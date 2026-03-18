@@ -670,13 +670,34 @@ function filterAlignedAiChangedChipEntries(searchMeta, defaultMaxBudget) {
 
   const baseEntries = buildSearchChipEntries(searchMeta, defaultMaxBudget);
   const baseByKey = new Map(baseEntries.map((entry) => [entry.key, entry.label]));
+  const filters = searchMeta?.filters || {};
+  const districtValue = String(filters.district || "").trim();
+  const typeValues = Array.isArray(filters.type) ? filters.type.filter(Boolean) : [];
+  const teamSizeValue = String(filters.teamSize || "").trim();
+  const minSizeValue = String(filters.minSize || "").trim();
+  const maxSizeValue = String(filters.maxSize || "").trim();
+  const minBudgetValue = String(filters.minBudget || "").trim();
+  const maxBudgetValue = String(filters.maxBudget ?? defaultMaxBudget ?? "").trim();
+  const moveInDateValue = String(filters.moveInDate || "").trim();
+  const contractFlexValue = String(filters.contractFlex || "").trim();
+  const transitDistanceValue = String(filters.transitDistance || "").trim();
+  const accessHoursValue = String(filters.accessHours || "").trim();
+  const parkingTypeValue = String(filters.parkingType || "").trim();
+  const layoutTypeValue = String(filters.layoutType || "").trim();
+  const advertiserValue = String(filters.advertiser || "").trim();
   const furnishedFilterValue = searchMeta?.furnishedFilter || "all";
+  const amenityQueryValue = String(searchMeta?.amenityQuery || "").trim();
+  const normalizedDefaultBudget = String(defaultMaxBudget ?? "").trim();
 
   return aiChangedChipEntries.filter((entry) => {
     if (!entry?.key || !entry?.label) return false;
+    const normalized = String(entry.label).toLowerCase().replace(/\s+/g, " ").trim();
+
+    if (baseByKey.get(entry.key) === entry.label) {
+      return true;
+    }
 
     if (entry.key === "furnishedFilter") {
-      const normalized = String(entry.label).toLowerCase().replace(/\s+/g, " ").trim();
       if (furnishedFilterValue === "all") {
         return normalized === "möblering: alla";
       }
@@ -689,7 +710,114 @@ function filterAlignedAiChangedChipEntries(searchMeta, defaultMaxBudget) {
       return false;
     }
 
-    return baseByKey.get(entry.key) === entry.label;
+    if (entry.key === "amenityQuery") {
+      if (amenityQueryValue === "") {
+        return normalized === "bekvämligheter: inga specifika krav"
+          || normalized === "bekvämlighet: inga specifika krav"
+          || normalized === "bekvämligheter: utan specifika krav";
+      }
+      return normalized === `bekvämlighet: ${amenityQueryValue.toLowerCase()}`
+        || normalized === `bekvämligheter: ${amenityQueryValue.toLowerCase()}`;
+    }
+
+    if (entry.key === "district") {
+      return districtValue === ""
+        ? normalized === "område: alla områden"
+        : districtValue === "Alla"
+          ? normalized === "område: alla områden"
+          : normalized === `område: ${districtValue.toLowerCase()}`;
+    }
+
+    if (entry.key === "type") {
+      return typeValues.length === 0
+        ? normalized === "typ: alla typer"
+        : normalized === `typ: ${typeValues.join(", ").toLowerCase()}`;
+    }
+
+    if (entry.key === "teamSize") {
+      return teamSizeValue === ""
+        ? normalized === "platser: utan minimikrav"
+        : normalized === `platser: ${teamSizeValue}+` || normalized === `platser: ${teamSizeValue}`;
+    }
+
+    if (entry.key === "size") {
+      if (minSizeValue === "" && maxSizeValue === "") {
+        return normalized === "yta: valfri";
+      }
+      return normalized === `yta: ${minSizeValue || "0"}-${maxSizeValue || "∞"} kvm`;
+    }
+
+    if (entry.key === "budget") {
+      const isDefaultBudget =
+        minBudgetValue === ""
+        && (maxBudgetValue === "" || maxBudgetValue === normalizedDefaultBudget);
+      if (isDefaultBudget) {
+        return normalized === "budget: valfri";
+      }
+      return normalized === `budget: ${minBudgetValue || "0"}-${maxBudgetValue || "∞"} kr`;
+    }
+
+    if (entry.key === "moveInDate") {
+      return moveInDateValue === ""
+        ? normalized === "inflyttning: flexibelt datum" || normalized === "inflyttning: utan fast datum"
+        : normalized === `inflytt: ${moveInDateValue}` || normalized === `inflyttning: ${moveInDateValue}`;
+    }
+
+    if (entry.key === "contractFlex") {
+      return contractFlexValue === ""
+        ? normalized === "avtal: alla" || normalized === "avtal: mer flexibelt"
+        : normalized === `avtal: ${contractFlexValue.toLowerCase()}`;
+    }
+
+    if (entry.key === "transitDistance") {
+      return transitDistanceValue === ""
+        ? normalized === "kommunaltrafik: alla" || normalized === "kommunaltrafik: alla avstånd"
+        : normalized === `kommunaltrafik: ${transitDistanceValue.toLowerCase()}`;
+    }
+
+    if (entry.key === "accessHours") {
+      return accessHoursValue === ""
+        ? normalized === "access: alla" || normalized === "access: alla tider"
+        : normalized === `access: ${accessHoursValue.toLowerCase()}`;
+    }
+
+    if (entry.key === "parkingType") {
+      return parkingTypeValue === ""
+        ? normalized === "parkering: alla" || normalized === "parkering: alla alternativ"
+        : normalized === `parkering: ${parkingTypeValue.toLowerCase()}`;
+    }
+
+    if (entry.key === "layoutType") {
+      return layoutTypeValue === ""
+        ? normalized === "planlösning: alla" || normalized === "planlösning: alla alternativ"
+        : normalized === `planlösning: ${layoutTypeValue.toLowerCase()}`;
+    }
+
+    if (entry.key === "advertiser") {
+      return advertiserValue === "" || advertiserValue === "Alla"
+        ? normalized === "annonsör: alla"
+        : normalized === `annonsör: ${advertiserValue.toLowerCase()}`;
+    }
+
+    if (entry.key === "includeOperatingCosts") {
+      return filters.includeOperatingCosts
+        ? normalized === "driftkostnader ingår" || normalized === "driftkostnad ingår: ja"
+        : normalized === "driftkostnader: valfritt" || normalized === "driftkostnad: valfri";
+    }
+
+    if (entry.key === "accessibilityAdapted") {
+      return filters.accessibilityAdapted
+        ? normalized === "tillgänglighetsanpassad" || normalized === "tillgänglighetsanpassad: ja"
+        : normalized === "tillgänglighet: valfritt";
+    }
+
+    if (entry.key === "ecoCertified") {
+      return filters.ecoCertified
+        ? normalized === "miljöcertifierad" || normalized === "miljöcertifierad: ja"
+        : normalized === "miljöcertifiering: valfritt";
+    }
+
+    return false;
   });
 }
 
@@ -818,6 +946,18 @@ function getSuggestionProblemText(suggestion) {
   return String(suggestion?.title || "").trim();
 }
 
+function renderTextWithBoldMarkers(text) {
+  const value = String(text || "");
+  if (!value.includes("**")) return value;
+
+  return value.split(/(\*\*.*?\*\*)/g).filter(Boolean).map((part, index) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return <strong key={`bold-${index}`}>{part.slice(2, -2)}</strong>;
+    }
+    return <span key={`text-${index}`}>{part}</span>;
+  });
+}
+
 function joinSuggestionLabels(values) {
   const items = values.map((value) => String(value || "").trim()).filter(Boolean);
   if (items.length === 0) return "";
@@ -900,7 +1040,7 @@ function buildResultsSuggestionCandidates({
       ? {
           id: "amenities-clear",
           title: `Bekvämligheter är satt till ${joinSuggestionLabels(amenityTerms)}`,
-          detail: `De här bekvämlighetskraven begränsar resultaten just nu. Om du gör dem valfria kan fler lokaler visas.`,
+          detail: `Bekvämlighetskravet **${joinSuggestionLabels(amenityTerms)}** begränsar resultaten just nu. Om du gör det valfritt kan fler lokaler visas.`,
           suggestedChange: "Bekvämligheter: inga specifika krav",
           targetStep: "amenities",
           nextFilters: { ...baseFilters },
@@ -912,7 +1052,7 @@ function buildResultsSuggestionCandidates({
       ? {
           id: "district-all",
           title: `Område är satt till ${baseFilters.district}`,
-          detail: `Det här områdeskravet begränsar resultaten just nu. Om du breddar till alla områden kan fler lokaler visas.`,
+          detail: `Områdeskravet **${baseFilters.district}** begränsar resultaten just nu. Om du breddar till alla områden kan fler lokaler visas.`,
           suggestedChange: "Område: Alla områden",
           targetStep: "core",
           nextFilters: { ...baseFilters, district: "Alla" },
@@ -924,7 +1064,7 @@ function buildResultsSuggestionCandidates({
       ? {
           id: "type-all",
           title: `Typ är satt till ${typeLabel}`,
-          detail: `Det här typkravet begränsar resultaten just nu. Om du öppnar upp till fler lokaltyper kan fler lokaler visas.`,
+          detail: `Typkravet **${typeLabel}** begränsar resultaten just nu. Om du öppnar upp till fler lokaltyper kan fler lokaler visas.`,
           suggestedChange: "Typ: Alla typer",
           targetStep: "type",
           nextFilters: { ...baseFilters, type: [] },
@@ -936,7 +1076,7 @@ function buildResultsSuggestionCandidates({
       ? {
           id: "layout-clear",
           title: `Planlösning är satt till ${baseFilters.layoutType}`,
-          detail: `Det här planlösningskravet begränsar resultaten just nu. Om du gör planlösning valfri kan fler lokaler visas.`,
+          detail: `Planlösningskravet **${baseFilters.layoutType}** begränsar resultaten just nu. Om du gör planlösning valfri kan fler lokaler visas.`,
           suggestedChange: "Planlösning: Alla",
           targetStep: "type",
           nextFilters: { ...baseFilters, layoutType: "" },
@@ -948,7 +1088,7 @@ function buildResultsSuggestionCandidates({
       ? {
           id: "team-clear",
           title: `Platser är satt till minst ${baseFilters.teamSize} st`,
-          detail: `Det här platskravet begränsar resultaten just nu. Om du sänker eller tar bort minimikravet kan fler lokaler visas.`,
+          detail: `Platskravet **${baseFilters.teamSize} st** begränsar resultaten just nu. Om du sänker eller tar bort minimikravet kan fler lokaler visas.`,
           suggestedChange: "Platser: utan minimikrav",
           targetStep: "core",
           nextFilters: { ...baseFilters, teamSize: "" },
@@ -960,7 +1100,7 @@ function buildResultsSuggestionCandidates({
       ? {
           id: "size-clear",
           title: `Yta är satt till ${formatRangeLabel(baseFilters.minSize, baseFilters.maxSize, "kvm")}`,
-          detail: `Det här ytkravet begränsar resultaten just nu. Om du gör ytan mer flexibel kan fler lokaler visas.`,
+          detail: `Ytkravet **${formatRangeLabel(baseFilters.minSize, baseFilters.maxSize, "kvm")}** begränsar resultaten just nu. Om du gör ytan mer flexibel kan fler lokaler visas.`,
           suggestedChange: "Yta: valfri",
           targetStep: "size",
           nextFilters: { ...baseFilters, minSize: "", maxSize: "" },
@@ -972,7 +1112,7 @@ function buildResultsSuggestionCandidates({
       ? {
           id: "budget-clear",
           title: `Budget är satt till ${formatRangeLabel(baseFilters.minBudget, baseFilters.maxBudget, "kr")}`,
-          detail: `Det här budgetkravet begränsar resultaten just nu. Om du gör budgeten mer flexibel kan fler lokaler visas.`,
+          detail: `Budgetkravet **${formatRangeLabel(baseFilters.minBudget, baseFilters.maxBudget, "kr")}** begränsar resultaten just nu. Om du gör budgeten mer flexibel kan fler lokaler visas.`,
           suggestedChange: "Budget: valfri",
           targetStep: "budget",
           nextFilters: { ...baseFilters, minBudget: "", maxBudget: String(defaultBudget) },
@@ -984,7 +1124,7 @@ function buildResultsSuggestionCandidates({
       ? {
           id: "movein-clear",
           title: `Inflyttning är satt till ${baseFilters.moveInDate}`,
-          detail: `Det fasta inflyttningsdatumet begränsar resultaten just nu. Om du gör datumet flexibelt kan fler lokaler visas.`,
+          detail: `Inflyttningskravet **${baseFilters.moveInDate}** begränsar resultaten just nu. Om du gör datumet flexibelt kan fler lokaler visas.`,
           suggestedChange: "Inflyttning: flexibelt datum",
           targetStep: "moveAndContract",
           nextFilters: { ...baseFilters, moveInDate: "" },
@@ -996,7 +1136,7 @@ function buildResultsSuggestionCandidates({
       ? {
           id: "contract-clear",
           title: `Avtal är satt till ${baseFilters.contractFlex}`,
-          detail: `Det här avtalskravet begränsar resultaten just nu. Om du gör avtalet mer flexibelt kan fler lokaler visas.`,
+          detail: `Avtalskravet **${baseFilters.contractFlex}** begränsar resultaten just nu. Om du gör avtalet mer flexibelt kan fler lokaler visas.`,
           suggestedChange: "Avtal: Alla",
           targetStep: "moveAndContract",
           nextFilters: { ...baseFilters, contractFlex: "" },
@@ -1008,7 +1148,7 @@ function buildResultsSuggestionCandidates({
       ? {
           id: "transit-clear",
           title: `Kommunaltrafik är satt till ${baseFilters.transitDistance}`,
-          detail: `Det här avståndskravet till kommunaltrafik begränsar resultaten just nu. Om du öppnar upp till alla avstånd kan fler lokaler visas.`,
+          detail: `Kravet på kommunaltrafik **${baseFilters.transitDistance}** begränsar resultaten just nu. Om du öppnar upp till alla avstånd kan fler lokaler visas.`,
           suggestedChange: "Kommunaltrafik: Alla",
           targetStep: "amenities",
           nextFilters: { ...baseFilters, transitDistance: "" },
@@ -1020,7 +1160,7 @@ function buildResultsSuggestionCandidates({
       ? {
           id: "parking-clear",
           title: `Parkering är satt till ${baseFilters.parkingType}`,
-          detail: `Det här parkeringskravet begränsar resultaten just nu. Om du gör parkering valfri kan fler lokaler visas.`,
+          detail: `Parkeringskravet **${baseFilters.parkingType}** begränsar resultaten just nu. Om du gör parkering valfri kan fler lokaler visas.`,
           suggestedChange: "Parkering: Alla",
           targetStep: "amenities",
           nextFilters: { ...baseFilters, parkingType: "" },
@@ -1032,7 +1172,7 @@ function buildResultsSuggestionCandidates({
       ? {
           id: "access-clear",
           title: `Access är satt till ${baseFilters.accessHours}`,
-          detail: `Det här accesskravet begränsar resultaten just nu. Om du gör access mer flexibel kan fler lokaler visas.`,
+          detail: `Accesskravet **${baseFilters.accessHours}** begränsar resultaten just nu. Om du gör access mer flexibel kan fler lokaler visas.`,
           suggestedChange: "Access: Alla",
           targetStep: "accessAndAdvertiser",
           nextFilters: { ...baseFilters, accessHours: "" },
@@ -1044,7 +1184,7 @@ function buildResultsSuggestionCandidates({
       ? {
           id: "advertiser-clear",
           title: `Annonsör är satt till ${baseFilters.advertiser}`,
-          detail: `Det här annonsörskravet begränsar resultaten just nu. Om du öppnar upp till alla annonsörer kan fler lokaler visas.`,
+          detail: `Annonsörskravet **${baseFilters.advertiser}** begränsar resultaten just nu. Om du öppnar upp till alla annonsörer kan fler lokaler visas.`,
           suggestedChange: "Annonsör: Alla",
           targetStep: "accessAndAdvertiser",
           nextFilters: { ...baseFilters, advertiser: "Alla" },
@@ -1056,7 +1196,7 @@ function buildResultsSuggestionCandidates({
       ? {
           id: "operating-clear",
           title: "Driftkostnader ingår är aktiverat",
-          detail: "Det här kravet begränsar resultaten just nu. Om du gör driftkostnader valfria kan fler lokaler visas.",
+          detail: "Kravet **Driftkostnader ingår** begränsar resultaten just nu. Om du gör driftkostnader valfria kan fler lokaler visas.",
           suggestedChange: "Driftkostnader: valfritt",
           targetStep: "compliance",
           nextFilters: { ...baseFilters, includeOperatingCosts: false },
@@ -1068,7 +1208,7 @@ function buildResultsSuggestionCandidates({
       ? {
           id: "accessibility-clear",
           title: "Tillgänglighetsanpassad är aktiverat",
-          detail: "Det här kravet begränsar resultaten just nu. Om du gör tillgänglighetskravet valfritt kan fler lokaler visas.",
+          detail: "Kravet **Tillgänglighetsanpassad** begränsar resultaten just nu. Om du gör tillgänglighetskravet valfritt kan fler lokaler visas.",
           suggestedChange: "Tillgänglighet: valfritt",
           targetStep: "compliance",
           nextFilters: { ...baseFilters, accessibilityAdapted: false },
@@ -1080,7 +1220,7 @@ function buildResultsSuggestionCandidates({
       ? {
           id: "eco-clear",
           title: "Miljöcertifierad är aktiverat",
-          detail: "Det här kravet begränsar resultaten just nu. Om du gör miljöcertifiering valfri kan fler lokaler visas.",
+          detail: "Kravet **Miljöcertifierad** begränsar resultaten just nu. Om du gör miljöcertifiering valfri kan fler lokaler visas.",
           suggestedChange: "Miljöcertifiering: valfritt",
           targetStep: "compliance",
           nextFilters: { ...baseFilters, ecoCertified: false },
@@ -1095,7 +1235,7 @@ function buildResultsSuggestionCandidates({
       ? {
           id: "district-amenities-combo",
           title: "Område och bekvämligheter är för snäva tillsammans",
-          detail: `Kombinationen av ${baseFilters.district && baseFilters.district !== "Alla" ? `område ${baseFilters.district}` : "nuvarande område"}${amenityTerms.length > 0 ? ` och bekvämligheterna ${joinSuggestionLabels(amenityTerms)}` : ""} ger för få träffar. Om du öppnar upp båda samtidigt kan fler lokaler visas.`,
+          detail: `Kombinationen av området **${baseFilters.district && baseFilters.district !== "Alla" ? baseFilters.district : "Alla områden"}**${amenityTerms.length > 0 ? ` och bekvämligheterna **${joinSuggestionLabels(amenityTerms)}**` : ""} ger för få träffar. Om du öppnar upp båda samtidigt kan fler lokaler visas.`,
           suggestedChange: "Område: Alla områden • Bekvämligheter: inga specifika krav",
           targetStep: amenityTerms.length > 0 ? "amenities" : "core",
           nextFilters: { ...baseFilters, district: "Alla" },
@@ -1107,7 +1247,7 @@ function buildResultsSuggestionCandidates({
       ? {
           id: "size-budget-combo",
           title: "Yta och budget är för snäva tillsammans",
-          detail: "Kombinationen av nuvarande yta och budget ger för få träffar. Om du gör båda mer flexibla kan fler lokaler visas.",
+          detail: `Kombinationen av ytan **${formatRangeLabel(baseFilters.minSize, baseFilters.maxSize, "kvm") || "valfri"}** och budgeten **${formatRangeLabel(baseFilters.minBudget, baseFilters.maxBudget, "kr") || "valfri"}** ger för få träffar. Om du gör båda mer flexibla kan fler lokaler visas.`,
           suggestedChange: "Yta: valfri • Budget: bredare intervall",
           targetStep: "size",
           nextFilters: {
@@ -1124,7 +1264,7 @@ function buildResultsSuggestionCandidates({
     {
       id: "reset-to-broad",
       title: "Sökningen är för snäv totalt sett",
-      detail: "Flera aktiva krav samverkar och ger för få träffar. Om du gör sökningen bredare kan fler lokaler visas direkt.",
+      detail: "Flera aktiva krav i sökningen begränsar resultaten just nu. Om du gör sökningen bredare kan fler lokaler visas direkt.",
       suggestedChange: "Bredare sökning med färre begränsningar",
       targetStep: "core",
       nextFilters: fullyRelaxedFilters,
@@ -1142,8 +1282,8 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
     favorites,
     savedFilters,
     searchListings,
+    resetSearchToAllListings,
     saveCurrentFilters,
-    saveAiSearch,
     toggleFavorite,
     requestViewing,
     runAiSearch
@@ -1217,10 +1357,47 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
   const searchChipRenderOrderRef = useRef([]);
 
   const favoriteIds = useMemo(() => new Set(favorites.map((entry) => entry.listingId)), [favorites]);
+  const implicitMaxBudget = app.allListingsFilters?.maxBudget ?? app.defaultFilters?.maxBudget ?? "";
   const hasTeamSizeForMatchChip = useMemo(() => {
     const parsed = Number(String(filters.teamSize || "").trim());
     return Number.isFinite(parsed) && parsed > 0;
   }, [filters.teamSize]);
+  const hasBeyondCoreAiInput = useMemo(() => {
+    const query = String(filters.query || "").trim();
+    const hasType = Array.isArray(filters.type) && filters.type.length > 0;
+    const minSize = String(filters.minSize || "").trim();
+    const maxSize = String(filters.maxSize || "").trim();
+    const minBudget = String(filters.minBudget || "").trim();
+    const maxBudget = String(filters.maxBudget || "").trim();
+    const hasNonDefaultBudget = minBudget !== "" || (maxBudget !== "" && Number(maxBudget) !== Number(implicitMaxBudget));
+    const hasDate = String(filters.moveInDate || "").trim() !== "";
+    const hasContract = String(filters.contractFlex || "").trim() !== "";
+    const hasTransit = String(filters.transitDistance || "").trim() !== "";
+    const hasAccess = String(filters.accessHours || "").trim() !== "";
+    const hasParking = String(filters.parkingType || "").trim() !== "";
+    const hasLayout = String(filters.layoutType || "").trim() !== "";
+    const advertiser = String(filters.advertiser || "").trim();
+    const hasAdvertiser = advertiser !== "" && advertiser !== "Alla";
+    const hasCompliance = Boolean(filters.includeOperatingCosts) || Boolean(filters.accessibilityAdapted) || Boolean(filters.ecoCertified);
+    const hasAmenities = String(amenityQuery || "").trim() !== "";
+
+    return Boolean(
+      query ||
+      hasType ||
+      minSize ||
+      maxSize ||
+      hasNonDefaultBudget ||
+      hasDate ||
+      hasContract ||
+      hasTransit ||
+      hasAccess ||
+      hasParking ||
+      hasLayout ||
+      hasAdvertiser ||
+      hasCompliance ||
+      hasAmenities
+    );
+  }, [filters, amenityQuery, implicitMaxBudget]);
   const listingsById = useMemo(() => new Map(listings.map((item) => [item.id, item])), [listings]);
   const advertiserOptions = useMemo(() => {
     const names = Array.from(new Set(listings.map((item) => item.advertiserName).filter(Boolean)));
@@ -1645,7 +1822,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
     const nextAiEnabled = !showEditorAiPanel;
     setShowEditorAiPanel(nextAiEnabled);
     if (!nextAiEnabled) {
-      setShowAdvancedSearchEditor(false);
+      setShowAdvancedSearchEditor(hasBeyondCoreAiInput);
       setAiLivePreview({
         filters: null,
         amenityQuery: "",
@@ -1695,14 +1872,20 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
   }
 
   async function handleResetSearchResults() {
-    const resetFilters = { ...app.defaultFilters };
+    const resetFilters = { ...(app.allListingsFilters || app.defaultFilters), accessHours: "" };
     setFilters(resetFilters);
     setAmenityQuery("");
     setFurnishedFilter("all");
-    await executeSearch(resetFilters, {
+    await resetSearchToAllListings?.();
+    setIsHydratingLandingSearch(false);
+    setAppliedSearchMeta({
+      filters: resetFilters,
       amenityQuery: "",
       furnishedFilter: "all",
-      aiPrompt: ""
+      aiPrompt: "",
+      aiSuggestionLabel: "",
+      aiChangedChipKeys: [],
+      aiChangedChipEntries: []
     });
     setUseNewSearchCta(false);
     setShowSearchEditor(false);
@@ -1772,6 +1955,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
       accessibilityAdapted: accessibilityAdaptedFromUrl || Boolean(baseFilters.accessibilityAdapted),
       ecoCertified: ecoCertifiedFromUrl || Boolean(baseFilters.ecoCertified)
     };
+    setFilters(nextFilters);
     if (amenityFromUrl) setAmenityQuery(amenityFromUrl);
     if (furnishedFromUrl === "yes" || furnishedFromUrl === "no") setFurnishedFilter(furnishedFromUrl);
     setAppliedSearchMeta({
@@ -1847,8 +2031,8 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
           furnishedFilter
         }
       : appliedSearchMeta;
-    return buildDisplayedSearchChipEntries(chipMeta, app.defaultFilters?.maxBudget);
-  }, [appliedSearchMeta, app.defaultFilters?.maxBudget, showInlineAiGuide, showEditorAiPanel, filters, amenityQuery, furnishedFilter]);
+    return buildDisplayedSearchChipEntries(chipMeta, implicitMaxBudget);
+  }, [appliedSearchMeta, implicitMaxBudget, showInlineAiGuide, showEditorAiPanel, filters, amenityQuery, furnishedFilter]);
 
   const liveAiChips = useMemo(() => {
     if (!useLiveAiSearchMeta) return [];
@@ -1863,7 +2047,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
           ? (aiLivePreview.aiChangedChipEntries || [])
           : (appliedSearchMeta.aiChangedChipEntries || [])
       },
-      app.defaultFilters?.maxBudget
+      implicitMaxBudget
     );
   }, [
     useLiveAiSearchMeta,
@@ -1873,7 +2057,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
     effectiveAiPrompt,
     aiLivePreview.aiChangedChipEntries,
     appliedSearchMeta.aiChangedChipEntries,
-    app.defaultFilters?.maxBudget
+    implicitMaxBudget
   ]);
   const displayedAiPrompt = useLiveAiSearchMeta ? effectiveAiPrompt : (appliedSearchMeta.aiPrompt || "");
   const displayedSearchChips = useLiveAiSearchMeta ? liveAiChips : activeSearchChips;
@@ -1910,7 +2094,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
           furnishedFilter: effectiveFurnishedFilter
         };
     return Array.from(new Set(
-      filterAlignedAiChangedChipEntries(activeMeta, app.defaultFilters?.maxBudget)
+      filterAlignedAiChangedChipEntries(activeMeta, implicitMaxBudget)
         .map((entry) => entry.key)
         .filter(Boolean)
     ));
@@ -1921,7 +2105,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
     effectiveFurnishedFilter,
     aiLivePreview.aiChangedChipEntries,
     appliedSearchMeta.aiChangedChipEntries,
-    app.defaultFilters?.maxBudget
+    implicitMaxBudget
   ]);
   const hasBegunSearch = Boolean(String(displayedAiPrompt || "").trim()) || displayedSearchChips.length > 0;
   const noMatchSuggestionSignature = useMemo(
@@ -2415,13 +2599,6 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
       openAuthPrompt("save");
       return;
     }
-    if (summaryPrompt) {
-      saveAiSearch({
-        prompt: summaryPrompt,
-        filters: summaryBaseFilters
-      });
-      return;
-    }
     void saveCurrentFilters(summaryBaseFilters);
   }
 
@@ -2430,14 +2607,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
       openAuthPrompt("save");
       return;
     }
-    if (summaryPrompt) {
-      saveAiSearch({
-        prompt: summaryPrompt,
-        filters: summaryBaseFilters
-      });
-    } else {
-      void saveCurrentFilters(summaryBaseFilters);
-    }
+    void saveCurrentFilters(summaryBaseFilters);
     app.pushToast("Bevakning aktiverad för sökningen.", "success");
   }
 
@@ -2569,7 +2739,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                   AI-förslag
                 </p>
                 <p className="text-sm font-semibold text-ink-900">
-                  {getSuggestionProblemText(visibleResultsSuggestion)}
+                  {renderTextWithBoldMarkers(getSuggestionProblemText(visibleResultsSuggestion))}
                 </p>
               </div>
               <button
@@ -2582,10 +2752,10 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
               </button>
             </div>
             <div className="mt-3 flex flex-wrap gap-2">
-              <span className="rounded-full border border-[#4f46e5]/20 bg-white px-2.5 py-1 text-xs font-semibold text-[#312e81]">
+              <span className="inline-flex items-center gap-1 rounded-full border border-[#4f46e5]/35 bg-white px-2.5 py-1 text-xs font-semibold text-[#312e81]">
                 Föreslagen ändring: {visibleResultsSuggestion.suggestedChange}
               </span>
-              <span className="rounded-full border border-[#4f46e5]/20 bg-white px-2.5 py-1 text-xs font-semibold text-[#312e81]">
+              <span className="rounded-full border border-[#4f46e5]/35 px-2.5 py-1 text-xs font-semibold text-[#312e81]">
                 {visibleResultsSuggestion.count} träffar efter ändring
               </span>
             </div>
@@ -3052,7 +3222,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                     <UploadIcon className="h-4 w-4 text-[#0f1930]" />
                     Ladda upp lokalprogram
                   </button>
-                  {showPreferencesSummaryCard ? (
+                  {hasBegunSearch ? (
                     <>
                       <button
                         type="button"
@@ -3060,7 +3230,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                         onClick={handleSaveSearchAction}
                       >
                         <SaveIcon className="h-4 w-4" />
-                        {summaryPrompt ? "Spara AI-sökning" : "Spara sökfilter"}
+                        Spara sökning
                       </button>
                       <button
                         type="button"

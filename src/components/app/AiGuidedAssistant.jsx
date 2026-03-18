@@ -2,14 +2,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { FilterIcon, ResetIcon, SaveIcon, SparklesIcon } from "../icons/UiIcons";
 import FurnishingToggle from "./FurnishingToggle";
 
-const questionOrder = ["core", "type", "size", "budget", "moveAndContract", "accessAndAdvertiser", "compliance", "amenities"];
+const questionOrder = ["core", "type", "size", "budget", "moveAndContract", "compliance", "amenities"];
 const stepLabels = {
   core: "Grundinställningar",
   type: "Typ",
   size: "Yta",
   budget: "Budget",
   moveAndContract: "Inflytt & avtal",
-  accessAndAdvertiser: "Access & annonsör",
   compliance: "Krav",
   amenities: "Bekvämligheter"
 };
@@ -60,6 +59,12 @@ function parseAmenityTerms(value) {
     .filter(Boolean);
 }
 
+function hasExplicitBudgetSelection(minBudget, maxBudget) {
+  const minValue = String(minBudget || "").trim();
+  const maxValue = String(maxBudget || "").trim();
+  return minValue !== "" || maxValue !== "";
+}
+
 function buildAnswersFromInitialState(initialFilters = {}, initialAmenityQuery = "", initialFurnishedFilter = "all") {
   return {
     district: initialFilters?.district && initialFilters.district !== "Alla" ? initialFilters.district : "Alla områden",
@@ -68,7 +73,7 @@ function buildAnswersFromInitialState(initialFilters = {}, initialAmenityQuery =
     minSize: initialFilters?.minSize ? String(initialFilters.minSize) : "",
     maxSize: initialFilters?.maxSize ? String(initialFilters.maxSize) : "",
     minBudget: initialFilters?.minBudget ? String(initialFilters.minBudget) : "",
-    maxBudget: initialFilters?.maxBudget && Number(initialFilters.maxBudget) !== 250000 ? String(initialFilters.maxBudget) : "",
+    maxBudget: hasExplicitBudgetSelection(initialFilters?.minBudget, initialFilters?.maxBudget) ? String(initialFilters?.maxBudget) : "",
     moveInDate: initialFilters?.moveInDate || "",
     contractFlex: initialFilters?.contractFlex || "Alla",
     transitDistance: initialFilters?.transitDistance || "Alla",
@@ -91,7 +96,7 @@ function composePrompt(answers) {
   if (answers.type && answers.type !== "Alla typer") parts.push(`Typ: ${answers.type}`);
   if (answers.teamSize) parts.push(`Team: minst ${answers.teamSize} platser`);
   if (answers.minSize || answers.maxSize) parts.push(`Yta: ${answers.minSize || 0}-${answers.maxSize || "∞"} kvm`);
-  if (answers.minBudget || answers.maxBudget) parts.push(`Budget: ${answers.minBudget || 0}-${answers.maxBudget || "∞"} kr/mån`);
+  if (hasExplicitBudgetSelection(answers.minBudget, answers.maxBudget)) parts.push(`Budget: ${answers.minBudget || 0}-${answers.maxBudget || "∞"} kr/mån`);
   if (answers.moveInDate) parts.push(`Inflyttning: ${answers.moveInDate}`);
   if (answers.contractFlex && answers.contractFlex !== "Alla") parts.push(`Avtalsflex: ${answers.contractFlex}`);
   if (answers.furnishedFilter === "yes") parts.push("Möblering: Möblerad");
@@ -99,7 +104,6 @@ function composePrompt(answers) {
   if (answers.layoutType && answers.layoutType !== "Alla") parts.push(`Planlösning: ${answers.layoutType}`);
   if (answers.transitDistance && answers.transitDistance !== "Alla") parts.push(`Kommunaltrafik: ${answers.transitDistance}`);
   if (answers.parkingType && answers.parkingType !== "Alla") parts.push(`Parkering: ${answers.parkingType}`);
-  if (answers.accessHours && answers.accessHours !== "Alla") parts.push(`Access: ${answers.accessHours}`);
   if (answers.advertiser && answers.advertiser !== "Alla") parts.push(`Annonsör: ${answers.advertiser}`);
   if (answers.includeOperatingCosts) parts.push("Driftkostnader ingår");
   if (answers.accessibilityAdapted) parts.push("Tillgänglighetsanpassad");
@@ -119,7 +123,7 @@ function buildNextFilters(baseFilters, answers) {
     minSize: answers.minSize || "",
     maxSize: answers.maxSize || "",
     minBudget: answers.minBudget || "",
-    maxBudget: answers.maxBudget ? Number(answers.maxBudget) : 250000,
+    maxBudget: answers.maxBudget ? Number(answers.maxBudget) : "",
     moveInDate: answers.moveInDate || "",
     contractFlex: answers.contractFlex === "Alla" ? "" : answers.contractFlex,
     transitDistance: answers.transitDistance === "Alla" ? "" : answers.transitDistance,
@@ -136,12 +140,11 @@ function buildNextFilters(baseFilters, answers) {
 
 function questionCopy(questionId) {
   if (questionId === "core") return "Låt oss börja med grundinställningarna för din sökning.";
-  if (questionId === "type") return "Vilken typ av lokal söker ni?";
+  if (questionId === "type") return "Vilken typ av lokal söker ni, och har ni en önskad annonsör?";
   if (questionId === "amenities") return "Har du behov av några särskilda bekvämligheter?";
   if (questionId === "budget") return "Vilken budgetram ska jag utgå från?";
   if (questionId === "size") return "Vilken yta (kvm) söker ni ungefär?";
   if (questionId === "moveAndContract") return "När vill ni flytta in och hur flexibel ska avtalsperioden vara?";
-  if (questionId === "accessAndAdvertiser") return "Har ni önskemål kring access och annonsör?";
   if (questionId === "compliance") return "Behöver lokalen uppfylla några särskilda krav?";
   return "Något mer jag ska ta hänsyn till innan jag söker?";
 }
@@ -157,23 +160,18 @@ function hasAnswerForQuestion(questionId, answers) {
   if (questionId === "type") {
     return Boolean(
       (answers.type && answers.type !== "Alla typer") ||
-      (answers.layoutType && answers.layoutType !== "Alla")
+      (answers.layoutType && answers.layoutType !== "Alla") ||
+      (answers.advertiser && answers.advertiser !== "Alla")
     );
   }
   if (questionId === "size") {
     return Boolean(String(answers.minSize || "").trim() || String(answers.maxSize || "").trim());
   }
   if (questionId === "budget") {
-    return Boolean(String(answers.minBudget || "").trim() || String(answers.maxBudget || "").trim());
+    return hasExplicitBudgetSelection(answers.minBudget, answers.maxBudget);
   }
   if (questionId === "moveAndContract") {
     return Boolean(String(answers.moveInDate || "").trim() || (answers.contractFlex && answers.contractFlex !== "Alla"));
-  }
-  if (questionId === "accessAndAdvertiser") {
-    return Boolean(
-      (answers.accessHours && answers.accessHours !== "Alla") ||
-      (answers.advertiser && answers.advertiser !== "Alla")
-    );
   }
   if (questionId === "compliance") {
     return Boolean(answers.includeOperatingCosts || answers.accessibilityAdapted || answers.ecoCertified);
@@ -203,6 +201,7 @@ function buildSearchSummaryGroups(answers) {
   const typeParts = [];
   if (answers.type && answers.type !== "Alla typer") typeParts.push(answers.type);
   if (answers.layoutType && answers.layoutType !== "Alla") typeParts.push(`Plan: ${answers.layoutType}`);
+  if (answers.advertiser && answers.advertiser !== "Alla") typeParts.push(`Annonsör: ${answers.advertiser}`);
   if (typeParts.length > 0) {
     groups.push({ id: "type", label: stepLabels.type, summary: typeParts.join(", ") });
   }
@@ -210,7 +209,7 @@ function buildSearchSummaryGroups(answers) {
   if (answers.minSize || answers.maxSize) {
     groups.push({ id: "size", label: stepLabels.size, summary: `${answers.minSize || 0}-${answers.maxSize || "∞"} kvm` });
   }
-  if (answers.minBudget || answers.maxBudget) {
+  if (hasExplicitBudgetSelection(answers.minBudget, answers.maxBudget)) {
     groups.push({ id: "budget", label: stepLabels.budget, summary: `${answers.minBudget || 0}-${answers.maxBudget || "∞"} kr/mån` });
   }
 
@@ -218,11 +217,6 @@ function buildSearchSummaryGroups(answers) {
   if (answers.moveInDate) moveAndContractParts.push(`Inflytt ${answers.moveInDate}`);
   if (answers.contractFlex && answers.contractFlex !== "Alla") moveAndContractParts.push(answers.contractFlex);
   if (moveAndContractParts.length > 0) groups.push({ id: "moveAndContract", label: stepLabels.moveAndContract, summary: moveAndContractParts.join(", ") });
-
-  const accessAndAdvertiserParts = [];
-  if (answers.accessHours && answers.accessHours !== "Alla") accessAndAdvertiserParts.push(`Access: ${answers.accessHours}`);
-  if (answers.advertiser && answers.advertiser !== "Alla") accessAndAdvertiserParts.push(`Annonsör: ${answers.advertiser}`);
-  if (accessAndAdvertiserParts.length > 0) groups.push({ id: "accessAndAdvertiser", label: stepLabels.accessAndAdvertiser, summary: accessAndAdvertiserParts.join(", ") });
 
   const complianceParts = [];
   if (answers.includeOperatingCosts) complianceParts.push("Driftkostnad");
@@ -285,7 +279,6 @@ function AiGuidedAssistant({
     ...buildAnswersFromInitialState(initialFilters, initialAmenityQuery, initialFurnishedFilter)
   }));
   const lastPreviewSignatureRef = useRef("");
-  const initialSyncSignatureRef = useRef("");
   const activeQuestion = activeStep;
 
   const prompt = useMemo(() => composePrompt(answers), [answers]);
@@ -343,18 +336,6 @@ function AiGuidedAssistant({
     if (Number.isFinite(matchCount)) return matchCount;
     return 0;
   }, [hasAnyInput, defaultResultCount, resultCount, matchCount]);
-
-  useEffect(() => {
-    const nextAnswers = buildAnswersFromInitialState(initialFilters, initialAmenityQuery, initialFurnishedFilter);
-    const nextSignature = JSON.stringify(nextAnswers);
-    if (nextSignature === initialSyncSignatureRef.current) return;
-    initialSyncSignatureRef.current = nextSignature;
-    setAnswers(nextAnswers);
-    setSkippedSteps([]);
-    setActiveStep(resolveInitialStep(nextAnswers));
-    setMatchCount(null);
-    lastPreviewSignatureRef.current = "";
-  }, [initialFilters, initialAmenityQuery, initialFurnishedFilter]);
 
   useEffect(() => {
     const signature = JSON.stringify({
@@ -451,9 +432,6 @@ function AiGuidedAssistant({
       }
       if (groupId === "moveAndContract") {
         return { ...prev, moveInDate: "", contractFlex: "Alla" };
-      }
-      if (groupId === "accessAndAdvertiser") {
-        return { ...prev, accessHours: "Alla", advertiser: "Alla" };
       }
       if (groupId === "compliance") {
         return { ...prev, includeOperatingCosts: false, accessibilityAdapted: false, ecoCertified: false };
@@ -623,37 +601,6 @@ function AiGuidedAssistant({
       );
     }
 
-    if (questionId === "accessAndAdvertiser") {
-      return (
-        <div className="max-w-[44rem] grid gap-3 sm:grid-cols-2">
-          <label className="block">
-            <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Access</span>
-            <select
-              className="select-chevron w-full rounded-2xl border border-black/10 bg-transparent px-3 py-3 pr-10 text-sm text-ink-900 focus:border-[#0f1930] focus:outline-none"
-              value={answers.accessHours}
-              onChange={(event) => setAnswers((prev) => ({ ...prev, accessHours: event.target.value }))}
-            >
-              {(accessHoursOptions.length > 0 ? accessHoursOptions : ["Alla"]).map((option) => (
-                <option key={option} value={option}>{option}</option>
-              ))}
-            </select>
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Annonsör</span>
-            <select
-              className="select-chevron w-full rounded-2xl border border-black/10 bg-transparent px-3 py-3 pr-10 text-sm text-ink-900 focus:border-[#0f1930] focus:outline-none"
-              value={answers.advertiser}
-              onChange={(event) => setAnswers((prev) => ({ ...prev, advertiser: event.target.value }))}
-            >
-              {(advertiserOptions.length > 0 ? advertiserOptions : ["Alla"]).map((option) => (
-                <option key={option} value={option}>{option}</option>
-              ))}
-            </select>
-          </label>
-        </div>
-      );
-    }
-
     if (questionId === "compliance") {
       return (
         <div className="w-full max-w-[46rem]">
@@ -756,34 +703,50 @@ function AiGuidedAssistant({
 
     if (questionId === "type") {
       return (
-        <div className="max-w-[44rem] grid gap-3 sm:grid-cols-2">
-          <label className="block">
-            <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Typ</span>
-            <select
-              className="select-chevron w-full rounded-2xl border border-black/10 bg-transparent px-3 py-3 pr-10 text-sm text-ink-900 focus:border-[#0f1930] focus:outline-none"
-              value={answers.type}
-              onChange={(event) => setAnswers((prev) => ({ ...prev, type: event.target.value }))}
-            >
-              <option value="Alla typer">Alla typer</option>
-              {listingTypes.map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Planlösning</span>
-            <select
-              className="select-chevron w-full rounded-2xl border border-black/10 bg-transparent px-3 py-3 pr-10 text-sm text-ink-900 focus:border-[#0f1930] focus:outline-none"
-              value={answers.layoutType}
-              onChange={(event) => setAnswers((prev) => ({ ...prev, layoutType: event.target.value }))}
-            >
-              {(layoutTypeOptions.length > 0 ? layoutTypeOptions : ["Alla"]).map((option) => (
-                <option key={option} value={option}>{option}</option>
-              ))}
-            </select>
-          </label>
+        <div className="max-w-[46rem] space-y-3">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="block">
+              <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Typ</span>
+              <select
+                className="select-chevron w-full rounded-2xl border border-black/10 bg-transparent px-3 py-3 pr-10 text-sm text-ink-900 focus:border-[#0f1930] focus:outline-none"
+                value={answers.type}
+                onChange={(event) => setAnswers((prev) => ({ ...prev, type: event.target.value }))}
+              >
+                <option value="Alla typer">Alla typer</option>
+                {listingTypes.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block">
+              <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Planlösning</span>
+              <select
+                className="select-chevron w-full rounded-2xl border border-black/10 bg-transparent px-3 py-3 pr-10 text-sm text-ink-900 focus:border-[#0f1930] focus:outline-none"
+                value={answers.layoutType}
+                onChange={(event) => setAnswers((prev) => ({ ...prev, layoutType: event.target.value }))}
+              >
+                {(layoutTypeOptions.length > 0 ? layoutTypeOptions : ["Alla"]).map((option) => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="block">
+              <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Annonsör</span>
+              <select
+                className="select-chevron w-full rounded-2xl border border-black/10 bg-transparent px-3 py-3 pr-10 text-sm text-ink-900 focus:border-[#0f1930] focus:outline-none"
+                value={answers.advertiser}
+                onChange={(event) => setAnswers((prev) => ({ ...prev, advertiser: event.target.value }))}
+              >
+                {(advertiserOptions.length > 0 ? advertiserOptions : ["Alla"]).map((option) => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </select>
+            </label>
+          </div>
         </div>
       );
     }

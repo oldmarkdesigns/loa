@@ -17,7 +17,7 @@ const defaultFilters = {
   type: [],
   minSize: "",
   maxSize: "",
-  maxBudget: 250000,
+  maxBudget: "",
   teamSize: "",
   transitDistance: "",
   moveInDate: "",
@@ -35,6 +35,10 @@ const defaultFilters = {
   advertiser: "Alla",
   verified: false,
   readyNow: false
+};
+
+const allListingsFilters = {
+  ...defaultFilters
 };
 
 function savedFilterKey(userId) {
@@ -153,8 +157,8 @@ function filterPresetLabel(filters) {
   const district = filters.district && filters.district !== "Alla" ? filters.district : "Alla områden";
   const selectedTypes = Array.isArray(filters.type) ? filters.type : [];
   const type = selectedTypes.length > 0 ? `${selectedTypes.length} typer` : "Alla typer";
-  const budget = Number(filters.maxBudget || defaultFilters.maxBudget).toLocaleString("sv-SE");
-  return `${district} · ${type} · ${budget} kr`;
+  const budget = String(filters.maxBudget || "").trim() ? `${Number(filters.maxBudget).toLocaleString("sv-SE")} kr` : "utan maxtak";
+  return `${district} · ${type} · ${budget}`;
 }
 
 export function AppProvider({ children }) {
@@ -188,23 +192,7 @@ export function AppProvider({ children }) {
     }
 
     const [{ listings: listingsData }, { favorites: favoriteData }, { viewings: viewingData }] = await Promise.all([
-      listingApi.getListings({
-        county: "Stockholms län",
-        query: "",
-        district: "Alla",
-        type: [],
-        minSize: "",
-        maxSize: "",
-        maxBudget: 500000,
-        teamSize: "",
-        requirePrice: false,
-        onlyBostadsratt: false,
-        daysOnMarket: "all",
-        keyword: "",
-        advertiser: "Alla",
-        verified: false,
-        readyNow: false
-      }),
+      listingApi.getListings(allListingsFilters),
       favoriteApi.getFavorites(),
       viewingsApi.getViewings()
     ]);
@@ -368,6 +356,18 @@ export function AppProvider({ children }) {
     }
 
     const { listings: listingData } = await listingApi.getListings(normalized);
+    setListings(listingData);
+    return listingData;
+  }
+
+  async function resetSearchToAllListings() {
+    const normalized = normalizeFilters(allListingsFilters);
+    setSavedFiltersState(normalized);
+    if (user?.id) {
+      persistSavedFilters(user.id, normalized);
+    }
+
+    const { listings: listingData } = await listingApi.getListings(allListingsFilters);
     setListings(listingData);
     return listingData;
   }
@@ -575,6 +575,7 @@ export function AppProvider({ children }) {
       completeOnboarding,
       switchRole,
       searchListings,
+      resetSearchToAllListings,
       saveCurrentFilters,
       deleteSavedFilter,
       saveAiSearch,
@@ -589,7 +590,8 @@ export function AppProvider({ children }) {
       runAiSearch,
       updateLead,
       refreshCoreData,
-      defaultFilters
+      defaultFilters,
+      allListingsFilters
     }),
     [
       aiHistory,
