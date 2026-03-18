@@ -3112,6 +3112,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                       layoutTypeOptions={layoutTypeOptions}
                       advertiserOptions={advertiserOptions}
                       initialAmenityQuery={amenityQuery}
+                      initialFurnishedFilter={furnishedFilter}
                       onPreviewFilters={previewEditorAiFilters}
                       onSubmitSearch={submitGuidedEditorAiSearch}
                       onOpenInfo={() => setShowEditorAiInfo(true)}
@@ -3489,6 +3490,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                           layoutTypeOptions={layoutTypeOptions}
                           advertiserOptions={advertiserOptions}
                           initialAmenityQuery={amenityQuery}
+                          initialFurnishedFilter={furnishedFilter}
                           onPreviewFilters={previewEditorAiFilters}
                           onSubmitSearch={submitInlineGuidedAiSearch}
                           onOpenInfo={() => setShowEditorAiInfo(true)}

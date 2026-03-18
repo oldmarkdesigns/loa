@@ -60,6 +60,31 @@ function parseAmenityTerms(value) {
     .filter(Boolean);
 }
 
+function buildAnswersFromInitialState(initialFilters = {}, initialAmenityQuery = "", initialFurnishedFilter = "all") {
+  return {
+    district: initialFilters?.district && initialFilters.district !== "Alla" ? initialFilters.district : "Alla områden",
+    type: Array.isArray(initialFilters?.type) && initialFilters.type.length > 0 ? initialFilters.type[0] : "Alla typer",
+    teamSize: initialFilters?.teamSize ? String(initialFilters.teamSize) : "",
+    minSize: initialFilters?.minSize ? String(initialFilters.minSize) : "",
+    maxSize: initialFilters?.maxSize ? String(initialFilters.maxSize) : "",
+    minBudget: initialFilters?.minBudget ? String(initialFilters.minBudget) : "",
+    maxBudget: initialFilters?.maxBudget && Number(initialFilters.maxBudget) !== 250000 ? String(initialFilters.maxBudget) : "",
+    moveInDate: initialFilters?.moveInDate || "",
+    contractFlex: initialFilters?.contractFlex || "Alla",
+    transitDistance: initialFilters?.transitDistance || "Alla",
+    accessHours: initialFilters?.accessHours || "Alla",
+    parkingType: initialFilters?.parkingType || "Alla",
+    layoutType: initialFilters?.layoutType || "Alla",
+    advertiser: initialFilters?.advertiser || "Alla",
+    includeOperatingCosts: Boolean(initialFilters?.includeOperatingCosts),
+    accessibilityAdapted: Boolean(initialFilters?.accessibilityAdapted),
+    ecoCertified: Boolean(initialFilters?.ecoCertified),
+    furnishedFilter: initialFurnishedFilter === "yes" || initialFurnishedFilter === "no" ? initialFurnishedFilter : "all",
+    amenities: parseAmenityTerms(initialAmenityQuery),
+    extra: String(initialFilters?.query || "").trim()
+  };
+}
+
 function composePrompt(answers) {
   const parts = [];
   if (answers.district && answers.district !== "Alla områden") parts.push(`Område: ${answers.district}`);
@@ -238,6 +263,7 @@ function AiGuidedAssistant({
   submitLabel = "Sök med AI",
   showHeader = true,
   initialAmenityQuery = "",
+  initialFurnishedFilter = "all",
   onResetSearch,
   onSaveSearch,
   onOpenEditSearch,
@@ -254,51 +280,12 @@ function AiGuidedAssistant({
   const [matchCount, setMatchCount] = useState(null);
   const [showCoreNextHint, setShowCoreNextHint] = useState(false);
   const [skippedSteps, setSkippedSteps] = useState([]);
-  const [answers, setAnswers] = useState(() => ({
-    district: initialFilters?.district && initialFilters.district !== "Alla" ? initialFilters.district : "Alla områden",
-    type: Array.isArray(initialFilters?.type) && initialFilters.type.length > 0 ? initialFilters.type[0] : "Alla typer",
-    teamSize: initialFilters?.teamSize ? String(initialFilters.teamSize) : "",
-    minSize: initialFilters?.minSize ? String(initialFilters.minSize) : "",
-    maxSize: initialFilters?.maxSize ? String(initialFilters.maxSize) : "",
-    minBudget: initialFilters?.minBudget ? String(initialFilters.minBudget) : "",
-    maxBudget: initialFilters?.maxBudget && Number(initialFilters.maxBudget) !== 250000 ? String(initialFilters.maxBudget) : "",
-    moveInDate: initialFilters?.moveInDate || "",
-    contractFlex: initialFilters?.contractFlex || "Alla",
-    transitDistance: initialFilters?.transitDistance || "Alla",
-    accessHours: initialFilters?.accessHours || "Alla",
-    parkingType: initialFilters?.parkingType || "Alla",
-    layoutType: initialFilters?.layoutType || "Alla",
-    advertiser: initialFilters?.advertiser || "Alla",
-    includeOperatingCosts: Boolean(initialFilters?.includeOperatingCosts),
-    accessibilityAdapted: Boolean(initialFilters?.accessibilityAdapted),
-    ecoCertified: Boolean(initialFilters?.ecoCertified),
-    furnishedFilter: "all",
-    amenities: parseAmenityTerms(initialAmenityQuery),
-    extra: ""
-  }));
+  const [answers, setAnswers] = useState(() => buildAnswersFromInitialState(initialFilters, initialAmenityQuery, initialFurnishedFilter));
   const [activeStep, setActiveStep] = useState(() => resolveInitialStep({
-    district: initialFilters?.district && initialFilters.district !== "Alla" ? initialFilters.district : "Alla områden",
-    type: Array.isArray(initialFilters?.type) && initialFilters.type.length > 0 ? initialFilters.type[0] : "Alla typer",
-    teamSize: initialFilters?.teamSize ? String(initialFilters.teamSize) : "",
-    minSize: initialFilters?.minSize ? String(initialFilters.minSize) : "",
-    maxSize: initialFilters?.maxSize ? String(initialFilters.maxSize) : "",
-    minBudget: initialFilters?.minBudget ? String(initialFilters.minBudget) : "",
-    maxBudget: initialFilters?.maxBudget && Number(initialFilters.maxBudget) !== 250000 ? String(initialFilters.maxBudget) : "",
-    moveInDate: initialFilters?.moveInDate || "",
-    contractFlex: initialFilters?.contractFlex || "Alla",
-    transitDistance: initialFilters?.transitDistance || "Alla",
-    accessHours: initialFilters?.accessHours || "Alla",
-    parkingType: initialFilters?.parkingType || "Alla",
-    layoutType: initialFilters?.layoutType || "Alla",
-    advertiser: initialFilters?.advertiser || "Alla",
-    includeOperatingCosts: Boolean(initialFilters?.includeOperatingCosts),
-    accessibilityAdapted: Boolean(initialFilters?.accessibilityAdapted),
-    ecoCertified: Boolean(initialFilters?.ecoCertified),
-    furnishedFilter: "all",
-    amenities: parseAmenityTerms(initialAmenityQuery),
-    extra: ""
+    ...buildAnswersFromInitialState(initialFilters, initialAmenityQuery, initialFurnishedFilter)
   }));
   const lastPreviewSignatureRef = useRef("");
+  const initialSyncSignatureRef = useRef("");
   const activeQuestion = activeStep;
 
   const prompt = useMemo(() => composePrompt(answers), [answers]);
@@ -356,6 +343,18 @@ function AiGuidedAssistant({
     if (Number.isFinite(matchCount)) return matchCount;
     return 0;
   }, [hasAnyInput, defaultResultCount, resultCount, matchCount]);
+
+  useEffect(() => {
+    const nextAnswers = buildAnswersFromInitialState(initialFilters, initialAmenityQuery, initialFurnishedFilter);
+    const nextSignature = JSON.stringify(nextAnswers);
+    if (nextSignature === initialSyncSignatureRef.current) return;
+    initialSyncSignatureRef.current = nextSignature;
+    setAnswers(nextAnswers);
+    setSkippedSteps([]);
+    setActiveStep(resolveInitialStep(nextAnswers));
+    setMatchCount(null);
+    lastPreviewSignatureRef.current = "";
+  }, [initialFilters, initialAmenityQuery, initialFurnishedFilter]);
 
   useEffect(() => {
     const signature = JSON.stringify({
