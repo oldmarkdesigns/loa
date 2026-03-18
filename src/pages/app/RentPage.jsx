@@ -664,9 +664,39 @@ function mergeAiChangedChipEntries(baseEntries, aiChangedChipEntries = []) {
   });
 }
 
+function filterAlignedAiChangedChipEntries(searchMeta, defaultMaxBudget) {
+  const aiChangedChipEntries = Array.isArray(searchMeta?.aiChangedChipEntries) ? searchMeta.aiChangedChipEntries : [];
+  if (aiChangedChipEntries.length === 0) return [];
+
+  const baseEntries = buildSearchChipEntries(searchMeta, defaultMaxBudget);
+  const baseByKey = new Map(baseEntries.map((entry) => [entry.key, entry.label]));
+  const furnishedFilterValue = searchMeta?.furnishedFilter || "all";
+
+  return aiChangedChipEntries.filter((entry) => {
+    if (!entry?.key || !entry?.label) return false;
+
+    if (entry.key === "furnishedFilter") {
+      const normalized = String(entry.label).toLowerCase().replace(/\s+/g, " ").trim();
+      if (furnishedFilterValue === "all") {
+        return normalized === "möblering: alla";
+      }
+      if (furnishedFilterValue === "yes") {
+        return normalized === "möblerad" || normalized === "möblering: möblerad";
+      }
+      if (furnishedFilterValue === "no") {
+        return normalized === "ej möblerad" || normalized === "möblering: omöblerad";
+      }
+      return false;
+    }
+
+    return baseByKey.get(entry.key) === entry.label;
+  });
+}
+
 function buildDisplayedSearchChipEntries(searchMeta, defaultMaxBudget) {
   const baseEntries = buildSearchChipEntries(searchMeta, defaultMaxBudget);
-  return mergeAiChangedChipEntries(baseEntries, searchMeta?.aiChangedChipEntries || []);
+  const alignedAiEntries = filterAlignedAiChangedChipEntries(searchMeta, defaultMaxBudget);
+  return mergeAiChangedChipEntries(baseEntries, alignedAiEntries);
 }
 
 function getChangedChipKeys(previousMeta, nextMeta, defaultMaxBudget) {
@@ -1456,19 +1486,19 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
       furnishedFilter: nextFurnishedFilter,
       aiPrompt: nextPrompt,
       matchCount: null,
-      aiChangedChipKeys: [],
-      aiChangedChipEntries: []
+      aiChangedChipKeys: prev.aiChangedChipKeys || [],
+      aiChangedChipEntries: prev.aiChangedChipEntries || []
     }));
     const listingData = await searchListings(nextFilters);
     const narrowed = applyAmenityAndFurnishedFilters(listingData, nextAmenityTerms, nextFurnishedFilter);
-    setAiLivePreview(() => ({
+    setAiLivePreview((prev) => ({
       filters: nextFilters,
       amenityQuery: nextAmenityTerms,
       furnishedFilter: nextFurnishedFilter,
       aiPrompt: nextPrompt,
       matchCount: narrowed.length,
-      aiChangedChipKeys: [],
-      aiChangedChipEntries: []
+      aiChangedChipKeys: prev.aiChangedChipKeys || [],
+      aiChangedChipEntries: prev.aiChangedChipEntries || []
     }));
     return narrowed.length;
   }
@@ -1864,26 +1894,34 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
   }, [displayedSearchChips]);
   const displayedAiChangedChipKeys = useMemo(() => {
     const hasLiveAiPreview = useLiveAiSearchMeta && Boolean(aiLivePreview.filters);
-    const activeKeys = useLiveAiSearchMeta
-      ? (hasLiveAiPreview
-        ? (aiLivePreview.aiChangedChipKeys || [])
-        : (appliedSearchMeta.aiChangedChipKeys || []))
-      : (appliedSearchMeta.aiChangedChipKeys || []);
-    const activeEntries = useLiveAiSearchMeta
-      ? (hasLiveAiPreview
-        ? (aiLivePreview.aiChangedChipEntries || [])
-        : (appliedSearchMeta.aiChangedChipEntries || []))
-      : (appliedSearchMeta.aiChangedChipEntries || []);
-    return Array.from(new Set([
-      ...activeKeys,
-      ...activeEntries.map((entry) => entry.key).filter(Boolean)
-    ]));
+    const activeMeta = useLiveAiSearchMeta
+      ? {
+          filters: effectiveFilters,
+          amenityQuery: effectiveAmenityQuery,
+          furnishedFilter: effectiveFurnishedFilter,
+          aiChangedChipEntries: hasLiveAiPreview
+            ? (aiLivePreview.aiChangedChipEntries || [])
+            : (appliedSearchMeta.aiChangedChipEntries || [])
+        }
+      : {
+          ...appliedSearchMeta,
+          filters: effectiveFilters,
+          amenityQuery: effectiveAmenityQuery,
+          furnishedFilter: effectiveFurnishedFilter
+        };
+    return Array.from(new Set(
+      filterAlignedAiChangedChipEntries(activeMeta, app.defaultFilters?.maxBudget)
+        .map((entry) => entry.key)
+        .filter(Boolean)
+    ));
   }, [
     useLiveAiSearchMeta,
-    aiLivePreview.aiChangedChipKeys,
+    effectiveFilters,
+    effectiveAmenityQuery,
+    effectiveFurnishedFilter,
     aiLivePreview.aiChangedChipEntries,
-    appliedSearchMeta.aiChangedChipKeys,
-    appliedSearchMeta.aiChangedChipEntries
+    appliedSearchMeta.aiChangedChipEntries,
+    app.defaultFilters?.maxBudget
   ]);
   const hasBegunSearch = Boolean(String(displayedAiPrompt || "").trim()) || displayedSearchChips.length > 0;
   const noMatchSuggestionSignature = useMemo(
