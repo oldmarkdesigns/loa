@@ -777,6 +777,17 @@ function formatSuggestionChanges(candidate, baseline) {
   return parts.join(" • ");
 }
 
+function getSuggestionProblemText(suggestion) {
+  const detail = String(suggestion?.detail || "").trim();
+  if (detail) {
+    const firstSentence = detail.split(". ")[0]?.trim();
+    if (firstSentence) {
+      return firstSentence.endsWith(".") ? firstSentence : `${firstSentence}.`;
+    }
+  }
+  return String(suggestion?.title || "").trim();
+}
+
 function joinSuggestionLabels(values) {
   const items = values.map((value) => String(value || "").trim()).filter(Boolean);
   if (items.length === 0) return "";
@@ -1173,6 +1184,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
   const filterExpandedBeforeAiRef = useRef(false);
   const headerUploadInputRef = useRef(null);
   const resultsTopRef = useRef(null);
+  const searchChipRenderOrderRef = useRef([]);
 
   const favoriteIds = useMemo(() => new Set(favorites.map((entry) => entry.listingId)), [favorites]);
   const hasTeamSizeForMatchChip = useMemo(() => {
@@ -1444,19 +1456,19 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
       furnishedFilter: nextFurnishedFilter,
       aiPrompt: nextPrompt,
       matchCount: null,
-      aiChangedChipKeys: prev.aiChangedChipKeys || [],
-      aiChangedChipEntries: prev.aiChangedChipEntries || []
+      aiChangedChipKeys: [],
+      aiChangedChipEntries: []
     }));
     const listingData = await searchListings(nextFilters);
     const narrowed = applyAmenityAndFurnishedFilters(listingData, nextAmenityTerms, nextFurnishedFilter);
-    setAiLivePreview((prev) => ({
+    setAiLivePreview(() => ({
       filters: nextFilters,
       amenityQuery: nextAmenityTerms,
       furnishedFilter: nextFurnishedFilter,
       aiPrompt: nextPrompt,
       matchCount: narrowed.length,
-      aiChangedChipKeys: prev.aiChangedChipKeys || [],
-      aiChangedChipEntries: prev.aiChangedChipEntries || []
+      aiChangedChipKeys: [],
+      aiChangedChipEntries: []
     }));
     return narrowed.length;
   }
@@ -1615,7 +1627,6 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
       });
       return;
     }
-    setShowAdvancedSearchEditor(true);
   }
 
   async function submitSideFilterSearch(event) {
@@ -1625,19 +1636,6 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
       transitionFromAvailableToResults();
     }
   }
-
-  useEffect(() => {
-    if (showEditorAiPanel || sidePanelMode !== "filter") return undefined;
-    const timer = window.setTimeout(() => {
-      void (async () => {
-        await executeSearch(filters, { amenityQuery, furnishedFilter });
-        if (isAvailableListingsView) {
-          transitionFromAvailableToResults();
-        }
-      })();
-    }, 220);
-    return () => window.clearTimeout(timer);
-  }, [showEditorAiPanel, sidePanelMode, filters, amenityQuery, furnishedFilter, isAvailableListingsView]);
 
   async function executeSearch(nextFilters = filters, options = {}) {
     await searchListings(nextFilters);
@@ -1824,14 +1822,15 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
 
   const liveAiChips = useMemo(() => {
     if (!useLiveAiSearchMeta) return [];
+    const hasLiveAiPreview = Boolean(aiLivePreview.filters);
     return buildDisplayedSearchChipEntries(
       {
         filters: effectiveFilters,
         amenityQuery: effectiveAmenityQuery,
         furnishedFilter: effectiveFurnishedFilter,
         aiPrompt: effectiveAiPrompt,
-        aiChangedChipEntries: aiLivePreview.aiChangedChipEntries && aiLivePreview.aiChangedChipEntries.length > 0
-          ? aiLivePreview.aiChangedChipEntries
+        aiChangedChipEntries: hasLiveAiPreview
+          ? (aiLivePreview.aiChangedChipEntries || [])
           : (appliedSearchMeta.aiChangedChipEntries || [])
       },
       app.defaultFilters?.maxBudget
@@ -1848,15 +1847,31 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
   ]);
   const displayedAiPrompt = useLiveAiSearchMeta ? effectiveAiPrompt : (appliedSearchMeta.aiPrompt || "");
   const displayedSearchChips = useLiveAiSearchMeta ? liveAiChips : activeSearchChips;
+  const orderedDisplayedSearchChips = useMemo(() => {
+    const chipEntriesByKey = new Map(displayedSearchChips.map((chip) => [chip.key, chip]));
+    const previousOrder = Array.isArray(searchChipRenderOrderRef.current) ? searchChipRenderOrderRef.current : [];
+    const nextOrder = previousOrder.filter((key) => chipEntriesByKey.has(key));
+    const existingKeys = new Set(nextOrder);
+
+    displayedSearchChips.forEach((chip) => {
+      if (existingKeys.has(chip.key)) return;
+      nextOrder.push(chip.key);
+      existingKeys.add(chip.key);
+    });
+
+    searchChipRenderOrderRef.current = nextOrder;
+    return nextOrder.map((key) => chipEntriesByKey.get(key)).filter(Boolean);
+  }, [displayedSearchChips]);
   const displayedAiChangedChipKeys = useMemo(() => {
+    const hasLiveAiPreview = useLiveAiSearchMeta && Boolean(aiLivePreview.filters);
     const activeKeys = useLiveAiSearchMeta
-      ? ((aiLivePreview.aiChangedChipKeys && aiLivePreview.aiChangedChipKeys.length > 0)
-        ? aiLivePreview.aiChangedChipKeys
+      ? (hasLiveAiPreview
+        ? (aiLivePreview.aiChangedChipKeys || [])
         : (appliedSearchMeta.aiChangedChipKeys || []))
       : (appliedSearchMeta.aiChangedChipKeys || []);
     const activeEntries = useLiveAiSearchMeta
-      ? ((aiLivePreview.aiChangedChipEntries && aiLivePreview.aiChangedChipEntries.length > 0)
-        ? aiLivePreview.aiChangedChipEntries
+      ? (hasLiveAiPreview
+        ? (aiLivePreview.aiChangedChipEntries || [])
         : (appliedSearchMeta.aiChangedChipEntries || []))
       : (appliedSearchMeta.aiChangedChipEntries || []);
     return Array.from(new Set([
@@ -2311,13 +2326,6 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
     setNoMatchSuggestions([]);
   }
 
-  function openAiGuideStep(stepId) {
-    if (!stepId) return;
-    setShowEditorAiPanel(true);
-    setSidePanelMode("ai");
-    setAiGuideStepRequest({ stepId, nonce: Date.now() });
-  }
-
   async function applyResultsSuggestion(suggestion) {
     if (!suggestion) return;
     const previousMeta = {
@@ -2362,6 +2370,37 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
     if (isAvailableListingsView) {
       transitionFromAvailableToResults();
     }
+  }
+
+  function handleSaveSearchAction() {
+    if (isGuest) {
+      openAuthPrompt("save");
+      return;
+    }
+    if (summaryPrompt) {
+      saveAiSearch({
+        prompt: summaryPrompt,
+        filters: summaryBaseFilters
+      });
+      return;
+    }
+    void saveCurrentFilters(summaryBaseFilters);
+  }
+
+  function handleWatchSearchAction() {
+    if (isGuest) {
+      openAuthPrompt("save");
+      return;
+    }
+    if (summaryPrompt) {
+      saveAiSearch({
+        prompt: summaryPrompt,
+        filters: summaryBaseFilters
+      });
+    } else {
+      void saveCurrentFilters(summaryBaseFilters);
+    }
+    app.pushToast("Bevakning aktiverad för sökningen.", "success");
   }
 
   const showPreferencesSummaryCard = !showSearchEditor
@@ -2460,9 +2499,9 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
             <SparklesIcon className="h-4 w-4 text-[#4f46e5]" />
             {summaryResultCount} lokaler matchar dina preferenser
           </p>
-          {displayedSearchChips.length > 0 ? (
+          {orderedDisplayedSearchChips.length > 0 ? (
             <div className="flex flex-wrap gap-2">
-              {displayedSearchChips.map((chip) => (
+              {orderedDisplayedSearchChips.map((chip) => (
                 displayedAiChangedChipKeys.includes(chip.key) ? (
                   <span key={chip.key} className="inline-flex items-center gap-1 rounded-full border border-[#4f46e5]/35 bg-[#eef0ff] px-2.5 py-1 text-xs font-semibold text-[#312e81]">
                     <SparklesIcon className="h-3.5 w-3.5 text-[#4f46e5]" />
@@ -2476,61 +2515,6 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
               ))}
             </div>
           ) : null}
-        </div>
-        <div className="flex flex-wrap items-center justify-end gap-2">
-          <button
-            type="button"
-            className="inline-flex h-[40px] items-center gap-1.5 rounded-xl border border-black/10 bg-white px-3 text-xs font-semibold text-ink-700 hover:bg-white"
-            onClick={() => {
-              if (isGuest) {
-                openAuthPrompt("save");
-                return;
-              }
-              if (summaryPrompt) {
-                saveAiSearch({
-                  prompt: summaryPrompt,
-                  filters: summaryBaseFilters
-                });
-                return;
-              }
-              void saveCurrentFilters(summaryBaseFilters);
-            }}
-          >
-            <SaveIcon className="h-3.5 w-3.5" />
-            {summaryPrompt ? "Spara AI-sökning" : "Spara sökfilter"}
-          </button>
-          <button
-            type="button"
-            className="inline-flex h-[40px] items-center gap-1.5 rounded-xl border border-black/10 bg-white px-3 text-xs font-semibold text-ink-700 hover:bg-white"
-            onClick={() => {
-              if (isGuest) {
-                openAuthPrompt("save");
-                return;
-              }
-              if (summaryPrompt) {
-                saveAiSearch({
-                  prompt: summaryPrompt,
-                  filters: summaryBaseFilters
-                });
-              } else {
-                void saveCurrentFilters(summaryBaseFilters);
-              }
-              app.pushToast("Bevakning aktiverad för sökningen.", "success");
-            }}
-          >
-            <EyeIcon className="h-3.5 w-3.5" />
-            Bevaka sökning
-          </button>
-          <button
-            type="button"
-            className="inline-flex h-[40px] items-center gap-1.5 rounded-xl border border-black/10 bg-white px-3 text-xs font-semibold text-ink-700 hover:bg-white"
-            onClick={() => {
-              void handleResetSearchResults();
-            }}
-          >
-            <ResetIcon className="h-3.5 w-3.5" />
-            Nollställ
-          </button>
         </div>
       </div>
       {summaryResultCount <= 3 ? (
@@ -2546,12 +2530,13 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                   <SparklesIcon className="h-4 w-4 text-[#4f46e5]" />
                   AI-förslag
                 </p>
-                <p className="text-sm font-semibold text-ink-900">{visibleResultsSuggestion.title}</p>
-                <p className="text-sm text-ink-700">{visibleResultsSuggestion.detail}</p>
+                <p className="text-sm font-semibold text-ink-900">
+                  {getSuggestionProblemText(visibleResultsSuggestion)}
+                </p>
               </div>
               <button
                 type="button"
-                className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[#4f46e5]/20 bg-white text-sm font-semibold text-[#312e81]"
+                className="inline-flex h-7 w-7 min-h-7 min-w-7 shrink-0 aspect-square items-center justify-center rounded-full border border-[#4f46e5]/20 bg-white p-0 text-sm font-semibold leading-none text-[#312e81]"
                 aria-label="Stäng AI-förslag"
                 onClick={() => setDismissedResultsSuggestionKey(visibleResultsSuggestion.key)}
               >
@@ -2574,13 +2559,6 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
               >
                 <SparklesIcon className="h-3.5 w-3.5" />
                 Redigera med AI
-              </button>
-              <button
-                type="button"
-                className="inline-flex h-[40px] items-center rounded-xl border border-black/10 bg-white px-3 text-xs font-semibold text-ink-700"
-                onClick={() => openAiGuideStep(visibleResultsSuggestion.targetStep)}
-              >
-                Redigera manuellt
               </button>
             </div>
           </div>
@@ -2929,6 +2907,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
       ) : null}
 
       {resultViewMode === "list" ? (visibleListings.length === 0 ? (
+        visibleResultsSuggestion ? null : (
         <div className="rounded-3xl border border-black/10 bg-white p-5">
           <p className="text-xl font-semibold text-ink-900">Ingen matchning just nu</p>
           <p className="mt-1 text-[1.05rem] text-ink-700">
@@ -2981,6 +2960,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
             </p>
           )}
         </div>
+        )
       ) : (
         <div className={`grid items-stretch gap-4 ${showInlineAiGuide ? "lg:grid-cols-2" : "lg:grid-cols-3"}`}>
           {visibleListings.map((listing) => (
@@ -3034,6 +3014,36 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                     <UploadIcon className="h-4 w-4 text-[#0f1930]" />
                     Ladda upp lokalprogram
                   </button>
+                  {showPreferencesSummaryCard ? (
+                    <>
+                      <button
+                        type="button"
+                        className="inline-flex h-10 items-center gap-2 rounded-2xl border border-black/10 bg-white px-4 text-xs font-semibold text-ink-700 hover:bg-white"
+                        onClick={handleSaveSearchAction}
+                      >
+                        <SaveIcon className="h-4 w-4" />
+                        {summaryPrompt ? "Spara AI-sökning" : "Spara sökfilter"}
+                      </button>
+                      <button
+                        type="button"
+                        className="inline-flex h-10 items-center gap-2 rounded-2xl border border-black/10 bg-white px-4 text-xs font-semibold text-ink-700 hover:bg-white"
+                        onClick={handleWatchSearchAction}
+                      >
+                        <EyeIcon className="h-4 w-4" />
+                        Bevaka sökning
+                      </button>
+                      <button
+                        type="button"
+                        className="inline-flex h-10 items-center gap-2 rounded-2xl border border-black/10 bg-white px-4 text-xs font-semibold text-ink-700 hover:bg-white"
+                        onClick={() => {
+                          void handleResetSearchResults();
+                        }}
+                      >
+                        <ResetIcon className="h-4 w-4" />
+                        Nollställ
+                      </button>
+                    </>
+                  ) : null}
                 </div>
               </div>
             </div>
