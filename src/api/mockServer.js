@@ -426,7 +426,7 @@ function parseFilters(params) {
     type: parsedTypes,
     minSize: params.get("minSize") || "",
     maxSize: params.get("maxSize") || "",
-    maxBudget: params.get("maxBudget") ? Number(params.get("maxBudget")) : 150000,
+    maxBudget: params.get("maxBudget") ? Number(params.get("maxBudget")) : "",
     teamSize: params.get("teamSize") || "",
     requirePrice: params.get("requirePrice") === "true",
     onlyBostadsratt: params.get("onlyBostadsratt") === "true",
