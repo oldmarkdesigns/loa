@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Analytics } from "@vercel/analytics/react";
 import ViewingRequestModal from "./components/app/ViewingRequestModal";
 import AppShell from "./components/layout/AppShell";
 import ToastStack from "./components/layout/ToastStack";
@@ -245,6 +246,7 @@ function App() {
   return (
     <AppProvider>
       <AppContent />
+      <Analytics />
     </AppProvider>
   );
 }
