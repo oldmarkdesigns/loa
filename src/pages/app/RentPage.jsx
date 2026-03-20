@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import ListingVisualCard from "../../components/app/ListingVisualCard";
-import MapListingPreviewCard from "../../components/app/MapListingPreviewCard";
 import ViewingRequestModal from "../../components/app/ViewingRequestModal";
 import FurnishingToggle from "../../components/app/FurnishingToggle";
 import AiGuidedAssistant from "../../components/app/AiGuidedAssistant";
@@ -260,6 +259,28 @@ function GoogleListingsMap({
   const [retryToken, setRetryToken] = useState(0);
   const [errorMessage, setErrorMessage] = useState("");
 
+  function inactiveMarkerIcon() {
+    if (!window.google?.maps) return null;
+    return {
+      url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
+        `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="32" viewBox="0 0 24 32"><path fill="#ea4335" stroke="#c5221f" stroke-width="1.4" d="M12 1.75C6.34 1.75 1.75 6.34 1.75 12c0 7.71 8.58 16.56 9.57 17.55a.97.97 0 0 0 1.36 0c.99-.99 9.57-9.84 9.57-17.55 0-5.66-4.59-10.25-10.25-10.25Z"/><circle cx="12" cy="12" r="4.1" fill="#ffffff"/></svg>`
+      )}`,
+      scaledSize: new window.google.maps.Size(20, 28),
+      anchor: new window.google.maps.Point(10, 28)
+    };
+  }
+
+  function activeMarkerIcon() {
+    if (!window.google?.maps) return null;
+    return {
+      url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
+        `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="32" viewBox="0 0 24 32"><path fill="#0f1930" stroke="#0b1428" stroke-width="1.4" d="M12 1.75C6.34 1.75 1.75 6.34 1.75 12c0 7.71 8.58 16.56 9.57 17.55a.97.97 0 0 0 1.36 0c.99-.99 9.57-9.84 9.57-17.55 0-5.66-4.59-10.25-10.25-10.25Z"/><circle cx="12" cy="12" r="4.1" fill="#ffffff"/></svg>`
+      )}`,
+      scaledSize: new window.google.maps.Size(30, 42),
+      anchor: new window.google.maps.Point(15, 42)
+    };
+  }
+
   useEffect(() => {
     markerClickRef.current = onMarkerClick;
   }, [onMarkerClick]);
@@ -267,22 +288,6 @@ function GoogleListingsMap({
   useEffect(() => {
     closeSelectedListingRef.current = onCloseSelectedListing;
   }, [onCloseSelectedListing]);
-
-  function isMapInFullscreen() {
-    if (typeof document === "undefined") return false;
-    const fullscreenEl = document.fullscreenElement;
-    if (!fullscreenEl || !containerRef.current) return false;
-    return fullscreenEl === containerRef.current || containerRef.current.contains(fullscreenEl) || fullscreenEl.contains(containerRef.current);
-  }
-
-  function escapeHtml(value) {
-    return String(value || "")
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll("\"", "&quot;")
-      .replaceAll("'", "&#39;");
-  }
 
   useEffect(() => {
     let cancelled = false;
@@ -307,7 +312,7 @@ function GoogleListingsMap({
             disableDefaultUI: false,
             zoomControl: true,
             streetViewControl: true,
-            fullscreenControl: true,
+            fullscreenControl: false,
             mapTypeControl: false,
             clickableIcons: false,
             gestureHandling: "greedy"
@@ -337,7 +342,8 @@ function GoogleListingsMap({
             marker = new maps.Marker({
               map: mapRef.current,
               position,
-              title: listing.title
+              title: listing.title,
+              icon: inactiveMarkerIcon()
             });
             marker.addListener("click", () => {
               suppressMapClickCloseRef.current = true;
@@ -384,46 +390,34 @@ function GoogleListingsMap({
   }, [listings, retryToken]);
 
   useEffect(() => {
-    const maps = mapsRef.current;
-    const map = mapRef.current;
-    if (!maps || !map) return;
-
-    if (!selectedListing || !isMapInFullscreen()) {
-      infoWindowRef.current?.close();
-      return;
-    }
-
-    const marker = markersByIdRef.current.get(String(selectedListing.id));
-    if (!marker) return;
-
-    if (!infoWindowRef.current) {
-      infoWindowRef.current = new maps.InfoWindow({
-        maxWidth: 460,
-        disableAutoPan: false,
-        disableCloseButton: true
-      });
-    }
-
-    const title = escapeHtml(selectedListing.title);
-    const district = escapeHtml(selectedListing.district);
-    const address = escapeHtml(selectedListing.address);
-    const image = escapeHtml(selectedListing.image);
-    const listingHref = `/app/listings/${encodeURIComponent(selectedListing.id)}`;
-    const addressLine = escapeHtml([address, district].filter(Boolean).join(", "));
-
-    infoWindowRef.current.setContent(`
-      <a href="${listingHref}" style="display:block;width:280px;max-width:calc(100vw - 80px);font-family:inherit;color:#182338;text-decoration:none;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 16px 34px rgba(15,25,48,0.16);">
-        <img src="${image}" alt="${title}" style="width:100%;height:112px;object-fit:cover;" />
-        <div style="display:flex;align-items:center;gap:8px;padding:12px 14px 14px 14px;">
-          <span style="display:inline-flex;width:16px;height:16px;color:#6b7280;flex:0 0 auto;">&#9679;</span>
-          <div style="font-size:14px;font-weight:500;line-height:1.35;color:#111827;">${addressLine}</div>
-        </div>
-      </a>
-    `);
-    infoWindowRef.current.open({
-      map,
-      anchor: marker
+    markersByIdRef.current.forEach((marker) => {
+      const markerListingId = String(marker?.__listing?.id || "");
+      const isActive = Boolean(selectedListing && markerListingId === String(selectedListing.id));
+      marker.setIcon(isActive ? activeMarkerIcon() : inactiveMarkerIcon());
+      marker.setZIndex(isActive ? 99 : 1);
     });
+  }, [selectedListing]);
+
+  function handleCycleSelectedListing(direction) {
+    if (!Array.isArray(listings) || listings.length === 0) return;
+    const currentId = String(selectedListing?.id || "");
+    const currentIndex = listings.findIndex((item) => String(item.id) === currentId);
+    const safeIndex = currentIndex >= 0 ? currentIndex : 0;
+    const nextIndex = (safeIndex + direction + listings.length) % listings.length;
+    const nextListing = listings[nextIndex];
+    if (!nextListing) return;
+    markerClickRef.current?.(nextListing);
+    const marker = markersByIdRef.current.get(String(nextListing.id));
+    if (marker && mapRef.current) {
+      const markerPosition = marker.getPosition?.();
+      if (markerPosition) {
+        mapRef.current.panTo(markerPosition);
+      }
+    }
+  }
+
+  useEffect(() => {
+    infoWindowRef.current?.close();
   }, [selectedListing]);
 
   useEffect(() => {
@@ -464,10 +458,44 @@ function GoogleListingsMap({
           </div>
         </div>
       ) : null}
-      {selectedListing && onOpenListing && onToggleShortlist && !isMapInFullscreen() ? (
-        <div className="pointer-events-none absolute inset-x-3 bottom-3 z-20 sm:inset-x-4 sm:bottom-4">
-          <div className="pointer-events-auto relative mx-auto w-full max-w-[320px]">
-            <MapListingPreviewCard listing={selectedListing} onOpen={onOpenListing} />
+      {selectedListing && onOpenListing && onToggleShortlist ? (
+        <div className="pointer-events-none absolute bottom-3 left-3 z-20 sm:bottom-4 sm:left-4">
+          <div className="flex items-start gap-2">
+            <div className="pointer-events-auto w-[min(420px,calc(100vw-6rem))]">
+              <ListingVisualCard
+                listing={selectedListing}
+                shortlisted={shortlistedIds?.has?.(selectedListing.id)}
+                onOpenListing={onOpenListing}
+                onToggleShortlist={onToggleShortlist}
+                showMatchChip={showMatchChip}
+              />
+            </div>
+            <div className="pointer-events-auto flex flex-col gap-2">
+              <button
+                type="button"
+                aria-label="Stäng objekt"
+                className="inline-flex h-9 w-9 min-h-9 min-w-9 aspect-square items-center justify-center rounded-full border border-black/10 bg-white p-0 text-lg font-semibold leading-none text-ink-700 hover:bg-[#eef3fa]"
+                onClick={() => onCloseSelectedListing?.()}
+              >
+                ×
+              </button>
+              <button
+                type="button"
+                aria-label="Föregående objekt"
+                className="inline-flex h-9 w-9 min-h-9 min-w-9 aspect-square items-center justify-center rounded-full border border-black/10 bg-white p-0 text-base font-semibold leading-none text-ink-700 hover:bg-[#eef3fa]"
+                onClick={() => handleCycleSelectedListing(-1)}
+              >
+                ‹
+              </button>
+              <button
+                type="button"
+                aria-label="Nästa objekt"
+                className="inline-flex h-9 w-9 min-h-9 min-w-9 aspect-square items-center justify-center rounded-full border border-black/10 bg-white p-0 text-base font-semibold leading-none text-ink-700 hover:bg-[#eef3fa]"
+                onClick={() => handleCycleSelectedListing(1)}
+              >
+                ›
+              </button>
+            </div>
           </div>
         </div>
       ) : null}
@@ -2710,7 +2738,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="space-y-1.5 lg:pr-[25rem]">
           <p className="inline-flex min-h-[36px] items-center gap-1.5 rounded-full border border-black/10 bg-white px-3 py-1 text-sm font-semibold text-ink-800">
-            <SparklesIcon className="h-4 w-4 text-[#4f46e5]" />
+            {hasBegunSearch ? <SparklesIcon className="h-4 w-4 text-[#4f46e5]" /> : null}
             {hasBegunSearch ? `${summaryResultCount} lokaler matchar dina preferenser` : `${summaryResultCount} lediga lokaler`}
           </p>
           {orderedDisplayedSearchChips.length > 0 ? (
@@ -3691,7 +3719,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
 
                   <div data-scroll-top-scope="results" className="min-h-0 flex-1 space-y-0 overflow-y-auto overscroll-contain pb-8 lg:h-full lg:pr-1 lg:pb-16">
                     {preferencesSummaryCard ? (
-                      <div className="sticky top-0 z-20 bg-white pb-6">
+                      <div className="sticky top-0 z-20 bg-white pb-4">
                         <div className="relative">
                           {preferencesSummaryCard}
                           <div className={`pointer-events-none absolute right-0 hidden lg:flex pr-4 ${
@@ -3716,7 +3744,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
               ) : (
                 <div className="min-h-0 h-full overflow-y-auto overscroll-contain pb-8">
                   {preferencesSummaryCard ? (
-                    <div className="sticky top-0 z-20 bg-white pb-6">
+                    <div className="sticky top-0 z-20 bg-white pb-4">
                       <div className="relative">
                         {preferencesSummaryCard}
                         <div className={`pointer-events-none absolute right-0 hidden lg:flex pr-4 ${

@@ -272,7 +272,7 @@ function heroMarkerIcon(featured) {
   };
 }
 
-function HeroMapWidget({ compact = false, expandOnHover = true, className = "" }) {
+function HeroMapWidget({ compact = false, expandOnHover = true, className = "", listings = null }) {
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
   const mapsRef = useRef(null);
@@ -281,10 +281,14 @@ function HeroMapWidget({ compact = false, expandOnHover = true, className = "" }
   const [mapStatus, setMapStatus] = useState("loading");
   const [selectedListing, setSelectedListing] = useState(null);
 
-  const featuredListings = useMemo(
-    () => [...baseListingDataset].sort((left, right) => (right.verified - left.verified) || (right.score - left.score)).slice(0, 4),
-    []
-  );
+  const featuredListings = useMemo(() => {
+    if (Array.isArray(listings) && listings.length > 0) {
+      return listings.slice(0, 8);
+    }
+    return [...baseListingDataset]
+      .sort((left, right) => (right.verified - left.verified) || (right.score - left.score))
+      .slice(0, 4);
+  }, [listings]);
 
   useEffect(() => {
     let cancelled = false;
@@ -309,7 +313,7 @@ function HeroMapWidget({ compact = false, expandOnHover = true, className = "" }
             keyboardShortcuts: false,
             zoomControl: true,
             streetViewControl: compact,
-            fullscreenControl: compact,
+            fullscreenControl: false,
             mapTypeControl: false,
             gestureHandling: "greedy",
             styles: undefined
@@ -380,11 +384,11 @@ function HeroMapWidget({ compact = false, expandOnHover = true, className = "" }
     : `group relative flex w-full flex-col overflow-visible text-left ${className}`.trim();
 
   const mapShellClassName = compact
-    ? "relative mt-3 flex-1 overflow-hidden"
+    ? "relative flex-1 overflow-hidden"
     : "relative mt-3 overflow-hidden";
 
   const mapViewportClassName = compact
-    ? "relative h-full min-h-[13.5rem] overflow-hidden rounded-[24px] bg-[#edf2f6]"
+    ? "relative h-full overflow-hidden bg-[#edf2f6]"
     : "relative h-[clamp(180px,calc(100vh-33rem),240px)] overflow-hidden rounded-[20px] bg-[#edf2f6]";
 
   return (
@@ -393,23 +397,17 @@ function HeroMapWidget({ compact = false, expandOnHover = true, className = "" }
         <div
           className={
             compact
-              ? "flex h-full min-h-[24.5rem] flex-col overflow-hidden rounded-[30px] border border-black/10 bg-white p-4"
+              ? "flex h-full min-h-[24.5rem] flex-col overflow-hidden rounded-[30px] border border-black/10 bg-white p-0"
               : "overflow-hidden rounded-[28px] border border-black/10 bg-white p-4"
           }
         >
-          {compact ? (
+          {!compact ? (
             <div>
               <span className="inline-flex h-8 items-center gap-1 rounded-full border border-[#0f1930]/8 bg-[#eef2f6] px-2.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#5c6778]">
                 Utvalda objekt
               </span>
             </div>
-          ) : (
-            <div>
-              <span className="inline-flex h-8 items-center gap-1 rounded-full border border-[#0f1930]/8 bg-[#eef2f6] px-2.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#5c6778]">
-                Utvalda objekt
-              </span>
-            </div>
-          )}
+          ) : null}
 
           <div className={mapShellClassName}>
           <div className={`pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.95),_rgba(238,242,246,0.3)_42%,_transparent_70%)] ${compact ? "" : ""}`} />
@@ -1017,7 +1015,20 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
               </div>
 
               <div className="grid items-stretch gap-4 lg:grid-cols-3">
-                <HeroMapWidget compact expandOnHover={false} />
+                {(() => {
+                  const popularGridListings = group.listings.slice(1, 6);
+                  const canonicalPopularMapListings = popularGridListings
+                    .map((listing, listingIndex) => resolvePopularListing(listing, listingIndex + 1))
+                    .filter(Boolean);
+
+                  return (
+                    <HeroMapWidget
+                      compact
+                      expandOnHover={false}
+                      listings={canonicalPopularMapListings}
+                    />
+                  );
+                })()}
                 {group.listings.slice(1, 6).map((listing, listingIndex) => {
                   const favoriteListingId = resolvePopularListingId(listing, listingIndex + 1);
                   const canonicalListing = resolvePopularListing(listing, listingIndex + 1);

@@ -187,7 +187,7 @@ function ListingAreaGoogleMap({ lat, lng, title }) {
             disableDefaultUI: false,
             zoomControl: true,
             streetViewControl: true,
-            fullscreenControl: true,
+            fullscreenControl: false,
             mapTypeControl: false,
             clickableIcons: false,
             gestureHandling: "greedy"
@@ -260,7 +260,7 @@ function ListingStreetView({ lat, lng }) {
             pov: { heading: 40, pitch: 0 },
             zoom: 1,
             addressControl: false,
-            fullscreenControl: true,
+            fullscreenControl: false,
             linksControl: true,
             panControl: true
           });
