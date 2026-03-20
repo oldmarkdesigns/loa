@@ -266,6 +266,7 @@ function AiGuidedAssistant({
   defaultResultCount,
   suggestionChipLabel = "",
   requestedStepRequest = null,
+  forceStepId = null,
   showModeSwitch = false,
   filterModeActive = false,
   onToggleFilterMode
@@ -275,11 +276,17 @@ function AiGuidedAssistant({
   const [showCoreNextHint, setShowCoreNextHint] = useState(false);
   const [skippedSteps, setSkippedSteps] = useState([]);
   const [answers, setAnswers] = useState(() => buildAnswersFromInitialState(initialFilters, initialAmenityQuery, initialFurnishedFilter));
-  const [activeStep, setActiveStep] = useState(() => resolveInitialStep({
-    ...buildAnswersFromInitialState(initialFilters, initialAmenityQuery, initialFurnishedFilter)
-  }));
+  const [activeStep, setActiveStep] = useState(() => {
+    if (forceStepId && questionOrder.includes(forceStepId)) {
+      return forceStepId;
+    }
+    return resolveInitialStep({
+      ...buildAnswersFromInitialState(initialFilters, initialAmenityQuery, initialFurnishedFilter)
+    });
+  });
   const lastPreviewSignatureRef = useRef("");
   const activeQuestion = activeStep;
+  const landingCoreView = forceStepId === "core" && activeQuestion === "core";
 
   const prompt = useMemo(() => composePrompt(answers), [answers]);
   const amenityQuery = useMemo(() => answers.amenities.join(", "), [answers.amenities]);
@@ -388,6 +395,12 @@ function AiGuidedAssistant({
     if (!questionOrder.includes(requestedStepRequest.stepId)) return;
     setActiveStep(requestedStepRequest.stepId);
   }, [requestedStepRequest]);
+
+  useEffect(() => {
+    if (!forceStepId) return;
+    if (!questionOrder.includes(forceStepId)) return;
+    setActiveStep(forceStepId);
+  }, [forceStepId]);
 
   function nextQuestion() {
     if (!activeQuestion) {
@@ -897,13 +910,15 @@ function AiGuidedAssistant({
 
       <div className="mt-3">
         <div className="mb-2 flex items-center gap-3">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-700">Din sökning</p>
-          <span aria-hidden="true" className="h-3 w-px bg-black/15" />
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-700">
+            {landingCoreView ? "Grundinställningar" : "Din sökning"}
+          </p>
+          {!landingCoreView ? <span aria-hidden="true" className="h-3 w-px bg-black/15" /> : null}
           <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-600">
             {activeQuestion ? (stepLabels[activeQuestion] || `Steg ${currentStepNumber} av ${totalSteps}`) : "Klar för sökning"}
           </p>
         </div>
-        {hasSummaryGroups || suggestionChipLabel ? (
+        {!landingCoreView && (hasSummaryGroups || suggestionChipLabel) ? (
           <div className="mb-3">
             <div className="mt-1 flex flex-wrap gap-2 search-summary-dissolve-in">
               {suggestionChipLabel ? (

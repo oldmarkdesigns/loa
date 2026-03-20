@@ -95,6 +95,13 @@ const amenityDefinitions = [
   { label: "Säkerhetsdörr", icon: ShieldIcon, aliases: ["säkerhetsdörr", "säkerhet", "security", "secure"] }
 ];
 
+function normalizeMatchValue(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function getDistrictInsight(district) {
   return districtInsights[district] || {
     center: { lat: 59.3293, lng: 18.0686 },
@@ -419,9 +426,33 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
     [insight.center.lat, insight.center.lng]
   );
 
+  const resolvedFavoriteListingId = useMemo(() => {
+    if (!listing) return null;
+    const ownId = String(listing.id || "").trim();
+    const ownAddress = normalizeMatchValue(listing.address);
+    const ownTitle = normalizeMatchValue(listing.title);
+    const ownDistrict = normalizeMatchValue(listing.district);
+
+    const matched = Array.isArray(app.listings)
+      ? app.listings.find((item) => {
+          const itemAddress = normalizeMatchValue(item?.address);
+          const itemTitle = normalizeMatchValue(item?.title);
+          if ((ownAddress && itemAddress === ownAddress) || (ownTitle && itemTitle === ownTitle)) {
+            return true;
+          }
+          if (ownDistrict && normalizeMatchValue(item?.district) === ownDistrict) {
+            return (ownTitle && itemTitle.includes(ownTitle)) || (ownAddress && itemAddress.includes(ownAddress));
+          }
+          return false;
+        })
+      : null;
+
+    return matched?.id || ownId || null;
+  }, [app.listings, listing]);
+
   const isSaved = useMemo(
-    () => Boolean((app.favorites || []).some((entry) => String(entry.listingId) === String(listing?.id))),
-    [app.favorites, listing?.id]
+    () => Boolean((app.favorites || []).some((entry) => String(entry.listingId) === String(resolvedFavoriteListingId))),
+    [app.favorites, resolvedFavoriteListingId]
   );
 
   const images = useMemo(() => {
@@ -448,14 +479,19 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
   }, [listingId, isGalleryView]);
 
   const actionButtonClass = "inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-black/10 bg-white px-3 text-xs font-semibold text-ink-700 hover:bg-white";
+  const saveActionButtonClass = `inline-flex min-h-[40px] items-center gap-1.5 rounded-xl px-3 text-xs font-semibold transition ${
+    isSaved
+      ? "border border-[#0f1930] bg-[#0f1930] text-white hover:bg-[#16233f]"
+      : "border border-black/10 bg-white text-ink-700 hover:bg-white"
+  }`;
 
   function handleToggleSave() {
-    if (!listing?.id) return;
+    if (!resolvedFavoriteListingId) return;
     if (isGuest) {
       onRequireAuth?.("login", "renter");
       return;
     }
-    app.toggleFavorite?.(listing.id);
+    app.toggleFavorite?.(resolvedFavoriteListingId);
   }
 
   function handleExportPdf() {
@@ -566,8 +602,14 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                 <PdfIcon className="h-3.5 w-3.5" />
                 PDF
               </button>
-              <button type="button" className={actionButtonClass} onClick={handleToggleSave}>
-                <StarIcon className={`h-3.5 w-3.5 ${isSaved ? "fill-current text-[#0f1930]" : ""}`} />
+              <button
+                type="button"
+                className={saveActionButtonClass}
+                onClick={handleToggleSave}
+                title={isSaved ? "Sparad" : "Spara"}
+                aria-label={isSaved ? "Sparad" : "Spara"}
+              >
+                <StarIcon className={`h-3.5 w-3.5 ${isSaved ? "fill-current" : ""}`} />
                 {isSaved ? "Sparad" : "Spara"}
               </button>
               <button type="button" className={actionButtonClass} onClick={handleShare}>
@@ -641,8 +683,14 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                 <PdfIcon className="h-3.5 w-3.5" />
                 PDF
               </button>
-              <button type="button" className={actionButtonClass} onClick={handleToggleSave}>
-                <StarIcon className={`h-3.5 w-3.5 ${isSaved ? "fill-current text-[#0f1930]" : ""}`} />
+              <button
+                type="button"
+                className={saveActionButtonClass}
+                onClick={handleToggleSave}
+                title={isSaved ? "Sparad" : "Spara"}
+                aria-label={isSaved ? "Sparad" : "Spara"}
+              >
+                <StarIcon className={`h-3.5 w-3.5 ${isSaved ? "fill-current" : ""}`} />
                 {isSaved ? "Sparad" : "Spara"}
               </button>
               <button type="button" className={actionButtonClass} onClick={handleShare}>

@@ -158,7 +158,16 @@ function AppContent() {
   let content = null;
 
   if (pathname === "/") {
-    content = <LandingPage user={app.user} listings={app.listings} onOpenAuthOverlay={openAuthOverlay} onLogout={app.logout} />;
+    content = (
+      <LandingPage
+        user={app.user}
+        listings={app.listings}
+        favorites={app.favorites}
+        onToggleFavorite={app.toggleFavorite}
+        onOpenAuthOverlay={openAuthOverlay}
+        onLogout={app.logout}
+      />
+    );
   } else if (pathname === "/forgot-password") {
     content = <ForgotPasswordPage />;
   } else if (pathname === "/onboarding") {
@@ -184,7 +193,16 @@ function AppContent() {
           </AppShell>
         );
       } else {
-        content = <LandingPage user={app.user} listings={app.listings} onOpenAuthOverlay={openAuthOverlay} onLogout={app.logout} />;
+        content = (
+          <LandingPage
+            user={app.user}
+            listings={app.listings}
+            favorites={app.favorites}
+            onToggleFavorite={app.toggleFavorite}
+            onOpenAuthOverlay={openAuthOverlay}
+            onLogout={app.logout}
+          />
+        );
       }
     } else {
     let appRouteContent = null;
@@ -219,7 +237,16 @@ function AppContent() {
       );
     }
   } else {
-    content = <LandingPage user={app.user} listings={app.listings} onOpenAuthOverlay={openAuthOverlay} onLogout={app.logout} />;
+    content = (
+      <LandingPage
+        user={app.user}
+        listings={app.listings}
+        favorites={app.favorites}
+        onToggleFavorite={app.toggleFavorite}
+        onOpenAuthOverlay={openAuthOverlay}
+        onLogout={app.logout}
+      />
+    );
   }
 
   return (

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { navigateTo } from "../lib/router";
 import MarketingNavLinks from "../components/layout/MarketingNavLinks";
 import ListingVisualCard from "../components/app/ListingVisualCard";
+import MapListingPreviewCard from "../components/app/MapListingPreviewCard";
 import { popularListingFallbackKey } from "../lib/popularListingFallback";
 import {
   BalconyIcon,
@@ -36,6 +37,17 @@ import featureImageA from "../../Assets/Object Images/Inspiration.jpeg";
 import featureImageB from "../../Assets/Object Images/_ (1).jpeg";
 import processImage from "../../Assets/Object Images/_ (2).jpeg";
 import faqImage from "../../Assets/Object Images/_ (3).jpeg";
+
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+const HERO_GOOGLE_MAPS_SCRIPT_ID = "google-maps-hero-sdk-script";
+const heroDistrictGeo = {
+  Solna: { lat: 59.3608, lng: 18.0003 },
+  Norrmalm: { lat: 59.3346, lng: 18.0628 },
+  Vasastan: { lat: 59.3458, lng: 18.0344 },
+  Östermalm: { lat: 59.3385, lng: 18.0916 },
+  Kungsholmen: { lat: 59.3319, lng: 18.0418 },
+  Södermalm: { lat: 59.3148, lng: 18.0632 }
+};
 
 const processSteps = [
   {
@@ -173,6 +185,275 @@ const popularGroups = [
   }
 ];
 
+function hashSeed(value) {
+  let hash = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash * 31 + value.charCodeAt(index)) >>> 0;
+  }
+  return hash;
+}
+
+function heroMarkerGeoForListing(listing) {
+  const base = heroDistrictGeo[listing.district] || { lat: 59.3293, lng: 18.0686 };
+  const seed = hashSeed(String(listing.id || listing.title || "listing"));
+  const jitterLat = ((seed % 9) - 4) * 0.001;
+  const jitterLng = (((seed >> 4) % 9) - 4) * 0.001;
+  return {
+    lat: base.lat + jitterLat,
+    lng: base.lng + jitterLng
+  };
+}
+
+function loadHeroGoogleMaps(apiKey) {
+  if (window.google?.maps) {
+    return Promise.resolve(window.google.maps);
+  }
+
+  if (window.__googleMapsHeroPromise) {
+    return window.__googleMapsHeroPromise;
+  }
+
+  window.__googleMapsHeroPromise = new Promise((resolve, reject) => {
+    const existingScript = document.getElementById(HERO_GOOGLE_MAPS_SCRIPT_ID);
+    if (existingScript) {
+      existingScript.remove();
+    }
+
+    const previousAuthFailure = window.gm_authFailure;
+    const timeoutId = window.setTimeout(() => {
+      reject(new Error("Google Maps timeout."));
+    }, 12000);
+
+    function cleanup() {
+      window.clearTimeout(timeoutId);
+      window.gm_authFailure = previousAuthFailure;
+    }
+
+    window.gm_authFailure = () => {
+      cleanup();
+      reject(new Error("Google Maps API-nyckeln nekades."));
+    };
+
+    const script = document.createElement("script");
+    script.id = HERO_GOOGLE_MAPS_SCRIPT_ID;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&v=weekly`;
+    script.async = true;
+    script.defer = true;
+    script.onload = () => {
+      cleanup();
+      if (window.google?.maps) {
+        resolve(window.google.maps);
+      } else {
+        reject(new Error("Google Maps SDK kunde inte initieras."));
+      }
+    };
+    script.onerror = () => {
+      cleanup();
+      reject(new Error("Kunde inte ladda Google Maps SDK."));
+    };
+    document.head.appendChild(script);
+  }).catch((error) => {
+    window.__googleMapsHeroPromise = null;
+    throw error;
+  });
+
+  return window.__googleMapsHeroPromise;
+}
+
+function heroMarkerIcon(featured) {
+  const fill = featured ? "%23d7c086" : "%230f1930";
+  const stroke = featured ? "%23b08a2e" : "%23ffffff";
+  return {
+    url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="32" viewBox="0 0 24 32"><path fill="${fill}" stroke="${stroke}" stroke-width="1.5" d="M12 1.75C6.34 1.75 1.75 6.34 1.75 12c0 7.71 8.58 16.56 9.57 17.55a.97.97 0 0 0 1.36 0c.99-.99 9.57-9.84 9.57-17.55 0-5.66-4.59-10.25-10.25-10.25Z"/><circle cx="12" cy="12" r="4.1" fill="${featured ? "%23fff8e2" : "%23ffffff"}"/></svg>`
+    )}`,
+    scaledSize: new window.google.maps.Size(featured ? 24 : 20, featured ? 32 : 28),
+    anchor: new window.google.maps.Point(featured ? 12 : 10, featured ? 32 : 28)
+  };
+}
+
+function HeroMapWidget({ compact = false, expandOnHover = true, className = "" }) {
+  const mapContainerRef = useRef(null);
+  const mapRef = useRef(null);
+  const mapsRef = useRef(null);
+  const markersRef = useRef([]);
+  const boundsRef = useRef(null);
+  const [mapStatus, setMapStatus] = useState("loading");
+  const [selectedListing, setSelectedListing] = useState(null);
+
+  const featuredListings = useMemo(
+    () => [...baseListingDataset].sort((left, right) => (right.verified - left.verified) || (right.score - left.score)).slice(0, 4),
+    []
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function setupMap() {
+      if (!GOOGLE_MAPS_API_KEY || !mapContainerRef.current) {
+        setMapStatus("fallback");
+        return;
+      }
+
+      try {
+        const maps = await loadHeroGoogleMaps(GOOGLE_MAPS_API_KEY);
+        if (cancelled || !mapContainerRef.current) return;
+        mapsRef.current = maps;
+
+        if (!mapRef.current) {
+          mapRef.current = new maps.Map(mapContainerRef.current, {
+            center: { lat: 59.3293, lng: 18.0686 },
+            zoom: 11,
+            disableDefaultUI: false,
+            clickableIcons: false,
+            keyboardShortcuts: false,
+            zoomControl: true,
+            streetViewControl: compact,
+            fullscreenControl: compact,
+            mapTypeControl: false,
+            gestureHandling: "greedy",
+            styles: undefined
+          });
+          mapRef.current.addListener("click", () => {
+            setSelectedListing(null);
+          });
+        }
+
+        markersRef.current.forEach((marker) => marker.setMap(null));
+        markersRef.current = featuredListings.map((listing) => {
+          const marker = new maps.Marker({
+            map: mapRef.current,
+            position: heroMarkerGeoForListing(listing),
+            title: listing.title
+          });
+          marker.addListener("click", () => {
+            setSelectedListing(listing);
+          });
+          return marker;
+        });
+
+        const bounds = new maps.LatLngBounds();
+        featuredListings.forEach((listing) => {
+          bounds.extend(heroMarkerGeoForListing(listing));
+        });
+        boundsRef.current = bounds;
+
+        window.requestAnimationFrame(() => {
+          if (!mapRef.current || !mapsRef.current || cancelled) return;
+          mapsRef.current.event.trigger(mapRef.current, "resize");
+          mapRef.current.fitBounds(bounds, compact ? 40 : 54);
+          mapsRef.current.event.addListenerOnce(mapRef.current, "idle", () => {
+            if (!cancelled) {
+              setMapStatus("ready");
+            }
+          });
+        });
+      } catch {
+        if (!cancelled) {
+          setMapStatus("fallback");
+        }
+      }
+    }
+
+    setupMap();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [featuredListings]);
+
+  useEffect(() => {
+    if (!mapRef.current || !mapsRef.current || !boundsRef.current) return undefined;
+
+    function handleWindowResize() {
+      if (!mapRef.current || !mapsRef.current || !boundsRef.current) return;
+      mapsRef.current.event.trigger(mapRef.current, "resize");
+      mapRef.current.fitBounds(boundsRef.current, compact ? 40 : 54);
+    }
+
+    window.addEventListener("resize", handleWindowResize);
+    return () => window.removeEventListener("resize", handleWindowResize);
+  }, [compact]);
+
+  const wrapperClassName = compact
+    ? `group relative flex h-full w-full flex-col text-left ${className}`.trim()
+    : `group relative flex w-full flex-col overflow-visible text-left ${className}`.trim();
+
+  const mapShellClassName = compact
+    ? "relative mt-3 flex-1 overflow-hidden"
+    : "relative mt-3 overflow-hidden";
+
+  const mapViewportClassName = compact
+    ? "relative h-full min-h-[13.5rem] overflow-hidden rounded-[24px] bg-[#edf2f6]"
+    : "relative h-[clamp(180px,calc(100vh-33rem),240px)] overflow-hidden rounded-[20px] bg-[#edf2f6]";
+
+  return (
+    <div className={`relative ${compact ? "h-full overflow-hidden" : "w-full overflow-visible"}`.trim()}>
+      <div className={wrapperClassName}>
+        <div
+          className={
+            compact
+              ? "flex h-full min-h-[24.5rem] flex-col overflow-hidden rounded-[30px] border border-black/10 bg-white p-4"
+              : "overflow-hidden rounded-[28px] border border-black/10 bg-white p-4"
+          }
+        >
+          {compact ? (
+            <div>
+              <span className="inline-flex h-8 items-center gap-1 rounded-full border border-[#0f1930]/8 bg-[#eef2f6] px-2.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#5c6778]">
+                Utvalda objekt
+              </span>
+            </div>
+          ) : (
+            <div>
+              <span className="inline-flex h-8 items-center gap-1 rounded-full border border-[#0f1930]/8 bg-[#eef2f6] px-2.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#5c6778]">
+                Utvalda objekt
+              </span>
+            </div>
+          )}
+
+          <div className={mapShellClassName}>
+          <div className={`pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.95),_rgba(238,242,246,0.3)_42%,_transparent_70%)] ${compact ? "" : ""}`} />
+          <div className={mapViewportClassName}>
+            <div ref={mapContainerRef} className="h-full w-full" />
+
+            {mapStatus !== "ready" ? (
+              <div className="absolute inset-0 bg-[linear-gradient(140deg,rgba(255,255,255,0.9),rgba(243,246,249,0.68))]">
+                <div className="absolute inset-0 opacity-60 [background-image:linear-gradient(rgba(15,25,48,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(15,25,48,0.06)_1px,transparent_1px)] [background-position:center_center] [background-size:36px_36px]" />
+                <div className="absolute left-[18%] top-[10%] h-[2px] w-[55%] rotate-[18deg] rounded-full bg-[#bfd0de]" />
+                <div className="absolute left-[15%] top-[44%] h-[2px] w-[68%] -rotate-[12deg] rounded-full bg-[#bfd0de]" />
+                <div className="absolute left-[42%] top-[18%] h-[56%] w-[2px] rotate-[9deg] rounded-full bg-[#cddae5]" />
+                <div className="absolute left-[60%] top-[22%] h-[48%] w-[2px] -rotate-[16deg] rounded-full bg-[#cddae5]" />
+                {featuredListings.map((listing, index) => (
+                  <div
+                    key={listing.id}
+                    className="absolute h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2"
+                    style={{
+                      left: `${44 + (index % 2) * 14}%`,
+                      top: `${28 + index * 14}%`,
+                      backgroundColor: index < 2 ? "#d7c086" : "#0f1930",
+                      borderColor: index < 2 ? "#b08a2e" : "#ffffff",
+                      boxShadow: index < 2 ? "0 0 0 6px rgba(215,192,134,0.18)" : "0 0 0 6px rgba(15,25,48,0.08)"
+                    }}
+                  />
+                ))}
+              </div>
+            ) : null}
+          </div>
+
+          {selectedListing ? (
+            <div className="pointer-events-none absolute inset-x-3 bottom-3 z-20 sm:inset-x-4 sm:bottom-4">
+              <div className="pointer-events-auto mx-auto w-full max-w-[320px]">
+                <MapListingPreviewCard listing={selectedListing} onOpen={(listing) => navigateTo(`/app/listings/${encodeURIComponent(listing.id)}`)} />
+              </div>
+            </div>
+          ) : null}
+        </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const guideCards = [
   {
     title: "Jämför olika lokaler",
@@ -280,13 +561,15 @@ function applyAmenityAndFurnishedFilters(listings, amenityQuery, furnishedFilter
   });
 }
 
-function LandingPage({ user, onOpenAuthOverlay, onLogout, listings = [] }) {
+function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay, onLogout, listings = [] }) {
   const headerRef = useRef(null);
+  const heroSectionRef = useRef(null);
   const processLeftRef = useRef(null);
   const processCardRef = useRef(null);
   const faqQuestionsRef = useRef(null);
   const faqCardRef = useRef(null);
   const [showScrollToTopButton, setShowScrollToTopButton] = useState(false);
+  const [showHeroScrollCue, setShowHeroScrollCue] = useState(true);
   const [isNavScrolled, setIsNavScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
@@ -309,6 +592,10 @@ function LandingPage({ user, onOpenAuthOverlay, onLogout, listings = [] }) {
   const activeRole = user?.role === "publisher" ? "publisher" : "renter";
   const rawRoles = Array.isArray(user?.roles) ? user.roles : [activeRole];
   const roleSet = new Set(rawRoles.filter((item) => item === "renter" || item === "publisher"));
+  const favoriteIds = useMemo(
+    () => new Set((favorites || []).map((entry) => String(entry.listingId))),
+    [favorites]
+  );
   useEffect(() => {
     function onPointerDown(event) {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -418,6 +705,7 @@ function LandingPage({ user, onOpenAuthOverlay, onLogout, listings = [] }) {
     const onScroll = () => {
       setShowScrollToTopButton(window.scrollY > 12);
       setIsNavScrolled(window.scrollY > 0);
+      setShowHeroScrollCue(window.scrollY <= 4);
     };
 
     onScroll();
@@ -442,21 +730,31 @@ function LandingPage({ user, onOpenAuthOverlay, onLogout, listings = [] }) {
     navigateTo(`/app/rent?${params.toString()}`);
   }
 
-  function openPopularListing(selected) {
+  function scrollToPopularListings() {
+    if (typeof document === "undefined") return;
+    setShowHeroScrollCue(false);
+    if (!heroSectionRef.current) return;
+    const navHeight = headerRef.current?.getBoundingClientRect().height ?? 72;
+    const heroBottom = heroSectionRef.current.getBoundingClientRect().bottom + window.scrollY;
+    const top = heroBottom - navHeight;
+    window.scrollTo({ top: Math.max(top, 0), behavior: "smooth" });
+  }
+
+  function resolvePopularListing(selected, fallbackIndex = 0) {
     const queryAddress = normalizeMatchValue(selected?.address || selected?.title);
     const queryTitle = normalizeMatchValue(selected?.title);
     const queryDistrict = normalizeMatchValue(selected?.district);
+    const sourceListings = Array.isArray(listings) ? listings : [];
+    if (sourceListings.length === 0) return null;
 
-    let matchedListing = Array.isArray(listings)
-      ? listings.find((item) => {
-          const itemAddress = normalizeMatchValue(item?.address);
-          const itemTitle = normalizeMatchValue(item?.title);
-          return (queryAddress && itemAddress === queryAddress) || (queryTitle && itemTitle === queryTitle);
-        })
-      : null;
+    let matchedListing = sourceListings.find((item) => {
+      const itemAddress = normalizeMatchValue(item?.address);
+      const itemTitle = normalizeMatchValue(item?.title);
+      return (queryAddress && itemAddress === queryAddress) || (queryTitle && itemTitle === queryTitle);
+    });
 
-    if (!matchedListing && Array.isArray(listings)) {
-      matchedListing = listings.find((item) => {
+    if (!matchedListing) {
+      matchedListing = sourceListings.find((item) => {
         const sameDistrict = normalizeMatchValue(item?.district) === queryDistrict;
         if (!sameDistrict) return false;
         const itemTitle = normalizeMatchValue(item?.title);
@@ -465,8 +763,28 @@ function LandingPage({ user, onOpenAuthOverlay, onLogout, listings = [] }) {
       });
     }
 
-    const targetId = matchedListing?.id || selected?.id;
+    if (!matchedListing) {
+      const districtPool = sourceListings.filter(
+        (item) => normalizeMatchValue(item?.district) === queryDistrict
+      );
+      if (districtPool.length > 0) {
+        matchedListing = districtPool[fallbackIndex % districtPool.length];
+      }
+    }
+
+    return matchedListing || sourceListings[fallbackIndex % sourceListings.length] || null;
+  }
+
+  function resolvePopularListingId(selected, fallbackIndex = 0) {
+    return resolvePopularListing(selected, fallbackIndex)?.id || null;
+  }
+
+  function openPopularListingDetail(selected) {
+    const targetId = resolvePopularListingId(selected);
     if (!targetId) return;
+    const matchedListing = Array.isArray(listings)
+      ? listings.find((item) => String(item?.id) === String(targetId))
+      : null;
 
     if (!matchedListing && typeof window !== "undefined") {
       try {
@@ -477,6 +795,15 @@ function LandingPage({ user, onOpenAuthOverlay, onLogout, listings = [] }) {
     }
 
     navigateTo(`/app/listings/${encodeURIComponent(targetId)}`);
+  }
+
+  function handleTogglePopularShortlist(listingId) {
+    if (!listingId) return;
+    if (!user) {
+      openAuth("login", "renter");
+      return;
+    }
+    onToggleFavorite?.(listingId);
   }
 
   return (
@@ -587,23 +914,23 @@ function LandingPage({ user, onOpenAuthOverlay, onLogout, listings = [] }) {
         </div>
       </header>
 
-      <section className="relative overflow-hidden">
+      <section ref={heroSectionRef} className="relative overflow-visible">
         <img
           src={heroImage}
           alt="Stockholm kontorsmarknad"
-          className="h-[72vh] min-h-[600px] max-h-[820px] w-full object-cover md:h-[68vh] md:min-h-[560px] md:max-h-[760px] lg:h-[60vh] lg:min-h-[520px] lg:max-h-[700px]"
+          className="h-[760px] w-full object-cover"
         />
         <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-b from-white/92 via-white/74 to-white/38" />
         <div className="absolute inset-0 z-20">
-          <div className="mx-auto flex h-full w-full max-w-[86rem] items-center justify-center px-4 py-6 sm:px-6">
-            <div className="w-full max-w-4xl text-center">
-              <div className="-translate-y-3 sm:-translate-y-4">
-                <h2 className="text-3xl font-semibold text-ink-900 sm:text-5xl">Sök lokaler i hela Stockholm</h2>
-                <p className="mt-2 text-sm text-ink-700 sm:text-base">Vi hjälper dig att hitta din nästa lokal i storstaden.</p>
+          <div className="mx-auto flex h-full w-full max-w-[86rem] items-start px-4 pt-20 pb-10 sm:px-6 sm:pt-24 sm:pb-10">
+            <div className="mx-auto flex w-full max-w-[44rem] flex-col items-center text-center">
+              <div>
+                <h2 className="whitespace-nowrap text-[1.7rem] font-semibold text-ink-900 sm:text-[2.25rem]">Sök lokaler i hela Stockholm</h2>
+                <p className="mt-1 text-sm text-ink-700 sm:text-base">Vi hjälper dig att hitta din nästa lokal i storstaden.</p>
               </div>
 
-              <form className="mx-auto mt-3 w-full max-w-[30rem] sm:mt-2" onSubmit={submitHeroSearch}>
-                <div className="inline-flex w-full items-stretch rounded-2xl border border-black/10 bg-white p-1.5 shadow-[0_8px_30px_rgba(15,25,48,0.12)]">
+              <form className="mx-auto mt-6 w-full max-w-[30rem]" onSubmit={submitHeroSearch}>
+                <div className="inline-flex w-full items-stretch rounded-2xl border border-black/10 bg-white p-1.5">
                   <label className="flex min-w-0 flex-[0.6] items-center border-r border-black/10 px-3">
                     <input
                       type="number"
@@ -640,12 +967,30 @@ function LandingPage({ user, onOpenAuthOverlay, onLogout, listings = [] }) {
                   </button>
                 </div>
               </form>
+
+              <div className="relative z-30 mt-8 mb-[-132px] flex w-full max-w-[40rem] flex-col items-center">
+                <HeroMapWidget />
+
+                <button
+                  type="button"
+                  aria-label="Utforska mer"
+                  onClick={scrollToPopularListings}
+                  className={`hero-scroll-cue mt-14 inline-flex min-h-0 flex-col items-center justify-center gap-0.5 rounded-full border border-black/20 bg-white/75 p-3 text-[#0f1930] backdrop-blur-md transition-all duration-250 hover:bg-white/90 ${
+                    showHeroScrollCue
+                      ? "pointer-events-auto opacity-100"
+                      : "pointer-events-none opacity-0"
+                  }`}
+                >
+                  <MouseScrollIcon className="h-4 w-4" />
+                  <ArrowUpIcon className="hero-scroll-chevron h-4 w-4 rotate-180" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-[86rem] px-4 py-16 sm:px-6">
+      <section id="lokaler-just-nu" className="relative z-10 mx-auto w-full max-w-[86rem] px-4 py-16 sm:px-6">
         <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Lokaler just nu</p>
@@ -672,15 +1017,26 @@ function LandingPage({ user, onOpenAuthOverlay, onLogout, listings = [] }) {
               </div>
 
               <div className="grid items-stretch gap-4 lg:grid-cols-3">
-                {group.listings.slice(0, 6).map((listing) => (
-                  <ListingVisualCard
-                    key={listing.id}
-                    listing={listing}
-                    shortlisted={false}
-                    onOpenListing={openPopularListing}
-                    onToggleShortlist={() => {}}
-                  />
-                ))}
+                <HeroMapWidget compact expandOnHover={false} />
+                {group.listings.slice(1, 6).map((listing, listingIndex) => {
+                  const favoriteListingId = resolvePopularListingId(listing, listingIndex + 1);
+                  const canonicalListing = resolvePopularListing(listing, listingIndex + 1);
+                  const cardListing = canonicalListing
+                    ? {
+                        ...canonicalListing,
+                        image: listing.image || canonicalListing.image
+                      }
+                    : listing;
+                  return (
+                    <ListingVisualCard
+                      key={listing.id}
+                      listing={cardListing}
+                      shortlisted={favoriteIds.has(String(favoriteListingId))}
+                      onOpenListing={openPopularListingDetail}
+                      onToggleShortlist={() => handleTogglePopularShortlist(favoriteListingId)}
+                    />
+                  );
+                })}
               </div>
             </article>
           ))}

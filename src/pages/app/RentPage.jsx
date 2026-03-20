@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import ListingVisualCard from "../../components/app/ListingVisualCard";
+import MapListingPreviewCard from "../../components/app/MapListingPreviewCard";
 import ViewingRequestModal from "../../components/app/ViewingRequestModal";
 import FurnishingToggle from "../../components/app/FurnishingToggle";
 import AiGuidedAssistant from "../../components/app/AiGuidedAssistant";
@@ -407,17 +408,15 @@ function GoogleListingsMap({
     const district = escapeHtml(selectedListing.district);
     const address = escapeHtml(selectedListing.address);
     const image = escapeHtml(selectedListing.image);
-    const type = escapeHtml(selectedListing.type || "Lokal");
-    const size = escapeHtml(selectedListing.sizeSqm);
     const listingHref = `/app/listings/${encodeURIComponent(selectedListing.id)}`;
+    const addressLine = escapeHtml([address, district].filter(Boolean).join(", "));
 
     infoWindowRef.current.setContent(`
-      <a href="${listingHref}" style="display:block;width:320px;max-width:calc(100vw - 80px);font-family:inherit;color:#182338;text-decoration:none;background:#fff;border-radius:22px;overflow:hidden;">
-        <img src="${image}" alt="${title}" style="width:100%;height:132px;object-fit:cover;border-bottom-left-radius:16px;border-bottom-right-radius:16px;" />
-        <div style="padding:12px 14px 14px 14px;">
-          <div style="font-weight:700;font-size:18px;line-height:1.25;color:#111827;">${title}</div>
-          <div style="margin-top:4px;font-size:12px;line-height:1.4;color:#6b7280;">${district} • ${address}</div>
-          <div style="margin-top:6px;font-size:14px;font-weight:500;line-height:1.4;color:#1f2937;">${type} • ${size} kvm</div>
+      <a href="${listingHref}" style="display:block;width:280px;max-width:calc(100vw - 80px);font-family:inherit;color:#182338;text-decoration:none;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 16px 34px rgba(15,25,48,0.16);">
+        <img src="${image}" alt="${title}" style="width:100%;height:112px;object-fit:cover;" />
+        <div style="display:flex;align-items:center;gap:8px;padding:12px 14px 14px 14px;">
+          <span style="display:inline-flex;width:16px;height:16px;color:#6b7280;flex:0 0 auto;">&#9679;</span>
+          <div style="font-size:14px;font-weight:500;line-height:1.35;color:#111827;">${addressLine}</div>
         </div>
       </a>
     `);
@@ -467,17 +466,8 @@ function GoogleListingsMap({
       ) : null}
       {selectedListing && onOpenListing && onToggleShortlist && !isMapInFullscreen() ? (
         <div className="pointer-events-none absolute inset-x-3 bottom-3 z-20 sm:inset-x-4 sm:bottom-4">
-          <div className="pointer-events-auto relative mx-auto w-full max-w-[440px]">
-            <ListingVisualCard
-              listing={selectedListing}
-              shortlisted={Boolean(
-                shortlistedIds?.has(selectedListing.id) ||
-                shortlistedIds?.has(String(selectedListing.id))
-              )}
-              onOpenListing={onOpenListing}
-              onToggleShortlist={onToggleShortlist}
-              showMatchChip={showMatchChip}
-            />
+          <div className="pointer-events-auto relative mx-auto w-full max-w-[320px]">
+            <MapListingPreviewCard listing={selectedListing} onOpen={onOpenListing} />
           </div>
         </div>
       ) : null}
@@ -586,6 +576,15 @@ function hasRunSearchInUrl() {
 function hasAvailableListingsViewInUrl() {
   if (typeof window === "undefined") return false;
   return new URLSearchParams(window.location.search).get("view") === "available";
+}
+
+function shouldForceCoreStepFromUrl() {
+  if (typeof window === "undefined") return false;
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("run") !== "1") return false;
+  const teamSizeFromUrl = String(params.get("teamSize") || "").trim();
+  const districtFromUrl = String(params.get("district") || "").trim();
+  return Boolean(teamSizeFromUrl || districtFromUrl);
 }
 
 function readFlagParam(params, key, legacyKey = "") {
@@ -1335,6 +1334,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
     aiChangedChipEntries: []
   });
   const [aiGuideStepRequest, setAiGuideStepRequest] = useState(null);
+  const [forceAiGuideCoreStep, setForceAiGuideCoreStep] = useState(() => shouldForceCoreStepFromUrl());
   const [resultsSuggestion, setResultsSuggestion] = useState(null);
   const [resultsSuggestionLoading, setResultsSuggestionLoading] = useState(false);
   const [dismissedResultsSuggestionKey, setDismissedResultsSuggestionKey] = useState("");
@@ -1907,6 +1907,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
     const params = new URLSearchParams(window.location.search);
     if (params.get("run") !== "1") {
       setIsHydratingLandingSearch(false);
+      setForceAiGuideCoreStep(false);
       return;
     }
 
@@ -1967,6 +1968,10 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
       aiChangedChipKeys: [],
       aiChangedChipEntries: []
     });
+    setShowEditorAiPanel(true);
+    setForceAiGuideCoreStep(true);
+    setAiGuideStepRequest({ stepId: "core", source: "landing-search", nonce: Date.now() });
+    setAiGuideResetKey((value) => value + 1);
 
     async function bootstrapFromLandingSearch() {
       try {
@@ -2614,8 +2619,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
   const showPreferencesSummaryCard = !showSearchEditor
     && !isResettingToAvailable
     && !isLeavingAvailableView
-    && hasBegunSearch
-    && (showInlineAiGuide || showSearchSummaryCard);
+    && (showInlineAiGuide || (hasBegunSearch && showSearchSummaryCard));
 
   const summaryBaseFilters = showInlineAiGuide ? (effectiveFilters || filters) : (appliedSearchMeta.filters || filters);
   const summaryPrompt = showInlineAiGuide ? String(effectiveAiPrompt || "").trim() : String(appliedSearchMeta.aiPrompt || "").trim();
@@ -2623,6 +2627,8 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
   const visibleResultsSuggestion = resultsSuggestion && resultsSuggestion.key !== dismissedResultsSuggestionKey
     ? resultsSuggestion
     : null;
+  const showingSearchResults = hasBegunSearch;
+  const summaryCardPaddingClass = showingSearchResults ? "p-3 sm:p-4" : "px-4 py-4 sm:px-5 sm:py-4";
 
   useEffect(() => {
     if (!showPreferencesSummaryCard || !hasBegunSearch || summaryResultCount > 3) {
@@ -2697,18 +2703,18 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
 
   const preferencesSummaryCard = showPreferencesSummaryCard ? (
     <div
-      className={`rounded-3xl border border-black/10 bg-white p-4 sm:p-5 ${
+      className={`rounded-3xl border border-black/10 bg-white ${summaryCardPaddingClass} ${
         animateSearchSummaryIn ? "search-summary-dissolve-in" : ""
       } ${isResettingToAvailable ? "search-summary-dissolve-out" : ""}`}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="space-y-1.5">
-          <p className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-800">
+        <div className="space-y-1.5 lg:pr-[25rem]">
+          <p className="inline-flex min-h-[36px] items-center gap-1.5 rounded-full border border-black/10 bg-white px-3 py-1 text-sm font-semibold text-ink-800">
             <SparklesIcon className="h-4 w-4 text-[#4f46e5]" />
-            {summaryResultCount} lokaler matchar dina preferenser
+            {hasBegunSearch ? `${summaryResultCount} lokaler matchar dina preferenser` : `${summaryResultCount} lediga lokaler`}
           </p>
           {orderedDisplayedSearchChips.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
+            <div className="mt-2 flex flex-wrap gap-2">
               {orderedDisplayedSearchChips.map((chip) => (
                 displayedAiChangedChipKeys.includes(chip.key) ? (
                   <span key={chip.key} className="inline-flex items-center gap-1 rounded-full border border-[#4f46e5]/35 bg-[#eef0ff] px-2.5 py-1 text-xs font-semibold text-[#312e81]">
@@ -2774,6 +2780,53 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
       ) : null}
     </div>
   ) : null;
+
+  const summaryControls = (
+    <>
+      <div className="inline-flex items-center gap-1 rounded-xl border border-black/10 bg-white p-1">
+        <button
+          type="button"
+          className={`inline-flex min-h-[34px] items-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition ${
+            resultViewMode === "list"
+              ? "bg-[#0f1930] text-white"
+              : "text-ink-700 hover:bg-white"
+          }`}
+          onClick={() => setResultViewMode("list")}
+          aria-pressed={resultViewMode === "list"}
+        >
+          <ListIcon className="h-3.5 w-3.5" />
+          Lista
+        </button>
+        <button
+          type="button"
+          className={`inline-flex min-h-[34px] items-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition ${
+            resultViewMode === "map"
+              ? "bg-[#0f1930] text-white"
+              : "text-ink-700 hover:bg-white"
+          }`}
+          onClick={() => setResultViewMode("map")}
+          aria-pressed={resultViewMode === "map"}
+        >
+          <MapIcon className="h-3.5 w-3.5" />
+          Karta
+        </button>
+      </div>
+      <div className="inline-flex items-center gap-2">
+        <label className="text-xs font-semibold text-ink-700">Sortera</label>
+        <select
+          className="select-chevron min-h-[40px] min-w-[132px] rounded-xl border border-black/10 bg-white px-4 text-xs font-semibold text-ink-800 focus:border-[#0f1930] focus:outline-none"
+          value={sortBy}
+          onChange={(event) => setSortBy(event.target.value)}
+        >
+          <option value="relevance">Relevans</option>
+          <option value="price_asc">Hyra: lägst först</option>
+          <option value="price_desc">Hyra: högst först</option>
+          <option value="size_asc">Yta: minst först</option>
+          <option value="size_desc">Yta: störst först</option>
+        </select>
+      </div>
+    </>
+  );
 
   const useScrollableFilterPanel = showAdvancedFiltersContent || isCollapsingAdvancedFilters;
 
@@ -3046,57 +3099,6 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
 
   const resultsContent = (
     <>
-      <div ref={resultsTopRef} className="flex flex-wrap items-center justify-between gap-2">
-        <div className="inline-flex items-center gap-1.5 rounded-2xl border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-ink-700">
-          <BuildingIcon className="h-3.5 w-3.5 text-ink-600" />
-          {visibleListings.length} träffar
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="inline-flex items-center gap-1 rounded-xl border border-black/10 bg-white p-1">
-            <button
-              type="button"
-              className={`inline-flex min-h-[34px] items-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition ${
-                resultViewMode === "list"
-                  ? "bg-[#0f1930] text-white"
-                  : "text-ink-700 hover:bg-white"
-              }`}
-              onClick={() => setResultViewMode("list")}
-              aria-pressed={resultViewMode === "list"}
-            >
-              <ListIcon className="h-3.5 w-3.5" />
-              Lista
-            </button>
-            <button
-              type="button"
-              className={`inline-flex min-h-[34px] items-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition ${
-                resultViewMode === "map"
-                  ? "bg-[#0f1930] text-white"
-                  : "text-ink-700 hover:bg-white"
-              }`}
-              onClick={() => setResultViewMode("map")}
-              aria-pressed={resultViewMode === "map"}
-            >
-              <MapIcon className="h-3.5 w-3.5" />
-              Karta
-            </button>
-          </div>
-          <div className="inline-flex items-center gap-2">
-            <label className="text-xs font-semibold text-ink-700">Sortera</label>
-            <select
-              className="select-chevron min-h-[40px] min-w-[132px] rounded-xl border border-black/10 bg-white px-4 text-xs font-semibold text-ink-800 focus:border-[#0f1930] focus:outline-none"
-              value={sortBy}
-              onChange={(event) => setSortBy(event.target.value)}
-            >
-              <option value="relevance">Relevans</option>
-              <option value="price_asc">Hyra: lägst först</option>
-              <option value="price_desc">Hyra: högst först</option>
-              <option value="size_asc">Yta: minst först</option>
-              <option value="size_desc">Yta: störst först</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
       {resultViewMode === "map" ? (
         <div className="space-y-2">
           <GoogleListingsMap
@@ -3187,27 +3189,27 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
   );
 
   return (
-    <section className="relative h-full overflow-y-auto px-4 py-3 sm:px-6 sm:py-4">
-      <div className="relative mx-auto w-full max-w-[1540px]">
+    <section className="relative h-full overflow-hidden px-4 py-2 sm:px-6 sm:py-2.5">
+      <div className="relative mx-auto flex h-full w-full max-w-[1540px] flex-col">
         {isHydratingLandingSearch ? (
-          <div className="grid min-h-[58vh] place-items-center">
+          <div className="grid min-h-0 flex-1 place-items-center">
             <div className="rounded-2xl border border-[#c8d1de] bg-white px-5 py-4 text-sm font-semibold text-ink-700">
               Laddar sökresultat...
             </div>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="flex min-h-0 flex-1 flex-col gap-4">
             <div className="px-1 py-1">
               <Breadcrumbs
                 className="mb-2"
                 items={[
                   { label: "Startsida", to: "/" },
-                  { label: isAvailableListingsView ? "Lediga lokaler" : "Sökresultat" }
+                  { label: showingSearchResults ? "Sökresultat" : "Lediga lokaler" }
                 ]}
               />
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <h1 className="text-2xl font-semibold">{isAvailableListingsView ? "Lediga lokaler" : "Sökresultat"}</h1>
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="grid w-full max-w-[460px] grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
+                  <h1 className="truncate text-2xl font-semibold leading-10">{showingSearchResults ? "Sökresultat" : "Lediga lokaler"}</h1>
                   <input
                     ref={headerUploadInputRef}
                     type="file"
@@ -3216,43 +3218,43 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                   />
                   <button
                     type="button"
-                    className="inline-flex h-10 items-center gap-2 rounded-2xl border border-black/10 bg-white px-3 text-xs font-semibold text-ink-700 hover:bg-white"
+                    className="inline-flex h-10 items-center gap-2 justify-self-end rounded-2xl border border-black/10 bg-white px-3 text-xs font-semibold text-ink-700 hover:bg-white"
                     onClick={() => headerUploadInputRef.current?.click()}
                   >
                     <UploadIcon className="h-4 w-4 text-[#0f1930]" />
                     Ladda upp lokalprogram
                   </button>
-                  {hasBegunSearch ? (
-                    <>
-                      <button
-                        type="button"
-                        className="inline-flex h-10 items-center gap-2 rounded-2xl border border-black/10 bg-white px-4 text-xs font-semibold text-ink-700 hover:bg-white"
-                        onClick={handleSaveSearchAction}
-                      >
-                        <SaveIcon className="h-4 w-4" />
-                        Spara sökning
-                      </button>
-                      <button
-                        type="button"
-                        className="inline-flex h-10 items-center gap-2 rounded-2xl border border-black/10 bg-white px-4 text-xs font-semibold text-ink-700 hover:bg-white"
-                        onClick={handleWatchSearchAction}
-                      >
-                        <EyeIcon className="h-4 w-4" />
-                        Bevaka sökning
-                      </button>
-                      <button
-                        type="button"
-                        className="inline-flex h-10 items-center gap-2 rounded-2xl border border-black/10 bg-white px-4 text-xs font-semibold text-ink-700 hover:bg-white"
-                        onClick={() => {
-                          void handleResetSearchResults();
-                        }}
-                      >
-                        <ResetIcon className="h-4 w-4" />
-                        Nollställ
-                      </button>
-                    </>
-                  ) : null}
                 </div>
+                {hasBegunSearch ? (
+                  <div className="flex flex-wrap items-center justify-end gap-2">
+                    <button
+                      type="button"
+                      className="inline-flex h-10 items-center gap-2 rounded-2xl border border-black/10 bg-white px-4 text-xs font-semibold text-ink-700 hover:bg-white"
+                      onClick={handleSaveSearchAction}
+                    >
+                      <SaveIcon className="h-4 w-4" />
+                      Spara sökning
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex h-10 items-center gap-2 rounded-2xl border border-black/10 bg-white px-4 text-xs font-semibold text-ink-700 hover:bg-white"
+                      onClick={handleWatchSearchAction}
+                    >
+                      <EyeIcon className="h-4 w-4" />
+                      Bevaka sökning
+                    </button>
+                    <button
+                      type="button"
+                      className="inline-flex h-10 items-center gap-2 rounded-2xl border border-black/10 bg-white px-4 text-xs font-semibold text-ink-700 hover:bg-white"
+                      onClick={() => {
+                        void handleResetSearchResults();
+                      }}
+                    >
+                      <ResetIcon className="h-4 w-4" />
+                      Nollställ
+                    </button>
+                  </div>
+                ) : null}
               </div>
             </div>
 
@@ -3292,6 +3294,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                       resultCount={visibleListings.length}
                       defaultResultCount={sortedListings.length}
                       requestedStepRequest={aiGuideStepRequest}
+                      forceStepId={forceAiGuideCoreStep ? "core" : null}
                       onShowMatches={() => {
                         resultsTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
                       }}
@@ -3641,10 +3644,10 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                 </article>
             ) : null}
 
-            <div className="space-y-4">
+            <div className="min-h-0 flex-1">
               {showInlineAiGuide ? (
-                <div className="grid gap-5 lg:h-[calc(100vh-12.5rem)] lg:grid-cols-[minmax(400px,460px)_minmax(0,1fr)] lg:items-start lg:overflow-hidden">
-                  <aside className="lg:h-full lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain lg:pr-1">
+                <div className="flex h-full min-h-0 flex-col gap-5 overflow-hidden lg:grid lg:grid-cols-[minmax(400px,460px)_minmax(0,1fr)] lg:items-start">
+                  <aside className="min-h-0 max-h-[42vh] overflow-y-auto overscroll-contain lg:h-full lg:max-h-none lg:pr-1">
                     <div className={`${isSwitchingSidePanel ? "search-editor-collapse-out" : "search-editor-expand-in"} lg:min-h-full`}>
                       {sidePanelMode === "ai" ? (
                         <AiGuidedAssistant
@@ -3670,6 +3673,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                           resultCount={visibleListings.length}
                           defaultResultCount={sortedListings.length}
                           requestedStepRequest={aiGuideStepRequest}
+                          forceStepId={forceAiGuideCoreStep ? "core" : null}
                         onShowMatches={() => {
                           resultsTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
                         }}
@@ -3685,16 +3689,54 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                     </div>
                   </aside>
 
-                  <div className="space-y-4 pb-8 lg:h-full lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain lg:pr-1 lg:pb-16">
-                    {preferencesSummaryCard}
+                  <div data-scroll-top-scope="results" className="min-h-0 flex-1 space-y-0 overflow-y-auto overscroll-contain pb-8 lg:h-full lg:pr-1 lg:pb-16">
+                    {preferencesSummaryCard ? (
+                      <div className="sticky top-0 z-20 bg-white pb-6">
+                        <div className="relative">
+                          {preferencesSummaryCard}
+                          <div className={`pointer-events-none absolute right-0 hidden lg:flex pr-4 ${
+                            hasBegunSearch ? "top-4 items-start" : "inset-y-0 items-center"
+                          }`}>
+                            <div className="flex justify-end">
+                              <div className="pointer-events-auto flex flex-wrap items-center justify-end gap-2">
+                                {summaryControls}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="mt-3 flex flex-wrap items-center gap-2 lg:hidden">
+                          {summaryControls}
+                        </div>
+                      </div>
+                    ) : null}
+                    <div ref={resultsTopRef} />
                     {resultsContent}
                   </div>
                 </div>
               ) : (
-                <>
-                  {preferencesSummaryCard}
+                <div className="min-h-0 h-full overflow-y-auto overscroll-contain pb-8">
+                  {preferencesSummaryCard ? (
+                    <div className="sticky top-0 z-20 bg-white pb-6">
+                      <div className="relative">
+                        {preferencesSummaryCard}
+                        <div className={`pointer-events-none absolute right-0 hidden lg:flex pr-4 ${
+                          hasBegunSearch ? "top-4 items-start" : "inset-y-0 items-center"
+                        }`}>
+                          <div className="flex justify-end">
+                            <div className="pointer-events-auto flex flex-wrap items-center justify-end gap-2">
+                              {summaryControls}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="mt-3 flex flex-wrap items-center gap-2 lg:hidden">
+                        {summaryControls}
+                      </div>
+                    </div>
+                  ) : null}
+                  <div ref={resultsTopRef} />
                   {resultsContent}
-                </>
+                </div>
               )}
             </div>
           </div>

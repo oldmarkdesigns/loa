@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef, useState } from "react";
 import {
   BuildingIcon,
   CarIcon,
@@ -44,8 +45,66 @@ function amenityIconFor(amenity) {
 
 function ListingVisualCard({ listing, shortlisted, onOpenListing, onToggleShortlist, compact = false, showMatchChip = false }) {
   const amenities = Array.isArray(listing.amenities) ? listing.amenities : [];
-  const visibleAmenities = amenities.slice(0, 3);
+  const amenityRowRef = useRef(null);
+  const amenityMeasureMoreRef = useRef(null);
+  const amenityMeasureRefs = useRef([]);
+  const [visibleAmenityCount, setVisibleAmenityCount] = useState(amenities.length);
+  const visibleAmenities = amenities.slice(0, visibleAmenityCount);
   const extraAmenities = Math.max(amenities.length - visibleAmenities.length, 0);
+
+  useLayoutEffect(() => {
+    if (compact) return undefined;
+
+    const row = amenityRowRef.current;
+    const moreMeasure = amenityMeasureMoreRef.current;
+    if (!row || !moreMeasure) return undefined;
+
+    const GAP_PX = 8;
+
+    const recomputeVisibleAmenities = () => {
+      const availableWidth = row.clientWidth;
+      if (!availableWidth || amenities.length === 0) {
+        setVisibleAmenityCount(amenities.length);
+        return;
+      }
+
+      const widths = amenities.map((_, index) => amenityMeasureRefs.current[index]?.offsetWidth || 0);
+
+      const measureMoreChipWidth = (remainingCount) => {
+        if (remainingCount <= 0) return 0;
+        moreMeasure.textContent = `+${remainingCount} more`;
+        return moreMeasure.offsetWidth;
+      };
+
+      let nextVisibleCount = 0;
+      for (let count = amenities.length; count >= 0; count -= 1) {
+        const visibleWidth = widths.slice(0, count).reduce((sum, width) => sum + width, 0);
+        const visibleGaps = count > 1 ? (count - 1) * GAP_PX : 0;
+        const remaining = amenities.length - count;
+        const moreWidth = measureMoreChipWidth(remaining);
+        const moreGap = remaining > 0 && count > 0 ? GAP_PX : 0;
+        const totalWidth = visibleWidth + visibleGaps + moreGap + moreWidth;
+
+        if (totalWidth <= availableWidth) {
+          nextVisibleCount = count;
+          break;
+        }
+      }
+
+      setVisibleAmenityCount(nextVisibleCount);
+    };
+
+    recomputeVisibleAmenities();
+
+    const resizeObserver = new ResizeObserver(() => {
+      recomputeVisibleAmenities();
+    });
+    resizeObserver.observe(row);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [amenities, compact]);
 
   if (compact) {
     return (
@@ -62,7 +121,7 @@ function ListingVisualCard({ listing, shortlisted, onOpenListing, onToggleShortl
           }}
           className="block w-full cursor-pointer text-left"
         >
-          <div className="relative overflow-hidden rounded-2xl h-36">
+          <div className="relative h-32 overflow-hidden rounded-2xl">
             <img src={listing.image} alt={listing.title} className="h-full w-full rounded-2xl object-cover" />
             <button
               type="button"
@@ -106,7 +165,7 @@ function ListingVisualCard({ listing, shortlisted, onOpenListing, onToggleShortl
         aria-label={`Open details for ${listing.title}`}
       >
         <div className="relative">
-          <img src={listing.image} alt={listing.title} className="h-52 w-full object-cover" />
+          <img src={listing.image} alt={listing.title} className="h-44 w-full object-cover" />
         </div>
         <div className="absolute right-4 top-4 flex items-center gap-2">
           {showMatchChip ? (
@@ -130,7 +189,7 @@ function ListingVisualCard({ listing, shortlisted, onOpenListing, onToggleShortl
 
         <div className="flex flex-1 flex-col p-5">
           <div className="space-y-2">
-            <h3 className="text-xl font-semibold leading-tight text-[#0f1930]">{listing.title}</h3>
+            <h3 className="text-lg font-semibold leading-tight text-[#0f1930]">{listing.title}</h3>
             <p className="flex items-center gap-1.5 text-sm text-ink-600">
               <PinIcon className="h-4 w-4 text-ink-500" />
               <span>{buildAddress(listing)}</span>
@@ -149,26 +208,51 @@ function ListingVisualCard({ listing, shortlisted, onOpenListing, onToggleShortl
           </div>
 
           <div className="mt-4 pb-3">
-            <div className="flex flex-wrap gap-2">
+            <div ref={amenityRowRef} className="flex flex-nowrap gap-2 overflow-hidden">
             {visibleAmenities.map((amenity) => {
               const Icon = amenityIconFor(amenity);
               return (
-                <span key={amenity} className="inline-flex items-center gap-1.5 rounded-xl border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-ink-700">
+                <span key={amenity} className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-ink-700">
                   <Icon className="h-4 w-4 shrink-0 text-ink-700" />
                   {amenity}
                 </span>
               );
             })}
             {extraAmenities > 0 ? (
-              <span className="inline-flex items-center gap-1.5 rounded-xl border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-ink-700">+{extraAmenities} more</span>
+              <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-ink-700">+{extraAmenities} more</span>
             ) : null}
+            </div>
+            <div aria-hidden="true" className="pointer-events-none absolute -left-[9999px] -top-[9999px] opacity-0">
+              <div className="flex gap-2">
+                {amenities.map((amenity, index) => {
+                  const Icon = amenityIconFor(amenity);
+                  return (
+                    <span
+                      key={`measure-${amenity}-${index}`}
+                      ref={(element) => {
+                        amenityMeasureRefs.current[index] = element;
+                      }}
+                      className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-ink-700"
+                    >
+                      <Icon className="h-4 w-4 shrink-0 text-ink-700" />
+                      {amenity}
+                    </span>
+                  );
+                })}
+                <span
+                  ref={amenityMeasureMoreRef}
+                  className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-ink-700"
+                >
+                  +99 more
+                </span>
+              </div>
             </div>
           </div>
 
           <div className="mt-auto border-t border-black/10 pt-4">
             <div className="flex items-end justify-between gap-4">
               <div>
-                <p className="text-xl font-semibold text-[#0f1930]">{formatPriceSek(listing.priceMonthly)} /månad</p>
+                <p className="text-lg font-semibold text-[#0f1930]">{formatPriceSek(listing.priceMonthly)} /månad</p>
                 <p className="mt-1 text-sm text-ink-500">Hyresperiod: {listing.term || "6-24 månader"}</p>
               </div>
             </div>

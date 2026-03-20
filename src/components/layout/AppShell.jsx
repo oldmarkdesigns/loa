@@ -54,7 +54,10 @@ function AppShell({ pathname, user, onSwitchRole, onLogout, onRequireAuth, isGue
 
   useEffect(() => {
     const scrollContainer = contentRef.current;
-    const activeScrollable = scrollContainer?.querySelector("section.h-full.overflow-y-auto");
+    const activeScrollable = (
+      scrollContainer?.querySelector("[data-scroll-top-scope='results']") ||
+      scrollContainer?.querySelector("section.h-full.overflow-y-auto")
+    );
 
     const handleScroll = () => {
       const scrollTop = activeScrollable ? activeScrollable.scrollTop : window.scrollY;
@@ -75,7 +78,10 @@ function AppShell({ pathname, user, onSwitchRole, onLogout, onRequireAuth, isGue
 
   function handleScrollToTop() {
     const scrollContainer = contentRef.current;
-    const activeScrollable = scrollContainer?.querySelector("section.h-full.overflow-y-auto");
+    const activeScrollable = (
+      scrollContainer?.querySelector("[data-scroll-top-scope='results']") ||
+      scrollContainer?.querySelector("section.h-full.overflow-y-auto")
+    );
     if (activeScrollable) {
       activeScrollable.scrollTo({ top: 0, behavior: "smooth" });
       return;
