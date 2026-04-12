@@ -136,7 +136,7 @@ function defaultDb() {
         id: "u-publisher-demo",
         email: "annonsor@demo.se",
         password: "demo123",
-        name: "Demo Annonsör",
+        name: "Demo Hyresvärd",
         phone: "0702223344",
         role: "publisher",
         roles: ["publisher"],
@@ -313,7 +313,7 @@ function migrateDb(db) {
       onboardingCompleted: true
     },
     "annonsor@demo.se": {
-      name: "Demo Annonsör",
+      name: "Demo Hyresvärd",
       role: "publisher",
       roles: ["publisher"],
       onboardingCompleted: true
@@ -445,7 +445,7 @@ function listingWithOwner(db, listing) {
   const owner = db.users.find((entry) => entry.id === listing.ownerId);
   return {
     ...listing,
-    advertiserName: owner?.name || "Annonsör"
+    advertiserName: owner?.name || "Hyresvärd"
   };
 }
 

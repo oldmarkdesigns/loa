@@ -32,6 +32,6 @@ export function normalizePopularListingFallback(payload) {
     images: normalizedImages,
     description: String(payload?.description || ""),
     term: String(payload?.term || "6-24 månader"),
-    advertiserName: String(payload?.advertiserName || "Annonsör")
+    advertiserName: String(payload?.advertiserName || "Hyresvärd")
   };
 }

@@ -56,7 +56,7 @@ function LeadsPage({ app }) {
             ]}
           />
           <div className="rounded-3xl border border-black/10 bg-white p-6 text-sm text-ink-600">
-            Intressehantering är tillgänglig i annonsörsläge.
+            Intressehantering är tillgänglig i hyresvärdsläge.
           </div>
         </div>
       </section>
@@ -75,7 +75,7 @@ function LeadsPage({ app }) {
             ]}
           />
           <h1 className="text-2xl font-semibold">Intresse och visningar</h1>
-          <p className="text-sm text-ink-600">Kombinerad annonsörsvy för pipeline och inkomna visningsförfrågningar.</p>
+          <p className="text-sm text-ink-600">Kombinerad hyresvärdsvy för pipeline och inkomna visningsförfrågningar.</p>
         </header>
 
         <div className="grid gap-4 xl:grid-cols-2">

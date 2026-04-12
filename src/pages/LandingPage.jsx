@@ -52,7 +52,7 @@ const heroDistrictGeo = {
 const processSteps = [
   {
     title: "Skapa konto och välj roll",
-    body: "Starta som hyresgäst, annonsör eller båda roller i samma konto.",
+    body: "Starta som hyresgäst, hyresvärd eller båda roller i samma konto.",
     icon: UserIcon
   },
   {
@@ -73,7 +73,7 @@ const faqItems = [
     a: "Ja, just nu är gratis publicering aktiv med obegränsat antal annonser."
   },
   {
-    q: "Kan samma konto vara både hyresgäst och annonsör?",
+    q: "Kan samma konto vara både hyresgäst och hyresvärd?",
     a: "Ja. Du kan växla roll direkt i plattformen utan att skapa nytt konto."
   },
   {
@@ -260,46 +260,72 @@ function loadHeroGoogleMaps(apiKey) {
   return window.__googleMapsHeroPromise;
 }
 
-function heroMarkerIcon(featured) {
-  const fill = featured ? "%23d7c086" : "%230f1930";
-  const stroke = featured ? "%23b08a2e" : "%23ffffff";
-  return {
-    url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
-      `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="32" viewBox="0 0 24 32"><path fill="${fill}" stroke="${stroke}" stroke-width="1.5" d="M12 1.75C6.34 1.75 1.75 6.34 1.75 12c0 7.71 8.58 16.56 9.57 17.55a.97.97 0 0 0 1.36 0c.99-.99 9.57-9.84 9.57-17.55 0-5.66-4.59-10.25-10.25-10.25Z"/><circle cx="12" cy="12" r="4.1" fill="${featured ? "%23fff8e2" : "%23ffffff"}"/></svg>`
-    )}`,
-    scaledSize: new window.google.maps.Size(featured ? 24 : 20, featured ? 32 : 28),
-    anchor: new window.google.maps.Point(featured ? 12 : 10, featured ? 32 : 28)
-  };
-}
-
-function HeroMapWidget({ compact = false, expandOnHover = true, className = "", listings = null }) {
+function HeroMapWidget({
+  compact = false,
+  className = "",
+  listings = null,
+  large = false,
+  shortlistedIds,
+  onToggleShortlist,
+  requireAuthForShortlist
+}) {
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
   const mapsRef = useRef(null);
-  const markersRef = useRef([]);
-  const boundsRef = useRef(null);
+  const markersByIdRef = useRef(new Map());
+  const suppressMapClickCloseRef = useRef(false);
   const [mapStatus, setMapStatus] = useState("loading");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [retryToken, setRetryToken] = useState(0);
   const [selectedListing, setSelectedListing] = useState(null);
 
   const featuredListings = useMemo(() => {
     if (Array.isArray(listings) && listings.length > 0) {
-      return listings.slice(0, 8);
+      return listings.slice(0, 120);
     }
     return [...baseListingDataset]
       .sort((left, right) => (right.verified - left.verified) || (right.score - left.score))
-      .slice(0, 4);
+      .slice(0, 120);
   }, [listings]);
+
+  function inactiveMarkerIcon() {
+    if (!window.google?.maps) return null;
+    return {
+      url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
+        `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="32" viewBox="0 0 24 32"><path fill="#ea4335" stroke="#c5221f" stroke-width="1.4" d="M12 1.75C6.34 1.75 1.75 6.34 1.75 12c0 7.71 8.58 16.56 9.57 17.55a.97.97 0 0 0 1.36 0c.99-.99 9.57-9.84 9.57-17.55 0-5.66-4.59-10.25-10.25-10.25Z"/><circle cx="12" cy="12" r="4.1" fill="#ffffff"/></svg>`
+      )}`,
+      scaledSize: new window.google.maps.Size(20, 28),
+      anchor: new window.google.maps.Point(10, 28)
+    };
+  }
+
+  function activeMarkerIcon() {
+    if (!window.google?.maps) return null;
+    return {
+      url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
+        `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="32" viewBox="0 0 24 32"><path fill="#0f1930" stroke="#0b1428" stroke-width="1.4" d="M12 1.75C6.34 1.75 1.75 6.34 1.75 12c0 7.71 8.58 16.56 9.57 17.55a.97.97 0 0 0 1.36 0c.99-.99 9.57-9.84 9.57-17.55 0-5.66-4.59-10.25-10.25-10.25Z"/><circle cx="12" cy="12" r="4.1" fill="#ffffff"/></svg>`
+      )}`,
+      scaledSize: new window.google.maps.Size(30, 42),
+      anchor: new window.google.maps.Point(15, 42)
+    };
+  }
 
   useEffect(() => {
     let cancelled = false;
 
     async function setupMap() {
-      if (!GOOGLE_MAPS_API_KEY || !mapContainerRef.current) {
-        setMapStatus("fallback");
+      if (!GOOGLE_MAPS_API_KEY) {
+        setMapStatus("missing_key");
+        setErrorMessage("Google Maps API-nyckel saknas.");
+        return;
+      }
+      if (!mapContainerRef.current) {
         return;
       }
 
       try {
+        setMapStatus("loading");
+        setErrorMessage("");
         const maps = await loadHeroGoogleMaps(GOOGLE_MAPS_API_KEY);
         if (cancelled || !mapContainerRef.current) return;
         mapsRef.current = maps;
@@ -309,52 +335,78 @@ function HeroMapWidget({ compact = false, expandOnHover = true, className = "", 
             center: { lat: 59.3293, lng: 18.0686 },
             zoom: 11,
             disableDefaultUI: false,
-            clickableIcons: false,
-            keyboardShortcuts: false,
             zoomControl: true,
-            streetViewControl: compact,
+            streetViewControl: true,
             fullscreenControl: false,
             mapTypeControl: false,
+            clickableIcons: false,
             gestureHandling: "greedy",
-            styles: undefined
           });
           mapRef.current.addListener("click", () => {
+            if (suppressMapClickCloseRef.current) return;
             setSelectedListing(null);
           });
         }
 
-        markersRef.current.forEach((marker) => marker.setMap(null));
-        markersRef.current = featuredListings.map((listing) => {
-          const marker = new maps.Marker({
-            map: mapRef.current,
-            position: heroMarkerGeoForListing(listing),
-            title: listing.title
-          });
-          marker.addListener("click", () => {
-            setSelectedListing(listing);
-          });
-          return marker;
-        });
-
         const bounds = new maps.LatLngBounds();
-        featuredListings.forEach((listing) => {
-          bounds.extend(heroMarkerGeoForListing(listing));
-        });
-        boundsRef.current = bounds;
+        const nextIds = new Set();
 
-        window.requestAnimationFrame(() => {
-          if (!mapRef.current || !mapsRef.current || cancelled) return;
-          mapsRef.current.event.trigger(mapRef.current, "resize");
-          mapRef.current.fitBounds(bounds, compact ? 40 : 54);
-          mapsRef.current.event.addListenerOnce(mapRef.current, "idle", () => {
-            if (!cancelled) {
-              setMapStatus("ready");
-            }
-          });
+        featuredListings.forEach((listing) => {
+          const listingId = String(listing.id);
+          nextIds.add(listingId);
+          const position = heroMarkerGeoForListing(listing);
+          let marker = markersByIdRef.current.get(listingId);
+
+          if (!marker) {
+            marker = new maps.Marker({
+              map: mapRef.current,
+              position,
+              title: listing.title,
+              icon: inactiveMarkerIcon()
+            });
+            marker.addListener("click", () => {
+              suppressMapClickCloseRef.current = true;
+              window.setTimeout(() => {
+                suppressMapClickCloseRef.current = false;
+              }, 180);
+              setSelectedListing(marker.__listing || listing);
+            });
+            markersByIdRef.current.set(listingId, marker);
+          } else {
+            marker.setPosition(position);
+            marker.setTitle(listing.title);
+          }
+
+          marker.__listing = listing;
+          bounds.extend(position);
         });
+
+        markersByIdRef.current.forEach((marker, markerId) => {
+          if (!nextIds.has(markerId)) {
+            marker.setMap(null);
+            markersByIdRef.current.delete(markerId);
+          }
+        });
+
+        if (featuredListings.length > 0) {
+          mapRef.current.fitBounds(bounds, compact ? 40 : 54);
+          window.requestAnimationFrame(() => {
+            if (!mapRef.current || !mapsRef.current) return;
+            mapsRef.current.event.trigger(mapRef.current, "resize");
+            mapRef.current.fitBounds(bounds, compact ? 40 : 54);
+          });
+          window.setTimeout(() => {
+            if (!mapRef.current || !mapsRef.current) return;
+            mapsRef.current.event.trigger(mapRef.current, "resize");
+            mapRef.current.fitBounds(bounds, compact ? 40 : 54);
+          }, 180);
+        }
+
+        setMapStatus("ready");
       } catch {
         if (!cancelled) {
-          setMapStatus("fallback");
+          setMapStatus("error");
+          setErrorMessage("Google Maps kunde inte laddas.");
         }
       }
     }
@@ -364,84 +416,142 @@ function HeroMapWidget({ compact = false, expandOnHover = true, className = "", 
     return () => {
       cancelled = true;
     };
-  }, [featuredListings]);
+  }, [featuredListings, compact, retryToken]);
 
   useEffect(() => {
-    if (!mapRef.current || !mapsRef.current || !boundsRef.current) return undefined;
+    markersByIdRef.current.forEach((marker) => {
+      const markerListingId = String(marker?.__listing?.id || "");
+      const isActive = Boolean(selectedListing && markerListingId === String(selectedListing.id));
+      marker.setIcon(isActive ? activeMarkerIcon() : inactiveMarkerIcon());
+      marker.setZIndex(isActive ? 99 : 1);
+    });
+  }, [selectedListing]);
 
-    function handleWindowResize() {
-      if (!mapRef.current || !mapsRef.current || !boundsRef.current) return;
-      mapsRef.current.event.trigger(mapRef.current, "resize");
-      mapRef.current.fitBounds(boundsRef.current, compact ? 40 : 54);
+  useEffect(() => () => {
+    markersByIdRef.current.forEach((marker) => marker.setMap(null));
+    markersByIdRef.current.clear();
+  }, []);
+
+  function handleCycleSelectedListing(direction) {
+    if (!Array.isArray(featuredListings) || featuredListings.length === 0) return;
+    const currentId = String(selectedListing?.id || "");
+    const currentIndex = featuredListings.findIndex((item) => String(item.id) === currentId);
+    const safeIndex = currentIndex >= 0 ? currentIndex : 0;
+    const nextIndex = (safeIndex + direction + featuredListings.length) % featuredListings.length;
+    const nextListing = featuredListings[nextIndex];
+    if (!nextListing) return;
+    setSelectedListing(nextListing);
+    const marker = markersByIdRef.current.get(String(nextListing.id));
+    if (marker && mapRef.current) {
+      const markerPosition = marker.getPosition?.();
+      if (markerPosition) {
+        mapRef.current.panTo(markerPosition);
+      }
     }
-
-    window.addEventListener("resize", handleWindowResize);
-    return () => window.removeEventListener("resize", handleWindowResize);
-  }, [compact]);
+  }
 
   const wrapperClassName = compact
     ? `group relative flex h-full w-full flex-col text-left ${className}`.trim()
-    : `group relative flex w-full flex-col overflow-visible text-left ${className}`.trim();
+    : `group relative flex h-full w-full flex-col overflow-visible text-left ${className}`.trim();
 
   const mapShellClassName = compact
     ? "relative flex-1 overflow-hidden"
-    : "relative mt-3 overflow-hidden";
+    : "relative flex-1 overflow-hidden";
 
   const mapViewportClassName = compact
     ? "relative h-full overflow-hidden bg-[#edf2f6]"
-    : "relative h-[clamp(180px,calc(100vh-33rem),240px)] overflow-hidden rounded-[20px] bg-[#edf2f6]";
+    : `relative h-full overflow-hidden rounded-[20px] bg-[#edf2f6] ${large ? "min-h-[420px] sm:min-h-[480px]" : "min-h-[clamp(180px,calc(100vh-33rem),240px)]"}`;
 
   return (
-    <div className={`relative ${compact ? "h-full overflow-hidden" : "w-full overflow-visible"}`.trim()}>
+    <div className={`relative ${compact ? "h-full overflow-hidden" : "h-full w-full overflow-visible"}`.trim()}>
       <div className={wrapperClassName}>
         <div
           className={
             compact
-              ? "flex h-full min-h-[24.5rem] flex-col overflow-hidden rounded-[30px] border border-black/10 bg-white p-0"
-              : "overflow-hidden rounded-[28px] border border-black/10 bg-white p-4"
+              ? "flex h-full min-h-0 flex-col overflow-hidden rounded-[30px] border border-black/10 bg-white p-0"
+              : "flex h-full min-h-0 flex-col overflow-hidden rounded-[28px] border border-black/10 bg-white p-4"
           }
         >
-          {!compact ? (
-            <div>
-              <span className="inline-flex h-8 items-center gap-1 rounded-full border border-[#0f1930]/8 bg-[#eef2f6] px-2.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#5c6778]">
-                Utvalda objekt
-              </span>
-            </div>
-          ) : null}
-
           <div className={mapShellClassName}>
-          <div className={`pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.95),_rgba(238,242,246,0.3)_42%,_transparent_70%)] ${compact ? "" : ""}`} />
           <div className={mapViewportClassName}>
             <div ref={mapContainerRef} className="h-full w-full" />
 
-            {mapStatus !== "ready" ? (
-              <div className="absolute inset-0 bg-[linear-gradient(140deg,rgba(255,255,255,0.9),rgba(243,246,249,0.68))]">
-                <div className="absolute inset-0 opacity-60 [background-image:linear-gradient(rgba(15,25,48,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(15,25,48,0.06)_1px,transparent_1px)] [background-position:center_center] [background-size:36px_36px]" />
-                <div className="absolute left-[18%] top-[10%] h-[2px] w-[55%] rotate-[18deg] rounded-full bg-[#bfd0de]" />
-                <div className="absolute left-[15%] top-[44%] h-[2px] w-[68%] -rotate-[12deg] rounded-full bg-[#bfd0de]" />
-                <div className="absolute left-[42%] top-[18%] h-[56%] w-[2px] rotate-[9deg] rounded-full bg-[#cddae5]" />
-                <div className="absolute left-[60%] top-[22%] h-[48%] w-[2px] -rotate-[16deg] rounded-full bg-[#cddae5]" />
-                {featuredListings.map((listing, index) => (
-                  <div
-                    key={listing.id}
-                    className="absolute h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2"
-                    style={{
-                      left: `${44 + (index % 2) * 14}%`,
-                      top: `${28 + index * 14}%`,
-                      backgroundColor: index < 2 ? "#d7c086" : "#0f1930",
-                      borderColor: index < 2 ? "#b08a2e" : "#ffffff",
-                      boxShadow: index < 2 ? "0 0 0 6px rgba(215,192,134,0.18)" : "0 0 0 6px rgba(15,25,48,0.08)"
-                    }}
-                  />
-                ))}
+            {mapStatus === "loading" ? (
+              <div className="absolute inset-0 grid place-items-center bg-white/55 text-xs font-semibold text-ink-700">Laddar karta...</div>
+            ) : null}
+
+            {mapStatus === "missing_key" ? (
+              <div className="absolute inset-0 grid place-items-center bg-white/70 p-4 text-center text-xs font-semibold text-rose-700">
+                Google Maps API-nyckel saknas. Lägg till `VITE_GOOGLE_MAPS_API_KEY` i `.env` och starta om `npm run dev`.
+              </div>
+            ) : null}
+
+            {mapStatus === "error" ? (
+              <div className="absolute inset-0 grid place-items-center bg-white/75 p-4 text-center text-xs font-semibold text-rose-700">
+                <div className="space-y-2">
+                  <p>{errorMessage || "Google Maps kunde inte laddas."}</p>
+                  <button
+                    type="button"
+                    className="mx-auto rounded-lg border border-rose-300 bg-white px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-50"
+                    onClick={() => setRetryToken((value) => value + 1)}
+                  >
+                    Försök igen
+                  </button>
+                </div>
               </div>
             ) : null}
           </div>
 
           {selectedListing ? (
-            <div className="pointer-events-none absolute inset-x-3 bottom-3 z-20 sm:inset-x-4 sm:bottom-4">
-              <div className="pointer-events-auto mx-auto w-full max-w-[320px]">
-                <MapListingPreviewCard listing={selectedListing} onOpen={(listing) => navigateTo(`/app/listings/${encodeURIComponent(listing.id)}`)} />
+            <div className="pointer-events-none absolute bottom-3 left-3 z-20 sm:bottom-4 sm:left-4">
+              <div className="flex items-start gap-2">
+                <div className="pointer-events-auto w-[min(320px,calc(100vw-6rem))] sm:w-[min(360px,calc(100vw-6rem))]">
+                  <div className="xl:hidden">
+                    <MapListingPreviewCard
+                      listing={selectedListing}
+                      onOpen={(listing) => navigateTo(`/app/listings/${encodeURIComponent(listing.id)}`)}
+                    />
+                  </div>
+                  <div className="hidden xl:block xl:w-[420px]">
+                    <ListingVisualCard
+                      listing={selectedListing}
+                      shortlisted={shortlistedIds?.has?.(String(selectedListing.id))}
+                      onOpenListing={(listing) => navigateTo(`/app/listings/${encodeURIComponent(listing.id)}`)}
+                      onToggleShortlist={(listingId) => {
+                        if (!onToggleShortlist) return;
+                        onToggleShortlist(listingId);
+                      }}
+                      requireAuthForShortlist={() => requireAuthForShortlist?.()}
+                      showMatchChip={false}
+                    />
+                  </div>
+                </div>
+                <div className="pointer-events-auto flex flex-col gap-2">
+                  <button
+                    type="button"
+                    aria-label="Stäng objekt"
+                    className="close-circle-button inline-flex items-center justify-center rounded-full border border-black/10 bg-white text-lg font-semibold leading-none text-ink-700 hover:bg-[#eef3fa]"
+                    onClick={() => setSelectedListing(null)}
+                  >
+                    ×
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Föregående objekt"
+                    className="inline-flex h-9 w-9 min-h-9 min-w-9 aspect-square items-center justify-center rounded-full border border-black/10 bg-white p-0 text-base font-semibold leading-none text-ink-700 hover:bg-[#eef3fa]"
+                    onClick={() => handleCycleSelectedListing(-1)}
+                  >
+                    ‹
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Nästa objekt"
+                    className="inline-flex h-9 w-9 min-h-9 min-w-9 aspect-square items-center justify-center rounded-full border border-black/10 bg-white p-0 text-base font-semibold leading-none text-ink-700 hover:bg-[#eef3fa]"
+                    onClick={() => handleCycleSelectedListing(1)}
+                  >
+                    ›
+                  </button>
+                </div>
               </div>
             </div>
           ) : null}
@@ -567,10 +677,11 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
   const faqQuestionsRef = useRef(null);
   const faqCardRef = useRef(null);
   const [showScrollToTopButton, setShowScrollToTopButton] = useState(false);
-  const [showHeroScrollCue, setShowHeroScrollCue] = useState(true);
   const [isNavScrolled, setIsNavScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const menuRef = useRef(null);
+  const profileMenuPanelRef = useRef(null);
   const [heroFilters, setHeroFilters] = useState({
     district: "Alla",
     teamSize: ""
@@ -594,9 +705,17 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
     () => new Set((favorites || []).map((entry) => String(entry.listingId))),
     [favorites]
   );
+  const totalAvailableListings = Array.isArray(listings) && listings.length > 0 ? listings.length : baseListingDataset.length;
+  const trustScore = 4.8;
+  const trustReviews = 127;
   useEffect(() => {
     function onPointerDown(event) {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
+      if (
+        menuRef.current
+        && !menuRef.current.contains(event.target)
+        && profileMenuPanelRef.current
+        && !profileMenuPanelRef.current.contains(event.target)
+      ) {
         setMenuOpen(false);
       }
     }
@@ -604,6 +723,17 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
     window.addEventListener("pointerdown", onPointerDown);
     return () => window.removeEventListener("pointerdown", onPointerDown);
   }, []);
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return undefined;
+    function onEscape(event) {
+      if (event.key === "Escape") {
+        setMobileMenuOpen(false);
+      }
+    }
+    window.addEventListener("keydown", onEscape);
+    return () => window.removeEventListener("keydown", onEscape);
+  }, [mobileMenuOpen]);
 
   useEffect(() => {
     if (typeof window === "undefined") return undefined;
@@ -703,7 +833,6 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
     const onScroll = () => {
       setShowScrollToTopButton(window.scrollY > 12);
       setIsNavScrolled(window.scrollY > 0);
-      setShowHeroScrollCue(window.scrollY <= 4);
     };
 
     onScroll();
@@ -726,16 +855,6 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
     if (heroFilters.district !== "Alla") params.set("district", heroFilters.district);
     if (teamSize) params.set("teamSize", teamSize);
     navigateTo(`/app/rent?${params.toString()}`);
-  }
-
-  function scrollToPopularListings() {
-    if (typeof document === "undefined") return;
-    setShowHeroScrollCue(false);
-    if (!heroSectionRef.current) return;
-    const navHeight = headerRef.current?.getBoundingClientRect().height ?? 72;
-    const heroBottom = heroSectionRef.current.getBoundingClientRect().bottom + window.scrollY;
-    const top = heroBottom - navHeight;
-    window.scrollTo({ top: Math.max(top, 0), behavior: "smooth" });
   }
 
   function resolvePopularListing(selected, fallbackIndex = 0) {
@@ -812,99 +931,100 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
           isNavScrolled ? "border-black/10 bg-white/95 backdrop-blur-md" : "border-black/0 bg-white/0 backdrop-blur-0"
         }`}
       >
-        <div className="grid w-full grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 py-3 sm:px-6">
-          <button type="button" className="justify-self-start text-left" onClick={handleHomeBrandClick}>
-            <span className="inline-flex items-center gap-2 rounded-xl border border-black/10 bg-white px-2.5 py-1.5">
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-dashed border-black/30 bg-white text-[9px] font-semibold uppercase tracking-wide text-ink-500">
-                LOGGA
+        <div className="grid w-full grid-cols-[auto_1fr_auto] items-center gap-4 px-4 py-3 sm:px-6">
+          <div className="flex min-w-0 items-center gap-8">
+            <button type="button" className="text-left" onClick={handleHomeBrandClick}>
+              <span className="inline-flex items-center gap-2 rounded-xl border border-black/10 bg-white px-2.5 py-1.5">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-dashed border-black/30 bg-white text-[9px] font-semibold uppercase tracking-wide text-ink-500">
+                  LOGGA
+                </span>
+                <span className="text-sm font-semibold text-ink-800">Företagsnamn</span>
               </span>
-              <span className="text-sm font-semibold text-ink-800">Företagsnamn</span>
-            </span>
-          </button>
+            </button>
 
-          <nav className="hidden items-center justify-self-center gap-5 lg:flex">
-            <MarketingNavLinks
-              onSectionLinkClick={handleSectionLinkClick}
-              onPublish={() => navigateTo("/app/publish")}
-            />
-          </nav>
+            <nav className="hidden items-center gap-7 lg:flex">
+              <MarketingNavLinks
+                onSectionLinkClick={handleSectionLinkClick}
+                showPublish={false}
+              />
+            </nav>
+          </div>
 
-          <div className="flex items-center justify-self-end gap-2">
+          <div className="flex items-center justify-self-end gap-4">
             {user ? (
-              <div ref={menuRef} className="relative">
+              <>
                 <button
                   type="button"
-                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-black/20 bg-white text-sm font-semibold text-ink-700"
+                  className="inline-flex h-11 items-center gap-1.5 rounded-xl border border-[#0f1930] px-3 text-xs font-semibold text-[#0f1930] transition hover:bg-[#0f1930] hover:text-white"
+                  onClick={() => navigateTo("/app/publish")}
+                >
+                  <span aria-hidden="true" className="text-sm leading-none">+</span>
+                  <span>Publicera annons</span>
+                </button>
+                <div ref={menuRef} className="relative inline-flex h-11 items-center self-center">
+                <button
+                  type="button"
+                  className="inline-flex h-full w-11 items-center justify-center overflow-hidden rounded-full border border-black/20 bg-white text-sm font-semibold text-ink-700"
                   onClick={() => setMenuOpen((value) => !value)}
                   aria-label="Öppna profilmeny"
                   aria-expanded={menuOpen}
                   aria-haspopup="menu"
                   title="Profil"
                 >
-                  {userInitials}
+                  {user?.profile?.avatarUrl ? (
+                    <img
+                      src={user.profile.avatarUrl}
+                      alt={user?.name || "Profil"}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    userInitials
+                  )}
                 </button>
-                {menuOpen ? (
-                  <div className="absolute right-0 top-[calc(100%+8px)] z-30 w-72 rounded-2xl border border-black/10 bg-white p-3">
-                    <div className="rounded-xl border border-black/10 bg-white px-3 py-2">
-                      <p className="text-sm font-semibold text-black">{user?.name || "Användare"}</p>
-                      <p className="text-xs text-ink-600">{user?.email || "-"}</p>
-                      <p className="mt-1 text-xs text-ink-500">Roll: {user?.role === "publisher" ? "Annonsör" : "Hyresgäst"}</p>
-                    </div>
-                    <div className="mt-2 grid gap-2 text-sm">
-                      <button
-                        type="button"
-                        className="rounded-xl border border-black/10 bg-white px-3 py-2 text-left font-semibold text-ink-700"
-                        onClick={() => {
-                          setMenuOpen(false);
-                          navigateTo("/app/profile");
-                        }}
-                      >
-                        <span className="inline-flex items-center gap-1.5">
-                          <UserIcon className="h-4 w-4" />
-                          Profil
-                        </span>
-                      </button>
-                      {roleSet.has("publisher") ? (
-                        <button
-                          type="button"
-                          className="rounded-xl border border-black/10 bg-white px-3 py-2 text-left font-semibold text-ink-700"
-                          onClick={() => {
-                            setMenuOpen(false);
-                            navigateTo("/app/my-listings");
-                          }}
-                        >
-                          <span className="inline-flex items-center gap-1.5">
-                            <BuildingIcon className="h-4 w-4" />
-                            Dina objekt
-                          </span>
-                        </button>
-                      ) : null}
-                      <button
-                        type="button"
-                        className="rounded-xl border border-black/10 bg-white px-3 py-2 text-left font-semibold text-ink-700"
-                        onClick={async () => {
-                          setMenuOpen(false);
-                          await onLogout?.();
-                          navigateTo("/", { replace: true });
-                        }}
-                      >
-                        <span className="inline-flex items-center gap-1.5">
-                          <HistoryIcon className="h-4 w-4" />
-                          Logga ut
-                        </span>
-                      </button>
-                    </div>
-                  </div>
-                ) : null}
               </div>
+              <button
+                type="button"
+                aria-label="Öppna meny"
+                className="inline-flex h-11 items-center justify-center text-[#0f1930] lg:hidden"
+                onClick={() => {
+                  setMenuOpen(false);
+                  setMobileMenuOpen((value) => !value);
+                }}
+              >
+                <span className="inline-flex flex-col items-end gap-1.5">
+                  <span className="block h-0.5 w-5 rounded-full bg-current" />
+                  <span className="block h-0.5 w-4 rounded-full bg-current" />
+                  <span className="block h-0.5 w-3 rounded-full bg-current" />
+                </span>
+              </button>
+              </>
             ) : (
               <>
                 <button
                   type="button"
-                  className="rounded-xl border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-white"
-                  onClick={() => navigateTo("/app/rent")}
+                  className="inline-flex items-center justify-center rounded-full border border-[#0f1930] bg-[#0f1930] px-4 py-2 text-xs font-semibold text-white hover:bg-[#16233f]"
+                  onClick={() => openAuth("signup", "renter")}
+                >
+                  Skapa konto
+                </button>
+                <button
+                  type="button"
+                  className="inline-flex items-center bg-transparent px-1 py-2 text-xs font-semibold text-ink-700"
+                  onClick={() => openAuth("login", "renter")}
                 >
                   Logga in
+                </button>
+                <button
+                  type="button"
+                  aria-label="Öppna meny"
+                  className="inline-flex h-11 items-center justify-center text-[#0f1930] lg:hidden"
+                  onClick={() => setMobileMenuOpen((value) => !value)}
+                >
+                  <span className="inline-flex flex-col items-end gap-1.5">
+                    <span className="block h-0.5 w-5 rounded-full bg-current" />
+                    <span className="block h-0.5 w-4 rounded-full bg-current" />
+                    <span className="block h-0.5 w-3 rounded-full bg-current" />
+                  </span>
                 </button>
               </>
             )}
@@ -912,24 +1032,122 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
         </div>
       </header>
 
-      <section ref={heroSectionRef} className="relative overflow-visible">
-        <img
-          src={heroImage}
-          alt="Stockholm kontorsmarknad"
-          className="h-[760px] w-full object-cover"
-        />
-        <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-b from-white/92 via-white/74 to-white/38" />
-        <div className="absolute inset-0 z-20">
-          <div className="mx-auto flex h-full w-full max-w-[86rem] items-start px-4 pt-20 pb-10 sm:px-6 sm:pt-24 sm:pb-10">
-            <div className="mx-auto flex w-full max-w-[44rem] flex-col items-center text-center">
-              <div>
-                <h2 className="whitespace-nowrap text-[1.7rem] font-semibold text-ink-900 sm:text-[2.25rem]">Sök lokaler i hela Stockholm</h2>
-                <p className="mt-1 text-sm text-ink-700 sm:text-base">Vi hjälper dig att hitta din nästa lokal i storstaden.</p>
-              </div>
+      {menuOpen ? (
+        <>
+          <div className="fixed inset-0 z-50 bg-black/20" onClick={() => setMenuOpen(false)} />
+          <div ref={profileMenuPanelRef} className="fixed right-4 top-[72px] z-[60] w-[min(320px,calc(100vw-2rem))] rounded-2xl bg-white p-3">
+            <div className="space-y-1 text-sm">
+              <button
+                type="button"
+                className="menu-hover-row inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5"
+                onClick={() => {
+                  setMenuOpen(false);
+                  navigateTo("/app/profile");
+                }}
+              >
+                <UserIcon className="h-4 w-4" />
+                <span>Profil</span>
+              </button>
+              {roleSet.has("publisher") ? (
+                <button
+                  type="button"
+                  className="menu-hover-row inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    navigateTo("/app/my-listings");
+                  }}
+                >
+                  <BuildingIcon className="h-4 w-4" />
+                  <span>Dina objekt</span>
+                </button>
+              ) : null}
+              <div className="my-1 h-px bg-black/10" />
+              <button
+                type="button"
+                className="menu-hover-row inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5"
+                onClick={async () => {
+                  setMenuOpen(false);
+                  await onLogout?.();
+                  navigateTo("/", { replace: true });
+                }}
+              >
+                <HistoryIcon className="h-4 w-4" />
+                <span>Logga ut</span>
+              </button>
+            </div>
+          </div>
+        </>
+      ) : null}
 
-              <form className="mx-auto mt-6 w-full max-w-[30rem]" onSubmit={submitHeroSearch}>
-                <div className="inline-flex w-full items-stretch rounded-2xl border border-black/10 bg-white p-1.5">
-                  <label className="flex min-w-0 flex-[0.6] items-center border-r border-black/10 px-3">
+      {mobileMenuOpen ? (
+        <div className="fixed inset-0 z-[60] bg-black/20 lg:hidden" onClick={() => setMobileMenuOpen(false)}>
+          <div className="absolute right-4 top-[72px] w-[min(320px,calc(100vw-2rem))] rounded-2xl border border-black/10 bg-white p-3" onClick={(event) => event.stopPropagation()}>
+            <div className="space-y-1">
+              <button type="button" className="menu-hover-row inline-flex w-full items-center rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5" onClick={() => { setMobileMenuOpen(false); navigateTo("/app/rent?view=available"); }}>
+                Lediga lokaler
+              </button>
+              {user ? (
+                <>
+                  <button
+                    type="button"
+                    className="menu-hover-row inline-flex w-full items-center rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      navigateTo("/app/publish");
+                    }}
+                  >
+                    Publicera annons
+                  </button>
+                  <div className="my-1 h-px bg-black/10" />
+                </>
+              ) : null}
+              <button type="button" className="menu-hover-row inline-flex w-full items-center rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5" onClick={() => { setMobileMenuOpen(false); scrollToHashSection("#funktioner", true); }}>
+                Funktioner
+              </button>
+              <button type="button" className="menu-hover-row inline-flex w-full items-center rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5" onClick={() => { setMobileMenuOpen(false); scrollToHashSection("#sa-fungerar-det", true); }}>
+                Så fungerar det
+              </button>
+              <button type="button" className="menu-hover-row inline-flex w-full items-center rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5" onClick={() => { setMobileMenuOpen(false); scrollToHashSection("#priser", true); }}>
+                Priser
+              </button>
+              <button type="button" className="menu-hover-row inline-flex w-full items-center rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5" onClick={() => { setMobileMenuOpen(false); scrollToHashSection("#faq", true); }}>
+                FAQ
+              </button>
+              <button type="button" className="menu-hover-row inline-flex w-full items-center rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5" onClick={() => { setMobileMenuOpen(false); scrollToHashSection("#kontakt", true); }}>
+                Kontakt
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      <section ref={heroSectionRef} className="relative overflow-visible px-4 pt-[72px] pb-4 sm:px-6 sm:pt-[72px] sm:pb-6 xl:pb-0">
+        <div className="pointer-events-none absolute inset-x-4 top-[72px] bottom-0 z-0 overflow-hidden rounded-[34px] sm:inset-x-6 sm:top-[72px]">
+          <img
+            src={heroImage}
+            alt="Stockholm kontorsmarknad"
+            className="h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-white/62 via-white/34 to-white/18" />
+        </div>
+
+        <div className="relative z-20 w-full px-2 pt-4 sm:px-3 sm:pt-5 xl:px-0 xl:pt-0">
+          <div className="relative min-h-[620px] xl:h-[620px]">
+            <div className="flex h-full flex-col items-center justify-center text-center xl:min-h-[560px] xl:w-[58%] xl:max-w-none">
+              <p className="inline-flex w-fit items-center gap-1.5 rounded-full border border-white/45 bg-white/22 px-3 py-1.5 text-xs font-semibold text-ink-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_8px_24px_rgba(15,25,48,0.12)] backdrop-blur-md">
+                <BuildingIcon className="h-3.5 w-3.5" />
+                {totalAvailableListings} lediga lokaler
+              </p>
+              <h2 className="mt-4 whitespace-nowrap text-[2.05rem] font-semibold leading-tight text-ink-900 sm:text-[2.45rem]">
+                Sök lokaler i hela Stockholm
+              </h2>
+              <p className="mt-3 max-w-[48ch] text-sm text-ink-700 sm:text-base">
+                Vi hjälper dig att hitta din nästa lokal i storstaden med verifierade objekt, smart matchning och snabb överblick.
+              </p>
+
+              <form className="mt-7 w-full max-w-[25rem] sm:max-w-[26rem] md:max-w-[28rem]" onSubmit={submitHeroSearch}>
+                <div className="grid w-full grid-cols-[140px_1fr_44px] items-stretch rounded-full border border-black/10 bg-white p-1 sm:grid-cols-[152px_1fr_44px]">
+                  <label className="flex min-w-0 items-center border-r border-black/10 px-3">
                     <input
                       type="number"
                       min="1"
@@ -941,11 +1159,12 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
                     <span className="ml-2 text-sm font-medium text-ink-700">st</span>
                   </label>
 
-                  <label className="min-w-0 flex-[1] px-3">
+                  <label className="min-w-0 px-3">
                     <select
                       value={heroFilters.district}
                       onChange={(event) => setHeroFilters((prev) => ({ ...prev, district: event.target.value }))}
-                      className="select-chevron h-full w-full bg-transparent pr-9 text-sm text-ink-900 focus:outline-none"
+                      className="select-chevron h-full w-full min-w-0 bg-transparent text-[13px] text-ink-900 focus:outline-none sm:text-sm"
+                      style={{ paddingRight: "28px", backgroundPosition: "right 0.5rem center" }}
                     >
                       <option value="Alla" className="text-black">Alla områden i Stockholm</option>
                       {districtOptions.map((district) => (
@@ -959,32 +1178,56 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
                   <button
                     type="submit"
                     aria-label="Sök lokaler"
-                    className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-[#0f1930] bg-[#0f1930] text-white hover:bg-[#16233f]"
+                    className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#0f1930] bg-[#0f1930] text-white hover:bg-[#16233f]"
                   >
                     <SearchIcon className="h-5 w-5" />
                   </button>
                 </div>
               </form>
 
-              <div className="relative z-30 mt-8 mb-[-132px] flex w-full max-w-[40rem] flex-col items-center">
-                <HeroMapWidget />
-
-                <button
-                  type="button"
-                  aria-label="Utforska mer"
-                  onClick={scrollToPopularListings}
-                  className={`hero-scroll-cue mt-14 inline-flex min-h-0 flex-col items-center justify-center gap-0.5 rounded-full border border-black/20 bg-white/75 p-3 text-[#0f1930] backdrop-blur-md transition-all duration-250 hover:bg-white/90 ${
-                    showHeroScrollCue
-                      ? "pointer-events-auto opacity-100"
-                      : "pointer-events-none opacity-0"
-                  }`}
-                >
-                  <MouseScrollIcon className="h-4 w-4" />
-                  <ArrowUpIcon className="hero-scroll-chevron h-4 w-4 rotate-180" />
-                </button>
+              <div className="mt-7 flex flex-col items-center">
+                <p className="text-[1rem] font-semibold text-[#0f1930]">
+                  TrustScore: {trustScore.toFixed(1)} <span className="ml-4 font-medium">{trustReviews}+ Reviews</span>
+                </p>
+                <div className="mt-1.5 inline-flex items-center gap-1.5">
+                  {Array.from({ length: 5 }).map((_, index) => {
+                    const fill = Math.max(0, Math.min(1, trustScore - index));
+                    return (
+                      <span key={`trust-star-${index}`} className="relative inline-flex h-4 w-4">
+                        <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 text-[#0f1930]/20">
+                          <path
+                            fill="currentColor"
+                            d="M12 2.7l2.92 5.92 6.54.95-4.73 4.61 1.12 6.51L12 17.6l-5.85 3.08 1.12-6.51-4.73-4.61 6.54-.95L12 2.7z"
+                          />
+                        </svg>
+                        <span
+                          className="absolute inset-y-0 left-0 overflow-hidden"
+                          style={{ width: `${fill * 100}%` }}
+                        >
+                          <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 text-[#0f1930]">
+                            <path
+                              fill="currentColor"
+                              d="M12 2.7l2.92 5.92 6.54.95-4.73 4.61 1.12 6.51L12 17.6l-5.85 3.08 1.12-6.51-4.73-4.61 6.54-.95L12 2.7z"
+                            />
+                          </svg>
+                        </span>
+                      </span>
+                    );
+                  })}
+                </div>
               </div>
             </div>
+            <div className="mt-8 h-[340px] w-full px-2 sm:h-[380px] sm:px-3 lg:h-[430px] lg:px-4 xl:absolute xl:top-6 xl:right-6 xl:bottom-6 xl:mt-0 xl:flex xl:h-auto xl:w-[42%] xl:px-0 xl:items-stretch">
+              <HeroMapWidget
+                className="h-full w-full"
+                large
+                shortlistedIds={favoriteIds}
+                onToggleShortlist={handleTogglePopularShortlist}
+                requireAuthForShortlist={() => openAuth("login", "renter")}
+              />
+            </div>
           </div>
+
         </div>
       </section>
 
@@ -1024,8 +1267,10 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
                   return (
                     <HeroMapWidget
                       compact
-                      expandOnHover={false}
                       listings={canonicalPopularMapListings}
+                      shortlistedIds={favoriteIds}
+                      onToggleShortlist={handleTogglePopularShortlist}
+                      requireAuthForShortlist={() => openAuth("login", "renter")}
                     />
                   );
                 })()}
@@ -1099,13 +1344,13 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
           <div className="grid gap-6">
             <article className="overflow-hidden rounded-3xl border border-black/10 bg-white">
               <div className="relative h-44">
-                <img src={featureImageB} alt="Annonsörsfunktioner" className="h-full w-full object-cover transition duration-500 hover:scale-[1.03]" />
+                <img src={featureImageB} alt="Hyresvärdsfunktioner" className="h-full w-full object-cover transition duration-500 hover:scale-[1.03]" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/20 to-transparent" />
               </div>
               <div className="space-y-3 p-5">
                 <p className="inline-flex items-center gap-1 rounded-full border border-black/10 bg-white px-3 py-1 text-xs font-semibold text-ink-700">
                   <BuildingIcon className="h-3.5 w-3.5" />
-                  Annonsör
+                  Hyresvärd
                 </p>
                 <h3 className="text-2xl font-semibold">Publicera med minimal friktion</h3>
                 <p className="text-sm text-ink-600">
@@ -1127,7 +1372,7 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
                 </li>
                 <li className="inline-flex items-start gap-2">
                   <UserIcon className="mt-0.5 h-4 w-4 text-white/80" />
-                  Rollväxling mellan hyresgäst och annonsör
+                  Rollväxling mellan hyresgäst och hyresvärd
                 </li>
               </ul>
             </article>
@@ -1365,7 +1610,7 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
                 </div>
               </div>
               <p className="max-w-sm text-sm text-ink-600">
-                Lokalflöde Stockholm samlar hyresgäst och annonsör i ett gemensamt flöde för snabbare matchning, visningar och affärer.
+                Lokalflöde Stockholm samlar hyresgäst och hyresvärd i ett gemensamt flöde för snabbare matchning, visningar och affärer.
               </p>
               <div className="flex flex-wrap gap-2">
                 <button type="button" className="rounded-xl border border-black/20 bg-white px-3 py-2 text-xs font-semibold text-ink-700" onClick={() => navigateTo("/app/rent?view=available")}>

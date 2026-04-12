@@ -3,7 +3,7 @@ import { aiApi, authApi, favoriteApi, leadsApi, listingApi, profileApi, viewings
 import { analyticsEventNames, trackEvent } from "../lib/analytics";
 
 const AppStateContext = createContext(null);
-const OPEN_ACCESS_MODE = true;
+const OPEN_ACCESS_MODE = false;
 const OPEN_ACCESS_CREDENTIALS = [
   { email: "kombi@demo.se", password: "demo123" },
   { email: "annonsor@demo.se", password: "demo123" },
@@ -161,6 +161,39 @@ function filterPresetLabel(filters) {
   return `${district} · ${type} · ${budget}`;
 }
 
+function mapRenterProgramToFilters(program) {
+  const parsedType = Array.isArray(program?.type)
+    ? program.type.filter(Boolean)
+    : (typeof program?.type === "string" && program.type.trim() ? program.type.split(",").map((item) => item.trim()).filter(Boolean) : []);
+
+  const district = String(program?.district || "").trim();
+  const contractFlex = String(program?.contractFlex || "").trim();
+  const transitDistance = String(program?.transitDistance || "").trim();
+  const accessHours = String(program?.accessHours || "").trim();
+  const parkingType = String(program?.parkingType || "").trim();
+  const layoutType = String(program?.layoutType || "").trim();
+
+  return normalizeFilters({
+    ...defaultFilters,
+    district: district || "Alla",
+    type: parsedType,
+    teamSize: String(program?.teamSize || "").trim(),
+    minSize: String(program?.minSize || "").trim(),
+    maxSize: String(program?.maxSize || "").trim(),
+    minBudget: String(program?.minBudget || "").trim(),
+    maxBudget: String(program?.maxBudget || "").trim(),
+    moveInDate: String(program?.moveInDate || "").trim(),
+    contractFlex: contractFlex === "Alla" ? "" : contractFlex,
+    transitDistance: transitDistance === "Alla" ? "" : transitDistance,
+    accessHours: accessHours === "Alla" ? "" : accessHours,
+    parkingType: parkingType === "Alla" ? "" : parkingType,
+    layoutType: layoutType === "Alla" ? "" : layoutType,
+    includeOperatingCosts: Boolean(program?.includeOperatingCosts),
+    accessibilityAdapted: Boolean(program?.accessibilityAdapted),
+    ecoCertified: Boolean(program?.ecoCertified)
+  });
+}
+
 export function AppProvider({ children }) {
   const [isBootstrapping, setIsBootstrapping] = useState(true);
   const [user, setUser] = useState(null);
@@ -182,9 +215,18 @@ export function AppProvider({ children }) {
     }, 3000);
   }
 
+  async function loadPublicListings() {
+    try {
+      const { listings: listingData } = await listingApi.getListings(allListingsFilters);
+      setListings(listingData);
+    } catch (_error) {
+      setListings([]);
+    }
+  }
+
   async function refreshCoreData(activeUser = user) {
     if (!activeUser) {
-      setListings([]);
+      await loadPublicListings();
       setFavorites([]);
       setViewings([]);
       setLeads([]);
@@ -235,12 +277,15 @@ export function AppProvider({ children }) {
         setFilterPresets(readSavedFilterPresets(sessionUser.id));
         setSavedAiSearches(readSavedAiSearches(sessionUser.id));
         await refreshCoreData(sessionUser);
+      } else {
+        await loadPublicListings();
       }
     } catch (_error) {
       setUser(null);
       setSavedFiltersState(defaultFilters);
       setFilterPresets([]);
       setSavedAiSearches([]);
+      await loadPublicListings();
     } finally {
       setIsBootstrapping(false);
     }
@@ -289,7 +334,6 @@ export function AppProvider({ children }) {
       // Always clear local session state even if mock logout request fails.
     } finally {
       setUser(null);
-      setListings([]);
       setFavorites([]);
       setViewings([]);
       setLeads([]);
@@ -297,6 +341,7 @@ export function AppProvider({ children }) {
       setFilterPresets([]);
       setSavedAiSearches([]);
       setAiHistory([]);
+      await loadPublicListings();
       pushToast("Du är utloggad.", "info");
     }
   }
@@ -304,10 +349,31 @@ export function AppProvider({ children }) {
   async function completeOnboarding(payload) {
     const { user: nextUser } = await profileApi.completeOnboarding(payload);
     setUser(nextUser);
-    setSavedFiltersState(readSavedFilters(nextUser.id));
+    const renterProgram = payload?.primaryRole === "renter" ? payload?.profile?.renterProgram : null;
+    const onboardingFilters = renterProgram ? mapRenterProgramToFilters(renterProgram) : null;
+
+    if (onboardingFilters) {
+      setSavedFiltersState(onboardingFilters);
+      if (nextUser?.id) {
+        persistSavedFilters(nextUser.id, onboardingFilters);
+      }
+    } else {
+      setSavedFiltersState(readSavedFilters(nextUser.id));
+    }
     setFilterPresets(readSavedFilterPresets(nextUser.id));
     setSavedAiSearches(readSavedAiSearches(nextUser.id));
-    await refreshCoreData(nextUser);
+
+    if (onboardingFilters) {
+      try {
+        const { listings: filteredListings } = await listingApi.getListings(onboardingFilters);
+        setListings(filteredListings);
+      } catch (_error) {
+        await refreshCoreData(nextUser);
+      }
+    } else {
+      await refreshCoreData(nextUser);
+    }
+
     await trackEvent(analyticsEventNames.ONBOARDING_COMPLETED, {
       role: payload.primaryRole
     });
@@ -339,12 +405,19 @@ export function AppProvider({ children }) {
         // Keep role switch successful even if secondary data refresh fails.
       }
 
-      pushToast(`Du bytte till ${role === "publisher" ? "annonsörsläge" : "hyresgästläge"}.`, "info");
+      pushToast(`Du bytte till ${role === "publisher" ? "hyresvärdsläge" : "hyresgästläge"}.`, "info");
       return nextUser;
     } catch (error) {
       pushToast(error.message || "Kunde inte byta roll just nu.", "error");
       return user;
     }
+  }
+
+  async function updateProfile(payload) {
+    if (!user) return null;
+    const { user: nextUser } = await profileApi.updateMe(payload);
+    setUser(nextUser);
+    return nextUser;
   }
 
   async function searchListings(filters) {
@@ -574,6 +647,7 @@ export function AppProvider({ children }) {
       logout,
       completeOnboarding,
       switchRole,
+      updateProfile,
       searchListings,
       resetSearchToAllListings,
       saveCurrentFilters,

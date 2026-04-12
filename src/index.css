@@ -168,7 +168,7 @@ body {
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center rounded-2xl border border-ink-200 bg-white px-4 py-2.5 text-sm font-semibold text-ink-800 transition hover:border-brand-300 hover:bg-brand-50;
+    @apply inline-flex items-center justify-center rounded-2xl border border-ink-200 bg-white px-4 py-2.5 text-sm font-semibold text-ink-800 transition hover:border-[#0f1930] hover:text-[#0f1930];
   }
 
   .field {
@@ -259,6 +259,77 @@ button {
 button[class*="text-xs"] {
   font-size: 0.875rem;
   line-height: 1.25rem;
+}
+
+/* Global control shape: fully rounded buttons across the product */
+button,
+[role="button"],
+.btn-primary,
+.btn-secondary {
+  border-radius: 9999px !important;
+}
+
+.gallery-thumb-button {
+  border-radius: 0.75rem !important;
+}
+
+.gallery-mosaic-tile {
+  border-radius: 0 !important;
+  min-height: 0 !important;
+}
+
+.close-circle-button {
+  width: 2.625rem !important;
+  height: 2.625rem !important;
+  min-width: 2.625rem !important;
+  min-height: 2.625rem !important;
+  padding: 0 !important;
+  aspect-ratio: 1 / 1 !important;
+  flex-shrink: 0 !important;
+  border-radius: 9999px !important;
+}
+
+.role-option-button {
+  border-radius: 1rem !important;
+}
+
+.menu-hover-row {
+  border-radius: 0.75rem !important;
+}
+
+.tab-underline-button {
+  border-radius: 0 !important;
+}
+
+.nav-underline-anim {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.nav-underline-anim::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -0.38rem;
+  height: 2px;
+  border-radius: 999px;
+  background: #0f1930;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.nav-underline-anim:hover::after,
+.nav-underline-anim:focus-visible::after {
+  transform: scaleX(1);
+}
+
+button[class*="bg-white"][class*="border-black/20"]:hover,
+button[class*="bg-white"][class*="border-black/10"]:hover {
+  border-color: #0f1930;
+  color: #0f1930;
 }
 
 .no-scrollbar {

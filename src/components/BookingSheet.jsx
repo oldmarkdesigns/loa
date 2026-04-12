@@ -26,7 +26,7 @@ function BookingSheet({ listing, onClose, onSubmit }) {
             <h2 className="font-display text-2xl font-semibold text-ink-900">
               {listing ? listing.title : "Starta flöde"}
             </h2>
-            <p className="text-sm text-ink-600">Skicka en direkt visningsförfrågan till annonsören.</p>
+            <p className="text-sm text-ink-600">Skicka en direkt visningsförfrågan till hyresvärden.</p>
           </div>
           <button type="button" onClick={onClose} className="btn-secondary px-3 py-1.5">
             Stäng
@@ -61,7 +61,7 @@ function BookingSheet({ listing, onClose, onSubmit }) {
           />
           <textarea
             className="field min-h-24"
-            placeholder="Meddelande till annonsören"
+            placeholder="Meddelande till hyresvärden"
             value={form.notes}
             onChange={(event) => setForm((prev) => ({ ...prev, notes: event.target.value }))}
           />

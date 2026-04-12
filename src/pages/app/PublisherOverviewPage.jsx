@@ -216,7 +216,7 @@ function PublisherOverviewPage({ app }) {
           />
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Annonsör</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Hyresvärd</p>
               <h1 className="mt-1 text-2xl font-semibold">Dina objekt</h1>
               <p className="mt-2 text-sm text-ink-600">
                 Hantera objekt, följ statistik och arbeta med leads i ett sammanhängande flöde.
@@ -287,7 +287,7 @@ function PublisherOverviewPage({ app }) {
                   <button
                     key={listing.id}
                     type="button"
-                    className="rounded-2xl border border-black/10 bg-white p-3 text-left transition hover:border-[#0f1930]/30 hover:bg-white sm:p-4"
+                    className="rounded-xl border border-black/10 bg-white p-3 text-left transition hover:border-[#0f1930]/30 hover:bg-white sm:p-4"
                     onClick={() => navigateTo(`/app/my-listings/${encodeURIComponent(listing.id)}`)}
                   >
                     {cardView === "compact" ? (
@@ -296,7 +296,7 @@ function PublisherOverviewPage({ app }) {
                           <img
                             src={listing.image || "/object-images/object-1.jpeg"}
                             alt={listing.title}
-                            className="h-20 w-full rounded-xl border border-black/10 object-cover"
+                            className="h-20 w-full rounded-lg border border-black/10 object-cover"
                           />
                           <div className="flex min-w-0 flex-col justify-between">
                             <div className="flex items-start justify-between gap-2">
@@ -317,7 +317,7 @@ function PublisherOverviewPage({ app }) {
                         <img
                           src={listing.image || "/object-images/object-1.jpeg"}
                           alt={listing.title}
-                          className="h-36 w-full rounded-xl border border-black/10 object-cover"
+                          className="h-36 w-full rounded-lg border border-black/10 object-cover"
                         />
                         <div className="flex items-start justify-between gap-2">
                           <div>
@@ -329,10 +329,7 @@ function PublisherOverviewPage({ app }) {
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-3 gap-2 text-xs">
-                          <span className="rounded-xl border border-black/10 bg-white px-2.5 py-2 text-center font-semibold text-ink-800 whitespace-nowrap">
-                            {formatSek(listing.priceMonthly)} kr
-                          </span>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
                           <span className="rounded-xl border border-black/10 bg-white px-2.5 py-2 text-center font-semibold text-ink-800 whitespace-nowrap">
                             {listing.sizeSqm} kvm
                           </span>

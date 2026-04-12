@@ -93,7 +93,7 @@ function BuyerWorkspace({
             </nav>
 
             <button type="button" className="rounded-full bg-white px-4 py-2 text-xs font-semibold text-ink-900" onClick={() => onBookViewing(spotlight)}>
-              Kontakta annonsör
+              Kontakta hyresvärd
             </button>
           </div>
 
@@ -123,7 +123,7 @@ function BuyerWorkspace({
             <div className="grid gap-3 text-right">
               <div className="ml-auto w-fit rounded-full bg-white/14 px-4 py-3 text-left backdrop-blur-md">
                 <p className="text-2xl font-semibold">50+</p>
-                <p className="text-xs text-white/80">Aktiva annonsörer</p>
+                <p className="text-xs text-white/80">Aktiva hyresvärder</p>
               </div>
               <div className="ml-auto w-fit rounded-full bg-white/14 px-4 py-3 text-left backdrop-blur-md">
                 <p className="text-2xl font-semibold">2.1h</p>
@@ -291,7 +291,6 @@ function BuyerWorkspace({
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-semibold text-ink-900">{listing.title}</p>
                         <p className="text-xs text-ink-500">{listing.district} • {listing.sizeSqm} kvm</p>
-                        <p className="mt-1 text-xs font-semibold text-brand-700">{formatSek(listing.priceMonthly)} / månad</p>
                         <div className="mt-2 flex gap-2">
                           <button type="button" className="btn-secondary px-3 py-1.5 text-xs" onClick={() => onOpenListing(listing)}>
                             Visa
@@ -349,7 +348,7 @@ function BuyerWorkspace({
             </article>
             <article className="rounded-2xl border border-ink-100 bg-white p-3">
               <p className="text-sm font-semibold text-ink-900">3. Skicka förfrågan</p>
-              <p className="text-xs text-ink-600">Boka visning och fortsätt till offert med annonsören.</p>
+              <p className="text-xs text-ink-600">Boka visning och fortsätt till offert med hyresvärden.</p>
             </article>
           </div>
         </section>

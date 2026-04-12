@@ -1,6 +1,9 @@
+import TopLeftLogoPlaceholder from "./TopLeftLogoPlaceholder";
+
 function PublicLayout({ title, subtitle, children, cta }) {
   return (
     <main className="min-h-screen bg-white px-4 py-6 sm:px-6">
+      <TopLeftLogoPlaceholder />
       <div className="mx-auto w-full max-w-6xl">
         <header className="mb-6 flex items-center justify-between rounded-3xl border border-black/10 bg-white px-5 py-4">
           <div>

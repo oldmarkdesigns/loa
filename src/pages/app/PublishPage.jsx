@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import FurnishingToggle from "../../components/app/FurnishingToggle";
 import Breadcrumbs from "../../components/layout/Breadcrumbs";
+import FieldLabel from "../../components/app/FieldLabel";
+import ListingPreview from "../../components/app/ListingPreview";
 import { formatSek, parseAmenities } from "../../lib/formatters";
 import { navigateTo } from "../../lib/router";
 import { districtOptions, listingTypes } from "../../data/mockData";
@@ -283,15 +285,6 @@ function buildPayload(draft, status = "draft") {
   };
 }
 
-function FieldLabel({ children, required = false }) {
-  return (
-    <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">
-      {children}
-      {required ? <span className="ml-1 align-top text-[11px] text-[#0f1930]">✶</span> : null}
-    </span>
-  );
-}
-
 function StepPills({ currentIndex, onSelect }) {
   return (
     <div className="grid gap-2 sm:grid-cols-4">
@@ -302,7 +295,7 @@ function StepPills({ currentIndex, onSelect }) {
           <button
             key={step.id}
             type="button"
-            className={`rounded-2xl border px-3 py-2 text-left text-xs font-semibold transition ${
+            className={`rounded-xl border px-3 py-2 text-left text-xs font-semibold transition ${
               active
                 ? "border-[#0f1930] bg-[#0f1930] text-white"
                 : complete
@@ -317,47 +310,6 @@ function StepPills({ currentIndex, onSelect }) {
         );
       })}
     </div>
-  );
-}
-
-function ListingPreview({ draft }) {
-  const mergedAmenities = mergeAmenities(draft);
-  const coverImage = draft.images?.[0]?.src || "/object-images/object-1.jpeg";
-
-  return (
-    <article className="overflow-hidden rounded-2xl border border-black/10 bg-white">
-      <img
-        src={coverImage}
-        alt={draft.title || "Objekt"}
-        className="h-44 w-full object-cover"
-      />
-      <div className="space-y-3 p-4">
-        <div>
-          <p className="text-lg font-semibold">{draft.title || "Rubrik saknas"}</p>
-          <p className="text-sm text-ink-600">{draft.district || "Område saknas"} • {draft.address || "Adress saknas"}</p>
-        </div>
-
-        <div className="grid grid-cols-2 gap-2 text-xs">
-          <div className="rounded-xl border border-black/10 bg-white px-2.5 py-2">{formatSek(draft.priceMonthly || 0)} / månad</div>
-          <div className="rounded-xl border border-black/10 bg-white px-2.5 py-2">{draft.sizeSqm || "-"} kvm</div>
-          <div className="rounded-xl border border-black/10 bg-white px-2.5 py-2">{draft.capacity || "-"} platser</div>
-          <div className="rounded-xl border border-black/10 bg-white px-2.5 py-2">{draft.type || "-"}</div>
-        </div>
-
-        <div className="flex flex-wrap gap-1.5">
-          {mergedAmenities.length === 0 ? <span className="text-xs text-ink-500">Inga bekvämligheter valda.</span> : null}
-          {mergedAmenities.slice(0, 8).map((amenity) => (
-            <span key={amenity} className="rounded-full border border-black/10 bg-white px-2 py-1 text-[11px] font-semibold text-ink-700">
-              {amenity}
-            </span>
-          ))}
-        </div>
-
-        <p className="text-sm text-ink-700">
-          {draft.description.trim() || "Lägg till en tydlig objektbeskrivning för att öka kvalitet och konvertering."}
-        </p>
-      </div>
-    </article>
   );
 }
 
@@ -866,7 +818,6 @@ function PublishPage({ app }) {
                       <div className="rounded-xl border border-black/10 bg-white px-3 py-2"><span className="text-ink-500">Rubrik:</span> {draft.title || "-"}</div>
                       <div className="rounded-xl border border-black/10 bg-white px-3 py-2"><span className="text-ink-500">Område:</span> {draft.district || "-"}</div>
                       <div className="rounded-xl border border-black/10 bg-white px-3 py-2"><span className="text-ink-500">Typ:</span> {draft.type || "-"}</div>
-                      <div className="rounded-xl border border-black/10 bg-white px-3 py-2"><span className="text-ink-500">Pris:</span> {formatSek(draft.priceMonthly || 0)} / månad</div>
                       <div className="rounded-xl border border-black/10 bg-white px-3 py-2"><span className="text-ink-500">Yta:</span> {draft.sizeSqm || "-"} kvm</div>
                       <div className="rounded-xl border border-black/10 bg-white px-3 py-2"><span className="text-ink-500">Team:</span> {draft.capacity || "-"} platser</div>
                       <div className="rounded-xl border border-black/10 bg-white px-3 py-2"><span className="text-ink-500">Inflyttning:</span> {draft.moveInDate || "-"}</div>

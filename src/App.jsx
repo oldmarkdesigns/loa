@@ -4,8 +4,10 @@ import ViewingRequestModal from "./components/app/ViewingRequestModal";
 import AppShell from "./components/layout/AppShell";
 import ToastStack from "./components/layout/ToastStack";
 import LandingPage from "./pages/LandingPage";
+import LoginPage from "./pages/LoginPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import OnboardingPage from "./pages/OnboardingPage";
+import SignupPage from "./pages/SignupPage";
 import LeadsPage from "./pages/app/LeadsPage";
 import ListingDetailPage from "./pages/app/ListingDetailPage";
 import ManageListingPage from "./pages/app/ManageListingPage";
@@ -24,7 +26,9 @@ function AppContent() {
   const [bookingListing, setBookingListing] = useState(null);
 
   function openAuthOverlay(mode = "login", preferredRole = "renter") {
-    const target = mode === "signup" && preferredRole === "publisher" ? "/app/publish" : "/app/rent";
+    const target = mode === "signup"
+      ? `/signup${preferredRole === "publisher" ? "?role=publisher" : ""}`
+      : "/login";
     navigateTo(target);
   }
 
@@ -34,30 +38,19 @@ function AppContent() {
     }
 
     const isAuthenticated = Boolean(app.user);
-    const isOnboardingPath = pathname === "/onboarding";
+    const isOnboardingPath = pathname === "/onboarding" || pathname.startsWith("/onboarding/");
     const isAppPath = pathname === "/app" || pathname.startsWith("/app/");
     const isPublicRentPath = pathname === "/app/rent";
     const isPublicListingPath = pathname.startsWith("/app/listings/");
     const isAuthPath = pathname === "/login" || pathname === "/signup" || pathname === "/forgot-password";
 
-    if (!isAuthenticated && pathname === "/login") {
-      navigateTo("/app/rent", { replace: true });
-      return;
-    }
-
-    if (!isAuthenticated && pathname === "/signup") {
-      navigateTo("/app/rent", { replace: true });
-      return;
-    }
-
     if (!isAuthenticated && pathname === "/app") {
-      navigateTo("/app/rent", { replace: true });
+      navigateTo("/login", { replace: true });
       return;
     }
 
     if (!isAuthenticated && isAppPath && !isPublicRentPath && !isPublicListingPath) {
-      openAuthOverlay("login");
-      navigateTo("/app/rent", { replace: true });
+      navigateTo("/login", { replace: true });
       return;
     }
 
@@ -67,7 +60,7 @@ function AppContent() {
       return;
     }
 
-    if (isAuthenticated && !app.user.onboardingCompleted && !isOnboardingPath) {
+    if (isAuthenticated && !app.user.onboardingCompleted && !isOnboardingPath && (pathname === "/app" || pathname.startsWith("/app/"))) {
       navigateTo("/onboarding", { replace: true });
       return;
     }
@@ -168,10 +161,14 @@ function AppContent() {
         onLogout={app.logout}
       />
     );
+  } else if (pathname === "/login") {
+    content = <LoginPage onLogin={app.login} />;
+  } else if (pathname === "/signup") {
+    content = <SignupPage onSignup={app.signup} />;
   } else if (pathname === "/forgot-password") {
     content = <ForgotPasswordPage />;
-  } else if (pathname === "/onboarding") {
-    content = <OnboardingPage user={app.user} onComplete={app.completeOnboarding} />;
+  } else if (pathname === "/onboarding" || pathname.startsWith("/onboarding/")) {
+    content = <OnboardingPage user={app.user} onComplete={app.completeOnboarding} pathname={pathname} />;
   } else if (pathname.startsWith("/app")) {
     const listingDetailMatch = pathname.match(/^\/app\/listings\/([^/]+)(?:\/gallery)?$/);
     const manageListingMatch = pathname.match(/^\/app\/my-listings\/([^/]+)$/);

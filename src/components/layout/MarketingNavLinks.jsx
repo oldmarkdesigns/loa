@@ -12,7 +12,7 @@ const marketingSectionItems = [
   { label: "Kontakt", hash: "#kontakt" }
 ];
 
-function MarketingNavLinks({ hrefPrefix = "", onSectionLinkClick, onPublish, onPrimaryNavClick }) {
+function MarketingNavLinks({ hrefPrefix = "", onSectionLinkClick, onPublish, onPrimaryNavClick, showPublish = true }) {
   return (
     <>
       {marketingPrimaryItems.map((item) => {
@@ -20,7 +20,7 @@ function MarketingNavLinks({ hrefPrefix = "", onSectionLinkClick, onPublish, onP
           <a
             key={item.label}
             href={item.href}
-            className="text-sm font-semibold text-[#0f1930] transition hover:text-[#0f1930]"
+            className="nav-underline-anim text-sm font-semibold text-[#0f1930] transition hover:text-[#0f1930]"
             onClick={(event) => {
               if (onPrimaryNavClick?.(event, item) === true) {
                 return;
@@ -39,21 +39,23 @@ function MarketingNavLinks({ hrefPrefix = "", onSectionLinkClick, onPublish, onP
           <a
             key={item.hash}
             href={href}
-            className="text-sm font-semibold text-[#0f1930] transition hover:text-[#0f1930]"
+            className="nav-underline-anim text-sm font-semibold text-[#0f1930] transition hover:text-[#0f1930]"
             onClick={onSectionLinkClick ? (event) => onSectionLinkClick(event, item.hash) : undefined}
           >
             {item.label}
           </a>
         );
       })}
-      <button
-        type="button"
-        className="inline-flex items-center gap-1.5 rounded-xl border border-[#0f1930] px-2.5 py-1.5 text-xs font-semibold text-[#0f1930] transition hover:bg-white"
-        onClick={onPublish}
-      >
-        <span aria-hidden="true" className="text-sm leading-none">+</span>
-        <span>Publicera annons</span>
-      </button>
+      {showPublish ? (
+        <button
+          type="button"
+          className="inline-flex items-center gap-1.5 rounded-xl border border-[#0f1930] px-2.5 py-1.5 text-xs font-semibold text-[#0f1930] transition hover:bg-[#0f1930] hover:text-white"
+          onClick={onPublish}
+        >
+          <span aria-hidden="true" className="text-sm leading-none">+</span>
+          <span>Publicera annons</span>
+        </button>
+      ) : null}
     </>
   );
 }

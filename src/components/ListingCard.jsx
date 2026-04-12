@@ -1,11 +1,3 @@
-function formatSek(value) {
-  return new Intl.NumberFormat("sv-SE", {
-    style: "currency",
-    currency: "SEK",
-    maximumFractionDigits: 0
-  }).format(value);
-}
-
 function ListingCard({ listing, shortlisted, onOpen, onToggleShortlist }) {
   return (
     <article className="surface group overflow-hidden p-3 animate-rise">
@@ -37,7 +29,6 @@ function ListingCard({ listing, shortlisted, onOpen, onToggleShortlist }) {
         </div>
 
         <div className="grid grid-cols-2 gap-2 text-xs text-ink-700">
-          <div className="rounded-xl bg-white px-2 py-2">{formatSek(listing.priceMonthly)} / månad</div>
           <div className="rounded-xl bg-white px-2 py-2">{listing.sizeSqm} kvm</div>
           <div className="rounded-xl bg-white px-2 py-2">{listing.capacity} platser</div>
           <div className="rounded-xl bg-white px-2 py-2">Svar inom {listing.responseHours}h</div>

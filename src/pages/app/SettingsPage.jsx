@@ -4,7 +4,7 @@ function SettingsPage({ app }) {
   const { user, savedFilters, filterPresets = [], savedAiSearches = [], switchRole } = app;
   const [pendingRole, setPendingRole] = useState(false);
 
-  const currentRoleLabel = useMemo(() => (user?.role === "publisher" ? "Annonsör" : "Hyresgäst"), [user?.role]);
+  const currentRoleLabel = useMemo(() => (user?.role === "publisher" ? "Hyresvärd" : "Hyresgäst"), [user?.role]);
 
   return (
     <section className="p-4 sm:p-6">
@@ -49,7 +49,7 @@ function SettingsPage({ app }) {
                 }
               }}
             >
-              Byt till Annonsör
+              Byt till Hyresvärd
             </button>
           </div>
         </article>

@@ -119,7 +119,7 @@ function AuthOverlay({ open, mode = "login", preferredRole = "renter", onClose, 
               <br />
               Hyresgäst: hyresgast@demo.se / demo123
               <br />
-              Annonsör: annonsor@demo.se / demo123
+              Hyresvärd: annonsor@demo.se / demo123
               <br />
               Kombi: kombi@demo.se / demo123
             </div>
@@ -162,7 +162,7 @@ function AuthOverlay({ open, mode = "login", preferredRole = "renter", onClose, 
                 <span className={`inline-flex h-4 w-4 items-center justify-center rounded-full border ${signupForm.roles.length === 1 && signupForm.roles[0] === "publisher" ? "border-[#0f1930]" : "border-ink-400"}`}>
                   {signupForm.roles.length === 1 && signupForm.roles[0] === "publisher" ? <span className="h-2 w-2 rounded-full bg-[#0f1930]" /> : null}
                 </span>
-                Annonsör
+                Hyresvärd
               </button>
               <button
                 type="button"

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { navigateTo, routeMatches } from "../../lib/router";
-import { ArrowUpIcon, BuildingIcon, HistoryIcon, MouseScrollIcon, UserIcon } from "../icons/UiIcons";
+import { ArrowLeftIcon, ArrowUpIcon, BuildingIcon, HistoryIcon, MouseScrollIcon, UserIcon } from "../icons/UiIcons";
 import AppFooter from "./AppFooter";
 import MarketingNavLinks from "./MarketingNavLinks";
 
@@ -21,11 +21,26 @@ function AppShell({ pathname, user, onSwitchRole, onLogout, onRequireAuth, isGue
     || routeMatches(pathname, "/app/leads")
   );
   const showPublisherWorkspaceNav = !isGuest && hasPublisherAccess && (activeRole === "publisher" || isPublisherWorkspacePath);
+  const deferPublisherWorkspaceNavToProfile = routeMatches(pathname, "/app/profile");
+  const currentSearch = typeof window !== "undefined" ? window.location.search : "";
+  const hasProfileSource = isPublisherWorkspacePath && new URLSearchParams(currentSearch).get("from") === "profile";
+
+  function withProfileSource(path) {
+    if (!hasProfileSource) return path;
+    const [basePath, rawQuery = ""] = path.split("?");
+    const params = new URLSearchParams(rawQuery);
+    params.set("from", "profile");
+    const nextQuery = params.toString();
+    return nextQuery ? `${basePath}?${nextQuery}` : basePath;
+  }
+  const shouldShowStaticNavBorder = routeMatches(pathname, "/app/rent");
   const [menuOpen, setMenuOpen] = useState(false);
   const [isNavScrolled, setIsNavScrolled] = useState(false);
   const [showScrollToTopButton, setShowScrollToTopButton] = useState(false);
   const [showLeaveSearchConfirm, setShowLeaveSearchConfirm] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const menuRef = useRef(null);
+  const profileMenuPanelRef = useRef(null);
   const contentRef = useRef(null);
 
   const initials = useMemo(() => {
@@ -39,7 +54,12 @@ function AppShell({ pathname, user, onSwitchRole, onLogout, onRequireAuth, isGue
 
   useEffect(() => {
     function onPointerDown(event) {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
+      if (
+        menuRef.current
+        && !menuRef.current.contains(event.target)
+        && profileMenuPanelRef.current
+        && !profileMenuPanelRef.current.contains(event.target)
+      ) {
         setMenuOpen(false);
       }
     }
@@ -50,6 +70,7 @@ function AppShell({ pathname, user, onSwitchRole, onLogout, onRequireAuth, isGue
 
   useEffect(() => {
     setMenuOpen(false);
+    setMobileMenuOpen(false);
   }, [pathname]);
 
   useEffect(() => {
@@ -107,11 +128,11 @@ function AppShell({ pathname, user, onSwitchRole, onLogout, onRequireAuth, isGue
     <main className="flex h-screen flex-col overflow-hidden bg-white text-black">
       <header
         className={`navbar-enter sticky top-0 z-40 shrink-0 border-b px-4 py-3 will-change-[background-color,border-color,backdrop-filter] transition-[background-color,border-color,backdrop-filter] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] sm:px-6 ${
-          isNavScrolled ? "border-black/10 bg-white/95 backdrop-blur-md" : "border-black/0 bg-white/0 backdrop-blur-0"
+          isNavScrolled || shouldShowStaticNavBorder ? "border-black/10 bg-white/95 backdrop-blur-md" : "border-black/0 bg-white/0 backdrop-blur-0"
         }`}
       >
-        <div className="grid w-full grid-cols-[1fr_auto_1fr] items-center gap-3">
-          <div className="flex items-center gap-3">
+        <div className="grid w-full grid-cols-[auto_1fr_auto] items-center gap-4">
+          <div className="flex min-w-0 items-center gap-4">
             <button type="button" className="justify-self-start text-left" onClick={() => navigateTo("/")}>
               <span className="inline-flex items-center gap-2 rounded-xl border border-black/10 bg-white px-2.5 py-1.5">
                 <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-dashed border-black/30 bg-white text-[9px] font-semibold uppercase tracking-wide text-ink-500">
@@ -122,103 +143,87 @@ function AppShell({ pathname, user, onSwitchRole, onLogout, onRequireAuth, isGue
             </button>
           </div>
 
-          <nav className="hidden items-center justify-self-center gap-5 lg:flex">
+          <nav className="hidden items-center justify-self-center gap-7 lg:flex">
             <MarketingNavLinks
               hrefPrefix="/"
               onPrimaryNavClick={handlePrimaryNavClick}
-              onPublish={() => {
-                if (isGuest) {
-                  onRequireAuth?.("login", "publisher");
-                  return;
-                }
-                navigateTo("/app/publish");
-              }}
+              showPublish={false}
             />
           </nav>
 
           {!isGuest ? (
-          <div className="flex items-center justify-self-end gap-2">
-            <div ref={menuRef} className="relative">
+          <div className="flex items-center justify-self-end gap-4">
+            <button
+              type="button"
+              className="inline-flex h-11 items-center gap-1.5 rounded-xl border border-[#0f1930] px-3 text-xs font-semibold text-[#0f1930] transition hover:bg-[#0f1930] hover:text-white"
+              onClick={() => navigateTo("/app/publish")}
+            >
+              <span aria-hidden="true" className="text-sm leading-none">+</span>
+              <span>Publicera annons</span>
+            </button>
+            <div ref={menuRef} className="relative inline-flex h-11 items-center self-center">
               <button
                 type="button"
-                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-black/20 bg-white text-sm font-semibold text-ink-700"
+                className="inline-flex h-full w-11 items-center justify-center overflow-hidden rounded-full border border-black/20 bg-white text-sm font-semibold text-ink-700"
                 onClick={() => setMenuOpen((value) => !value)}
                 aria-expanded={menuOpen}
                 aria-haspopup="menu"
               >
-                {initials}
+                {user?.profile?.avatarUrl ? (
+                  <img
+                    src={user.profile.avatarUrl}
+                    alt={user?.name || "Profil"}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  initials
+                )}
               </button>
 
-              {menuOpen ? (
-                <div className="absolute right-0 top-[calc(100%+8px)] z-30 w-72 rounded-2xl border border-black/10 bg-white p-3">
-                  <div className="rounded-xl border border-black/10 bg-white px-3 py-2">
-                    <p className="text-sm font-semibold text-black">{isGuest ? "Gästläge" : (user?.name || "Användare")}</p>
-                    <p className="text-xs text-ink-600">{isGuest ? "Logga in för att spara och boka visning" : (user?.email || "-")}</p>
-                    {!isGuest ? <p className="mt-1 text-xs text-ink-500">Roll: {activeRole === "publisher" ? "Annonsör" : "Hyresgäst"}</p> : null}
-                  </div>
-
-                  <div className="mt-2 grid gap-2 text-sm">
-                    {isGuest ? (
-                      <>
-                        <button
-                          type="button"
-                          className="rounded-xl border border-black/10 bg-white px-3 py-2 text-left font-semibold text-ink-700"
-                          onClick={() => onRequireAuth?.("login")}
-                        >
-                          Logga in
-                        </button>
-                        <button
-                          type="button"
-                          className="rounded-xl border border-[#0f1930] bg-[#0f1930] px-3 py-2 text-left font-semibold text-white hover:bg-[#16233f]"
-                          onClick={() => onRequireAuth?.("signup", "renter")}
-                        >
-                          Skapa konto
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <button type="button" className="rounded-xl border border-black/10 bg-white px-3 py-2 text-left font-semibold text-ink-700" onClick={() => navigateTo("/app/profile")}>
-                          <span className="inline-flex items-center gap-1.5">
-                            <UserIcon className="h-4 w-4" />
-                            Profil
-                          </span>
-                        </button>
-                        {roleSet.has("publisher") ? (
-                          <button type="button" className="rounded-xl border border-black/10 bg-white px-3 py-2 text-left font-semibold text-ink-700" onClick={() => navigateTo("/app/my-listings")}>
-                            <span className="inline-flex items-center gap-1.5">
-                              <BuildingIcon className="h-4 w-4" />
-                              Dina objekt
-                            </span>
-                          </button>
-                        ) : null}
-                        <button
-                          type="button"
-                          className="rounded-xl border border-black/10 bg-white px-3 py-2 text-left font-semibold text-ink-700"
-                          onClick={async () => {
-                            await onLogout();
-                            navigateTo("/", { replace: true });
-                          }}
-                        >
-                          <span className="inline-flex items-center gap-1.5">
-                            <HistoryIcon className="h-4 w-4" />
-                            Logga ut
-                          </span>
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              ) : null}
             </div>
+            <button
+              type="button"
+              aria-label="Öppna meny"
+              className="inline-flex h-11 items-center justify-center text-[#0f1930] lg:hidden"
+              onClick={() => {
+                setMenuOpen(false);
+                setMobileMenuOpen((value) => !value);
+              }}
+            >
+              <span className="inline-flex flex-col items-end gap-1.5">
+                <span className="block h-0.5 w-5 rounded-full bg-current" />
+                <span className="block h-0.5 w-4 rounded-full bg-current" />
+                <span className="block h-0.5 w-3 rounded-full bg-current" />
+              </span>
+            </button>
           </div>
           ) : (
-            <div className="flex items-center justify-self-end gap-2">
+            <div className="flex items-center justify-self-end gap-4">
               <button
                 type="button"
-                className="rounded-xl border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-white"
+                className="inline-flex items-center justify-center rounded-full border border-[#0f1930] bg-[#0f1930] px-4 py-2 text-xs font-semibold text-white hover:bg-[#16233f]"
+                onClick={() => onRequireAuth?.("signup", "renter")}
+              >
+                Skapa konto
+              </button>
+              <button
+                type="button"
+                className="inline-flex items-center bg-transparent px-1 py-2 text-xs font-semibold text-ink-700"
                 onClick={() => onRequireAuth?.("login")}
               >
                 Logga in
+              </button>
+              <button
+                type="button"
+                aria-label="Öppna meny"
+                className="inline-flex h-11 items-center justify-center text-[#0f1930] lg:hidden"
+                onClick={() => setMobileMenuOpen((value) => !value)}
+              >
+                <span className="inline-flex flex-col items-end gap-1.5">
+                  <span className="block h-0.5 w-5 rounded-full bg-current" />
+                  <span className="block h-0.5 w-4 rounded-full bg-current" />
+                  <span className="block h-0.5 w-3 rounded-full bg-current" />
+                </span>
               </button>
             </div>
           )}
@@ -226,28 +231,138 @@ function AppShell({ pathname, user, onSwitchRole, onLogout, onRequireAuth, isGue
 
       </header>
 
-      {showPublisherWorkspaceNav ? (
-        <div className="shrink-0 border-b border-black/10 bg-white px-4 py-2 sm:px-6">
-          <nav className="mx-auto flex w-full max-w-[1240px] flex-wrap items-center justify-start gap-5">
-            {publisherWorkspaceItems.map((item) => {
-              const active = routeMatches(pathname, item.path);
-              return (
-                <button
-                  key={item.path}
-                  type="button"
-                  className={`border-b-2 pb-0.5 text-sm font-semibold transition ${
-                    active
-                      ? "border-[#0f1930] text-[#0f1930]"
-                      : "border-transparent text-[#0f1930]/85 hover:text-[#0f1930]"
-                  }`}
-                  onClick={() => navigateTo(item.path)}
-                >
-                  {item.label}
-                </button>
-              );
-            })}
-          </nav>
+      {menuOpen ? (
+        <>
+          <div className="fixed inset-0 z-50 bg-black/20" onClick={() => setMenuOpen(false)} />
+          <div ref={profileMenuPanelRef} className="fixed right-4 top-[72px] z-[60] w-[min(320px,calc(100vw-2rem))] rounded-2xl bg-white p-3">
+            <div className="space-y-1 text-sm">
+              {isGuest ? (
+                <>
+                  <button
+                    type="button"
+                    className="menu-hover-row inline-flex w-full items-center rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5"
+                    onClick={() => onRequireAuth?.("login")}
+                  >
+                    Logga in
+                  </button>
+                  <button
+                    type="button"
+                    className="menu-hover-row inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5"
+                    onClick={() => onRequireAuth?.("signup", "renter")}
+                  >
+                    <BuildingIcon className="h-4 w-4" />
+                    Skapa konto
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button type="button" className="menu-hover-row inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5" onClick={() => navigateTo("/app/profile")}>
+                    <UserIcon className="h-4 w-4" />
+                    <span>Profil</span>
+                  </button>
+                  {roleSet.has("publisher") ? (
+                    <button type="button" className="menu-hover-row inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5" onClick={() => navigateTo("/app/my-listings")}>
+                      <BuildingIcon className="h-4 w-4" />
+                      <span>Dina objekt</span>
+                    </button>
+                  ) : null}
+                  <div className="my-1 h-px bg-black/10" />
+                  <button
+                    type="button"
+                    className="menu-hover-row inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5"
+                    onClick={async () => {
+                      setMenuOpen(false);
+                      await onLogout();
+                      navigateTo("/", { replace: true });
+                    }}
+                  >
+                    <HistoryIcon className="h-4 w-4" />
+                    <span>Logga ut</span>
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </>
+      ) : null}
+
+      {mobileMenuOpen ? (
+        <div className="fixed inset-0 z-[60] bg-black/20 lg:hidden" onClick={() => setMobileMenuOpen(false)}>
+          <div className="absolute right-4 top-[72px] w-[min(320px,calc(100vw-2rem))] rounded-2xl border border-black/10 bg-white p-3" onClick={(event) => event.stopPropagation()}>
+            <div className="space-y-1">
+              <button type="button" className="menu-hover-row inline-flex w-full items-center rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5" onClick={() => { setMobileMenuOpen(false); navigateTo("/app/rent?view=available"); }}>
+                Lediga lokaler
+              </button>
+              {!isGuest ? (
+                <>
+                  <button
+                    type="button"
+                    className="menu-hover-row inline-flex w-full items-center rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5"
+                    onClick={() => { setMobileMenuOpen(false); navigateTo("/app/publish"); }}
+                  >
+                    Publicera annons
+                  </button>
+                  <div className="my-1 h-px bg-black/10" />
+                </>
+              ) : null}
+              <button type="button" className="menu-hover-row inline-flex w-full items-center rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5" onClick={() => { setMobileMenuOpen(false); navigateTo("/#funktioner"); }}>
+                Funktioner
+              </button>
+              <button type="button" className="menu-hover-row inline-flex w-full items-center rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5" onClick={() => { setMobileMenuOpen(false); navigateTo("/#sa-fungerar-det"); }}>
+                Så fungerar det
+              </button>
+              <button type="button" className="menu-hover-row inline-flex w-full items-center rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5" onClick={() => { setMobileMenuOpen(false); navigateTo("/#priser"); }}>
+                Priser
+              </button>
+              <button type="button" className="menu-hover-row inline-flex w-full items-center rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5" onClick={() => { setMobileMenuOpen(false); navigateTo("/#faq"); }}>
+                FAQ
+              </button>
+              <button type="button" className="menu-hover-row inline-flex w-full items-center rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5" onClick={() => { setMobileMenuOpen(false); navigateTo("/#kontakt"); }}>
+                Kontakt
+              </button>
+            </div>
+          </div>
         </div>
+      ) : null}
+
+      {showPublisherWorkspaceNav && !deferPublisherWorkspaceNavToProfile ? (
+        <>
+          {hasProfileSource ? (
+            <div className="shrink-0 border-b border-black/10 bg-white px-4 py-2 sm:px-6">
+              <div className="mx-auto flex w-full max-w-[1240px] items-center justify-start">
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-black/20 bg-white px-3 py-2 text-xs font-semibold text-ink-800 hover:bg-[#f8fafc]"
+                  onClick={() => navigateTo("/app/profile")}
+                >
+                  <ArrowLeftIcon className="h-3.5 w-3.5" />
+                  Tillbaka till profil
+                </button>
+              </div>
+            </div>
+          ) : null}
+          <div className="shrink-0 border-b border-black/10 bg-white px-4 py-2 sm:px-6">
+            <nav className="mx-auto flex w-full max-w-[1240px] flex-wrap items-center justify-start gap-5">
+              {publisherWorkspaceItems.map((item) => {
+                const active = routeMatches(pathname, item.path);
+                return (
+                  <button
+                    key={item.path}
+                    type="button"
+                    className={`tab-underline-button border-b-2 pb-0.5 text-sm font-semibold transition ${
+                      active
+                        ? "border-[#0f1930] text-[#0f1930]"
+                        : "border-transparent text-[#0f1930]/85 hover:text-[#0f1930]"
+                    }`}
+                    onClick={() => navigateTo(withProfileSource(item.path))}
+                  >
+                    {item.label}
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+        </>
       ) : null}
 
       <section ref={contentRef} className="min-h-0 flex-1 overflow-hidden">{children}</section>

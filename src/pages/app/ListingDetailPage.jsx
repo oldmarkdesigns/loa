@@ -4,14 +4,15 @@ import Breadcrumbs from "../../components/layout/Breadcrumbs";
 import { formatSek } from "../../lib/formatters";
 import { normalizePopularListingFallback, popularListingFallbackKey } from "../../lib/popularListingFallback";
 import { navigateTo } from "../../lib/router";
+import nornormAd from "../../../Assets/ADS/Nornorm-AD.png";
 import {
   ArrowLeftIcon,
   BalconyIcon,
   BikeIcon,
+  BusIcon,
   BuildingIcon,
   CarIcon,
   ClockIcon,
-  CoinsIcon,
   DumbbellIcon,
   ExternalLinkIcon,
   LockerIcon,
@@ -25,6 +26,7 @@ import {
   ShieldIcon,
   SnowflakeIcon,
   StarIcon,
+  TrainIcon,
   UserIcon,
   UtensilsIcon,
   WifiIcon
@@ -32,6 +34,33 @@ import {
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 const GOOGLE_MAPS_SCRIPT_ID = "google-maps-listing-detail-script";
+const TRANSIT_DISTANCE_LIMIT_METERS = 1000;
+const MIN_TRANSIT_OPTIONS = 3;
+const MAX_TRANSIT_OPTIONS = 8;
+const TRANSIT_PLACE_TYPES = [
+  "transit_station",
+  "subway_station",
+  "train_station",
+  "light_rail_station",
+  "bus_station"
+];
+
+const STOCKHOLM_STATION_LINES = {
+  odenplan: ["17", "18", "19", "40", "41", "42", "43", "44"],
+  "stockholm odenplan": ["17", "18", "19", "40", "41", "42", "43", "44"],
+  "s:t eriksplan": ["17", "18", "19"],
+  "st eriksplan": ["17", "18", "19"],
+  hötorget: ["17", "18", "19"],
+  "medborgarplatsen": ["17", "18", "19"],
+  skanstull: ["17", "18", "19"],
+  fridhemsplan: ["10", "11", "17", "18", "19"],
+  rådhuset: ["10", "11"],
+  "östermalmstorg": ["13", "14"],
+  stadion: ["14"],
+  "tekniska högskolan": ["14"],
+  "t-centralen": ["10", "11", "13", "14", "17", "18", "19"],
+  "centralstationen": ["40", "41", "42", "43", "44"]
+};
 
 const districtInsights = {
   Norrmalm: {
@@ -141,7 +170,7 @@ function loadGoogleMaps(apiKey) {
 
     const script = document.createElement("script");
     script.id = GOOGLE_MAPS_SCRIPT_ID;
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&v=weekly`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&v=weekly&libraries=places`;
     script.async = true;
     script.defer = true;
     script.onload = () => {
@@ -299,6 +328,228 @@ function ListingStreetView({ lat, lng }) {
   );
 }
 
+function haversineMeters(from, to) {
+  const toRadians = (value) => (value * Math.PI) / 180;
+  const earthRadius = 6371000;
+  const dLat = toRadians(to.lat - from.lat);
+  const dLng = toRadians(to.lng - from.lng);
+  const a = Math.sin(dLat / 2) ** 2
+    + Math.cos(toRadians(from.lat)) * Math.cos(toRadians(to.lat)) * Math.sin(dLng / 2) ** 2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return Math.round(earthRadius * c);
+}
+
+function formatDistanceMeters(value) {
+  const meters = Number(value || 0);
+  if (!Number.isFinite(meters) || meters <= 0) return "";
+  if (meters >= 1000) {
+    return `${(meters / 1000).toFixed(1).replace(".", ",")} km`;
+  }
+  return `${meters} meter`;
+}
+
+function parseLineBadges(text) {
+  const normalized = String(text || "")
+    .replace(/\bca\.?\s*\d+\s*(min|meter|m|km)\b/gi, "")
+    .replace(/\b\d+\s*(min|meter|m|km)\b/gi, "");
+  const matches = normalized.match(/\b(?:\d{1,3}|[A-Z]\d{1,2})\b/g) || [];
+  return Array.from(new Set(matches)).slice(0, 4);
+}
+
+function normalizeTransitStopName(name, vicinity = "", lines = []) {
+  const knownLineTokens = new Set((Array.isArray(lines) ? lines : []).map((item) => String(item).toUpperCase()));
+  const lettersPattern = /[A-Za-zÅÄÖåäö]/;
+  const clean = (value) => String(value || "")
+    .replace(/\bca\.?\s*\d+\s*(min|meter|m|km)\b/gi, "")
+    .replace(/\b\d+\s*(min|meter|m|km)\b/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const primary = clean(name);
+  const primaryTokens = primary.split(" ").filter(Boolean);
+  const filteredPrimary = primaryTokens.filter((token) => !knownLineTokens.has(token.toUpperCase())).join(" ").trim();
+  if (filteredPrimary && lettersPattern.test(filteredPrimary)) return filteredPrimary;
+
+  const fallback = clean(vicinity).split(",")[0]?.trim() || "";
+  if (fallback && lettersPattern.test(fallback)) return fallback;
+  return primary;
+}
+
+function inferStationLinesFromName(name) {
+  const normalized = String(name || "").trim().toLowerCase();
+  if (!normalized) return [];
+  for (const [stationKey, lines] of Object.entries(STOCKHOLM_STATION_LINES)) {
+    if (normalized.includes(stationKey)) return lines;
+  }
+  return [];
+}
+
+function transitKindFromTypes(types = []) {
+  const list = Array.isArray(types) ? types : [];
+  if (list.includes("train_station") || list.includes("subway_station") || list.includes("light_rail_station")) {
+    return "train";
+  }
+  return "bus";
+}
+
+function buildFallbackTransitStops(fallbackTransit = []) {
+  return (Array.isArray(fallbackTransit) ? fallbackTransit : [])
+    .filter(Boolean)
+    .map((item, index) => {
+      const sourceName = String(item).trim();
+      const lines = Array.from(new Set([...parseLineBadges(sourceName), ...inferStationLinesFromName(sourceName)])).slice(0, 4);
+      const name = normalizeTransitStopName(sourceName, "", lines);
+      return {
+        id: `fallback-transit-${index}`,
+        name,
+        distanceLabel: "",
+        lines,
+        kind: "bus"
+      };
+    })
+    .filter((item) => Array.isArray(item.lines) && item.lines.length > 0)
+    .slice(0, 5);
+}
+
+function ListingTransitCard({ lat, lng, fallbackTransit = [] }) {
+  const [status, setStatus] = useState("loading");
+  const [stops, setStops] = useState(() => buildFallbackTransitStops(fallbackTransit));
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadTransit() {
+      const fallbackStops = buildFallbackTransitStops(fallbackTransit);
+
+      if (!GOOGLE_MAPS_API_KEY) {
+        setStops(fallbackStops);
+        setStatus("missing_key");
+        return;
+      }
+
+      try {
+        const maps = await loadGoogleMaps(GOOGLE_MAPS_API_KEY);
+        if (cancelled) return;
+
+        if (!maps?.places?.PlacesService || !maps?.places?.PlacesServiceStatus) {
+          setStops(fallbackStops);
+          setStatus("missing_places");
+          return;
+        }
+
+        const location = new maps.LatLng(lat, lng);
+        const service = new maps.places.PlacesService(document.createElement("div"));
+
+        const searchNearbyByType = (type) => new Promise((resolve) => {
+          service.nearbySearch(
+            { location, rankBy: maps.places.RankBy.DISTANCE, type },
+            (results, serviceStatus) => {
+              if (serviceStatus === maps.places.PlacesServiceStatus.OK && Array.isArray(results)) {
+                resolve(results);
+                return;
+              }
+              resolve([]);
+            }
+          );
+        });
+
+        async function searchAcrossTypes() {
+          const byType = await Promise.all(
+            TRANSIT_PLACE_TYPES.map((type) => searchNearbyByType(type))
+          );
+          const deduped = new Map();
+          byType.flat().forEach((place, index) => {
+            const key = String(place?.place_id || place?.name || `transit-${index}`);
+            if (!deduped.has(key)) deduped.set(key, place);
+          });
+          return Array.from(deduped.values());
+        }
+
+        const places = await searchAcrossTypes();
+
+        const parsedStops = places
+          .map((place, index) => {
+            const placeLocation = place?.geometry?.location;
+            const placeLat = typeof placeLocation?.lat === "function" ? placeLocation.lat() : null;
+            const placeLng = typeof placeLocation?.lng === "function" ? placeLocation.lng() : null;
+            const distance = (Number.isFinite(placeLat) && Number.isFinite(placeLng))
+              ? haversineMeters({ lat, lng }, { lat: placeLat, lng: placeLng })
+              : null;
+
+            const kind = transitKindFromTypes(place?.types);
+            const parsedLines = parseLineBadges(place?.name);
+            const inferredLines = kind === "train" ? inferStationLinesFromName(place?.name) : [];
+            const lines = Array.from(new Set([...parsedLines, ...inferredLines])).slice(0, 4);
+            const displayName = normalizeTransitStopName(place?.name, place?.vicinity, lines);
+            return {
+              id: String(place?.place_id || place?.name || `transit-${index}`),
+              name: String(displayName || "").trim(),
+              distanceMeters: distance ?? Number.POSITIVE_INFINITY,
+              distanceLabel: distance ? formatDistanceMeters(distance) : "",
+              lines,
+              kind
+            };
+          })
+          .filter((item) => item.name && Array.isArray(item.lines) && item.lines.length > 0)
+          .filter((item) => Number.isFinite(item.distanceMeters) && item.distanceMeters <= TRANSIT_DISTANCE_LIMIT_METERS)
+          .sort((a, b) => a.distanceMeters - b.distanceMeters)
+          .slice(0, MAX_TRANSIT_OPTIONS);
+
+        const nextStops = parsedStops.length > 0 ? parsedStops : fallbackStops;
+        setStops(nextStops);
+        setStatus(nextStops.length >= MIN_TRANSIT_OPTIONS ? "ready" : "limited");
+      } catch {
+        if (cancelled) return;
+        setStops(fallbackStops);
+        setStatus("error");
+      }
+    }
+
+    void loadTransit();
+    return () => {
+      cancelled = true;
+    };
+  }, [lat, lng, fallbackTransit]);
+
+  return (
+    <article className="rounded-2xl border border-black/10 bg-white p-4">
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="text-xl font-semibold">Kollektivtrafik</h3>
+      </div>
+      <div className="mt-3 grid gap-2 sm:grid-cols-2">
+        {stops.length > 0 ? (
+          stops.map((stop) => (
+            <article key={stop.id} className="rounded-xl border border-black/10 bg-[#f6f6f4] px-3 py-3">
+              <div className="flex items-start gap-2.5">
+                <div className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-black/10 bg-white text-ink-800">
+                  {stop.kind === "train" ? <TrainIcon className="h-5 w-5" /> : <BusIcon className="h-5 w-5" />}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-ink-900">{stop.name}</p>
+                  <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                    {stop.lines.map((line) => (
+                      <span key={`${stop.id}-line-${line}`} className="inline-flex min-w-[24px] items-center justify-center rounded-[4px] bg-[#0f1930] px-1.5 py-0.5 text-[11px] font-semibold leading-none text-white">
+                        {line}
+                      </span>
+                    ))}
+                    {stop.distanceLabel ? <span className="ml-1 text-xs font-medium text-ink-600">{stop.distanceLabel}</span> : null}
+                  </div>
+                </div>
+              </div>
+            </article>
+          ))
+        ) : (
+          <p className="text-sm text-ink-600">
+            {status === "loading"
+              ? "Hämtar kollektivtrafik..."
+              : "Inga kollektivtrafiklinjer med linjenummer hittades just nu."}
+          </p>
+        )}
+      </div>
+    </article>
+  );
+}
+
 function inferAmenitiesFromText(text) {
   const normalized = String(text || "").toLowerCase();
   const inferred = [];
@@ -380,7 +631,10 @@ function amenityIconFor(amenity) {
 function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, initialView = "detail" }) {
   const pageRef = useRef(null);
   const [galleryTab, setGalleryTab] = useState("images");
+  const [galleryOverlayOpen, setGalleryOverlayOpen] = useState(false);
+  const [activeGalleryIndex, setActiveGalleryIndex] = useState(0);
   const [areaViewMode, setAreaViewMode] = useState("map");
+  const [aboutOverlayOpen, setAboutOverlayOpen] = useState(false);
   const [inquiryOverlayOpen, setInquiryOverlayOpen] = useState(false);
   const [inquiryType, setInquiryType] = useState("contact");
   const [inquiryMessage, setInquiryMessage] = useState("");
@@ -420,6 +674,15 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
   const insight = useMemo(() => getDistrictInsight(listing?.district), [listing?.district]);
   const displayAmenities = useMemo(() => (listing ? buildDisplayAmenities(listing) : []), [listing]);
   const longDescription = useMemo(() => (listing ? buildLongDescription(listing, insight, displayAmenities) : []), [listing, insight, displayAmenities]);
+  const shortDescription = useMemo(() => {
+    if (longDescription.length === 0) return [];
+    const combined = longDescription.join(" ");
+    if (combined.length <= 420) return longDescription.slice(0, 2);
+    const firstChunk = combined.slice(0, 420).trim();
+    const safeCut = firstChunk.lastIndexOf(".");
+    const preview = safeCut > 180 ? firstChunk.slice(0, safeCut + 1) : `${firstChunk}...`;
+    return [preview];
+  }, [longDescription]);
 
   const googleMapsHref = useMemo(
     () => `https://www.google.com/maps?q=${encodeURIComponent(`${insight.center.lat},${insight.center.lng}`)}`,
@@ -461,10 +724,11 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
       ? listing.images
       : [listing.image || "/object-images/object-1.jpeg"];
   }, [listing]);
-
-  const sidebarGalleryImages = useMemo(() => {
+  const galleryPreviewImages = useMemo(() => {
     if (images.length === 0) return [];
-    return Array.from({ length: 12 }, (_, index) => images[index % images.length]);
+    const secondaryImages = images.length > 1 ? images.slice(1) : images;
+    if (secondaryImages.length >= 4) return secondaryImages.slice(0, 4);
+    return Array.from({ length: 4 }, (_, index) => secondaryImages[index % secondaryImages.length]);
   }, [images]);
 
   useEffect(() => {
@@ -496,6 +760,24 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
 
   function handleExportPdf() {
     window.print();
+  }
+
+  function openGalleryOverlay(startIndex = 0) {
+    const safeIndex = Number.isFinite(startIndex) ? Math.max(0, Math.min(images.length - 1, startIndex)) : 0;
+    setActiveGalleryIndex(safeIndex);
+    setGalleryOverlayOpen(true);
+  }
+
+  function closeGalleryOverlay() {
+    setGalleryOverlayOpen(false);
+  }
+
+  function openAboutOverlay() {
+    setAboutOverlayOpen(true);
+  }
+
+  function closeAboutOverlay() {
+    setAboutOverlayOpen(false);
   }
 
   function openInquiryOverlay(type) {
@@ -575,7 +857,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
             <div className="inline-flex items-center justify-center gap-6 justify-self-center">
               <button
                 type="button"
-                className={`border-b-2 pb-0.5 text-xs font-semibold transition ${
+                className={`tab-underline-button border-b-2 pb-0.5 text-xs font-semibold transition ${
                   galleryTab === "images"
                     ? "border-[#0f1930] text-[#0f1930]"
                     : "border-transparent text-ink-600 hover:text-black"
@@ -586,7 +868,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
               </button>
               <button
                 type="button"
-                className={`border-b-2 pb-0.5 text-xs font-semibold transition ${
+                className={`tab-underline-button border-b-2 pb-0.5 text-xs font-semibold transition ${
                   galleryTab === "street"
                     ? "border-[#0f1930] text-[#0f1930]"
                     : "border-transparent text-ink-600 hover:text-black"
@@ -635,7 +917,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                   href={googleMapsHref}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-white"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-white"
                 >
                   Öppna i Google Maps
                   <ExternalLinkIcon className="h-3.5 w-3.5" />
@@ -672,12 +954,13 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
           </button>
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h1 className="text-3xl font-semibold">{listing.title}</h1>
+              <h1 className="text-3xl font-semibold text-ink-900">{listing.title}</h1>
               <p className="mt-2 inline-flex items-center gap-1.5 text-sm text-ink-500">
                 <PinIcon className="h-4 w-4" />
                 {listing.district} • {listing.address}
               </p>
             </div>
+
             <div className="flex flex-wrap items-center gap-2">
               <button type="button" className={actionButtonClass} onClick={handleExportPdf}>
                 <PdfIcon className="h-3.5 w-3.5" />
@@ -701,169 +984,216 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
           </div>
 
           <div className="grid gap-2 md:grid-cols-2">
-            <button
-              type="button"
-              className="block h-full w-full text-left"
-              onClick={() => navigateTo(galleryHref)}
-            >
-              <img src={images[0]} alt={listing.title} className="h-60 w-full rounded-2xl object-cover sm:h-[340px]" />
-            </button>
-            <div className="grid h-60 grid-cols-4 grid-rows-3 gap-2 sm:h-[340px]">
-              {sidebarGalleryImages.map((image, index) => (
+            <div className="relative h-60 overflow-hidden rounded-3xl border border-black/10 bg-white sm:h-[340px]">
+              <div className="grid h-full grid-cols-[1.1fr_1fr] gap-0.5 bg-white">
                 <button
-                  key={`${image}-${index}`}
                   type="button"
-                  className="block"
-                  onClick={() => navigateTo(galleryHref)}
+                  className="gallery-mosaic-tile relative block h-full w-full overflow-hidden text-left"
+                  onClick={() => openGalleryOverlay(0)}
                 >
-                  <img src={image} alt={`${listing.title} ${index + 1}`} className="h-full w-full rounded-xl border border-black/10 object-cover" />
+                  <img src={images[0]} alt={listing.title} className="h-full w-full object-cover" />
+                  <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/45 via-black/10 to-transparent px-4 pb-4 pt-16">
+                    <span
+                      className="pointer-events-auto inline-flex items-center justify-center rounded-full border border-black/10 bg-white px-4 py-2.5 text-sm font-semibold text-[#0f1930] transition hover:border-[#0f1930]"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        openGalleryOverlay(0);
+                      }}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          openGalleryOverlay(0);
+                        }
+                      }}
+                    >
+                      Se alla bilder
+                    </span>
+                  </div>
                 </button>
-              ))}
+
+                <div className="grid h-full grid-cols-2 grid-rows-2 gap-0.5">
+                  {galleryPreviewImages.map((image, index) => (
+                    <button
+                      key={`gallery-side-${image}-${index}`}
+                      type="button"
+                      className="gallery-mosaic-tile overflow-hidden bg-white text-left"
+                      onClick={() => openGalleryOverlay(index + 1)}
+                    >
+                      <img src={image} alt={`${listing.title} forhandsbild ${index + 2}`} className="h-full w-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="relative h-60 overflow-hidden rounded-3xl border border-black/10 bg-white sm:h-[340px]">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(15,25,48,0.06),transparent_42%),radial-gradient(circle_at_82%_78%,rgba(15,25,48,0.06),transparent_40%)]" />
+              <div className="relative z-10 flex h-full flex-col items-center justify-center px-5 text-center">
+                <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-black/10 bg-white text-[#0f1930]">
+                  <BuildingIcon className="h-5 w-5" />
+                </div>
+                <p className="mt-3 text-sm font-semibold text-ink-900">3D-modell kommer snart</p>
+                <p className="mt-1 max-w-[18rem] text-xs text-ink-600">
+                  Här visas en interaktiv 3D-visualisering av lokalen i nästa version.
+                </p>
+              </div>
             </div>
           </div>
 
-          <div className="mt-4 grid gap-4 lg:grid-cols-2">
-            <article className="flex h-full flex-col rounded-2xl border border-black/10 bg-white p-4">
-              <p className="text-2xl font-semibold">{formatSek(listing.priceMonthly)} /månad</p>
-              <p className="mt-1 text-sm text-ink-500">Hyresperiod: {listing.term || "6-24 månader"}</p>
+          <div className="mt-4 grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+            <div className="space-y-4">
+              <article className="rounded-3xl border border-black/10 bg-white p-5">
+                <h2 className="text-xl font-semibold">Om lokalen</h2>
+                <div className="mt-3 inline-flex flex-wrap items-center overflow-hidden rounded-full border border-black/10 bg-white text-sm text-ink-700">
+                  <div className="inline-flex items-center gap-2 px-3 py-2">
+                    <RulerIcon className="h-4 w-4 text-ink-600" />
+                    {listing.sizeSqm} kvm
+                  </div>
+                  <span className="h-5 w-px bg-black/10" />
+                  <div className="inline-flex items-center gap-2 px-3 py-2">
+                    <UserIcon className="h-4 w-4 text-ink-600" />
+                    {listing.capacity} platser
+                  </div>
+                  <span className="h-5 w-px bg-black/10" />
+                  <div className="inline-flex items-center gap-2 px-3 py-2">
+                    <ClockIcon className="h-4 w-4 text-ink-600" />
+                    Svarstid cirka {listing.responseHours}h
+                  </div>
+                </div>
+                <div className="mt-3 space-y-3 text-sm leading-relaxed text-ink-700">
+                  {shortDescription.map((paragraph) => (
+                    <p key={paragraph}>{paragraph}</p>
+                  ))}
+                </div>
+                <div className="mt-5">
+                  <button
+                    type="button"
+                    className="rounded-full border border-black/10 bg-white px-4 py-2.5 text-sm font-semibold text-ink-700 transition hover:border-[#0f1930]/25 hover:text-[#0f1930]"
+                    onClick={openAboutOverlay}
+                  >
+                    Läs mer
+                  </button>
+                </div>
+              </article>
 
-              <h3 className="mt-5 text-base font-semibold">Bekvämligheter</h3>
-              <ul className="mt-3 flex flex-wrap gap-2">
-                {displayAmenities.map((amenity) => {
-                  const Icon = amenityIconFor(amenity);
-                  return (
-                    <li
-                      key={amenity}
-                      className="inline-flex items-center gap-1.5 rounded-xl border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-ink-700"
+              <article className="rounded-3xl border border-black/10 bg-white p-5">
+                <h3 className="text-xl font-semibold">Bekvämligheter</h3>
+                <ul className="mt-4 flex flex-wrap gap-2">
+                  {displayAmenities.map((amenity) => {
+                    const Icon = amenityIconFor(amenity);
+                    return (
+                      <li
+                        key={amenity}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-ink-700"
+                      >
+                        <Icon className="h-4 w-4 shrink-0 text-ink-700" />
+                        {amenity}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </article>
+
+              <ListingTransitCard lat={insight.center.lat} lng={insight.center.lng} fallbackTransit={insight.transit} />
+
+              <article className="rounded-3xl border border-black/10 bg-white p-5">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h2 className="text-xl font-semibold">Området</h2>
+                  <div className="inline-flex items-center gap-1 rounded-full border border-black/10 bg-white p-1">
+                    <button
+                      type="button"
+                      className={`inline-flex min-h-[30px] items-center gap-1 rounded-full px-2.5 text-[11px] font-semibold transition ${
+                        areaViewMode === "map"
+                          ? "bg-[#0f1930] text-white"
+                          : "text-ink-700 hover:bg-white"
+                      }`}
+                      onClick={() => setAreaViewMode("map")}
+                      aria-pressed={areaViewMode === "map"}
                     >
-                      <Icon className="h-4 w-4 shrink-0 text-ink-700" />
-                      {amenity}
-                    </li>
-                  );
-                })}
-              </ul>
-
-              <div className="mt-auto space-y-2 pt-5">
-                <button
-                  type="button"
-                  className="w-full rounded-2xl border border-[#0f1930] bg-[#0f1930] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#16233f]"
-                  onClick={() => openInquiryOverlay("viewing")}
+                      Karta
+                    </button>
+                    <button
+                      type="button"
+                      className={`inline-flex min-h-[30px] items-center gap-1 rounded-full px-2.5 text-[11px] font-semibold transition ${
+                        areaViewMode === "street"
+                          ? "bg-[#0f1930] text-white"
+                          : "text-ink-700 hover:bg-white"
+                      }`}
+                      onClick={() => setAreaViewMode("street")}
+                      aria-pressed={areaViewMode === "street"}
+                    >
+                      Gatuvy
+                    </button>
+                  </div>
+                </div>
+                <p className="mt-2 text-sm text-ink-700">
+                  Lokalen ligger i {listing.district} och nås smidigt med kollektivtrafik, cykel och bil beroende på teamets behov.
+                </p>
+                <div className="mt-3">
+                  {areaViewMode === "map" ? (
+                    <ListingAreaGoogleMap lat={insight.center.lat} lng={insight.center.lng} title={listing.title} />
+                  ) : (
+                    <ListingStreetView lat={insight.center.lat} lng={insight.center.lng} />
+                  )}
+                </div>
+                <a
+                  href={googleMapsHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-white"
                 >
-                  Boka visning
-                </button>
-                <button
-                  type="button"
-                  className="w-full rounded-2xl border border-black/10 bg-white px-4 py-2.5 text-sm font-semibold text-ink-700 hover:bg-white"
-                  onClick={() => openInquiryOverlay("contact")}
-                >
-                  Kontakta uthyrare
-                </button>
-              </div>
-            </article>
+                  Öppna i Google Maps
+                  <ExternalLinkIcon className="h-3.5 w-3.5" />
+                </a>
+              </article>
+            </div>
 
-            <article className="rounded-2xl border border-black/10 bg-white p-4">
-              <h3 className="text-base font-semibold">Snabbfakta</h3>
-              <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                <div className="inline-flex items-center gap-2 px-1 py-1 text-sm text-ink-700">
-                  <CoinsIcon className="h-4 w-4 text-ink-600" />
-                  {formatSek(listing.priceMonthly)} / månad
+            <aside className="space-y-4 xl:sticky xl:top-6 xl:self-start">
+              <article className="rounded-3xl border border-black/10 bg-white p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Tillgänglighet</p>
+                    <p className="mt-1 text-sm font-semibold text-ink-900">{listing.availability || "Efter överenskommelse"}</p>
+                  </div>
+                  <span className="rounded-full border border-black/10 bg-white px-2.5 py-1 text-[11px] font-semibold text-ink-700">
+                    {listing.term || "Flexibelt avtal"}
+                  </span>
                 </div>
-                <div className="inline-flex items-center gap-2 px-1 py-1 text-sm text-ink-700">
-                  <RulerIcon className="h-4 w-4 text-ink-600" />
-                  {listing.sizeSqm} kvm
-                </div>
-                <div className="inline-flex items-center gap-2 px-1 py-1 text-sm text-ink-700">
-                  <UserIcon className="h-4 w-4 text-ink-600" />
-                  {listing.capacity} platser
-                </div>
-                <div className="inline-flex items-center gap-2 px-1 py-1 text-sm text-ink-700">
-                  <ClockIcon className="h-4 w-4 text-ink-600" />
-                  Svarstid cirka {listing.responseHours}h
-                </div>
-              </div>
 
-              <h3 className="mt-5 text-base font-semibold">Kommunikation & service i området</h3>
-              <div className="mt-3 grid gap-x-8 gap-y-4 md:grid-cols-2">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Kommunaltrafik</p>
-                  <ul className="mt-2 space-y-1.5 text-sm text-ink-700">
-                    {insight.transit.map((item) => (
-                      <li key={item} className="leading-relaxed">• {item}</li>
-                    ))}
-                  </ul>
+                <div className="mt-4 border-t border-black/10 pt-4">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Hyra per månad</p>
+                  <p className="mt-1 text-[28px] font-semibold leading-none text-[#0f1930]">{formatSek(listing.priceMonthly)}</p>
                 </div>
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Närområde</p>
-                  <ul className="mt-2 space-y-1.5 text-sm text-ink-700">
-                    {insight.services.map((item) => (
-                      <li key={item} className="leading-relaxed">• {item}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </article>
-          </div>
 
-          <div className="mt-4 grid items-start gap-4 lg:grid-cols-2">
-            <article className="self-start rounded-2xl border border-black/10 p-4">
-              <h2 className="text-xl font-semibold">Om lokalen</h2>
-              <div className="mt-2 space-y-3 text-sm text-ink-700">
-                {longDescription.map((paragraph) => (
-                  <p key={paragraph}>{paragraph}</p>
-                ))}
-              </div>
-            </article>
-
-            <article className="rounded-2xl border border-black/10 bg-white p-4">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <h2 className="text-xl font-semibold">Området</h2>
-                <div className="inline-flex items-center gap-1 rounded-xl border border-black/10 bg-white p-1">
+                <div className="mt-5 space-y-2">
                   <button
                     type="button"
-                    className={`inline-flex min-h-[30px] items-center gap-1 rounded-lg px-2.5 text-[11px] font-semibold transition ${
-                      areaViewMode === "map"
-                        ? "bg-[#0f1930] text-white"
-                        : "text-ink-700 hover:bg-white"
-                    }`}
-                    onClick={() => setAreaViewMode("map")}
-                    aria-pressed={areaViewMode === "map"}
+                    className="w-full rounded-full border border-[#0f1930] bg-[#0f1930] px-4 py-3 text-sm font-semibold text-white hover:bg-[#16233f]"
+                    onClick={() => openInquiryOverlay("contact")}
                   >
-                    Karta
+                    Kontakta uthyrare
                   </button>
                   <button
                     type="button"
-                    className={`inline-flex min-h-[30px] items-center gap-1 rounded-lg px-2.5 text-[11px] font-semibold transition ${
-                      areaViewMode === "street"
-                        ? "bg-[#0f1930] text-white"
-                        : "text-ink-700 hover:bg-white"
-                    }`}
-                    onClick={() => setAreaViewMode("street")}
-                    aria-pressed={areaViewMode === "street"}
+                    className="w-full rounded-full border border-black/10 bg-white px-4 py-3 text-sm font-semibold text-ink-700 hover:bg-white"
+                    onClick={() => openInquiryOverlay("viewing")}
                   >
-                    Gatuvy
+                    Boka visning
                   </button>
                 </div>
-              </div>
-              <p className="mt-2 text-sm text-ink-700">
-                Lokalen ligger i {listing.district} och nås smidigt med kollektivtrafik, cykel och bil beroende på teamets behov.
-              </p>
-              <div className="mt-3">
-                {areaViewMode === "map" ? (
-                  <ListingAreaGoogleMap lat={insight.center.lat} lng={insight.center.lng} title={listing.title} />
-                ) : (
-                  <ListingStreetView lat={insight.center.lat} lng={insight.center.lng} />
-                )}
-              </div>
-              <a
-                href={googleMapsHref}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-3 inline-flex items-center gap-1.5 rounded-xl border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-white"
-              >
-                Öppna i Google Maps
-                <ExternalLinkIcon className="h-3.5 w-3.5" />
-              </a>
-            </article>
+
+                <div className="mt-5 border-t border-black/10 pt-4 text-sm text-ink-600">
+                  <p>Svarstid cirka {listing.responseHours} timmar.</p>
+                </div>
+              </article>
+
+              <article className="overflow-hidden rounded-3xl border border-black/10 bg-white">
+                <img src={nornormAd} alt="Nornorm annons" className="block w-full" />
+              </article>
+            </aside>
           </div>
         </div>
 
@@ -945,6 +1275,144 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                   </div>
                 </>
               )}
+            </div>
+          </div>
+        ) : null}
+
+        {aboutOverlayOpen ? (
+          <div className="fixed inset-0 z-[72] flex items-center justify-center bg-black/45 p-4" onClick={closeAboutOverlay}>
+            <div className="w-full max-w-2xl rounded-3xl border border-black/10 bg-white p-6 shadow-[0_20px_60px_rgba(0,0,0,0.25)] sm:p-7" onClick={(event) => event.stopPropagation()}>
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="text-2xl font-semibold text-ink-900">Om lokalen</h3>
+                  <p className="mt-1 text-sm text-ink-600">{listing.title}</p>
+                </div>
+                <button
+                  type="button"
+                  className="close-circle-button inline-flex items-center justify-center rounded-full border border-black/10 bg-white text-xl leading-none text-ink-700 hover:border-[#0f1930]/25 hover:text-[#0f1930]"
+                  onClick={closeAboutOverlay}
+                  aria-label="Stäng"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="mt-5 space-y-3 text-sm leading-relaxed text-ink-700">
+                {longDescription.map((paragraph) => (
+                  <p key={`overlay-${paragraph}`}>{paragraph}</p>
+                ))}
+              </div>
+
+              <div className="mt-6 border-t border-black/10 pt-5">
+                <h4 className="text-base font-semibold text-ink-900">Service i området</h4>
+                <ul className="mt-3 space-y-1.5 text-sm text-ink-700">
+                  {insight.services.map((item) => (
+                    <li key={`overlay-service-${item}`} className="leading-relaxed">• {item}</li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="mt-6 flex justify-center border-t border-black/10 pt-5">
+                <button
+                  type="button"
+                  className="rounded-full border border-black/10 bg-white px-4 py-2.5 text-sm font-semibold text-ink-700 transition hover:border-[#0f1930]/25 hover:text-[#0f1930]"
+                  onClick={closeAboutOverlay}
+                >
+                  Stäng
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {galleryOverlayOpen ? (
+          <div className="fixed inset-0 z-[75] overflow-y-auto bg-white pb-24">
+            <div className="min-h-screen">
+              <div className="sticky top-0 z-10 border-b border-black/10 bg-white/95 backdrop-blur-md">
+                <div className="mx-auto grid w-full max-w-[1600px] grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 py-4 sm:px-6">
+                  <div />
+
+                  <div className="inline-flex items-center justify-center gap-6 justify-self-center">
+                    <button
+                      type="button"
+                      className={`tab-underline-button border-b-2 pb-0.5 text-sm font-semibold transition ${
+                        galleryTab === "images"
+                          ? "border-[#0f1930] text-[#0f1930]"
+                          : "border-transparent text-ink-600 hover:text-black"
+                      }`}
+                      onClick={() => setGalleryTab("images")}
+                    >
+                      Galleri
+                    </button>
+                    <button
+                      type="button"
+                      className={`tab-underline-button border-b-2 pb-0.5 text-sm font-semibold transition ${
+                        galleryTab === "street"
+                          ? "border-[#0f1930] text-[#0f1930]"
+                          : "border-transparent text-ink-600 hover:text-black"
+                      }`}
+                      onClick={() => setGalleryTab("street")}
+                    >
+                      Gatuvy
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="close-circle-button inline-flex items-center justify-center justify-self-end rounded-full border border-black/10 bg-white text-xl leading-none text-ink-700 transition hover:border-[#0f1930]/25 hover:text-[#0f1930]"
+                    onClick={closeGalleryOverlay}
+                    aria-label="Stäng galleri"
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
+
+              <div className="mx-auto w-full max-w-[1600px] px-4 py-5 sm:px-6 sm:py-6">
+                {galleryTab === "images" ? (
+                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                    {images.map((image, index) => (
+                      <button
+                        key={`gallery-full-${image}-${index}`}
+                        type="button"
+                        className="gallery-thumb-button overflow-hidden border border-black/10 bg-white text-left"
+                        onClick={() => setActiveGalleryIndex(index)}
+                      >
+                        <img
+                          src={image}
+                          alt={`${listing.title} bild ${index + 1}`}
+                          className="h-[360px] w-full object-cover sm:h-[460px] xl:h-[560px]"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="rounded-3xl border border-black/10 bg-white p-3 sm:p-4">
+                    <ListingStreetView lat={insight.center.lat} lng={insight.center.lng} />
+                    <a
+                      href={googleMapsHref}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-white"
+                    >
+                      Öppna i Google Maps
+                      <ExternalLinkIcon className="h-3.5 w-3.5" />
+                    </a>
+                  </div>
+                )}
+              </div>
+
+              <div className="fixed inset-x-0 bottom-0 z-10 border-t border-black/10 bg-white/95 backdrop-blur-md">
+                <div className="mx-auto flex w-full max-w-[1600px] justify-center px-4 py-4 sm:px-6">
+                  <button
+                    type="button"
+                    className="rounded-full border border-[#0f1930] bg-[#0f1930] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#16233f]"
+                    onClick={closeGalleryOverlay}
+                  >
+                    Stäng
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         ) : null}

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { formatDate, formatSek, parseAmenities } from "../../lib/formatters";
+import { formatDate, parseAmenities } from "../../lib/formatters";
 import { navigateTo } from "../../lib/router";
 import { districtOptions, listingTypes } from "../../data/mockData";
 import PresetTextField from "../../components/app/PresetTextField";
@@ -154,7 +154,6 @@ function ListingPreview({ draft }) {
         </div>
 
         <div className="grid grid-cols-2 gap-2 text-xs">
-          <div className="rounded-xl border border-black/10 bg-[#fafafa] px-3 py-2">{formatSek(draft.priceMonthly || 0)} / månad</div>
           <div className="rounded-xl border border-black/10 bg-[#fafafa] px-3 py-2">{draft.sizeSqm || "-"} kvm</div>
           <div className="rounded-xl border border-black/10 bg-[#fafafa] px-3 py-2">{draft.capacity || "-"} platser</div>
           <div className="rounded-xl border border-black/10 bg-[#fafafa] px-3 py-2">{draft.type || "-"}</div>
@@ -291,7 +290,7 @@ function MyListingsPage({ app }) {
     return (
       <section className="p-4 sm:p-6">
         <div className="mx-auto max-w-[1000px] rounded-3xl border border-black/10 bg-white p-6 text-sm text-ink-600">
-          Dina objekt är tillgängligt i annonsörsläge.
+          Dina objekt är tillgängligt i hyresvärdsläge.
         </div>
       </section>
     );
@@ -564,7 +563,7 @@ function MyListingsPage({ app }) {
             <div className="mb-2 flex flex-wrap items-center gap-5">
               <button
                 type="button"
-                className="inline-flex items-center gap-1.5 border-b-2 border-[#0f1930] pb-1 text-sm font-semibold text-[#0f1930]"
+                className="tab-underline-button inline-flex items-center gap-1.5 border-b-2 border-[#0f1930] pb-1 text-sm font-semibold text-[#0f1930]"
                 onClick={() => navigateTo("/app/my-listings")}
               >
                 <BuildingIcon className="h-3.5 w-3.5" />
@@ -572,7 +571,7 @@ function MyListingsPage({ app }) {
               </button>
               <button
                 type="button"
-                className="inline-flex items-center gap-1.5 border-b-2 border-transparent pb-1 text-sm font-semibold text-ink-600 hover:text-black"
+                className="tab-underline-button inline-flex items-center gap-1.5 border-b-2 border-transparent pb-1 text-sm font-semibold text-ink-600 hover:text-black"
                 onClick={() => navigateTo("/app/leads")}
               >
                 <CalendarIcon className="h-3.5 w-3.5" />
@@ -775,7 +774,6 @@ function MyListingsPage({ app }) {
                       </div>
 
                       <div className="grid grid-cols-2 gap-1.5 text-[11px]">
-                        <div className="rounded-2xl border border-black/10 bg-[#fafafa] px-2 py-1.5">{formatSek(listing.priceMonthly)} / månad</div>
                         <div className="rounded-2xl border border-black/10 bg-[#fafafa] px-2 py-1.5">{listing.sizeSqm} kvm</div>
                         <div className="rounded-2xl border border-black/10 bg-[#fafafa] px-2 py-1.5">{listing.capacity} platser</div>
                         <div className="rounded-2xl border border-black/10 bg-[#fafafa] px-2 py-1.5">Uppdaterad {formatDate(listing.updatedAt)}</div>

@@ -24,7 +24,6 @@ import {
   ShieldIcon,
   SnowflakeIcon,
   SparklesIcon,
-  UploadIcon,
   UserIcon,
   UtensilsIcon,
   WifiIcon
@@ -118,6 +117,44 @@ function parseAmenityTerms(value) {
     .split(",")
     .map((token) => token.trim())
     .filter(Boolean);
+}
+
+function parseTypeSelection(value) {
+  if (Array.isArray(value)) return value.filter(Boolean);
+  const normalized = String(value || "").trim();
+  if (!normalized || normalized === "Alla" || normalized === "Alla typer") return [];
+  return normalized.split(",").map((item) => item.trim()).filter(Boolean);
+}
+
+function mapRenterProgramToSearchFilters(program = {}, defaultFilters = {}) {
+  const district = String(program?.district || "").trim();
+  const contractFlex = String(program?.contractFlex || "").trim();
+  const transitDistance = String(program?.transitDistance || "").trim();
+  const accessHours = String(program?.accessHours || "").trim();
+  const parkingType = String(program?.parkingType || "").trim();
+  const layoutType = String(program?.layoutType || "").trim();
+
+  return {
+    ...defaultFilters,
+    district: district || defaultFilters.district || "Alla",
+    type: parseTypeSelection(program?.type),
+    teamSize: String(program?.teamSize || "").trim(),
+    minSize: String(program?.minSize || "").trim(),
+    maxSize: String(program?.maxSize || "").trim(),
+    minBudget: String(program?.minBudget || "").trim(),
+    maxBudget: String(program?.maxBudget || "").trim(),
+    moveInDate: String(program?.moveInDate || "").trim(),
+    contractFlex: contractFlex === "Alla" ? "" : contractFlex,
+    transitDistance: transitDistance === "Alla" ? "" : transitDistance,
+    accessHours: accessHours === "Alla" ? "" : accessHours,
+    parkingType: parkingType === "Alla" ? "" : parkingType,
+    layoutType: layoutType === "Alla" ? "" : layoutType,
+    includeOperatingCosts: Boolean(program?.includeOperatingCosts),
+    accessibilityAdapted: Boolean(program?.accessibilityAdapted),
+    ecoCertified: Boolean(program?.ecoCertified),
+    advertiser: defaultFilters.advertiser || "Alla",
+    query: ""
+  };
 }
 
 function normalizeAmenityTerm(value) {
@@ -474,7 +511,7 @@ function GoogleListingsMap({
               <button
                 type="button"
                 aria-label="Stäng objekt"
-                className="inline-flex h-9 w-9 min-h-9 min-w-9 aspect-square items-center justify-center rounded-full border border-black/10 bg-white p-0 text-lg font-semibold leading-none text-ink-700 hover:bg-[#eef3fa]"
+                className="close-circle-button inline-flex items-center justify-center rounded-full border border-black/10 bg-white text-lg font-semibold leading-none text-ink-700 hover:bg-[#eef3fa]"
                 onClick={() => onCloseSelectedListing?.()}
               >
                 ×
@@ -558,7 +595,7 @@ function AuthPromptModal({ mode, onClose, onRequireAuth }) {
 
   const message = mode === "save"
     ? "Logga in eller skapa konto för att spara objekt och bygga en lista med sparade objekt."
-    : "Logga in eller skapa konto för att boka visning och skicka förfrågan till annonsör.";
+    : "Logga in eller skapa konto för att boka visning och skicka förfrågan till hyresvärd.";
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink-900/45 p-4 sm:items-center" onClick={onClose}>
@@ -644,7 +681,7 @@ function buildSearchChipEntries(searchMeta, defaultMaxBudget) {
   if (activeFilters.accessHours) chips.push({ key: "accessHours", label: `Access: ${activeFilters.accessHours}` });
   if (activeFilters.parkingType) chips.push({ key: "parkingType", label: `Parkering: ${activeFilters.parkingType}` });
   if (activeFilters.layoutType) chips.push({ key: "layoutType", label: `Planlösning: ${activeFilters.layoutType}` });
-  if (activeFilters.advertiser && activeFilters.advertiser !== "Alla") chips.push({ key: "advertiser", label: `Annonsör: ${activeFilters.advertiser}` });
+  if (activeFilters.advertiser && activeFilters.advertiser !== "Alla") chips.push({ key: "advertiser", label: `Hyresvärd: ${activeFilters.advertiser}` });
   if (activeFilters.includeOperatingCosts) chips.push({ key: "includeOperatingCosts", label: "Driftkostnader ingår" });
   if (activeFilters.accessibilityAdapted) chips.push({ key: "accessibilityAdapted", label: "Tillgänglighetsanpassad" });
   if (activeFilters.ecoCertified) chips.push({ key: "ecoCertified", label: "Miljöcertifierad" });
@@ -822,8 +859,8 @@ function filterAlignedAiChangedChipEntries(searchMeta, defaultMaxBudget) {
 
     if (entry.key === "advertiser") {
       return advertiserValue === "" || advertiserValue === "Alla"
-        ? normalized === "annonsör: alla"
-        : normalized === `annonsör: ${advertiserValue.toLowerCase()}`;
+        ? normalized === "hyresvärd: alla"
+        : normalized === `hyresvärd: ${advertiserValue.toLowerCase()}`;
     }
 
     if (entry.key === "includeOperatingCosts") {
@@ -883,7 +920,7 @@ function buildAiChangedChipEntriesFromSummary(summary) {
     else if (item.startsWith("Access:")) key = "accessHours";
     else if (item.startsWith("Parkering:")) key = "parkingType";
     else if (item.startsWith("Planlösning:")) key = "layoutType";
-    else if (item.startsWith("Annonsör:")) key = "advertiser";
+    else if (item.startsWith("Hyresvärd:")) key = "advertiser";
     else if (item.startsWith("Driftkostnad") || item.startsWith("Driftkostnader")) key = "includeOperatingCosts";
     else if (item.startsWith("Tillgänglighet") || item.startsWith("Tillgänglighetsanpassad")) key = "accessibilityAdapted";
     else if (item.startsWith("Miljöcertifierad") || item.startsWith("Miljöcertifiering")) key = "ecoCertified";
@@ -940,7 +977,7 @@ function formatSuggestionChanges(candidate, baseline) {
     parts.push(`Planlösning: ${nextFilters.layoutType || "alla"}`);
   }
   if ((nextFilters.advertiser || "Alla") !== (baseFilters.advertiser || "Alla")) {
-    parts.push(`Annonsör: ${nextFilters.advertiser || "Alla"}`);
+    parts.push(`Hyresvärd: ${nextFilters.advertiser || "Alla"}`);
   }
   if (Boolean(nextFilters.includeOperatingCosts) !== Boolean(baseFilters.includeOperatingCosts)) {
     parts.push(`Driftkostnad ingår: ${nextFilters.includeOperatingCosts ? "ja" : "nej"}`);
@@ -1210,9 +1247,9 @@ function buildResultsSuggestionCandidates({
     baseFilters.advertiser && baseFilters.advertiser !== "Alla"
       ? {
           id: "advertiser-clear",
-          title: `Annonsör är satt till ${baseFilters.advertiser}`,
-          detail: `Annonsörskravet **${baseFilters.advertiser}** begränsar resultaten just nu. Om du öppnar upp till alla annonsörer kan fler lokaler visas.`,
-          suggestedChange: "Annonsör: Alla",
+          title: `Hyresvärd är satt till ${baseFilters.advertiser}`,
+          detail: `Hyresvärdskravet **${baseFilters.advertiser}** begränsar resultaten just nu. Om du öppnar upp till alla hyresvärder kan fler lokaler visas.`,
+          suggestedChange: "Hyresvärd: Alla",
           targetStep: "accessAndAdvertiser",
           nextFilters: { ...baseFilters, advertiser: "Alla" },
           nextAmenityQuery: baseAmenityQuery,
@@ -1363,6 +1400,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
   });
   const [aiGuideStepRequest, setAiGuideStepRequest] = useState(null);
   const [forceAiGuideCoreStep, setForceAiGuideCoreStep] = useState(() => shouldForceCoreStepFromUrl());
+  const [localProgramSearchEnabled, setLocalProgramSearchEnabled] = useState(false);
   const [resultsSuggestion, setResultsSuggestion] = useState(null);
   const [resultsSuggestionLoading, setResultsSuggestionLoading] = useState(false);
   const [dismissedResultsSuggestionKey, setDismissedResultsSuggestionKey] = useState("");
@@ -1380,11 +1418,11 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
   const advancedFiltersTimerRef = useRef(null);
   const noMatchSuggestionRequestRef = useRef(0);
   const filterExpandedBeforeAiRef = useRef(false);
-  const headerUploadInputRef = useRef(null);
   const resultsTopRef = useRef(null);
   const searchChipRenderOrderRef = useRef([]);
 
   const favoriteIds = useMemo(() => new Set(favorites.map((entry) => entry.listingId)), [favorites]);
+  const renterProgram = useMemo(() => app.user?.profile?.renterProgram || null, [app.user?.profile?.renterProgram]);
   const implicitMaxBudget = app.allListingsFilters?.maxBudget ?? app.defaultFilters?.maxBudget ?? "";
   const hasTeamSizeForMatchChip = useMemo(() => {
     const parsed = Number(String(filters.teamSize || "").trim());
@@ -1916,6 +1954,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
       aiChangedChipEntries: []
     });
     setUseNewSearchCta(false);
+    setLocalProgramSearchEnabled(false);
     setShowSearchEditor(false);
     setAiLivePreview({
       filters: null,
@@ -2334,8 +2373,8 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
       baseFilters.advertiser && baseFilters.advertiser !== "Alla"
         ? {
             id: "advertiser-clear",
-            label: "Minska annonsörskrav",
-            preview: "Annonsör: alla",
+            label: "Minska hyresvärdskrav",
+            preview: "Hyresvärd: alla",
             nextFilters: { ...baseFilters, advertiser: "Alla" },
             nextAmenityQuery: baseAmenityQuery,
             nextFurnishedFilter: baseFurnished
@@ -2518,9 +2557,85 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
     setSelectedMapListing(listing);
   }
 
-  function handleUploadProgramFile(file) {
-    if (file) {
-      app.pushToast(`Lokalprogram uppladdat: ${file.name}`, "info");
+  async function applyLocalProgramSearch() {
+    if (isGuest) {
+      openAuthPrompt("save");
+      return false;
+    }
+
+    if (!renterProgram) {
+      app.pushToast("Inget lokalprogram hittades i din profil ännu.", "info");
+      return false;
+    }
+
+    const hasAnyProgramInput = [
+      renterProgram.district,
+      renterProgram.type,
+      renterProgram.teamSize,
+      renterProgram.minSize,
+      renterProgram.maxSize,
+      renterProgram.minBudget,
+      renterProgram.maxBudget,
+      renterProgram.moveInDate,
+      renterProgram.contractFlex,
+      renterProgram.transitDistance,
+      renterProgram.accessHours,
+      renterProgram.parkingType,
+      renterProgram.layoutType,
+      renterProgram.amenities,
+      renterProgram.includeOperatingCosts,
+      renterProgram.accessibilityAdapted,
+      renterProgram.ecoCertified
+    ].some((value) => Boolean(String(value || "").trim() || value === true));
+
+    if (!hasAnyProgramInput) {
+      app.pushToast("Ditt lokalprogram är tomt. Lägg till preferenser i Profil först.", "info");
+      return false;
+    }
+
+    const nextFilters = mapRenterProgramToSearchFilters(renterProgram, app.defaultFilters || {});
+    const nextAmenityQuery = parseAmenityTerms(renterProgram.amenities || "").join(", ");
+
+    // Force the same UX as manual filter search:
+    // switch to Filter-sök + expanded mode so user sees prefilled values.
+    setShowEditorAiPanel(false);
+    setShowAdvancedSearchEditor(true);
+    setShowSearchSummaryCard(true);
+    setAnimateSearchSummaryIn(true);
+
+    setFilters(nextFilters);
+    setAmenityQuery(nextAmenityQuery);
+    setFurnishedFilter("all");
+
+    await executeSearch(nextFilters, {
+      amenityQuery: nextAmenityQuery,
+      furnishedFilter: "all"
+    });
+
+    if (isAvailableListingsView) {
+      transitionFromAvailableToResults();
+    }
+
+    if (!isAvailableListingsView) {
+      if (summaryFadeTimerRef.current) clearTimeout(summaryFadeTimerRef.current);
+      summaryFadeTimerRef.current = setTimeout(() => {
+        setAnimateSearchSummaryIn(false);
+        summaryFadeTimerRef.current = null;
+      }, 280);
+    }
+
+    return true;
+  }
+
+  async function handleLocalProgramToggle() {
+    if (localProgramSearchEnabled) {
+      setLocalProgramSearchEnabled(false);
+      return;
+    }
+
+    const applied = await applyLocalProgramSearch();
+    if (applied) {
+      setLocalProgramSearchEnabled(true);
     }
   }
 
@@ -2778,7 +2893,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
               </div>
               <button
                 type="button"
-                className="inline-flex h-7 w-7 min-h-7 min-w-7 shrink-0 aspect-square items-center justify-center rounded-full border border-[#4f46e5]/20 bg-white p-0 text-sm font-semibold leading-none text-[#312e81]"
+                className="close-circle-button inline-flex items-center justify-center rounded-full border border-[#4f46e5]/20 bg-white text-sm font-semibold leading-none text-[#312e81]"
                 aria-label="Stäng AI-förslag"
                 onClick={() => setDismissedResultsSuggestionKey(visibleResultsSuggestion.key)}
               >
@@ -2811,10 +2926,10 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
 
   const summaryControls = (
     <>
-      <div className="inline-flex items-center gap-1 rounded-xl border border-black/10 bg-white p-1">
+      <div className="view-toggle-group inline-flex items-center gap-1 rounded-full border border-black/10 bg-white p-1">
         <button
           type="button"
-          className={`inline-flex min-h-[34px] items-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition ${
+          className={`view-toggle-option inline-flex min-h-[34px] items-center gap-1.5 rounded-full px-3 text-xs font-semibold transition ${
             resultViewMode === "list"
               ? "bg-[#0f1930] text-white"
               : "text-ink-700 hover:bg-white"
@@ -2827,7 +2942,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
         </button>
         <button
           type="button"
-          className={`inline-flex min-h-[34px] items-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition ${
+          className={`view-toggle-option inline-flex min-h-[34px] items-center gap-1.5 rounded-full px-3 text-xs font-semibold transition ${
             resultViewMode === "map"
               ? "bg-[#0f1930] text-white"
               : "text-ink-700 hover:bg-white"
@@ -2842,7 +2957,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
       <div className="inline-flex items-center gap-2">
         <label className="text-xs font-semibold text-ink-700">Sortera</label>
         <select
-          className="select-chevron min-h-[40px] min-w-[132px] rounded-xl border border-black/10 bg-white px-4 text-xs font-semibold text-ink-800 focus:border-[#0f1930] focus:outline-none"
+          className="select-chevron min-h-[40px] min-w-[132px] rounded-full border border-black/10 bg-white px-4 text-xs font-semibold text-ink-800 focus:border-[#0f1930] focus:outline-none"
           value={sortBy}
           onChange={(event) => setSortBy(event.target.value)}
         >
@@ -2937,7 +3052,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                   </select>
                 </label>
                 <label>
-                  <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Annonsör</span>
+                  <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Hyresvärd</span>
                   <select
                     value={filters.advertiser || "Alla"}
                     onChange={(event) => setFilters((prev) => ({ ...prev, advertiser: event.target.value }))}
@@ -3238,20 +3353,26 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                 <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="grid w-full max-w-[460px] grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
                   <h1 className="truncate text-2xl font-semibold leading-10">{showingSearchResults ? "Sökresultat" : "Lediga lokaler"}</h1>
-                  <input
-                    ref={headerUploadInputRef}
-                    type="file"
-                    className="hidden"
-                    onChange={(event) => handleUploadProgramFile(event.target.files?.[0] || null)}
-                  />
-                  <button
-                    type="button"
-                    className="inline-flex h-10 items-center gap-2 justify-self-end rounded-2xl border border-black/10 bg-white px-3 text-xs font-semibold text-ink-700 hover:bg-white"
-                    onClick={() => headerUploadInputRef.current?.click()}
-                  >
-                    <UploadIcon className="h-4 w-4 text-[#0f1930]" />
-                    Ladda upp lokalprogram
-                  </button>
+                  <div className="inline-flex h-10 items-center gap-2 justify-self-end rounded-2xl border border-black/10 bg-white px-3 text-xs font-semibold text-ink-700">
+                    <span className="inline-flex items-center gap-1">
+                      <FilterIcon className="h-3.5 w-3.5 text-[#0f1930]" />
+                      <span>Sök med lokalprogram</span>
+                    </span>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={localProgramSearchEnabled}
+                      aria-label="Växla sök med lokalprogram"
+                      className={`relative inline-flex h-6 w-10 min-h-0 items-center rounded-full p-0.5 transition-colors ${
+                        localProgramSearchEnabled ? "bg-[#0f1930] justify-end" : "bg-[#a8adb3] justify-start"
+                      }`}
+                      onClick={() => {
+                        void handleLocalProgramToggle();
+                      }}
+                    >
+                      <span aria-hidden="true" className="h-5 w-5 rounded-full bg-white shadow-[0_1px_2px_rgba(15,25,48,0.35)]" />
+                    </button>
+                  </div>
                 </div>
                 {hasBegunSearch ? (
                   <div className="flex flex-wrap items-center justify-end gap-2">
@@ -3528,7 +3649,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                               </select>
                             </label>
                             <label>
-                              <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Annonsör</span>
+                              <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Hyresvärd</span>
                               <select
                                 value={filters.advertiser || "Alla"}
                                 onChange={(event) => setFilters((prev) => ({ ...prev, advertiser: event.target.value }))}
@@ -3787,7 +3908,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
           <div className="relative w-full max-w-lg rounded-2xl border border-black/10 bg-white p-5 shadow-[0_24px_64px_rgba(15,25,48,0.28)]" onClick={(event) => event.stopPropagation()}>
             <button
               type="button"
-              className="absolute right-3 top-3 inline-flex h-9 w-9 min-h-9 min-w-9 aspect-square items-center justify-center rounded-full border border-black/10 p-0 text-lg font-semibold leading-none text-ink-700 hover:bg-white"
+              className="close-circle-button absolute right-3 top-3 inline-flex items-center justify-center rounded-full border border-black/10 text-lg font-semibold leading-none text-ink-700 hover:bg-white"
               onClick={() => setShowEditorAiInfo(false)}
               aria-label="Stäng"
             >

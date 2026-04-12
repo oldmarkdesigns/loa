@@ -67,7 +67,7 @@ function ListingModal({ listing, onClose, onToggleShortlist, shortlisted, onBook
               <p className="mb-2 text-sm font-semibold text-ink-800">Nyckelfunktioner</p>
               <div className="flex flex-wrap gap-2">
                 {(listing.amenities || []).map((amenity) => (
-                  <span key={amenity} className="chip bg-white">
+                  <span key={amenity} className="chip rounded-full bg-white">
                     {amenity}
                   </span>
                 ))}

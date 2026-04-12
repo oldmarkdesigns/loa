@@ -10,13 +10,6 @@ import {
   UtensilsIcon,
   UserIcon
 } from "../icons/UiIcons";
-import { formatSek } from "../../lib/formatters";
-
-function formatPriceSek(value) {
-  const numeric = Number(value);
-  if (!Number.isFinite(numeric)) return "Pris saknas";
-  return formatSek(numeric);
-}
 
 function formatCapacity(value) {
   if (value === null || value === undefined || value === "") return "Kapacitet saknas";
@@ -43,14 +36,42 @@ function amenityIconFor(amenity) {
   return match?.icon || BuildingIcon;
 }
 
-function ListingVisualCard({ listing, shortlisted, onOpenListing, onToggleShortlist, compact = false, showMatchChip = false }) {
+function ListingVisualCard({
+  listing,
+  shortlisted,
+  onOpenListing,
+  onToggleShortlist,
+  compact = false,
+  showMatchChip = false,
+  highlightAmenities = [],
+  missingAmenities = [],
+  comparedAmenitiesOnly = false
+}) {
   const amenities = Array.isArray(listing.amenities) ? listing.amenities : [];
+  const highlightedNeedles = Array.isArray(highlightAmenities)
+    ? highlightAmenities.map((item) => String(item || "").toLowerCase()).filter(Boolean)
+    : [];
+  const sourceAmenities = comparedAmenitiesOnly && highlightedNeedles.length > 0
+    ? amenities.filter((amenity) => highlightedNeedles.some((needle) => String(amenity || "").toLowerCase().includes(needle)))
+    : amenities;
+  const orderedAmenities = highlightedNeedles.length > 0
+    ? [...sourceAmenities].sort((a, b) => {
+        const aMatch = highlightedNeedles.some((needle) => String(a || "").toLowerCase().includes(needle));
+        const bMatch = highlightedNeedles.some((needle) => String(b || "").toLowerCase().includes(needle));
+        if (aMatch === bMatch) return 0;
+        return aMatch ? -1 : 1;
+      })
+    : sourceAmenities;
   const amenityRowRef = useRef(null);
   const amenityMeasureMoreRef = useRef(null);
   const amenityMeasureRefs = useRef([]);
-  const [visibleAmenityCount, setVisibleAmenityCount] = useState(amenities.length);
-  const visibleAmenities = amenities.slice(0, visibleAmenityCount);
-  const extraAmenities = Math.max(amenities.length - visibleAmenities.length, 0);
+  const [visibleAmenityCount, setVisibleAmenityCount] = useState(orderedAmenities.length);
+  const visibleAmenities = orderedAmenities.slice(0, visibleAmenityCount);
+  const extraAmenities = Math.max(orderedAmenities.length - visibleAmenities.length, 0);
+  const visibleMissingAmenities = Array.isArray(missingAmenities)
+    ? missingAmenities.map((item) => String(item || "").trim()).filter(Boolean).slice(0, 4)
+    : [];
+  const hasAmenityChips = visibleAmenities.length > 0 || visibleMissingAmenities.length > 0;
 
   useLayoutEffect(() => {
     if (compact) return undefined;
@@ -63,12 +84,12 @@ function ListingVisualCard({ listing, shortlisted, onOpenListing, onToggleShortl
 
     const recomputeVisibleAmenities = () => {
       const availableWidth = row.clientWidth;
-      if (!availableWidth || amenities.length === 0) {
-        setVisibleAmenityCount(amenities.length);
+      if (!availableWidth || orderedAmenities.length === 0) {
+        setVisibleAmenityCount(orderedAmenities.length);
         return;
       }
 
-      const widths = amenities.map((_, index) => amenityMeasureRefs.current[index]?.offsetWidth || 0);
+      const widths = orderedAmenities.map((_, index) => amenityMeasureRefs.current[index]?.offsetWidth || 0);
 
       const measureMoreChipWidth = (remainingCount) => {
         if (remainingCount <= 0) return 0;
@@ -77,10 +98,10 @@ function ListingVisualCard({ listing, shortlisted, onOpenListing, onToggleShortl
       };
 
       let nextVisibleCount = 0;
-      for (let count = amenities.length; count >= 0; count -= 1) {
+      for (let count = orderedAmenities.length; count >= 0; count -= 1) {
         const visibleWidth = widths.slice(0, count).reduce((sum, width) => sum + width, 0);
         const visibleGaps = count > 1 ? (count - 1) * GAP_PX : 0;
-        const remaining = amenities.length - count;
+        const remaining = orderedAmenities.length - count;
         const moreWidth = measureMoreChipWidth(remaining);
         const moreGap = remaining > 0 && count > 0 ? GAP_PX : 0;
         const totalWidth = visibleWidth + visibleGaps + moreGap + moreWidth;
@@ -104,7 +125,7 @@ function ListingVisualCard({ listing, shortlisted, onOpenListing, onToggleShortl
     return () => {
       resizeObserver.disconnect();
     };
-  }, [amenities, compact]);
+  }, [orderedAmenities, compact]);
 
   if (compact) {
     return (
@@ -126,7 +147,7 @@ function ListingVisualCard({ listing, shortlisted, onOpenListing, onToggleShortl
             <button
               type="button"
               aria-label={shortlisted ? "Ta bort sparad" : "Spara"}
-              className="absolute right-3 top-3 inline-flex h-9 w-9 min-h-9 min-w-9 aspect-square shrink-0 items-center justify-center rounded-full border border-black/10 bg-white p-0 text-ink-700 hover:bg-white"
+              className="absolute right-3 top-3 inline-flex h-9 w-9 min-h-9 min-w-9 aspect-square shrink-0 items-center justify-center rounded-full border border-black/10 bg-white p-0 text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
               onClick={(event) => {
                 event.stopPropagation();
                 onToggleShortlist(listing.id);
@@ -177,7 +198,7 @@ function ListingVisualCard({ listing, shortlisted, onOpenListing, onToggleShortl
           <button
             type="button"
             aria-label={shortlisted ? "Ta bort sparad" : "Spara"}
-            className="inline-flex h-10 w-10 min-h-10 min-w-10 items-center justify-center rounded-full border border-black/10 bg-white p-0 text-ink-700 hover:bg-[#eef3fa]"
+            className="inline-flex h-10 w-10 min-h-10 min-w-10 items-center justify-center rounded-full border border-black/10 bg-white p-0 text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
             onClick={(event) => {
               event.stopPropagation();
               onToggleShortlist(listing.id);
@@ -207,56 +228,88 @@ function ListingVisualCard({ listing, shortlisted, onOpenListing, onToggleShortl
             </p>
           </div>
 
-          <div className="mt-4 pb-3">
-            <div ref={amenityRowRef} className="flex flex-nowrap gap-2 overflow-hidden">
-            {visibleAmenities.map((amenity) => {
-              const Icon = amenityIconFor(amenity);
-              return (
-                <span key={amenity} className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-ink-700">
-                  <Icon className="h-4 w-4 shrink-0 text-ink-700" />
-                  {amenity}
-                </span>
-              );
-            })}
-            {extraAmenities > 0 ? (
-              <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-ink-700">+{extraAmenities} more</span>
-            ) : null}
-            </div>
-            <div aria-hidden="true" className="pointer-events-none absolute -left-[9999px] -top-[9999px] opacity-0">
-              <div className="flex gap-2">
-                {amenities.map((amenity, index) => {
+          <div className={hasAmenityChips ? "mt-4 pb-3" : "mt-4 pb-3"}>
+            {comparedAmenitiesOnly ? (
+              <div className="flex flex-wrap gap-2">
+                {visibleAmenities.map((amenity) => {
                   const Icon = amenityIconFor(amenity);
                   return (
                     <span
-                      key={`measure-${amenity}-${index}`}
-                      ref={(element) => {
-                        amenityMeasureRefs.current[index] = element;
-                      }}
-                      className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-ink-700"
+                      key={`matched-${listing.id}-${amenity}`}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800"
                     >
-                      <Icon className="h-4 w-4 shrink-0 text-ink-700" />
+                      <Icon className="h-4 w-4 shrink-0 text-emerald-700" />
                       {amenity}
                     </span>
                   );
                 })}
-                <span
-                  ref={amenityMeasureMoreRef}
-                  className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-ink-700"
-                >
-                  +99 more
-                </span>
+                {visibleMissingAmenities.map((amenity) => {
+                  const Icon = amenityIconFor(amenity);
+                  return (
+                    <span
+                      key={`missing-${listing.id}-${amenity}`}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800"
+                    >
+                      <Icon className="h-4 w-4 shrink-0 text-amber-700" />
+                      {amenity}
+                    </span>
+                  );
+                })}
               </div>
-            </div>
+            ) : (
+              <>
+                <div ref={amenityRowRef} className="flex flex-nowrap gap-2 overflow-hidden">
+                {visibleAmenities.map((amenity) => {
+                  const Icon = amenityIconFor(amenity);
+                  const normalizedAmenity = String(amenity || "").toLowerCase();
+                  const isHighlighted = highlightedNeedles.some((needle) => normalizedAmenity.includes(needle));
+                  return (
+                    <span
+                      key={amenity}
+                      className={`inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-2 text-xs font-semibold ${
+                        isHighlighted
+                          ? "border border-emerald-300 bg-emerald-50 text-emerald-800"
+                          : "border border-black/10 bg-white text-ink-700"
+                      }`}
+                    >
+                      <Icon className={`h-4 w-4 shrink-0 ${isHighlighted ? "text-emerald-700" : "text-ink-700"}`} />
+                      {amenity}
+                    </span>
+                  );
+                })}
+                {extraAmenities > 0 ? (
+                  <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-ink-700">+{extraAmenities} more</span>
+                ) : null}
+                </div>
+                <div aria-hidden="true" className="pointer-events-none absolute -left-[9999px] -top-[9999px] opacity-0">
+                  <div className="flex gap-2">
+                    {orderedAmenities.map((amenity, index) => {
+                      const Icon = amenityIconFor(amenity);
+                      return (
+                        <span
+                          key={`measure-${amenity}-${index}`}
+                          ref={(element) => {
+                            amenityMeasureRefs.current[index] = element;
+                          }}
+                          className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-ink-700"
+                        >
+                          <Icon className="h-4 w-4 shrink-0 text-ink-700" />
+                          {amenity}
+                        </span>
+                      );
+                    })}
+                    <span
+                      ref={amenityMeasureMoreRef}
+                      className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-ink-700"
+                    >
+                      +99 more
+                    </span>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
 
-          <div className="mt-auto border-t border-black/10 pt-4">
-            <div className="flex items-end justify-between gap-4">
-              <div>
-                <p className="text-lg font-semibold text-[#0f1930]">{formatPriceSek(listing.priceMonthly)} /månad</p>
-                <p className="mt-1 text-sm text-ink-500">Hyresperiod: {listing.term || "6-24 månader"}</p>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </article>

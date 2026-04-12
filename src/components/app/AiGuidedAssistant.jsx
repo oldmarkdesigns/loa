@@ -104,7 +104,7 @@ function composePrompt(answers) {
   if (answers.layoutType && answers.layoutType !== "Alla") parts.push(`Planlösning: ${answers.layoutType}`);
   if (answers.transitDistance && answers.transitDistance !== "Alla") parts.push(`Kommunaltrafik: ${answers.transitDistance}`);
   if (answers.parkingType && answers.parkingType !== "Alla") parts.push(`Parkering: ${answers.parkingType}`);
-  if (answers.advertiser && answers.advertiser !== "Alla") parts.push(`Annonsör: ${answers.advertiser}`);
+  if (answers.advertiser && answers.advertiser !== "Alla") parts.push(`Hyresvärd: ${answers.advertiser}`);
   if (answers.includeOperatingCosts) parts.push("Driftkostnader ingår");
   if (answers.accessibilityAdapted) parts.push("Tillgänglighetsanpassad");
   if (answers.ecoCertified) parts.push("Miljöcertifierad");
@@ -140,7 +140,7 @@ function buildNextFilters(baseFilters, answers) {
 
 function questionCopy(questionId) {
   if (questionId === "core") return "Låt oss börja med grundinställningarna för din sökning.";
-  if (questionId === "type") return "Vilken typ av lokal söker ni, och har ni en önskad annonsör?";
+  if (questionId === "type") return "Vilken typ av lokal söker ni, och har ni en önskad hyresvärd?";
   if (questionId === "amenities") return "Har du behov av några särskilda bekvämligheter?";
   if (questionId === "budget") return "Vilken budgetram ska jag utgå från?";
   if (questionId === "size") return "Vilken yta (kvm) söker ni ungefär?";
@@ -201,7 +201,7 @@ function buildSearchSummaryGroups(answers) {
   const typeParts = [];
   if (answers.type && answers.type !== "Alla typer") typeParts.push(answers.type);
   if (answers.layoutType && answers.layoutType !== "Alla") typeParts.push(`Plan: ${answers.layoutType}`);
-  if (answers.advertiser && answers.advertiser !== "Alla") typeParts.push(`Annonsör: ${answers.advertiser}`);
+  if (answers.advertiser && answers.advertiser !== "Alla") typeParts.push(`Hyresvärd: ${answers.advertiser}`);
   if (typeParts.length > 0) {
     groups.push({ id: "type", label: stepLabels.type, summary: typeParts.join(", ") });
   }
@@ -748,7 +748,7 @@ function AiGuidedAssistant({
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="block">
-              <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Annonsör</span>
+              <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Hyresvärd</span>
               <select
                 className="select-chevron w-full rounded-2xl border border-black/10 bg-transparent px-3 py-3 pr-10 text-sm text-ink-900 focus:border-[#0f1930] focus:outline-none"
                 value={answers.advertiser}
