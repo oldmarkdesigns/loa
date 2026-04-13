@@ -1039,19 +1039,21 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
             <div className="grid gap-6 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
               <article className="rounded-3xl border border-black/10 bg-white p-5">
                 <h2 className="text-2xl font-semibold leading-tight text-ink-900">{listing.title}</h2>
-                <p className="mt-1 inline-flex items-center gap-1.5 text-sm text-ink-500">
-                  <PinIcon className="h-4 w-4" />
-                  {listing.district} • {listing.address}
-                </p>
-                <div className="mt-3 inline-flex flex-wrap items-center overflow-hidden rounded-full border border-black/10 bg-white text-base font-semibold text-ink-700">
-                  <div className="inline-flex items-center gap-2.5 px-4 py-2.5">
-                    <RulerIcon className="h-5 w-5 text-ink-600" />
-                    {listing.sizeSqm} kvm
-                  </div>
-                  <span className="h-5 w-px bg-black/10" />
-                  <div className="inline-flex items-center gap-2.5 px-4 py-2.5">
-                    <UserIcon className="h-5 w-5 text-ink-600" />
-                    {listing.capacity} platser
+                <div className="mt-2 space-y-3">
+                  <p className="flex items-center gap-1.5 text-sm text-ink-500">
+                    <PinIcon className="h-4 w-4" />
+                    {listing.district} • {listing.address}
+                  </p>
+                  <div className="inline-flex flex-wrap items-center overflow-hidden rounded-full border border-black/10 bg-white text-base font-semibold text-ink-700">
+                    <div className="inline-flex items-center gap-2.5 px-4 py-2.5">
+                      <RulerIcon className="h-5 w-5 text-ink-600" />
+                      {listing.sizeSqm} kvm
+                    </div>
+                    <span className="h-5 w-px bg-black/10" />
+                    <div className="inline-flex items-center gap-2.5 px-4 py-2.5">
+                      <UserIcon className="h-5 w-5 text-ink-600" />
+                      {listing.capacity} platser
+                    </div>
                   </div>
                 </div>
                 <div className="mt-3 text-sm leading-relaxed text-ink-700">

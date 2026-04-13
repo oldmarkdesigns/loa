@@ -937,9 +937,8 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
         <div className="grid w-full grid-cols-[auto_1fr_auto] items-center gap-4 px-4 py-3 sm:px-6">
           <div className="flex min-w-0 items-center gap-8">
             <button type="button" className="text-left" onClick={handleHomeBrandClick}>
-              <span className="inline-flex items-center gap-2 rounded-xl border border-black/10 bg-white px-2.5 py-1.5">
-                <img src={companyLogo} alt="Företagslogga" className="h-8 w-8 rounded-lg object-contain" />
-                <span className="text-sm font-semibold text-ink-800">Företagsnamn</span>
+              <span className="inline-flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-black/20 bg-white">
+                <img src={companyLogo} alt="Företagslogga" className="h-full w-full object-cover" />
               </span>
             </button>
 
