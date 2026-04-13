@@ -30,6 +30,7 @@ import {
 } from "../../components/icons/UiIcons";
 import { listingApi } from "../../api";
 import { districtOptions, listingTypes } from "../../data/mockData";
+import { PLATFORM_GOOGLE_MAP_STYLE } from "../../lib/googleMapStyles";
 import { navigateTo } from "../../lib/router";
 
 const districtMapLayout = {
@@ -346,6 +347,7 @@ function GoogleListingsMap({
           mapRef.current = new maps.Map(containerRef.current, {
             center: { lat: 59.3293, lng: 18.0686 },
             zoom: 11,
+            styles: PLATFORM_GOOGLE_MAP_STYLE,
             disableDefaultUI: false,
             zoomControl: true,
             streetViewControl: true,

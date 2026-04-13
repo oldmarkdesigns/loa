@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import ListingVisualCard from "../../components/app/ListingVisualCard";
 import Breadcrumbs from "../../components/layout/Breadcrumbs";
 import { formatSek } from "../../lib/formatters";
+import { PLATFORM_GOOGLE_MAP_STYLE } from "../../lib/googleMapStyles";
 import { normalizePopularListingFallback, popularListingFallbackKey } from "../../lib/popularListingFallback";
 import { navigateTo } from "../../lib/router";
 import nornormAd from "../../../Assets/ADS/Nornorm-AD.png";
@@ -213,6 +214,7 @@ function ListingAreaGoogleMap({ lat, lng, title }) {
           mapRef.current = new maps.Map(containerRef.current, {
             center,
             zoom: 15,
+            styles: PLATFORM_GOOGLE_MAP_STYLE,
             disableDefaultUI: false,
             zoomControl: true,
             streetViewControl: true,
@@ -528,7 +530,7 @@ function ListingTransitCard({ lat, lng, fallbackTransit = [] }) {
                   <p className="text-sm font-semibold text-ink-900">{stop.name}</p>
                   <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                     {stop.lines.map((line) => (
-                      <span key={`${stop.id}-line-${line}`} className="inline-flex min-w-[24px] items-center justify-center rounded-[4px] bg-[#0f1930] px-1.5 py-0.5 text-[11px] font-semibold leading-none text-white">
+                      <span key={`${stop.id}-line-${line}`} className="inline-flex min-h-[24px] min-w-[30px] items-center justify-center rounded-[6px] bg-[#0f1930] px-2 py-1 text-xs font-semibold leading-none text-white">
                         {line}
                       </span>
                     ))}
@@ -536,7 +538,7 @@ function ListingTransitCard({ lat, lng, fallbackTransit = [] }) {
                   </div>
                 </div>
               </div>
-            </article>
+              </article>
           ))
         ) : (
           <p className="text-sm text-ink-600">
@@ -683,6 +685,12 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
     const preview = safeCut > 180 ? firstChunk.slice(0, safeCut + 1) : `${firstChunk}...`;
     return [preview];
   }, [longDescription]);
+  const shortDescriptionPreview = useMemo(() => {
+    const base = String(shortDescription?.[0] || longDescription?.[0] || "").trim();
+    if (!base) return "";
+    if (base.length <= 240) return base;
+    return `${base.slice(0, 237).trim()}...`;
+  }, [shortDescription, longDescription]);
 
   const googleMapsHref = useMemo(
     () => `https://www.google.com/maps?q=${encodeURIComponent(`${insight.center.lat},${insight.center.lng}`)}`,
@@ -730,7 +738,6 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
     if (secondaryImages.length >= 4) return secondaryImages.slice(0, 4);
     return Array.from({ length: 4 }, (_, index) => secondaryImages[index % secondaryImages.length]);
   }, [images]);
-
   useEffect(() => {
     setGalleryTab("images");
     setAreaViewMode("map");
@@ -983,9 +990,9 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
             </div>
           </div>
 
-          <div className="grid gap-2 md:grid-cols-2">
-            <div className="relative h-60 overflow-hidden rounded-3xl border border-black/10 bg-white sm:h-[340px]">
-              <div className="grid h-full grid-cols-[1.1fr_1fr] gap-0.5 bg-white">
+          <div className="grid gap-3">
+            <div className="relative h-72 overflow-hidden rounded-3xl border border-black/10 bg-white sm:h-[420px]">
+              <div className="grid h-full grid-cols-2 gap-0.5 bg-white">
                 <button
                   type="button"
                   className="gallery-mosaic-tile relative block h-full w-full overflow-hidden text-left"
@@ -1014,59 +1021,41 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                   </div>
                 </button>
 
-                <div className="grid h-full grid-cols-2 grid-rows-2 gap-0.5">
+                <div className="grid h-full min-h-0 grid-cols-2 grid-rows-[repeat(2,minmax(0,1fr))] gap-0.5">
                   {galleryPreviewImages.map((image, index) => (
                     <button
                       key={`gallery-side-${image}-${index}`}
                       type="button"
-                      className="gallery-mosaic-tile overflow-hidden bg-white text-left"
+                      className="gallery-mosaic-tile relative block h-full w-full min-h-0 overflow-hidden bg-white p-0 text-left"
                       onClick={() => openGalleryOverlay(index + 1)}
                     >
-                      <img src={image} alt={`${listing.title} forhandsbild ${index + 2}`} className="h-full w-full object-cover" />
+                      <img src={image} alt={`${listing.title} forhandsbild ${index + 2}`} className="absolute inset-0 h-full w-full object-cover" />
                     </button>
                   ))}
                 </div>
               </div>
             </div>
 
-            <div className="relative h-60 overflow-hidden rounded-3xl border border-black/10 bg-white sm:h-[340px]">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(15,25,48,0.06),transparent_42%),radial-gradient(circle_at_82%_78%,rgba(15,25,48,0.06),transparent_40%)]" />
-              <div className="relative z-10 flex h-full flex-col items-center justify-center px-5 text-center">
-                <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-black/10 bg-white text-[#0f1930]">
-                  <BuildingIcon className="h-5 w-5" />
-                </div>
-                <p className="mt-3 text-sm font-semibold text-ink-900">3D-modell kommer snart</p>
-                <p className="mt-1 max-w-[18rem] text-xs text-ink-600">
-                  Här visas en interaktiv 3D-visualisering av lokalen i nästa version.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-4 grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-            <div className="space-y-4">
+            <div className="grid gap-6 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
               <article className="rounded-3xl border border-black/10 bg-white p-5">
-                <h2 className="text-xl font-semibold">Om lokalen</h2>
-                <div className="mt-3 inline-flex flex-wrap items-center overflow-hidden rounded-full border border-black/10 bg-white text-sm text-ink-700">
-                  <div className="inline-flex items-center gap-2 px-3 py-2">
-                    <RulerIcon className="h-4 w-4 text-ink-600" />
+                <h2 className="text-2xl font-semibold leading-tight text-ink-900">{listing.title}</h2>
+                <p className="mt-1 inline-flex items-center gap-1.5 text-sm text-ink-500">
+                  <PinIcon className="h-4 w-4" />
+                  {listing.district} • {listing.address}
+                </p>
+                <div className="mt-3 inline-flex flex-wrap items-center overflow-hidden rounded-full border border-black/10 bg-white text-base font-semibold text-ink-700">
+                  <div className="inline-flex items-center gap-2.5 px-4 py-2.5">
+                    <RulerIcon className="h-5 w-5 text-ink-600" />
                     {listing.sizeSqm} kvm
                   </div>
                   <span className="h-5 w-px bg-black/10" />
-                  <div className="inline-flex items-center gap-2 px-3 py-2">
-                    <UserIcon className="h-4 w-4 text-ink-600" />
+                  <div className="inline-flex items-center gap-2.5 px-4 py-2.5">
+                    <UserIcon className="h-5 w-5 text-ink-600" />
                     {listing.capacity} platser
                   </div>
-                  <span className="h-5 w-px bg-black/10" />
-                  <div className="inline-flex items-center gap-2 px-3 py-2">
-                    <ClockIcon className="h-4 w-4 text-ink-600" />
-                    Svarstid cirka {listing.responseHours}h
-                  </div>
                 </div>
-                <div className="mt-3 space-y-3 text-sm leading-relaxed text-ink-700">
-                  {shortDescription.map((paragraph) => (
-                    <p key={paragraph}>{paragraph}</p>
-                  ))}
+                <div className="mt-3 text-sm leading-relaxed text-ink-700">
+                  <p>{shortDescriptionPreview}</p>
                 </div>
                 <div className="mt-5">
                   <button
@@ -1077,35 +1066,51 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                     Läs mer
                   </button>
                 </div>
+                <div className="mt-5">
+                  <h3 className="text-base font-semibold">Bekvämligheter</h3>
+                  <ul className="mt-3 flex flex-wrap gap-2">
+                    {displayAmenities.map((amenity) => {
+                      const Icon = amenityIconFor(amenity);
+                      return (
+                        <li
+                          key={`about-${amenity}`}
+                          className="inline-flex min-h-[42px] items-center gap-1.5 rounded-full border border-black/10 bg-white px-3 py-1.5 text-[0.875rem] font-semibold leading-5 text-ink-700"
+                        >
+                          <Icon className="h-3.5 w-3.5 shrink-0 text-ink-700" />
+                          {amenity}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
               </article>
 
-              <article className="rounded-3xl border border-black/10 bg-white p-5">
-                <h3 className="text-xl font-semibold">Bekvämligheter</h3>
-                <ul className="mt-4 flex flex-wrap gap-2">
-                  {displayAmenities.map((amenity) => {
-                    const Icon = amenityIconFor(amenity);
-                    return (
-                      <li
-                        key={amenity}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-ink-700"
-                      >
-                        <Icon className="h-4 w-4 shrink-0 text-ink-700" />
-                        {amenity}
-                      </li>
-                    );
-                  })}
-                </ul>
-              </article>
-
+              <div className="relative h-80 overflow-hidden rounded-3xl border border-black/10 bg-white sm:h-[440px]">
+                <iframe
+                  src="https://app.archilogic.com/viewer?sceneId=d47471f6-f59c-4efe-8bf9-fe0239f143a9&s=m3s0p0fhslt0xfstumrbrjrhrn&drawingStyle=textured-shadows"
+                  title="Archilogic Embed"
+                  width="640"
+                  height="480"
+                  frameBorder="0"
+                  scrolling="no"
+                  style={{ border: 0 }}
+                  allowFullScreen
+                />
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-4 grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+            <div className="space-y-4">
               <ListingTransitCard lat={insight.center.lat} lng={insight.center.lng} fallbackTransit={insight.transit} />
 
               <article className="rounded-3xl border border-black/10 bg-white p-5">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h2 className="text-xl font-semibold">Området</h2>
-                  <div className="inline-flex items-center gap-1 rounded-full border border-black/10 bg-white p-1">
+                  <div className="inline-flex items-center gap-1 rounded-full border border-black/10 bg-white p-1.5">
                     <button
                       type="button"
-                      className={`inline-flex min-h-[30px] items-center gap-1 rounded-full px-2.5 text-[11px] font-semibold transition ${
+                      className={`inline-flex min-h-[38px] items-center gap-1.5 rounded-full px-4 text-sm font-semibold transition ${
                         areaViewMode === "map"
                           ? "bg-[#0f1930] text-white"
                           : "text-ink-700 hover:bg-white"
@@ -1117,7 +1122,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                     </button>
                     <button
                       type="button"
-                      className={`inline-flex min-h-[30px] items-center gap-1 rounded-full px-2.5 text-[11px] font-semibold transition ${
+                      className={`inline-flex min-h-[38px] items-center gap-1.5 rounded-full px-4 text-sm font-semibold transition ${
                         areaViewMode === "street"
                           ? "bg-[#0f1930] text-white"
                           : "text-ink-700 hover:bg-white"

@@ -1,10 +1,17 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import {
+  BalconyIcon,
+  BikeIcon,
   BuildingIcon,
   CarIcon,
   CalendarIcon,
+  DumbbellIcon,
   LockerIcon,
+  LoungeIcon,
+  PenthouseIcon,
   PinIcon,
+  ShieldIcon,
+  SnowflakeIcon,
   SparklesIcon,
   StarIcon,
   UtensilsIcon,
@@ -23,11 +30,22 @@ function buildAddress(listing) {
 }
 
 const amenityDefinitions = [
-  { icon: CarIcon, aliases: ["parkering", "garage", "lastzon", "lastkaj", "loading zone"] },
-  { icon: BuildingIcon, aliases: ["mötesrum", "konferensrum", "styrelserum", "telefonbås", "telefonrum", "skyltfönster"] },
+  { icon: BikeIcon, aliases: ["cykelförråd", "cykelrum", "bike"] },
+  { icon: CarIcon, aliases: ["garage", "lastzon", "lastkaj", "loading zone", "parkering"] },
   { icon: UtensilsIcon, aliases: ["kök", "kitchen", "pentry"] },
+  { icon: BuildingIcon, aliases: ["mötesrum", "konferensrum", "styrelserum"] },
   { icon: UserIcon, aliases: ["reception", "väntrum"] },
-  { icon: LockerIcon, aliases: ["förråd", "förrad", "storage", "lager"] }
+  { icon: BalconyIcon, aliases: ["balkong"] },
+  { icon: BuildingIcon, aliases: ["takterrass"] },
+  { icon: PenthouseIcon, aliases: ["takvåning"] },
+  { icon: DumbbellIcon, aliases: ["gym"] },
+  { icon: LockerIcon, aliases: ["omklädningsrum"] },
+  { icon: SnowflakeIcon, aliases: ["air condition", "ac"] },
+  { icon: LoungeIcon, aliases: ["lounge"] },
+  { icon: LockerIcon, aliases: ["förråd", "förrad", "storage", "lager"] },
+  { icon: BuildingIcon, aliases: ["telefonbås", "telefonrum"] },
+  { icon: BuildingIcon, aliases: ["skyltfönster", "storefront"] },
+  { icon: ShieldIcon, aliases: ["säkerhetsdörr", "säkerhet", "security", "secure"] }
 ];
 
 function amenityIconFor(amenity) {
@@ -72,6 +90,7 @@ function ListingVisualCard({
     ? missingAmenities.map((item) => String(item || "").trim()).filter(Boolean).slice(0, 4)
     : [];
   const hasAmenityChips = visibleAmenities.length > 0 || visibleMissingAmenities.length > 0;
+  const baseAmenityChipClass = "inline-flex min-h-[42px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1.5 text-[0.875rem] font-semibold leading-5";
 
   useLayoutEffect(() => {
     if (compact) return undefined;
@@ -236,9 +255,9 @@ function ListingVisualCard({
                   return (
                     <span
                       key={`matched-${listing.id}-${amenity}`}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800"
+                      className={`${baseAmenityChipClass} border-emerald-300 bg-emerald-50 text-emerald-800`}
                     >
-                      <Icon className="h-4 w-4 shrink-0 text-emerald-700" />
+                      <Icon className="h-3.5 w-3.5 shrink-0 text-emerald-700" />
                       {amenity}
                     </span>
                   );
@@ -248,9 +267,9 @@ function ListingVisualCard({
                   return (
                     <span
                       key={`missing-${listing.id}-${amenity}`}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800"
+                      className={`${baseAmenityChipClass} border-amber-300 bg-amber-50 text-amber-800`}
                     >
-                      <Icon className="h-4 w-4 shrink-0 text-amber-700" />
+                      <Icon className="h-3.5 w-3.5 shrink-0 text-amber-700" />
                       {amenity}
                     </span>
                   );
@@ -266,19 +285,19 @@ function ListingVisualCard({
                   return (
                     <span
                       key={amenity}
-                      className={`inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-2 text-xs font-semibold ${
+                      className={`${baseAmenityChipClass} ${
                         isHighlighted
-                          ? "border border-emerald-300 bg-emerald-50 text-emerald-800"
-                          : "border border-black/10 bg-white text-ink-700"
+                          ? "border-emerald-300 bg-emerald-50 text-emerald-800"
+                          : "border-black/10 bg-white text-ink-700"
                       }`}
                     >
-                      <Icon className={`h-4 w-4 shrink-0 ${isHighlighted ? "text-emerald-700" : "text-ink-700"}`} />
+                      <Icon className={`h-3.5 w-3.5 shrink-0 ${isHighlighted ? "text-emerald-700" : "text-ink-700"}`} />
                       {amenity}
                     </span>
                   );
                 })}
                 {extraAmenities > 0 ? (
-                  <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-ink-700">+{extraAmenities} more</span>
+                  <span className={`${baseAmenityChipClass} border-black/10 bg-white text-ink-700`}>+{extraAmenities} more</span>
                 ) : null}
                 </div>
                 <div aria-hidden="true" className="pointer-events-none absolute -left-[9999px] -top-[9999px] opacity-0">
@@ -291,16 +310,16 @@ function ListingVisualCard({
                           ref={(element) => {
                             amenityMeasureRefs.current[index] = element;
                           }}
-                          className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-ink-700"
+                          className={`${baseAmenityChipClass} border-black/10 bg-white text-ink-700`}
                         >
-                          <Icon className="h-4 w-4 shrink-0 text-ink-700" />
+                          <Icon className="h-3.5 w-3.5 shrink-0 text-ink-700" />
                           {amenity}
                         </span>
                       );
                     })}
                     <span
                       ref={amenityMeasureMoreRef}
-                      className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-ink-700"
+                      className={`${baseAmenityChipClass} border-black/10 bg-white text-ink-700`}
                     >
                       +99 more
                     </span>
