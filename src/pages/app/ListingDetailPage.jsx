@@ -1086,16 +1086,14 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
               </article>
 
               <div className="relative h-80 overflow-hidden rounded-3xl border border-black/10 bg-white sm:h-[440px]">
-                <iframe
-                  src="https://app.archilogic.com/viewer?sceneId=d47471f6-f59c-4efe-8bf9-fe0239f143a9&s=m3s0p0fhslt0xfstumrbrjrhrn&drawingStyle=textured-shadows"
-                  title="Archilogic Embed"
-                  width="640"
-                  height="480"
-                  frameBorder="0"
-                  scrolling="no"
-                  style={{ border: 0 }}
-                  allowFullScreen
-                />
+                <iframe 
+                  src="https://app.archilogic.com/viewer?sceneId=d47471f6-f59c-4efe-8bf9-fe0239f143a9&s=m3s1p0fhslt0xfstumrbrjrhrd" 
+                  height="100%" 
+                  width="100%"
+                  frameborder="0" 
+                  onmousewheel="false" 
+                  allowfullscreen>
+                </iframe>
               </div>
             </div>
           </div>
