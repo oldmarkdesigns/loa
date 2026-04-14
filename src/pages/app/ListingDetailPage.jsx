@@ -5,7 +5,9 @@ import { formatSek } from "../../lib/formatters";
 import { PLATFORM_GOOGLE_MAP_STYLE } from "../../lib/googleMapStyles";
 import { normalizePopularListingFallback, popularListingFallbackKey } from "../../lib/popularListingFallback";
 import { navigateTo } from "../../lib/router";
-import nornormAd from "../../../Assets/ADS/Nornorm-AD.png";
+import imagesPictogram from "../../../Assets/Pictograms/images.png";
+import locationPictogram from "../../../Assets/Pictograms/location.png";
+import trainPictogram from "../../../Assets/Pictograms/train.png";
 import {
   ArrowLeftIcon,
   BalconyIcon,
@@ -516,9 +518,12 @@ function ListingTransitCard({ lat, lng, fallbackTransit = [] }) {
   return (
     <article className="rounded-2xl border border-black/10 bg-white p-4">
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-xl font-semibold">Kollektivtrafik</h3>
+        <h3 className="inline-flex items-center gap-2 text-xl font-semibold">
+          <img src={trainPictogram} alt="" aria-hidden="true" className="h-[33px] w-[33px] object-contain" />
+          Kollektivtrafik
+        </h3>
       </div>
-      <div className="mt-3 grid gap-2 sm:grid-cols-2">
+      <div className="mt-5 grid gap-2 sm:grid-cols-2">
         {stops.length > 0 ? (
           stops.map((stop) => (
             <article key={stop.id} className="rounded-xl border border-black/10 bg-[#f6f6f4] px-3 py-3">
@@ -725,6 +730,14 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
     () => Boolean((app.favorites || []).some((entry) => String(entry.listingId) === String(resolvedFavoriteListingId))),
     [app.favorites, resolvedFavoriteListingId]
   );
+  const ownerCompanyName = String(listing?.advertiserName || "Fastighetsägare").trim() || "Fastighetsägare";
+  const brokerName = String(listing?.brokerName || "Ansvarig mäklare").trim() || "Ansvarig mäklare";
+  const brokerInitials = brokerName
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() || "")
+    .join("") || "M";
 
   const images = useMemo(() => {
     if (!listing) return [];
@@ -735,8 +748,8 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
   const galleryPreviewImages = useMemo(() => {
     if (images.length === 0) return [];
     const secondaryImages = images.length > 1 ? images.slice(1) : images;
-    if (secondaryImages.length >= 4) return secondaryImages.slice(0, 4);
-    return Array.from({ length: 4 }, (_, index) => secondaryImages[index % secondaryImages.length]);
+    if (secondaryImages.length >= 2) return secondaryImages.slice(0, 2);
+    return Array.from({ length: 2 }, (_, index) => secondaryImages[index % secondaryImages.length]);
   }, [images]);
   useEffect(() => {
     setGalleryTab("images");
@@ -959,38 +972,8 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
             <ArrowLeftIcon className="h-4 w-4" />
             {backLabel}
           </button>
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h1 className="text-3xl font-semibold text-ink-900">{listing.title}</h1>
-              <p className="mt-2 inline-flex items-center gap-1.5 text-sm text-ink-500">
-                <PinIcon className="h-4 w-4" />
-                {listing.district} • {listing.address}
-              </p>
-            </div>
 
-            <div className="flex flex-wrap items-center gap-2">
-              <button type="button" className={actionButtonClass} onClick={handleExportPdf}>
-                <PdfIcon className="h-3.5 w-3.5" />
-                PDF
-              </button>
-              <button
-                type="button"
-                className={saveActionButtonClass}
-                onClick={handleToggleSave}
-                title={isSaved ? "Sparad" : "Spara"}
-                aria-label={isSaved ? "Sparad" : "Spara"}
-              >
-                <StarIcon className={`h-3.5 w-3.5 ${isSaved ? "fill-current" : ""}`} />
-                {isSaved ? "Sparad" : "Spara"}
-              </button>
-              <button type="button" className={actionButtonClass} onClick={handleShare}>
-                <ShareIcon className="h-3.5 w-3.5" />
-                Dela
-              </button>
-            </div>
-          </div>
-
-          <div className="grid gap-3">
+          <div className="grid gap-6">
             <div className="relative h-72 overflow-hidden rounded-3xl border border-black/10 bg-white sm:h-[420px]">
               <div className="grid h-full grid-cols-2 gap-0.5 bg-white">
                 <button
@@ -999,9 +982,29 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                   onClick={() => openGalleryOverlay(0)}
                 >
                   <img src={images[0]} alt={listing.title} className="h-full w-full object-cover" />
+                  <div className="pointer-events-auto absolute right-4 top-4 z-20 flex flex-wrap items-center justify-end gap-2">
+                    <button type="button" className={actionButtonClass} onClick={(event) => { event.stopPropagation(); handleExportPdf(); }}>
+                      <PdfIcon className="h-3.5 w-3.5" />
+                      PDF
+                    </button>
+                    <button
+                      type="button"
+                      className={saveActionButtonClass}
+                      onClick={(event) => { event.stopPropagation(); handleToggleSave(); }}
+                      title={isSaved ? "Sparad" : "Spara"}
+                      aria-label={isSaved ? "Sparad" : "Spara"}
+                    >
+                      <StarIcon className={`h-3.5 w-3.5 ${isSaved ? "fill-current" : ""}`} />
+                      {isSaved ? "Sparad" : "Spara"}
+                    </button>
+                    <button type="button" className={actionButtonClass} onClick={(event) => { event.stopPropagation(); handleShare(); }}>
+                      <ShareIcon className="h-3.5 w-3.5" />
+                      Dela
+                    </button>
+                  </div>
                   <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/45 via-black/10 to-transparent px-4 pb-4 pt-16">
                     <span
-                      className="pointer-events-auto inline-flex items-center justify-center rounded-full border border-black/10 bg-white px-4 py-2.5 text-sm font-semibold text-[#0f1930] transition hover:border-[#0f1930]"
+                      className="pointer-events-auto inline-flex items-center justify-center gap-3 rounded-full border border-black/10 bg-white px-4 py-2.5 text-sm font-semibold text-[#0f1930] transition hover:border-[#0f1930]"
                       onClick={(event) => {
                         event.stopPropagation();
                         openGalleryOverlay(0);
@@ -1016,12 +1019,13 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                         }
                       }}
                     >
+                      <img src={imagesPictogram} alt="" aria-hidden="true" className="h-[26px] w-[26px] object-contain" />
                       Se alla bilder
                     </span>
                   </div>
                 </button>
 
-                <div className="grid h-full min-h-0 grid-cols-2 grid-rows-[repeat(2,minmax(0,1fr))] gap-0.5">
+                <div className="grid h-full min-h-0 grid-cols-2 gap-0.5">
                   {galleryPreviewImages.map((image, index) => (
                     <button
                       key={`gallery-side-${image}-${index}`}
@@ -1037,7 +1041,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
             </div>
 
             <div className="grid gap-6 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-              <article className="rounded-3xl border border-black/10 bg-white p-5">
+              <article className="flex h-full flex-col rounded-3xl border border-black/10 bg-white p-5">
                 <h2 className="text-2xl font-semibold leading-tight text-ink-900">{listing.title}</h2>
                 <div className="mt-2 space-y-3">
                   <p className="flex items-center gap-1.5 text-sm text-ink-500">
@@ -1060,15 +1064,6 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                   <p>{shortDescriptionPreview}</p>
                 </div>
                 <div className="mt-5">
-                  <button
-                    type="button"
-                    className="rounded-full border border-black/10 bg-white px-4 py-2.5 text-sm font-semibold text-ink-700 transition hover:border-[#0f1930]/25 hover:text-[#0f1930]"
-                    onClick={openAboutOverlay}
-                  >
-                    Läs mer
-                  </button>
-                </div>
-                <div className="mt-5">
                   <h3 className="text-base font-semibold">Bekvämligheter</h3>
                   <ul className="mt-3 flex flex-wrap gap-2">
                     {displayAmenities.map((amenity) => {
@@ -1085,6 +1080,17 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                     })}
                   </ul>
                 </div>
+                <div className="mt-auto border-t border-black/10 pt-4">
+                  <div className="flex justify-center">
+                    <button
+                      type="button"
+                      className="rounded-full border border-black/10 bg-white px-4 py-2.5 text-sm font-semibold text-ink-700 transition hover:border-[#0f1930]/25 hover:text-[#0f1930]"
+                      onClick={openAboutOverlay}
+                    >
+                      Läs mer
+                    </button>
+                  </div>
+                </div>
               </article>
 
               <div className="relative h-80 overflow-hidden rounded-3xl border border-black/10 bg-white sm:h-[440px]">
@@ -1098,19 +1104,23 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                 </iframe>
               </div>
             </div>
-          </div>
-          
-          <div className="mt-4 grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-            <div className="space-y-4">
+
+            <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+            <div className="space-y-6">
               <ListingTransitCard lat={insight.center.lat} lng={insight.center.lng} fallbackTransit={insight.transit} />
 
-              <article className="rounded-3xl border border-black/10 bg-white p-5">
+              <article className="rounded-3xl border border-black/10 bg-white p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <h2 className="text-xl font-semibold">Området</h2>
+                  <div className="min-w-0 flex-1 pr-2">
+                    <h2 className="inline-flex items-center gap-2 text-xl font-semibold">
+                      <img src={locationPictogram} alt="" aria-hidden="true" className="h-[33px] w-[33px] object-contain" />
+                      Området
+                    </h2>
+                  </div>
                   <div className="inline-flex items-center gap-1 rounded-full border border-black/10 bg-white p-1.5">
                     <button
                       type="button"
-                      className={`inline-flex min-h-[38px] items-center gap-1.5 rounded-full px-4 text-sm font-semibold transition ${
+                      className={`inline-flex min-h-[34px] items-center gap-1 rounded-full px-3.5 text-xs font-semibold transition ${
                         areaViewMode === "map"
                           ? "bg-[#0f1930] text-white"
                           : "text-ink-700 hover:bg-white"
@@ -1122,7 +1132,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                     </button>
                     <button
                       type="button"
-                      className={`inline-flex min-h-[38px] items-center gap-1.5 rounded-full px-4 text-sm font-semibold transition ${
+                      className={`inline-flex min-h-[34px] items-center gap-1 rounded-full px-3.5 text-xs font-semibold transition ${
                         areaViewMode === "street"
                           ? "bg-[#0f1930] text-white"
                           : "text-ink-700 hover:bg-white"
@@ -1134,9 +1144,6 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                     </button>
                   </div>
                 </div>
-                <p className="mt-2 text-sm text-ink-700">
-                  Lokalen ligger i {listing.district} och nås smidigt med kollektivtrafik, cykel och bil beroende på teamets behov.
-                </p>
                 <div className="mt-3">
                   {areaViewMode === "map" ? (
                     <ListingAreaGoogleMap lat={insight.center.lat} lng={insight.center.lng} title={listing.title} />
@@ -1156,7 +1163,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
               </article>
             </div>
 
-            <aside className="space-y-4 xl:sticky xl:top-6 xl:self-start">
+            <aside className="space-y-6 lg:sticky lg:top-6 lg:self-start">
               <article className="rounded-3xl border border-black/10 bg-white p-5">
                 <div className="flex items-start justify-between gap-3">
                   <div>
@@ -1171,6 +1178,19 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                 <div className="mt-4 border-t border-black/10 pt-4">
                   <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Hyra per månad</p>
                   <p className="mt-1 text-[28px] font-semibold leading-none text-[#0f1930]">{formatSek(listing.priceMonthly)}</p>
+                </div>
+
+                <div className="mt-4 border-t border-black/10 pt-4">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Mäklare</p>
+                  <div className="mt-2 flex items-center gap-3 rounded-2xl border border-black/10 bg-[#f8f8f7] p-3">
+                    <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#0f1930] text-sm font-semibold text-white">
+                      {brokerInitials}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="truncate text-base font-semibold text-ink-900">{brokerName}</p>
+                      <p className="truncate text-xs text-ink-600">{ownerCompanyName}</p>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="mt-5 space-y-2">
@@ -1190,14 +1210,8 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                   </button>
                 </div>
 
-                <div className="mt-5 border-t border-black/10 pt-4 text-sm text-ink-600">
-                  <p>Svarstid cirka {listing.responseHours} timmar.</p>
-                </div>
               </article>
 
-              <article className="overflow-hidden rounded-3xl border border-black/10 bg-white">
-                <img src={nornormAd} alt="Nornorm annons" className="block w-full" />
-              </article>
             </aside>
           </div>
         </div>
@@ -1289,8 +1303,11 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
             <div className="w-full max-w-2xl rounded-3xl border border-black/10 bg-white p-6 shadow-[0_20px_60px_rgba(0,0,0,0.25)] sm:p-7" onClick={(event) => event.stopPropagation()}>
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <h3 className="text-2xl font-semibold text-ink-900">Om lokalen</h3>
-                  <p className="mt-1 text-sm text-ink-600">{listing.title}</p>
+                  <h3 className="text-2xl font-semibold text-ink-900">{listing.title}</h3>
+                  <p className="mt-1 inline-flex items-center gap-1.5 text-sm text-ink-500">
+                    <PinIcon className="h-4 w-4" />
+                    {listing.district} • {listing.address}
+                  </p>
                 </div>
                 <button
                   type="button"
@@ -1306,6 +1323,24 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                 {longDescription.map((paragraph) => (
                   <p key={`overlay-${paragraph}`}>{paragraph}</p>
                 ))}
+              </div>
+
+              <div className="mt-6 border-t border-black/10 pt-5">
+                <h4 className="text-base font-semibold text-ink-900">Bekvämligheter</h4>
+                <ul className="mt-3 flex flex-wrap gap-2">
+                  {displayAmenities.map((amenity) => {
+                    const Icon = amenityIconFor(amenity);
+                    return (
+                      <li
+                        key={`overlay-amenity-${amenity}`}
+                        className="inline-flex min-h-[42px] items-center gap-1.5 rounded-full border border-black/10 bg-white px-3 py-1.5 text-[0.875rem] font-semibold leading-5 text-ink-700"
+                      >
+                        <Icon className="h-3.5 w-3.5 shrink-0 text-ink-700" />
+                        {amenity}
+                      </li>
+                    );
+                  })}
+                </ul>
               </div>
 
               <div className="mt-6 border-t border-black/10 pt-5">
@@ -1423,7 +1458,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
         ) : null}
 
         {similarListings.length > 0 ? (
-          <section className="mt-10 pb-8">
+          <section className="pt-16 pb-8">
             <h2 className="text-2xl font-semibold">Liknande objekt</h2>
             <div className="mt-6 grid gap-4 lg:grid-cols-3">
               {similarListings.map((item) => (
@@ -1438,6 +1473,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
             </div>
           </section>
         ) : null}
+      </div>
       </div>
     </section>
   );

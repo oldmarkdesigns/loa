@@ -1,14 +1,16 @@
 import MarketingNavLinks from "./MarketingNavLinks";
 import { navigateTo } from "../../lib/router";
-import companyLogo from "../../../Assets/Logo/68D028A1-E148-495B-BD8C-A9B789FFD8C3.PNG.png";
 
 function AuthFlowNav() {
   return (
     <header className="fixed inset-x-0 top-0 z-40 border-b border-black/10 bg-white/95 backdrop-blur-md">
       <div className="grid w-full grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 py-3 sm:px-6">
         <button type="button" className="justify-self-start text-left" onClick={() => navigateTo("/")}>
-          <span className="inline-flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-black/20 bg-white">
-            <img src={companyLogo} alt="Företagslogga" className="h-full w-full object-cover" />
+          <span className="inline-flex items-center gap-2 rounded-xl border border-black/10 bg-white px-2.5 py-1.5">
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-dashed border-black/30 bg-white text-[9px] font-semibold uppercase tracking-wide text-ink-500">
+              LOGGA
+            </span>
+            <span className="text-sm font-semibold text-ink-800">Företagsnamn</span>
           </span>
         </button>
 

@@ -38,7 +38,6 @@ import featureImageA from "../../Assets/Object Images/Inspiration.jpeg";
 import featureImageB from "../../Assets/Object Images/_ (1).jpeg";
 import processImage from "../../Assets/Object Images/_ (2).jpeg";
 import faqImage from "../../Assets/Object Images/_ (3).jpeg";
-import companyLogo from "../../Assets/Logo/68D028A1-E148-495B-BD8C-A9B789FFD8C3.PNG.png";
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 const HERO_GOOGLE_MAPS_SCRIPT_ID = "google-maps-hero-sdk-script";
@@ -937,8 +936,11 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
         <div className="grid w-full grid-cols-[auto_1fr_auto] items-center gap-4 px-4 py-3 sm:px-6">
           <div className="flex min-w-0 items-center gap-8">
             <button type="button" className="text-left" onClick={handleHomeBrandClick}>
-              <span className="inline-flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-black/20 bg-white">
-                <img src={companyLogo} alt="Företagslogga" className="h-full w-full object-cover" />
+              <span className="inline-flex items-center gap-2 rounded-xl border border-black/10 bg-white px-2.5 py-1.5">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-dashed border-black/30 bg-white text-[9px] font-semibold uppercase tracking-wide text-ink-500">
+                  LOGGA
+                </span>
+                <span className="text-sm font-semibold text-ink-800">Företagsnamn</span>
               </span>
             </button>
 
