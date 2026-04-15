@@ -739,10 +739,10 @@ function ProfilePage({ app }) {
                           <img
                             src={user.profile.avatarUrl}
                             alt={user?.name || "Profilbild"}
-                            className="h-32 w-32 rounded-full border border-black/10 object-cover"
+                            className="h-36 w-36 rounded-full border border-black/10 object-cover"
                           />
                         ) : (
-                          <div className="inline-flex h-32 w-32 items-center justify-center rounded-full border border-black/10 bg-[#eef2f8] text-3xl font-semibold text-ink-700">
+                          <div className="inline-flex h-36 w-36 items-center justify-center rounded-full border border-black/10 bg-[#eef2f8] text-3xl font-semibold text-ink-700">
                             {(user?.name || "AA")
                               .split(" ")
                               .filter(Boolean)
@@ -871,7 +871,7 @@ function ProfilePage({ app }) {
               <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
                 <div className="space-y-5">
                   {showProfileSetupCard ? (
-                  <article className="rounded-3xl border border-black/10 bg-white p-5 sm:p-6">
+                  <div>
                     <button
                       type="button"
                       className="flex w-full items-center justify-between gap-3 text-left"
@@ -937,7 +937,7 @@ function ProfilePage({ app }) {
                         </div>
                       </div>
                     </div>
-                  </article>
+                  </div>
                   ) : null}
 
                   <article className="rounded-3xl border border-black/10 bg-white p-5 sm:p-6">
@@ -960,7 +960,7 @@ function ProfilePage({ app }) {
 
                     {hasRenter ? (
                       <div className="mt-6 space-y-6">
-                        <div>
+                        <div className="rounded-2xl border border-black/10 bg-white p-4 sm:p-5">
                           <div className="flex items-center justify-between gap-3">
                             <p className="text-sm font-semibold text-ink-700">{localProgramProgress.percent}% klart</p>
                           </div>
@@ -1047,8 +1047,8 @@ function ProfilePage({ app }) {
                   </section>
                 </div>
 
-                <aside className="lg:sticky lg:top-6 lg:self-start">
-                  <div className="space-y-4">
+                <aside className="space-y-6 lg:sticky lg:top-0 lg:self-start">
+                  <div className="space-y-6">
                     <article className="overflow-hidden rounded-3xl border border-black/10 bg-white">
                       <div className="px-5 py-4">
                         <p className="text-lg font-semibold text-[#0f1930]">Publicera din profil</p>

@@ -1344,6 +1344,7 @@ function buildResultsSuggestionCandidates({
 
 function RentPage({ app, isGuest = false, onRequireAuth }) {
   const {
+    user,
     listings,
     favorites,
     savedFilters,
@@ -1402,7 +1403,6 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
   });
   const [aiGuideStepRequest, setAiGuideStepRequest] = useState(null);
   const [forceAiGuideCoreStep, setForceAiGuideCoreStep] = useState(() => shouldForceCoreStepFromUrl());
-  const [localProgramSearchEnabled, setLocalProgramSearchEnabled] = useState(false);
   const [resultsSuggestion, setResultsSuggestion] = useState(null);
   const [resultsSuggestionLoading, setResultsSuggestionLoading] = useState(false);
   const [dismissedResultsSuggestionKey, setDismissedResultsSuggestionKey] = useState("");
@@ -1956,7 +1956,6 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
       aiChangedChipEntries: []
     });
     setUseNewSearchCta(false);
-    setLocalProgramSearchEnabled(false);
     setShowSearchEditor(false);
     setAiLivePreview({
       filters: null,
@@ -2627,18 +2626,6 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
     }
 
     return true;
-  }
-
-  async function handleLocalProgramToggle() {
-    if (localProgramSearchEnabled) {
-      setLocalProgramSearchEnabled(false);
-      return;
-    }
-
-    const applied = await applyLocalProgramSearch();
-    if (applied) {
-      setLocalProgramSearchEnabled(true);
-    }
   }
 
   async function submitInlineGuidedAiSearch(payload) {
@@ -3353,28 +3340,8 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                 ]}
               />
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="grid w-full max-w-[460px] grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
+                <div className="w-full max-w-[460px]">
                   <h1 className="truncate text-2xl font-semibold leading-10">{showingSearchResults ? "Sökresultat" : "Lediga lokaler"}</h1>
-                  <div className="inline-flex h-10 items-center gap-2 justify-self-end rounded-2xl border border-black/10 bg-white px-3 text-xs font-semibold text-ink-700">
-                    <span className="inline-flex items-center gap-1">
-                      <FilterIcon className="h-3.5 w-3.5 text-[#0f1930]" />
-                      <span>Sök med lokalprogram</span>
-                    </span>
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={localProgramSearchEnabled}
-                      aria-label="Växla sök med lokalprogram"
-                      className={`relative inline-flex h-6 w-10 min-h-0 items-center rounded-full p-0.5 transition-colors ${
-                        localProgramSearchEnabled ? "bg-[#0f1930] justify-end" : "bg-[#a8adb3] justify-start"
-                      }`}
-                      onClick={() => {
-                        void handleLocalProgramToggle();
-                      }}
-                    >
-                      <span aria-hidden="true" className="h-5 w-5 rounded-full bg-white shadow-[0_1px_2px_rgba(15,25,48,0.35)]" />
-                    </button>
-                  </div>
                 </div>
                 {hasBegunSearch ? (
                   <div className="flex flex-wrap items-center justify-end gap-2">
@@ -3801,39 +3768,75 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                   <aside className="min-h-0 max-h-[42vh] overflow-y-auto overscroll-contain lg:h-full lg:max-h-none lg:pr-1">
                     <div className={`${isSwitchingSidePanel ? "search-editor-collapse-out" : "search-editor-expand-in"} lg:min-h-full`}>
                       {sidePanelMode === "ai" ? (
-                        <AiGuidedAssistant
-                          key={`inline-ai-${aiGuideResetKey}`}
-                          initialFilters={filters}
-                          districtOptions={districtOptions}
-                          listingTypes={listingTypes}
-                          amenityOptions={editorAmenityOptions}
-                          transitDistanceOptions={transitDistanceOptions}
-                          contractFlexOptions={contractFlexOptions}
-                          accessHoursOptions={accessHoursOptions}
-                          parkingTypeOptions={parkingTypeOptions}
-                          layoutTypeOptions={layoutTypeOptions}
-                          advertiserOptions={advertiserOptions}
-                          initialAmenityQuery={amenityQuery}
-                          initialFurnishedFilter={furnishedFilter}
-                          onPreviewFilters={previewEditorAiFilters}
-                          onSubmitSearch={submitInlineGuidedAiSearch}
-                          onOpenInfo={() => setShowEditorAiInfo(true)}
-                          onResetSearch={() => {
-                            void handleResetSearchResults();
-                          }}
-                          resultCount={visibleListings.length}
-                          defaultResultCount={sortedListings.length}
-                          requestedStepRequest={aiGuideStepRequest}
-                          forceStepId={forceAiGuideCoreStep ? "core" : null}
-                        onShowMatches={() => {
-                          resultsTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-                        }}
-                        submitLabel="Uppdatera sökning"
-                        showHeader={false}
-                        showModeSwitch
-                        filterModeActive={!showEditorAiPanel}
-                        onToggleFilterMode={handleFilterSearchToggle}
-                        />
+                        <div className="space-y-3">
+                          <AiGuidedAssistant
+                            key={`inline-ai-${aiGuideResetKey}`}
+                            initialFilters={filters}
+                            districtOptions={districtOptions}
+                            listingTypes={listingTypes}
+                            amenityOptions={editorAmenityOptions}
+                            transitDistanceOptions={transitDistanceOptions}
+                            contractFlexOptions={contractFlexOptions}
+                            accessHoursOptions={accessHoursOptions}
+                            parkingTypeOptions={parkingTypeOptions}
+                            layoutTypeOptions={layoutTypeOptions}
+                            advertiserOptions={advertiserOptions}
+                            initialAmenityQuery={amenityQuery}
+                            initialFurnishedFilter={furnishedFilter}
+                            onPreviewFilters={previewEditorAiFilters}
+                            onSubmitSearch={submitInlineGuidedAiSearch}
+                            onOpenInfo={() => setShowEditorAiInfo(true)}
+                            onResetSearch={() => {
+                              void handleResetSearchResults();
+                            }}
+                            resultCount={visibleListings.length}
+                            defaultResultCount={sortedListings.length}
+                            requestedStepRequest={aiGuideStepRequest}
+                            forceStepId={forceAiGuideCoreStep ? "core" : null}
+                            onShowMatches={() => {
+                              resultsTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                            }}
+                            submitLabel="Uppdatera sökning"
+                            showHeader={false}
+                            showModeSwitch
+                            filterModeActive={!showEditorAiPanel}
+                            onToggleFilterMode={handleFilterSearchToggle}
+                          />
+
+                          <div className="rounded-3xl border border-[#0f1930]/15 bg-gradient-to-r from-[#f8fafc] to-white p-3">
+                            <div className="flex flex-wrap items-center gap-3">
+                              <div className="min-w-[160px] flex-1">
+                                <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">Din sökprofil</p>
+                                <p className="text-sm font-semibold text-ink-900">Kör sökning med lokalprogram</p>
+                              </div>
+                              <button
+                                type="button"
+                                className="inline-flex items-center justify-center gap-2 rounded-full border border-[#0f1930] bg-[#0f1930] pl-2 pr-5 py-1.5 text-sm font-semibold text-white hover:bg-[#16233f]"
+                                onClick={() => {
+                                  void applyLocalProgramSearch();
+                                }}
+                              >
+                                {user?.profile?.avatarUrl ? (
+                                  <img
+                                    src={user.profile.avatarUrl}
+                                    alt={user?.name || "Profilbild"}
+                                    className="h-9 w-9 rounded-full border-2 border-white object-cover shadow-[0_1px_2px_rgba(15,25,48,0.35)]"
+                                  />
+                                ) : (
+                                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-[#0b1733] text-xs font-semibold text-white shadow-[0_1px_2px_rgba(15,25,48,0.35)]">
+                                    {(user?.name || user?.email || "A")
+                                      .split(" ")
+                                      .filter(Boolean)
+                                      .slice(0, 2)
+                                      .map((part) => part[0]?.toUpperCase() || "")
+                                      .join("")}
+                                  </span>
+                                )}
+                                Sök med lokalprogram
+                              </button>
+                            </div>
+                          </div>
+                        </div>
                       ) : (
                         sideFilterPanel
                       )}

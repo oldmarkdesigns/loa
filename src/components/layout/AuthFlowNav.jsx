@@ -14,7 +14,7 @@ function AuthFlowNav() {
           </span>
         </button>
 
-        <nav className="hidden items-center justify-self-center gap-5 lg:flex">
+        <nav className="hidden items-center justify-self-start gap-5 lg:flex">
           <MarketingNavLinks hrefPrefix="/" onPublish={() => navigateTo("/app/publish")} />
         </nav>
 

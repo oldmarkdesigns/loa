@@ -143,7 +143,7 @@ function AppShell({ pathname, user, onSwitchRole, onLogout, onRequireAuth, isGue
             </button>
           </div>
 
-          <nav className="hidden items-center justify-self-center gap-7 lg:flex">
+          <nav className="hidden items-center justify-self-start gap-7 lg:flex">
             <MarketingNavLinks
               hrefPrefix="/"
               onPrimaryNavClick={handlePrimaryNavClick}

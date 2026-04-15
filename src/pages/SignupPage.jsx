@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { navigateTo } from "../lib/router";
 import { CameraIcon, EyeIcon } from "../components/icons/UiIcons";
 import AuthFlowNav from "../components/layout/AuthFlowNav";
+import { trackSignupStarted } from "../lib/analytics";
 
 function SignupPage({ onSignup }) {
   const countryCodeOptions = [
@@ -26,7 +27,10 @@ function SignupPage({ onSignup }) {
   const [phoneCountryCode, setPhoneCountryCode] = useState("+46");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
-  const [detailsStep, setDetailsStep] = useState(1);
+  const [detailsStep, setDetailsStep] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("step") === "details" ? 2 : 1;
+  });
   const [avatarPreviewUrl, setAvatarPreviewUrl] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const avatarInputRef = useRef(null);
@@ -45,6 +49,11 @@ function SignupPage({ onSignup }) {
   }, []);
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setDetailsStep(params.get("step") === "details" ? 2 : 1);
+  }, []);
+
+  useEffect(() => {
     setForm((previous) => ({ ...previous, role: roleFromUrl, roles: [roleFromUrl] }));
   }, [roleFromUrl]);
 
@@ -56,6 +65,7 @@ function SignupPage({ onSignup }) {
   async function submit(event) {
     event.preventDefault();
     if (detailsStep === 1) {
+      trackSignupStarted({ role: form.role });
       setDetailsStep(2);
       return;
     }
@@ -83,6 +93,7 @@ function SignupPage({ onSignup }) {
     if (pending) return;
 
     if (detailsStep === 1) {
+      trackSignupStarted({ role: form.role });
       setDetailsStep(2);
       return;
     }
@@ -111,7 +122,7 @@ function SignupPage({ onSignup }) {
   const avatarInitial = String(form.firstName || form.email || "A").trim().charAt(0).toUpperCase();
 
   return (
-    <main className="grid min-h-screen place-items-center bg-[#f6f7f8] px-4 pb-8 pt-28">
+    <main className="grid min-h-screen place-items-center bg-white px-4 pb-8 pt-28">
       <AuthFlowNav />
       <div className="w-full max-w-[460px]">
         <div className="rounded-[30px] border border-black/10 bg-white px-6 py-7 sm:px-7 sm:py-8">

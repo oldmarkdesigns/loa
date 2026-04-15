@@ -1,6 +1,11 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { aiApi, authApi, favoriteApi, leadsApi, listingApi, profileApi, viewingsApi } from "../api";
-import { analyticsEventNames, trackEvent } from "../lib/analytics";
+import {
+  analyticsEventNames,
+  trackEvent,
+  trackSearchPerformed,
+  trackSignupCompleted
+} from "../lib/analytics";
 
 const AppStateContext = createContext(null);
 const OPEN_ACCESS_MODE = false;
@@ -301,7 +306,7 @@ export function AppProvider({ children }) {
     setSavedFiltersState(readSavedFilters(response.user.id));
     setFilterPresets(readSavedFilterPresets(response.user.id));
     setSavedAiSearches(readSavedAiSearches(response.user.id));
-    await trackEvent(analyticsEventNames.SIGNUP_COMPLETED, {
+    trackSignupCompleted({
       role: payload.role
     });
     pushToast("Konto skapat. Fortsätt med onboarding.", "success");
@@ -430,6 +435,12 @@ export function AppProvider({ children }) {
 
     const { listings: listingData } = await listingApi.getListings(normalized);
     setListings(listingData);
+    trackSearchPerformed({
+      results_count: Array.isArray(listingData) ? listingData.length : 0,
+      has_district_filter: normalized.district !== "Alla",
+      has_budget_filter: Boolean(String(normalized.maxBudget || "").trim()),
+      has_type_filter: Array.isArray(normalized.type) && normalized.type.length > 0
+    });
     return listingData;
   }
 

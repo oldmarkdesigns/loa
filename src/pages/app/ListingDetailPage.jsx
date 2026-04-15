@@ -5,6 +5,7 @@ import { formatSek } from "../../lib/formatters";
 import { PLATFORM_GOOGLE_MAP_STYLE } from "../../lib/googleMapStyles";
 import { normalizePopularListingFallback, popularListingFallbackKey } from "../../lib/popularListingFallback";
 import { navigateTo } from "../../lib/router";
+import { trackContactClicked, trackListingViewed } from "../../lib/analytics";
 import imagesPictogram from "../../../Assets/Pictograms/images.png";
 import locationPictogram from "../../../Assets/Pictograms/location.png";
 import trainPictogram from "../../../Assets/Pictograms/train.png";
@@ -757,6 +758,14 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
   }, [listingId, isGalleryView]);
 
   useEffect(() => {
+    if (!listing?.id || isGalleryView) return;
+    trackListingViewed({
+      listing_id: String(listing.id),
+      source
+    });
+  }, [isGalleryView, listing?.id, source]);
+
+  useEffect(() => {
     const container = pageRef.current;
     if (container) container.scrollTo({ top: 0, behavior: "auto" });
     else window.scrollTo({ top: 0, behavior: "auto" });
@@ -1197,7 +1206,13 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                   <button
                     type="button"
                     className="w-full rounded-full border border-[#0f1930] bg-[#0f1930] px-4 py-3 text-sm font-semibold text-white hover:bg-[#16233f]"
-                    onClick={() => openInquiryOverlay("contact")}
+                    onClick={() => {
+                      trackContactClicked({
+                        listing_id: String(listing.id),
+                        source
+                      });
+                      openInquiryOverlay("contact");
+                    }}
                   >
                     Kontakta uthyrare
                   </button>

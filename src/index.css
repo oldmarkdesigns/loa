@@ -24,6 +24,12 @@ body {
   min-height: 100vh;
 }
 
+/* Global icon bump: affects SVG icon components, not image pictograms. */
+svg.h-4.w-4 {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
 .page-enter {
   animation: page-fade-in 220ms ease-out both;
 }
