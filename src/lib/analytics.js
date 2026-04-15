@@ -34,6 +34,15 @@ function isClient() {
   return typeof window !== "undefined";
 }
 
+function isLocalhostHost(hostname) {
+  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
+}
+
+function isAnalyticsEnabled() {
+  if (!isClient()) return false;
+  return !isLocalhostHost(window.location.hostname);
+}
+
 function sanitizeProps(payload = {}) {
   const blockedKeys = /email|phone|password|token|name|address|message|note|description|query/i;
   const output = {};
@@ -94,6 +103,7 @@ function shouldSkipDuplicate(dedupKey, ttlMs = DUPLICATE_EVENT_TTL_MS) {
 
 export function initAnalytics() {
   if (!isClient()) return;
+  if (!isAnalyticsEnabled()) return;
   if (!POSTHOG_KEY) return;
   if (window.__posthogInitialized) return;
 
@@ -109,6 +119,7 @@ export function initAnalytics() {
 
 export function trackEvent(eventName, payload = {}, options = {}) {
   if (!allowedEvents.has(eventName)) return;
+  if (!isAnalyticsEnabled()) return;
   if (!isClient() || !POSTHOG_KEY) return;
 
   const dedupKey = options.dedupKey ? `${eventName}:${options.dedupKey}` : "";
