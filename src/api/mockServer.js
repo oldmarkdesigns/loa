@@ -562,6 +562,64 @@ async function handleRequest(method, endpoint, body = {}) {
     return { user: sanitizeUser(user) };
   }
 
+  if (method === "POST" && url.pathname === "/api/auth/clerk-session") {
+    const email = String(body.email || "").trim().toLowerCase();
+    if (!email) {
+      throw new ApiError(400, "Saknar e-post från Clerk-konto.");
+    }
+
+    const requestedRoles = Array.isArray(body.roles)
+      ? body.roles.filter((role) => role === "renter" || role === "publisher")
+      : [];
+    const hasRoleOverride = body.role === "publisher" || body.role === "renter";
+    const rolesFromPayload = requestedRoles.length
+      ? Array.from(new Set(requestedRoles))
+      : (hasRoleOverride ? [body.role] : []);
+    const primaryRole = hasRoleOverride ? body.role : (rolesFromPayload[0] || "renter");
+
+    let user = db.users.find((entry) => entry.email.toLowerCase() === email);
+
+    if (!user) {
+      user = {
+        id: slugId("u"),
+        email,
+        password: `clerk-${crypto.randomUUID()}`,
+        name: String(body.name || "").trim() || "Ny användare",
+        phone: body.phone || "",
+        role: primaryRole,
+        roles: rolesFromPayload.length ? rolesFromPayload : [primaryRole],
+        publisherPlan: defaultPublisherPlan(),
+        onboardingCompleted: false,
+        profile: {
+          avatarUrl: String(body.imageUrl || "").trim()
+        },
+        authProvider: "clerk",
+        clerkUserId: String(body.clerkUserId || "").trim()
+      };
+      db.users.push(user);
+    } else {
+      user.name = String(body.name || "").trim() || user.name;
+      user.phone = body.phone ?? user.phone;
+      if (hasRoleOverride) {
+        user.role = primaryRole;
+      }
+      if (rolesFromPayload.length) {
+        user.roles = rolesFromPayload;
+      }
+      user.publisherPlan = user.publisherPlan || defaultPublisherPlan();
+      user.profile = {
+        ...user.profile,
+        ...(body.imageUrl ? { avatarUrl: String(body.imageUrl).trim() } : {})
+      };
+      user.authProvider = "clerk";
+      user.clerkUserId = String(body.clerkUserId || "").trim() || user.clerkUserId;
+    }
+
+    writeDb(db);
+    writeSession({ userId: user.id, issuedAt: nowIso() });
+    return { user: sanitizeUser(user) };
+  }
+
   if (method === "POST" && url.pathname === "/api/auth/logout") {
     writeSession(null);
     return { ok: true };

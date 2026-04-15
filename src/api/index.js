@@ -3,6 +3,7 @@ import { apiClient } from "./client";
 export const authApi = {
   signup: (payload) => apiClient.request("POST", "/api/auth/signup", payload),
   login: (payload) => apiClient.request("POST", "/api/auth/login", payload),
+  clerkSession: (payload) => apiClient.request("POST", "/api/auth/clerk-session", payload),
   logout: () => apiClient.request("POST", "/api/auth/logout"),
   session: () => apiClient.request("GET", "/api/auth/session")
 };

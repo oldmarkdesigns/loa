@@ -161,9 +161,9 @@ function AppContent() {
       />
     );
   } else if (pathname === "/login") {
-    content = <LoginPage onLogin={app.login} />;
+    content = <LoginPage onClerkContinue={app.loginWithClerk} onDemoLogin={app.loginDemoKombi} />;
   } else if (pathname === "/signup") {
-    content = <SignupPage onSignup={app.signup} />;
+    content = <SignupPage onClerkContinue={app.loginWithClerk} onDemoLogin={app.loginDemoKombi} onTestSignup={app.signup} onUpdateProfile={app.updateProfile} />;
   } else if (pathname === "/forgot-password") {
     content = <ForgotPasswordPage />;
   } else if (pathname === "/onboarding" || pathname.startsWith("/onboarding/")) {

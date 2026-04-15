@@ -1,4 +1,5 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useClerk, useUser } from "@clerk/react";
 import { aiApi, authApi, favoriteApi, leadsApi, listingApi, profileApi, viewingsApi } from "../api";
 import {
   analyticsEventNames,
@@ -200,6 +201,12 @@ function mapRenterProgramToFilters(program) {
 }
 
 export function AppProvider({ children }) {
+  const { user: clerkUser, isLoaded: isClerkLoaded } = useUser();
+  const { signOut: signOutClerk } = useClerk();
+  const clerkSyncInFlightRef = useRef(false);
+  const lastSyncedClerkUserIdRef = useRef(null);
+  const clerkSignoutSyncInFlightRef = useRef(false);
+
   const [isBootstrapping, setIsBootstrapping] = useState(true);
   const [user, setUser] = useState(null);
   const [listings, setListings] = useState([]);
@@ -300,6 +307,33 @@ export function AppProvider({ children }) {
     bootstrapSession();
   }, []);
 
+  useEffect(() => {
+    if (!isClerkLoaded || !clerkUser) {
+      return;
+    }
+
+    if (user?.id || clerkSyncInFlightRef.current) {
+      return;
+    }
+
+    if (lastSyncedClerkUserIdRef.current === clerkUser.id) {
+      return;
+    }
+
+    clerkSyncInFlightRef.current = true;
+
+    loginWithClerk()
+      .then(() => {
+        lastSyncedClerkUserIdRef.current = clerkUser.id;
+      })
+      .catch(() => {
+        // Keep app usable even if Clerk bridge fails.
+      })
+      .finally(() => {
+        clerkSyncInFlightRef.current = false;
+      });
+  }, [clerkUser, isClerkLoaded, user?.id]);
+
   async function signup(payload) {
     const response = await authApi.signup(payload);
     setUser(response.user);
@@ -327,6 +361,67 @@ export function AppProvider({ children }) {
     return response.user;
   }
 
+  async function loginWithClerk(payload = {}) {
+    if (!clerkUser) {
+      throw new Error("Clerk-session saknas.");
+    }
+
+    const primaryEmail =
+      clerkUser.primaryEmailAddress?.emailAddress ||
+      clerkUser.emailAddresses?.[0]?.emailAddress ||
+      "";
+
+    if (!primaryEmail) {
+      throw new Error("Kunde inte läsa e-post från Clerk-konto.");
+    }
+
+    const hasRoleOverride = payload.role === "publisher" || payload.role === "renter";
+    const safeRole = hasRoleOverride ? payload.role : undefined;
+    const safeRoles = Array.isArray(payload.roles)
+      ? payload.roles.filter((role) => role === "renter" || role === "publisher")
+      : [];
+    const uniqueRoles = Array.from(new Set(safeRoles));
+    const fullName = String(payload.name || clerkUser.fullName || "").trim();
+    const phone = String(payload.phone || "").trim();
+
+    const response = await authApi.clerkSession({
+      clerkUserId: clerkUser.id,
+      email: primaryEmail,
+      name: fullName || primaryEmail.split("@")[0],
+      phone,
+      ...(safeRole ? { role: safeRole } : {}),
+      ...(uniqueRoles.length ? { roles: uniqueRoles } : {}),
+      imageUrl: clerkUser.imageUrl || ""
+    });
+
+    setUser(response.user);
+    setSavedFiltersState(readSavedFilters(response.user.id));
+    setFilterPresets(readSavedFilterPresets(response.user.id));
+    setSavedAiSearches(readSavedAiSearches(response.user.id));
+    await refreshCoreData(response.user);
+    return response.user;
+  }
+
+  async function loginDemoKombi() {
+    return login({
+      email: "kombi@demo.se",
+      password: "demo123"
+    });
+  }
+
+  async function clearLocalSessionState() {
+    setUser(null);
+    setFavorites([]);
+    setViewings([]);
+    setLeads([]);
+    setSavedFiltersState(defaultFilters);
+    setFilterPresets([]);
+    setSavedAiSearches([]);
+    setAiHistory([]);
+    await loadPublicListings();
+    lastSyncedClerkUserIdRef.current = null;
+  }
+
   async function logout() {
     if (OPEN_ACCESS_MODE) {
       pushToast("Öppet läge är aktivt. Utloggning är tillfälligt avstängd.", "info");
@@ -334,22 +429,38 @@ export function AppProvider({ children }) {
     }
 
     try {
+      if (clerkUser) {
+        await signOutClerk();
+      }
       await authApi.logout();
     } catch (_error) {
       // Always clear local session state even if mock logout request fails.
     } finally {
-      setUser(null);
-      setFavorites([]);
-      setViewings([]);
-      setLeads([]);
-      setSavedFiltersState(defaultFilters);
-      setFilterPresets([]);
-      setSavedAiSearches([]);
-      setAiHistory([]);
-      await loadPublicListings();
+      await clearLocalSessionState();
       pushToast("Du är utloggad.", "info");
     }
   }
+
+  useEffect(() => {
+    if (!isClerkLoaded || clerkUser || !user || user.authProvider !== "clerk") {
+      return;
+    }
+
+    if (clerkSignoutSyncInFlightRef.current) {
+      return;
+    }
+    clerkSignoutSyncInFlightRef.current = true;
+
+    authApi.logout()
+      .catch(() => {
+        // Continue and clear local session state.
+      })
+      .finally(async () => {
+        await clearLocalSessionState();
+        pushToast("Du är utloggad.", "info");
+        clerkSignoutSyncInFlightRef.current = false;
+      });
+  }, [clerkUser, isClerkLoaded, user]);
 
   async function completeOnboarding(payload) {
     const { user: nextUser } = await profileApi.completeOnboarding(payload);
@@ -655,6 +766,8 @@ export function AppProvider({ children }) {
       pushToast,
       signup,
       login,
+      loginWithClerk,
+      loginDemoKombi,
       logout,
       completeOnboarding,
       switchRole,
