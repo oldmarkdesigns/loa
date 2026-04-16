@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Show, SignUp, useUser } from "@clerk/react";
+import { SignUp, useUser } from "@clerk/react";
 import { defaultAppPathForRole, navigateTo } from "../lib/router";
 import { CameraIcon } from "../components/icons/UiIcons";
 import AuthFlowNav from "../components/layout/AuthFlowNav";
 
 function SignupPage({ onClerkContinue, onDemoLogin, onTestSignup, onUpdateProfile }) {
-  const { isSignedIn: isClerkSignedIn } = useUser();
+  const { isLoaded, isSignedIn: isClerkSignedIn } = useUser();
   const countryCodeOptions = [
     { label: "Sverige (+46)", value: "+46" },
     { label: "Norge (+47)", value: "+47" },
@@ -165,13 +165,15 @@ function SignupPage({ onClerkContinue, onDemoLogin, onTestSignup, onUpdateProfil
         <AuthFlowNav />
         <div className="mx-auto w-full">
           <div ref={clerkCardWrapRef} className="mx-auto w-fit max-w-full">
-            <Show when="signed-out">
+            {!isLoaded ? (
+              <div className="h-[580px] w-[430px] max-w-full rounded-xl border border-black/10 bg-white" aria-hidden="true" />
+            ) : !isClerkSignedIn ? (
               <SignUp
                 routing="virtual"
                 signInUrl="/login"
                 fallbackRedirectUrl="/signup?step=details"
               />
-            </Show>
+            ) : null}
           </div>
 
           <div className="mx-auto mt-4 text-center" style={clerkCardWidth ? { width: `${clerkCardWidth}px`, maxWidth: "100%" } : undefined}>

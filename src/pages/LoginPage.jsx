@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { Show, SignIn, useUser } from "@clerk/react";
+import { SignIn, useUser } from "@clerk/react";
 import { defaultAppPathForRole, navigateTo } from "../lib/router";
 import AuthFlowNav from "../components/layout/AuthFlowNav";
 
 function LoginPage({ onClerkContinue, onDemoLogin }) {
-  const { isSignedIn } = useUser();
+  const { isLoaded, isSignedIn } = useUser();
   const continueAttemptedRef = useRef(false);
   const clerkCardWrapRef = useRef(null);
   const [clerkCardWidth, setClerkCardWidth] = useState(null);
@@ -44,13 +44,15 @@ function LoginPage({ onClerkContinue, onDemoLogin }) {
       <AuthFlowNav />
       <div className="w-full">
         <div ref={clerkCardWrapRef} className="mx-auto w-fit max-w-full">
-          <Show when="signed-out">
+          {!isLoaded ? (
+            <div className="h-[580px] w-[430px] max-w-full rounded-xl border border-black/10 bg-white" aria-hidden="true" />
+          ) : !isSignedIn ? (
             <SignIn
               routing="virtual"
               signUpUrl="/signup"
               fallbackRedirectUrl="/login"
             />
-          </Show>
+          ) : null}
         </div>
 
         <div className="mx-auto mt-4 text-center" style={clerkCardWidth ? { width: `${clerkCardWidth}px`, maxWidth: "100%" } : undefined}>
