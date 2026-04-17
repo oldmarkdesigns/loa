@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { navigateTo } from "../lib/router";
 import MarketingNavLinks from "../components/layout/MarketingNavLinks";
+import ProfileMenuDropdown from "../components/layout/ProfileMenuDropdown";
 import ListingVisualCard from "../components/app/ListingVisualCard";
 import MapListingPreviewCard from "../components/app/MapListingPreviewCard";
 import { popularListingFallbackKey } from "../lib/popularListingFallback";
@@ -671,7 +672,7 @@ function applyAmenityAndFurnishedFilters(listings, amenityQuery, furnishedFilter
   });
 }
 
-function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay, onLogout, listings = [] }) {
+function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay, onLogout, onSwitchRole, listings = [] }) {
   const headerRef = useRef(null);
   const heroSectionRef = useRef(null);
   const processLeftRef = useRef(null);
@@ -929,13 +930,13 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
     <main className="min-h-screen bg-white text-black">
       <header
         ref={headerRef}
-        className={`navbar-enter fixed inset-x-0 top-0 z-40 border-b will-change-[background-color,border-color,backdrop-filter] transition-[background-color,border-color,backdrop-filter] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+        className={`navbar-enter sticky top-0 z-40 shrink-0 border-b will-change-[background-color,border-color,backdrop-filter] transition-[background-color,border-color,backdrop-filter] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
           isNavScrolled ? "border-black/10 bg-white/95 backdrop-blur-md" : "border-black/0 bg-white/0 backdrop-blur-0"
         }`}
       >
         <div className="grid w-full grid-cols-[auto_1fr_auto] items-center gap-4 px-4 py-3 sm:px-6">
-          <div className="flex min-w-0 items-center gap-8">
-            <button type="button" className="text-left" onClick={handleHomeBrandClick}>
+          <div className="flex min-w-0 items-center gap-4">
+            <button type="button" className="justify-self-start text-left" onClick={handleHomeBrandClick}>
               <span className="inline-flex items-center gap-2 rounded-xl border border-black/10 bg-white px-2.5 py-1.5">
                 <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-dashed border-black/30 bg-white text-[9px] font-semibold uppercase tracking-wide text-ink-500">
                   LOGGA
@@ -943,14 +944,14 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
                 <span className="text-sm font-semibold text-ink-800">Företagsnamn</span>
               </span>
             </button>
-
-            <nav className="hidden items-center gap-7 lg:flex">
-              <MarketingNavLinks
-                onSectionLinkClick={handleSectionLinkClick}
-                showPublish={false}
-              />
-            </nav>
           </div>
+
+          <nav className="hidden items-center justify-self-start gap-7 lg:flex">
+            <MarketingNavLinks
+              onSectionLinkClick={handleSectionLinkClick}
+              showPublish={false}
+            />
+          </nav>
 
           <div className="flex items-center justify-self-end gap-4">
             {user ? (
@@ -1035,54 +1036,18 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
       </header>
 
       {menuOpen ? (
-        <>
-          <div className="fixed inset-0 z-50 bg-black/20" onClick={() => setMenuOpen(false)} />
-          <div ref={profileMenuPanelRef} className="fixed right-4 top-[72px] z-[60] w-[min(320px,calc(100vw-2rem))] rounded-2xl bg-white p-3">
-            <div className="space-y-1 text-sm">
-              <button
-                type="button"
-                className="menu-hover-row inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5"
-                onClick={() => {
-                  setMenuOpen(false);
-                  navigateTo("/app/profile");
-                }}
-              >
-                <UserIcon className="h-4 w-4" />
-                <span>Profil</span>
-              </button>
-              {roleSet.has("publisher") ? (
-                <button
-                  type="button"
-                  className="menu-hover-row inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    navigateTo("/app/my-listings");
-                  }}
-                >
-                  <BuildingIcon className="h-4 w-4" />
-                  <span>Dina objekt</span>
-                </button>
-              ) : null}
-              <div className="my-1 h-px bg-black/10" />
-              <button
-                type="button"
-                className="menu-hover-row inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5"
-                onClick={async () => {
-                  setMenuOpen(false);
-                  await onLogout?.();
-                  navigateTo("/", { replace: true });
-                }}
-              >
-                <HistoryIcon className="h-4 w-4" />
-                <span>Logga ut</span>
-              </button>
-            </div>
-          </div>
-        </>
+        <ProfileMenuDropdown
+          menuOpen={menuOpen}
+          setMenuOpen={setMenuOpen}
+          profileMenuPanelRef={profileMenuPanelRef}
+          onSwitchRole={onSwitchRole}
+          onLogout={onLogout}
+          onHelp={() => scrollToHashSection("#faq", true)}
+        />
       ) : null}
 
       {mobileMenuOpen ? (
-        <div className="fixed inset-0 z-[60] bg-black/20 lg:hidden" onClick={() => setMobileMenuOpen(false)}>
+        <div className="fixed inset-0 z-[60] bg-transparent lg:hidden" onClick={() => setMobileMenuOpen(false)}>
           <div className="absolute right-4 top-[72px] w-[min(320px,calc(100vw-2rem))] rounded-2xl border border-black/10 bg-white p-3" onClick={(event) => event.stopPropagation()}>
             <div className="space-y-1">
               <button type="button" className="menu-hover-row inline-flex w-full items-center rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5" onClick={() => { setMobileMenuOpen(false); navigateTo("/app/rent?view=available"); }}>
@@ -1123,8 +1088,8 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
         </div>
       ) : null}
 
-      <section ref={heroSectionRef} className="relative overflow-visible px-4 pt-[72px] pb-4 sm:px-6 sm:pt-[72px] sm:pb-6 xl:pb-0">
-        <div className="pointer-events-none absolute inset-x-4 top-[72px] bottom-0 z-0 overflow-hidden rounded-[34px] sm:inset-x-6 sm:top-[72px]">
+      <section ref={heroSectionRef} className="relative overflow-visible px-4 pt-0 pb-4 sm:px-6 sm:pb-6 xl:pb-0">
+        <div className="pointer-events-none absolute inset-x-4 top-0 bottom-0 z-0 overflow-hidden rounded-[34px] sm:inset-x-6">
           <img
             src={heroImage}
             alt="Stockholm kontorsmarknad"
@@ -1133,7 +1098,7 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
           <div className="absolute inset-0 bg-gradient-to-b from-white/62 via-white/34 to-white/18" />
         </div>
 
-        <div className="relative z-20 w-full px-2 pt-4 sm:px-3 sm:pt-5 xl:px-0 xl:pt-0">
+        <div className="relative z-20 w-full px-2 pt-4 sm:px-3 sm:pt-4 xl:px-0 xl:pt-0">
           <div className="relative min-h-[620px] xl:h-[620px]">
             <div className="flex h-full flex-col items-center justify-center text-center xl:min-h-[560px] xl:w-[58%] xl:max-w-none">
               <p className="inline-flex w-fit items-center gap-1.5 rounded-full border border-white/45 bg-white/22 px-3 py-1.5 text-xs font-semibold text-ink-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_8px_24px_rgba(15,25,48,0.12)] backdrop-blur-md">

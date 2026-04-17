@@ -14,6 +14,7 @@ import ProfilePage from "./pages/app/ProfilePage";
 import PublishPage from "./pages/app/PublishPage";
 import PublisherOverviewPage from "./pages/app/PublisherOverviewPage";
 import RentPage from "./pages/app/RentPage";
+import SettingsPage from "./pages/app/SettingsPage";
 import ViewingsPage from "./pages/app/ViewingsPage";
 import { defaultAppPathForRole, navigateTo, usePathname } from "./lib/router";
 import { AppProvider, useAppState } from "./state/AppState";
@@ -197,6 +198,7 @@ function AppContent() {
             onToggleFavorite={app.toggleFavorite}
             onOpenAuthOverlay={openAuthOverlay}
             onLogout={app.logout}
+            onSwitchRole={app.switchRole}
           />
         );
       }
@@ -219,7 +221,7 @@ function AppContent() {
     } else if (pathname === "/app/profile") {
       appRouteContent = <ProfilePage app={app} />;
     } else if (pathname === "/app/settings") {
-      appRouteContent = <ProfilePage app={app} />;
+      appRouteContent = <SettingsPage app={app} />;
     } else if (pathname === "/app/publish") {
       appRouteContent = <PublishPage app={app} />;
     } else {
@@ -241,6 +243,7 @@ function AppContent() {
         onToggleFavorite={app.toggleFavorite}
         onOpenAuthOverlay={openAuthOverlay}
         onLogout={app.logout}
+        onSwitchRole={app.switchRole}
       />
     );
   }

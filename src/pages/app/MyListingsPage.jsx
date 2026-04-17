@@ -120,7 +120,7 @@ function StepProgress({ currentStep }) {
             >
               <div className="flex items-center gap-2">
                 <span
-                  className={`inline-flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-semibold ${
+                  className={`inline-flex h-7 w-7 items-center justify-center rounded-md text-[11px] font-semibold ${
                     active
                       ? "bg-[#0d162b] text-white"
                       : complete

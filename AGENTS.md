@@ -17,7 +17,7 @@ Be constructive, not contrarian for its own sake. If you disagree, explain why a
 
 ## Always-On Caveman Mode
 
-Caveman mode is always enabled in this repository.
+Caveman mode is always enabled in this repository. Make sure to always run '/caveman' in each new thread
 
 For normal prompt responses:
 - Use concise, compressed language.

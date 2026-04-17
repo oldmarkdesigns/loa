@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { FilterIcon, ResetIcon, SaveIcon, SparklesIcon } from "../icons/UiIcons";
+import { FilterIcon, ResetIcon, SparklesIcon, StarIcon } from "../icons/UiIcons";
 import FurnishingToggle from "./FurnishingToggle";
 
 const questionOrder = ["core", "type", "size", "budget", "moveAndContract", "compliance", "amenities"];
@@ -267,6 +267,7 @@ function AiGuidedAssistant({
   suggestionChipLabel = "",
   requestedStepRequest = null,
   forceStepId = null,
+  bare = false,
   showModeSwitch = false,
   filterModeActive = false,
   onToggleFilterMode
@@ -867,48 +868,50 @@ function AiGuidedAssistant({
   }
 
   return (
-    <article className="rounded-2xl border border-black/10 bg-white p-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-700">
-          <SparklesIcon className="h-3.5 w-3.5 text-[#0f1930]" />
-          {showHeader ? "AI-sök assistent" : "AI-guide"}
+    <article className={bare ? "" : "rounded-2xl border border-black/10 bg-white p-4"}>
+      {!bare ? (
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-700">
+            <SparklesIcon className="h-3.5 w-3.5 text-[#0f1930]" />
+            {showHeader ? "AI-sök assistent" : "AI-guide"}
+          </div>
+          <div className="flex items-center gap-3">
+            {showModeSwitch ? (
+              <div className="inline-flex h-10 items-center gap-2 rounded-2xl border border-black/10 bg-white px-3 text-xs font-semibold text-ink-700">
+                <span className="inline-flex items-center gap-1">
+                  <SparklesIcon className="h-3.5 w-3.5 text-[#4f46e5]" />
+                  <span>AI-guide</span>
+                </span>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={filterModeActive}
+                  aria-label="Växla AI-guide"
+                  className={`relative inline-flex h-6 w-10 min-h-0 items-center rounded-full p-0.5 transition-colors ${
+                    filterModeActive ? "bg-[#0f1930] justify-end" : "bg-[#a8adb3] justify-start"
+                  }`}
+                  onClick={onToggleFilterMode}
+                >
+                  <span aria-hidden="true" className="h-5 w-5 rounded-full bg-white shadow-[0_1px_2px_rgba(15,25,48,0.35)]" />
+                </button>
+              </div>
+            ) : (
+              hasAnyInput || hasSummaryGroups ? (
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-ink-700 hover:text-ink-900"
+                  onClick={onResetSearch}
+                >
+                  <ResetIcon className="h-3.5 w-3.5" />
+                  Nollställ sökning
+                </button>
+              ) : null
+            )}
+          </div>
         </div>
-        <div className="flex items-center gap-3">
-          {showModeSwitch ? (
-            <div className="inline-flex h-10 items-center gap-2 rounded-2xl border border-black/10 bg-white px-3 text-xs font-semibold text-ink-700">
-              <span className="inline-flex items-center gap-1">
-                <FilterIcon className="h-3.5 w-3.5 text-[#0f1930]" />
-                <span>Filter-sök</span>
-              </span>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={filterModeActive}
-                aria-label="Växla filter-sök"
-                className={`relative inline-flex h-6 w-10 min-h-0 items-center rounded-full p-0.5 transition-colors ${
-                  filterModeActive ? "bg-[#0f1930] justify-end" : "bg-[#a8adb3] justify-start"
-                }`}
-                onClick={onToggleFilterMode}
-              >
-                <span aria-hidden="true" className="h-5 w-5 rounded-full bg-white shadow-[0_1px_2px_rgba(15,25,48,0.35)]" />
-              </button>
-            </div>
-          ) : (
-            hasAnyInput || hasSummaryGroups ? (
-              <button
-                type="button"
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-ink-700 hover:text-ink-900"
-                onClick={onResetSearch}
-              >
-                <ResetIcon className="h-3.5 w-3.5" />
-                Nollställ sökning
-              </button>
-            ) : null
-          )}
-        </div>
-      </div>
+      ) : null}
 
-      <div className="mt-3">
+      <div className={bare ? "" : "mt-3"}>
         <div className="mb-2 flex items-center gap-3">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-700">
             {landingCoreView ? "Grundinställningar" : "Din sökning"}
@@ -1065,7 +1068,7 @@ function AiGuidedAssistant({
             className="inline-flex items-center gap-2 rounded-2xl border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-white"
             onClick={onSaveSearch}
           >
-            <SaveIcon className="h-4 w-4" />
+            <StarIcon className="h-4 w-4" />
             Spara AI-sökning
           </button>
         ) : null}

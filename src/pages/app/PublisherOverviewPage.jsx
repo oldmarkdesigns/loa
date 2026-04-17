@@ -287,7 +287,7 @@ function PublisherOverviewPage({ app }) {
                   <button
                     key={listing.id}
                     type="button"
-                    className="rounded-xl border border-black/10 bg-white p-3 text-left transition hover:border-[#0f1930]/30 hover:bg-white sm:p-4"
+                    className="!rounded-[24px] border border-black/10 bg-white p-3 text-left transition hover:border-[#0f1930]/30 hover:bg-white sm:p-4"
                     onClick={() => navigateTo(`/app/my-listings/${encodeURIComponent(listing.id)}`)}
                   >
                     {cardView === "compact" ? (

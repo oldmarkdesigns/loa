@@ -61,6 +61,8 @@ function ListingVisualCard({
   onToggleShortlist,
   compact = false,
   showMatchChip = false,
+  onHoverStart,
+  onHoverEnd,
   highlightAmenities = [],
   missingAmenities = [],
   comparedAmenitiesOnly = false
@@ -195,6 +197,10 @@ function ListingVisualCard({
         role="button"
         tabIndex={0}
         onClick={() => onOpenListing(listing)}
+        onMouseEnter={() => onHoverStart?.(listing)}
+        onMouseLeave={() => onHoverEnd?.()}
+        onFocus={() => onHoverStart?.(listing)}
+        onBlur={() => onHoverEnd?.()}
         onKeyDown={(event) => {
           if (event.key === "Enter" || event.key === " ") {
             event.preventDefault();

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import ListingVisualCard from "../../components/app/ListingVisualCard";
 import Breadcrumbs from "../../components/layout/Breadcrumbs";
 import { formatSek } from "../../lib/formatters";
@@ -1380,97 +1381,100 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
           </div>
         ) : null}
 
-        {galleryOverlayOpen ? (
-          <div className="fixed inset-0 z-[75] overflow-y-auto bg-white pb-24">
-            <div className="min-h-screen">
-              <div className="sticky top-0 z-10 border-b border-black/10 bg-white/95 backdrop-blur-md">
-                <div className="mx-auto grid w-full max-w-[1600px] grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 py-4 sm:px-6">
-                  <div />
+        {galleryOverlayOpen && typeof document !== "undefined"
+          ? createPortal(
+            <div className="fixed inset-0 z-[90] overflow-y-auto bg-white pb-24">
+              <div className="min-h-screen">
+                <div className="sticky top-0 z-10 border-b border-black/10 bg-white/95 backdrop-blur-md">
+                  <div className="mx-auto grid w-full max-w-[1600px] grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 py-4 sm:px-6">
+                    <div />
 
-                  <div className="inline-flex items-center justify-center gap-6 justify-self-center">
-                    <button
-                      type="button"
-                      className={`tab-underline-button border-b-2 pb-0.5 text-sm font-semibold transition ${
-                        galleryTab === "images"
-                          ? "border-[#0f1930] text-[#0f1930]"
-                          : "border-transparent text-ink-600 hover:text-black"
-                      }`}
-                      onClick={() => setGalleryTab("images")}
-                    >
-                      Galleri
-                    </button>
-                    <button
-                      type="button"
-                      className={`tab-underline-button border-b-2 pb-0.5 text-sm font-semibold transition ${
-                        galleryTab === "street"
-                          ? "border-[#0f1930] text-[#0f1930]"
-                          : "border-transparent text-ink-600 hover:text-black"
-                      }`}
-                      onClick={() => setGalleryTab("street")}
-                    >
-                      Gatuvy
-                    </button>
-                  </div>
-
-                  <button
-                    type="button"
-                    className="close-circle-button inline-flex items-center justify-center justify-self-end rounded-full border border-black/10 bg-white text-xl leading-none text-ink-700 transition hover:border-[#0f1930]/25 hover:text-[#0f1930]"
-                    onClick={closeGalleryOverlay}
-                    aria-label="Stäng galleri"
-                  >
-                    ×
-                  </button>
-                </div>
-              </div>
-
-              <div className="mx-auto w-full max-w-[1600px] px-4 py-5 sm:px-6 sm:py-6">
-                {galleryTab === "images" ? (
-                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                    {images.map((image, index) => (
+                    <div className="inline-flex items-center justify-center gap-6 justify-self-center">
                       <button
-                        key={`gallery-full-${image}-${index}`}
                         type="button"
-                        className="gallery-thumb-button overflow-hidden border border-black/10 bg-white text-left"
-                        onClick={() => setActiveGalleryIndex(index)}
+                        className={`tab-underline-button border-b-2 pb-0.5 text-sm font-semibold transition ${
+                          galleryTab === "images"
+                            ? "border-[#0f1930] text-[#0f1930]"
+                            : "border-transparent text-ink-600 hover:text-black"
+                        }`}
+                        onClick={() => setGalleryTab("images")}
                       >
-                        <img
-                          src={image}
-                          alt={`${listing.title} bild ${index + 1}`}
-                          className="h-[360px] w-full object-cover sm:h-[460px] xl:h-[560px]"
-                        />
+                        Galleri
                       </button>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="rounded-3xl border border-black/10 bg-white p-3 sm:p-4">
-                    <ListingStreetView lat={insight.center.lat} lng={insight.center.lng} />
-                    <a
-                      href={googleMapsHref}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-white"
-                    >
-                      Öppna i Google Maps
-                      <ExternalLinkIcon className="h-3.5 w-3.5" />
-                    </a>
-                  </div>
-                )}
-              </div>
+                      <button
+                        type="button"
+                        className={`tab-underline-button border-b-2 pb-0.5 text-sm font-semibold transition ${
+                          galleryTab === "street"
+                            ? "border-[#0f1930] text-[#0f1930]"
+                            : "border-transparent text-ink-600 hover:text-black"
+                        }`}
+                        onClick={() => setGalleryTab("street")}
+                      >
+                        Gatuvy
+                      </button>
+                    </div>
 
-              <div className="fixed inset-x-0 bottom-0 z-10 border-t border-black/10 bg-white/95 backdrop-blur-md">
-                <div className="mx-auto flex w-full max-w-[1600px] justify-center px-4 py-4 sm:px-6">
-                  <button
-                    type="button"
-                    className="rounded-full border border-[#0f1930] bg-[#0f1930] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#16233f]"
-                    onClick={closeGalleryOverlay}
-                  >
-                    Stäng
-                  </button>
+                    <button
+                      type="button"
+                      className="close-circle-button inline-flex items-center justify-center justify-self-end rounded-full border border-black/10 bg-white text-xl leading-none text-ink-700 transition hover:border-[#0f1930]/25 hover:text-[#0f1930]"
+                      onClick={closeGalleryOverlay}
+                      aria-label="Stäng galleri"
+                    >
+                      ×
+                    </button>
+                  </div>
+                </div>
+
+                <div className="mx-auto w-full max-w-[1600px] px-4 py-5 sm:px-6 sm:py-6">
+                  {galleryTab === "images" ? (
+                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                      {images.map((image, index) => (
+                        <button
+                          key={`gallery-full-${image}-${index}`}
+                          type="button"
+                          className="gallery-thumb-button overflow-hidden border border-black/10 bg-white text-left"
+                          onClick={() => setActiveGalleryIndex(index)}
+                        >
+                          <img
+                            src={image}
+                            alt={`${listing.title} bild ${index + 1}`}
+                            className="h-[360px] w-full object-cover sm:h-[460px] xl:h-[560px]"
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="rounded-3xl border border-black/10 bg-white p-3 sm:p-4">
+                      <ListingStreetView lat={insight.center.lat} lng={insight.center.lng} />
+                      <a
+                        href={googleMapsHref}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-white"
+                      >
+                        Öppna i Google Maps
+                        <ExternalLinkIcon className="h-3.5 w-3.5" />
+                      </a>
+                    </div>
+                  )}
+                </div>
+
+                <div className="fixed inset-x-0 bottom-0 z-10 border-t border-black/10 bg-white/95 backdrop-blur-md">
+                  <div className="mx-auto flex w-full max-w-[1600px] justify-center px-4 py-4 sm:px-6">
+                    <button
+                      type="button"
+                      className="rounded-full border border-[#0f1930] bg-[#0f1930] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#16233f]"
+                      onClick={closeGalleryOverlay}
+                    >
+                      Stäng
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-        ) : null}
+            </div>,
+            document.body
+          )
+          : null}
 
         {similarListings.length > 0 ? (
           <section className="pt-16 pb-8">

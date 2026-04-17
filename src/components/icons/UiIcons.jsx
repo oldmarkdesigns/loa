@@ -499,3 +499,44 @@ export function TrashIcon({ className }) {
     </IconBase>
   );
 }
+
+export function SettingsGearIcon({ className }) {
+  return (
+    <IconBase className={className}>
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </IconBase>
+  );
+}
+
+export function InfoCircleIcon({ className }) {
+  return (
+    <IconBase className={className}>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 10.5v5.5" />
+      <circle cx="12" cy="7.4" r="0.8" fill="currentColor" stroke="none" />
+    </IconBase>
+  );
+}
+
+export function SupportIcon({ className }) {
+  return (
+    <IconBase className={className}>
+      <path d="M4.5 12a7.5 7.5 0 0 1 15 0" />
+      <rect x="3.5" y="11.2" width="3.2" height="5.6" rx="1.4" />
+      <rect x="17.3" y="11.2" width="3.2" height="5.6" rx="1.4" />
+      <path d="M20.5 16.8c0 2.3-1.8 4.2-4.1 4.2H13" />
+      <rect x="11.2" y="19.6" width="2.9" height="1.9" rx="0.9" />
+    </IconBase>
+  );
+}
+
+export function LogoutIcon({ className }) {
+  return (
+    <IconBase className={className}>
+      <path d="M10 4H6.8A1.8 1.8 0 0 0 5 5.8v12.4A1.8 1.8 0 0 0 6.8 20H10" />
+      <path d="M13 12h8" />
+      <path d="M18 8l3 4-3 4" />
+    </IconBase>
+  );
+}

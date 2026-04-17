@@ -6,6 +6,7 @@ import AuthFlowNav from "../components/layout/AuthFlowNav";
 
 function SignupPage({ onClerkContinue, onDemoLogin, onTestSignup, onUpdateProfile }) {
   const { isLoaded, isSignedIn: isClerkSignedIn } = useUser();
+  const hasClerkKey = Boolean(import.meta.env.VITE_CLERK_PUBLISHABLE_KEY);
   const countryCodeOptions = [
     { label: "Sverige (+46)", value: "+46" },
     { label: "Norge (+47)", value: "+47" },
@@ -36,6 +37,7 @@ function SignupPage({ onClerkContinue, onDemoLogin, onTestSignup, onUpdateProfil
   const avatarInputRef = useRef(null);
   const clerkCardWrapRef = useRef(null);
   const [clerkCardWidth, setClerkCardWidth] = useState(null);
+  const [clerkInitTimedOut, setClerkInitTimedOut] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -60,6 +62,15 @@ function SignupPage({ onClerkContinue, onDemoLogin, onTestSignup, onUpdateProfil
       setDetailsStep(2);
     }
   }, [isClerkSignedIn]);
+
+  useEffect(() => {
+    if (isLoaded) {
+      setClerkInitTimedOut(false);
+      return undefined;
+    }
+    const timeoutId = window.setTimeout(() => setClerkInitTimedOut(true), 5000);
+    return () => window.clearTimeout(timeoutId);
+  }, [isLoaded]);
 
   useEffect(() => {
     setForm((previous) => ({ ...previous, role: roleFromUrl, roles: [roleFromUrl] }));
@@ -165,7 +176,15 @@ function SignupPage({ onClerkContinue, onDemoLogin, onTestSignup, onUpdateProfil
         <AuthFlowNav />
         <div className="mx-auto w-full">
           <div ref={clerkCardWrapRef} className="mx-auto w-fit max-w-full">
-            {!isLoaded ? (
+            {!hasClerkKey ? (
+              <div className="w-[430px] max-w-full rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                Clerk saknar publishable key i denna build. Lägg till <code>VITE_CLERK_PUBLISHABLE_KEY</code> i deploy-miljön och bygg om.
+              </div>
+            ) : !isLoaded && clerkInitTimedOut ? (
+              <div className="w-[430px] max-w-full rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                Clerk kunde inte initieras. Kontrollera deploy-miljövariabeln och att din deploy-domän är tillåten i Clerk dashboard.
+              </div>
+            ) : !isLoaded ? (
               <div className="h-[580px] w-[430px] max-w-full rounded-xl border border-black/10 bg-white" aria-hidden="true" />
             ) : !isClerkSignedIn ? (
               <SignUp

@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { navigateTo, routeMatches } from "../../lib/router";
-import { ArrowLeftIcon, ArrowUpIcon, BuildingIcon, HistoryIcon, MouseScrollIcon, UserIcon } from "../icons/UiIcons";
+import { ArrowLeftIcon, ArrowUpIcon, BuildingIcon, MouseScrollIcon, UserIcon } from "../icons/UiIcons";
 import AppFooter from "./AppFooter";
 import MarketingNavLinks from "./MarketingNavLinks";
+import ProfileMenuDropdown from "./ProfileMenuDropdown";
 
 const publisherWorkspaceItems = [
   { label: "Publicera annons", path: "/app/publish" },
@@ -232,62 +233,41 @@ function AppShell({ pathname, user, onSwitchRole, onLogout, onRequireAuth, isGue
       </header>
 
       {menuOpen ? (
-        <>
-          <div className="fixed inset-0 z-50 bg-black/20" onClick={() => setMenuOpen(false)} />
-          <div ref={profileMenuPanelRef} className="fixed right-4 top-[72px] z-[60] w-[min(320px,calc(100vw-2rem))] rounded-2xl bg-white p-3">
-            <div className="space-y-1 text-sm">
-              {isGuest ? (
-                <>
-                  <button
-                    type="button"
-                    className="menu-hover-row inline-flex w-full items-center rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5"
-                    onClick={() => onRequireAuth?.("login")}
-                  >
-                    Logga in
-                  </button>
-                  <button
-                    type="button"
-                    className="menu-hover-row inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5"
-                    onClick={() => onRequireAuth?.("signup", "renter")}
-                  >
-                    <BuildingIcon className="h-4 w-4" />
-                    Skapa konto
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button type="button" className="menu-hover-row inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5" onClick={() => navigateTo("/app/profile")}>
-                    <UserIcon className="h-4 w-4" />
-                    <span>Profil</span>
-                  </button>
-                  {roleSet.has("publisher") ? (
-                    <button type="button" className="menu-hover-row inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5" onClick={() => navigateTo("/app/my-listings")}>
-                      <BuildingIcon className="h-4 w-4" />
-                      <span>Dina objekt</span>
-                    </button>
-                  ) : null}
-                  <div className="my-1 h-px bg-black/10" />
-                  <button
-                    type="button"
-                    className="menu-hover-row inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5"
-                    onClick={async () => {
-                      setMenuOpen(false);
-                      await onLogout();
-                      navigateTo("/", { replace: true });
-                    }}
-                  >
-                    <HistoryIcon className="h-4 w-4" />
-                    <span>Logga ut</span>
-                  </button>
-                </>
-              )}
+        isGuest ? (
+          <>
+            <div ref={profileMenuPanelRef} className="fixed right-4 top-[72px] z-[60] w-[min(320px,calc(100vw-2rem))] rounded-2xl border border-black/10 bg-white p-3 shadow-[0_10px_28px_rgba(15,25,48,0.10)]">
+              <div className="space-y-2 text-sm">
+                <button
+                  type="button"
+                  className="menu-hover-row inline-flex w-full items-center rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5"
+                  onClick={() => onRequireAuth?.("login")}
+                >
+                  Logga in
+                </button>
+                <button
+                  type="button"
+                  className="menu-hover-row inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5"
+                  onClick={() => onRequireAuth?.("signup", "renter")}
+                >
+                  <BuildingIcon className="h-4 w-4" />
+                  Skapa konto
+                </button>
+              </div>
             </div>
-          </div>
-        </>
+          </>
+        ) : (
+          <ProfileMenuDropdown
+            menuOpen={menuOpen}
+            setMenuOpen={setMenuOpen}
+            profileMenuPanelRef={profileMenuPanelRef}
+            onSwitchRole={onSwitchRole}
+            onLogout={onLogout}
+          />
+        )
       ) : null}
 
       {mobileMenuOpen ? (
-        <div className="fixed inset-0 z-[60] bg-black/20 lg:hidden" onClick={() => setMobileMenuOpen(false)}>
+        <div className="fixed inset-0 z-[60] bg-transparent lg:hidden" onClick={() => setMobileMenuOpen(false)}>
           <div className="absolute right-4 top-[72px] w-[min(320px,calc(100vw-2rem))] rounded-2xl border border-black/10 bg-white p-3" onClick={(event) => event.stopPropagation()}>
             <div className="space-y-1">
               <button type="button" className="menu-hover-row inline-flex w-full items-center rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5" onClick={() => { setMobileMenuOpen(false); navigateTo("/app/rent?view=available"); }}>

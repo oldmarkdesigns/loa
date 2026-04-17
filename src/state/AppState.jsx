@@ -172,7 +172,9 @@ function mapRenterProgramToFilters(program) {
     ? program.type.filter(Boolean)
     : (typeof program?.type === "string" && program.type.trim() ? program.type.split(",").map((item) => item.trim()).filter(Boolean) : []);
 
-  const district = String(program?.district || "").trim();
+  const districtRaw = String(program?.district || "").trim();
+  const districtValues = districtRaw.split(",").map((item) => item.trim()).filter(Boolean);
+  const district = districtValues.length > 1 ? "Alla" : districtRaw;
   const contractFlex = String(program?.contractFlex || "").trim();
   const transitDistance = String(program?.transitDistance || "").trim();
   const accessHours = String(program?.accessHours || "").trim();

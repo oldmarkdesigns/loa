@@ -20,7 +20,6 @@ import {
   SaveIcon,
   ShieldIcon,
   SnowflakeIcon,
-  SparklesIcon,
   UploadIcon,
   UserIcon,
   UtensilsIcon,
@@ -58,6 +57,25 @@ const amenityOptions = [
   { value: "Skyltfönster", label: "Skyltfönster", icon: BuildingIcon },
   { value: "Säkerhetsdörr", label: "Säkerhetsdörr", icon: ShieldIcon }
 ];
+const amenityDefinitions = [
+  { icon: BikeIcon, aliases: ["cykelförråd", "cykelrum", "bike"] },
+  { icon: CarIcon, aliases: ["garage", "lastzon", "lastkaj", "loading zone", "parkering"] },
+  { icon: UtensilsIcon, aliases: ["kök", "kitchen", "pentry"] },
+  { icon: BuildingIcon, aliases: ["mötesrum", "konferensrum", "styrelserum"] },
+  { icon: UserIcon, aliases: ["reception", "väntrum"] },
+  { icon: BalconyIcon, aliases: ["balkong"] },
+  { icon: BuildingIcon, aliases: ["takterrass"] },
+  { icon: PenthouseIcon, aliases: ["takvåning"] },
+  { icon: DumbbellIcon, aliases: ["gym"] },
+  { icon: LockerIcon, aliases: ["omklädningsrum"] },
+  { icon: SnowflakeIcon, aliases: ["air condition", "ac"] },
+  { icon: LoungeIcon, aliases: ["lounge"] },
+  { icon: LockerIcon, aliases: ["förråd", "förrad", "storage", "lager"] },
+  { icon: BuildingIcon, aliases: ["telefonbås", "telefonrum"] },
+  { icon: BuildingIcon, aliases: ["skyltfönster", "storefront"] },
+  { icon: ShieldIcon, aliases: ["säkerhetsdörr", "säkerhet", "security", "secure"] }
+];
+const propertyCardAmenityChipClass = "inline-flex min-h-[42px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-black/10 bg-white px-3 py-1.5 text-[0.875rem] font-semibold leading-5 text-ink-700";
 const furnishedOptions = [
   { value: "all", label: "Alla" },
   { value: "yes", label: "Möblerad" },
@@ -197,6 +215,12 @@ function mergeAmenities(draft) {
   return Array.from(new Set([...(draft.amenities || []), ...textAmenities, ...furnishedAmenity]));
 }
 
+function amenityIconFor(amenity) {
+  const normalized = String(amenity || "").toLowerCase();
+  const match = amenityDefinitions.find((item) => item.aliases.some((alias) => normalized.includes(alias)));
+  return match?.icon || BuildingIcon;
+}
+
 function computeQualityScore(draft) {
   let score = 0;
   if (draft.title.trim()) score += 14;
@@ -295,7 +319,7 @@ function StepPills({ currentIndex, onSelect }) {
           <button
             key={step.id}
             type="button"
-            className={`rounded-xl border px-3 py-2 text-left text-xs font-semibold transition ${
+            className={`step-pill-button rounded-2xl border px-3 py-2 text-left text-xs font-semibold transition ${
               active
                 ? "border-[#0f1930] bg-[#0f1930] text-white"
                 : complete
@@ -839,11 +863,15 @@ function PublishPage({ app }) {
                     <div className="rounded-xl border border-black/10 bg-white px-3 py-2">
                       <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Bekvämligheter</p>
                       <div className="mt-2 flex flex-wrap gap-1.5">
-                        {mergeAmenities(draft).map((amenity) => (
-                          <span key={amenity} className="rounded-full border border-black/10 bg-white px-2 py-1 text-[11px] font-semibold text-ink-700">
-                            {amenity}
-                          </span>
-                        ))}
+                        {mergeAmenities(draft).map((amenity) => {
+                          const Icon = amenityIconFor(amenity);
+                          return (
+                            <span key={amenity} className={propertyCardAmenityChipClass}>
+                              <Icon className="h-3.5 w-3.5 shrink-0 text-ink-700" />
+                              {amenity}
+                            </span>
+                          );
+                        })}
                         {mergeAmenities(draft).length === 0 ? <span className="text-xs text-ink-500">Inga valda.</span> : null}
                       </div>
                     </div>
@@ -967,10 +995,7 @@ function PublishPage({ app }) {
           <aside className="space-y-4 xl:sticky xl:top-4 xl:self-start">
             <article className="surface p-4">
               <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                <div className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white px-2.5 py-1 text-xs font-semibold text-ink-700">
-                  <SparklesIcon className="h-3.5 w-3.5 text-[#0f1930]" />
-                  Förhandsvisning
-                </div>
+                <h3 className="text-xl font-semibold text-[#0f1930]">Förhandsvisning</h3>
                 <div className="min-w-[120px] rounded-xl border border-black/10 bg-white px-2.5 py-2">
                   <div className="flex items-end justify-between gap-2">
                     <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">Kvalitet</span>

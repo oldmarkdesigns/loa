@@ -29,6 +29,7 @@ import {
   UtensilsIcon,
   WifiIcon
 } from "../../components/icons/UiIcons";
+import PremiumPromoCard from "../../components/shared/PremiumPromoCard";
 import { navigateTo } from "../../lib/router";
 
 const DEFAULT_MAX_BUDGET = 250000;
@@ -183,6 +184,13 @@ function listFromDelimitedValue(value) {
     .filter(Boolean);
 }
 
+function parseDistrictSelection(value) {
+  return String(value || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
 function normalizeAmenity(value) {
   return String(value || "").trim().toLowerCase();
 }
@@ -248,15 +256,16 @@ function isFilled(value, { disallowAll = false } = {}) {
 
 function preferenceMatchScore(listing, renterProgram = {}) {
   const preferredTypes = listFromDelimitedValue(renterProgram.type);
+  const preferredDistricts = parseDistrictSelection(renterProgram.district).filter((item) => item !== "Alla");
   const desiredAmenities = listFromDelimitedValue(renterProgram.amenities).map((item) => item.toLowerCase());
   const listingAmenities = Array.isArray(listing.amenities) ? listing.amenities.map((item) => String(item || "").toLowerCase()) : [];
 
   let score = 0;
   let max = 0;
 
-  if (renterProgram.district && renterProgram.district !== "Alla") {
+  if (preferredDistricts.length > 0) {
     max += 22;
-    if (listing.district === renterProgram.district) score += 22;
+    if (preferredDistricts.includes(listing.district)) score += 22;
   }
 
   if (preferredTypes.length > 0) {
@@ -313,6 +322,7 @@ function preferenceMatchScore(listing, renterProgram = {}) {
 function buildMatchReasons(listing, renterProgram = {}) {
   const reasons = [];
   const preferredTypes = listFromDelimitedValue(renterProgram.type);
+  const preferredDistricts = parseDistrictSelection(renterProgram.district).filter((item) => item !== "Alla");
 
   const maxBudget = Number(renterProgram.maxBudget || 0);
   if (maxBudget > 0 && Number(listing.priceMonthly || 0) <= maxBudget) {
@@ -324,7 +334,7 @@ function buildMatchReasons(listing, renterProgram = {}) {
     reasons.push(`Yta matchar (${listing.sizeSqm} kvm)`);
   }
 
-  if (renterProgram.district && renterProgram.district !== "Alla" && listing.district === renterProgram.district) {
+  if (preferredDistricts.length > 0 && preferredDistricts.includes(listing.district)) {
     reasons.push(`Läge: ${listing.district}`);
   }
 
@@ -871,7 +881,7 @@ function ProfilePage({ app }) {
               <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
                 <div className="space-y-5">
                   {showProfileSetupCard ? (
-                  <div>
+                  <article className="rounded-3xl border border-black/10 bg-white p-5 sm:p-6">
                     <button
                       type="button"
                       className="flex w-full items-center justify-between gap-3 text-left"
@@ -937,7 +947,7 @@ function ProfilePage({ app }) {
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </article>
                   ) : null}
 
                   <article className="rounded-3xl border border-black/10 bg-white p-5 sm:p-6">
@@ -1061,18 +1071,7 @@ function ProfilePage({ app }) {
                       </div>
                     </article>
 
-                    <article className="rounded-3xl border border-black/10 bg-white p-5">
-                      <p className="text-[34px] font-semibold leading-[1.05] text-[#0f1930]">
-                        Stick ut med
-                        <span className="mt-1 block w-fit rounded-2xl bg-[#f3d571] px-2 py-1 text-[34px] leading-none text-[#352922]">
-                          Lokalflöde Premium
-                        </span>
-                      </p>
-                      <p className="mt-3 text-sm text-ink-600">Premiumprofiler får i snitt fler relevanta förfrågningar och snabbare återkoppling.</p>
-                      <button type="button" className="mt-4 rounded-full border border-[#0f1930] bg-white px-4 py-2.5 text-sm font-semibold text-[#0f1930]">
-                        Uppgradera (demo)
-                      </button>
-                    </article>
+                    <PremiumPromoCard />
                   </div>
                 </aside>
               </div>

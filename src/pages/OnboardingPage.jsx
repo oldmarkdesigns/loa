@@ -21,6 +21,7 @@ import {
   RooftopIcon,
   ShieldIcon,
   SnowflakeIcon,
+  SparklesIcon,
   UserIcon,
   UtensilsIcon,
   WifiIcon
@@ -30,7 +31,30 @@ const RENTER_STEPS = ["program-core", "review"];
 const PUBLISHER_STEPS = ["publisher-profile", "review"];
 
 const districtOptions = ["Alla", "Norrmalm", "Södermalm", "Vasastan", "Östermalm", "Kungsholmen", "Solna", "Sundbyberg"];
-const typeOptions = ["Kontor", "Coworking", "Kontorshotell", "Butik", "Lager", "Showroom", "Ateljé", "Klinik", "Restaurang"];
+const typeOptions = [
+  "Kontor",
+  "Coworking",
+  "Kontorshotell",
+  "Butik",
+  "Butikslokal",
+  "Lager",
+  "Lagerlokal",
+  "Showroom",
+  "Ateljé",
+  "Studio / ateljé",
+  "Klinik",
+  "Restaurang",
+  "Produktionslokal",
+  "Övrig lokal",
+  "Verkstad",
+  "Träningslokal / gym",
+  "Utbildningslokal",
+  "Livsmedelslokal",
+  "Kontor / Lager",
+  "Nyproduktion",
+  "Vårdlokal",
+  "Logistiklokal"
+];
 const contractOptions = ["Alla", "Kort (0-6 mån)", "Mellan (6-12 mån)", "Lång (12+ mån)"];
 const transitOptions = ["Alla", "0-300 meter", "0-600 meter", "0-1000 meter", "0-1100 meter"];
 const parkingOptions = ["Alla", "Ingen preferens", "Bilparkering", "Laddplats", "Garage"];
@@ -58,6 +82,15 @@ const amenityOptions = [
   { value: "Skyltfönster", label: "Skyltfönster", icon: BuildingIcon },
   { value: "Säkerhetsdörr", label: "Säkerhetsdörr", icon: ShieldIcon }
 ];
+const sqmPerPersonByType = {
+  Kontor: 12,
+  Coworking: 8,
+  "Kontorshotell": 10,
+  Butik: 18,
+  Lager: 25,
+  Klinik: 22,
+  Restaurang: 20
+};
 
 function listFromDelimitedValue(value) {
   if (Array.isArray(value)) return value.map((item) => String(item || "").trim()).filter(Boolean);
@@ -79,6 +112,29 @@ function parseInitialTypes(rawTypes) {
   return [];
 }
 
+const inputWithUnitClass = "flex w-full items-center rounded-2xl border border-ink-200 bg-white px-3.5 text-[15px] text-ink-900 transition focus-within:border-brand-400";
+
+function roundToNearestFive(value) {
+  return Math.max(0, Math.round(value / 5) * 5);
+}
+
+function buildRecommendedSizeRange(type, teamSize) {
+  const people = Number(teamSize || 0);
+  if (!Number.isFinite(people) || people <= 0) return null;
+  const sqmPerPerson = sqmPerPersonByType[type] || 12;
+  const base = people * sqmPerPerson;
+  const min = roundToNearestFive(base * 0.9);
+  const max = roundToNearestFive(base * 1.15);
+  return { min, max, sqmPerPerson };
+}
+
+function parseDistrictSelection(rawDistrict) {
+  const raw = String(rawDistrict || "").trim();
+  if (!raw || raw.toLowerCase() === "alla") return ["Alla"];
+  const values = raw.split(",").map((item) => item.trim()).filter(Boolean);
+  return values.length > 0 ? values : ["Alla"];
+}
+
 function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
   const [primaryRole, setPrimaryRole] = useState(user?.role === "publisher" ? "publisher" : "renter");
   const [account, setAccount] = useState({
@@ -94,7 +150,9 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
     maxSize: user?.profile?.renterProgram?.maxSize || "",
     minBudget: user?.profile?.renterProgram?.minBudget || "",
     maxBudget: user?.profile?.renterProgram?.maxBudget || "",
+    maxBudgetPerSqm: user?.profile?.renterProgram?.maxBudgetPerSqm || "",
     moveInDate: user?.profile?.renterProgram?.moveInDate || "",
+    moveWithinMonths: user?.profile?.renterProgram?.moveWithinMonths || "",
     contractFlex: user?.profile?.renterProgram?.contractFlex || "",
     transitDistance: user?.profile?.renterProgram?.transitDistance || "",
     accessHours: user?.profile?.renterProgram?.accessHours || "",
@@ -114,7 +172,13 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const [showProgramInfoCard, setShowProgramInfoCard] = useState(true);
+  const [showSizeRecommendationCard, setShowSizeRecommendationCard] = useState(true);
   const selectedProgramAmenities = useMemo(() => listFromDelimitedValue(renterProgram.amenities), [renterProgram.amenities]);
+  const selectedProgramType = Array.isArray(renterProgram.type) && renterProgram.type.length ? renterProgram.type[0] : "Kontor";
+  const recommendedSizeRange = useMemo(
+    () => buildRecommendedSizeRange(selectedProgramType, renterProgram.teamSize),
+    [selectedProgramType, renterProgram.teamSize]
+  );
 
   const draftStorageKey = useMemo(() => `office_rental_onboarding_draft_${user?.id || "guest"}`, [user?.id]);
 
@@ -141,6 +205,10 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
     };
     window.localStorage.setItem(draftStorageKey, JSON.stringify(payload));
   }, [draftStorageKey, primaryRole, account, renterProgram, publisherProfile]);
+
+  useEffect(() => {
+    setShowSizeRecommendationCard(true);
+  }, [selectedProgramType, renterProgram.teamSize]);
 
   useEffect(() => {
     if (pathname === "/onboarding") {
@@ -198,6 +266,38 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
     });
   }
 
+  function toggleProgramType(typeValue) {
+    setRenterProgram((prev) => {
+      const current = Array.isArray(prev.type) ? prev.type : [];
+      const exists = current.includes(typeValue);
+      return {
+        ...prev,
+        type: exists ? current.filter((item) => item !== typeValue) : [...current, typeValue]
+      };
+    });
+  }
+
+  function toggleProgramDistrict(districtValue) {
+    setRenterProgram((prev) => {
+      const current = parseDistrictSelection(prev.district);
+
+      if (districtValue === "Alla") {
+        return { ...prev, district: "Alla" };
+      }
+
+      const withoutAll = current.filter((item) => item !== "Alla");
+      const exists = withoutAll.includes(districtValue);
+      const next = exists
+        ? withoutAll.filter((item) => item !== districtValue)
+        : [...withoutAll, districtValue];
+
+      return {
+        ...prev,
+        district: next.length ? next.join(", ") : "Alla"
+      };
+    });
+  }
+
   async function finish() {
     setPending(true);
     setError("");
@@ -215,7 +315,9 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
                 maxSize: String(renterProgram.maxSize || "").trim(),
                 minBudget: String(renterProgram.minBudget || "").trim(),
                 maxBudget: String(renterProgram.maxBudget || "").trim(),
+                maxBudgetPerSqm: String(renterProgram.maxBudgetPerSqm || "").trim(),
                 moveInDate: renterProgram.moveInDate || "",
+                moveWithinMonths: String(renterProgram.moveWithinMonths || "").trim(),
                 contractFlex: renterProgram.contractFlex || "",
                 transitDistance: renterProgram.transitDistance || "",
                 accessHours: renterProgram.accessHours || "",
@@ -287,8 +389,8 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
 
           <div className="mt-5 space-y-3">
             {currentStep === "program-core" ? (
-              <div className="max-h-[74vh] overflow-y-auto">
-                <section className="space-y-4">
+              <div>
+                <section className="space-y-8 pb-1">
                   {showProgramInfoCard ? (
                     <div className="relative rounded-2xl border border-[#0f1930]/15 bg-[#f8fafc] px-4 py-4 sm:px-5">
                       <button
@@ -299,15 +401,16 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
                       >
                         ×
                       </button>
-                      <div className="flex items-center gap-2 pr-10">
-                        <p className="text-base font-semibold text-[#0f1930]">Varför lokalprogram?</p>
-                        <img src={infoPictogram} alt="" aria-hidden="true" className="h-[25px] w-[25px] object-contain" />
+                      <div className="pr-10">
+                        <p className="text-[1.65rem] font-semibold leading-tight text-[#0f1930]">Hitta rätt lokal snabbare</p>
                       </div>
-                      <p className="mt-1.5 text-sm leading-relaxed text-ink-600">
-                        Lokalprogrammet hjälper oss att matcha er med rätt lokaler snabbare. Ju mer ni fyller i, desto bättre blir sökresultat,
-                        rekommendationer och relevans i förslag.
-                      </p>
-                      <div className="mt-3">
+                      <p className="mt-1.5 text-sm leading-relaxed text-ink-600">Fyll i era behov så matchar vi lokaler med högre precision.</p>
+                      <ul className="mt-3 space-y-1.5 text-sm text-ink-700">
+                        <li className="flex items-start gap-2"><span className="mt-1 inline-block h-2 w-2 rounded-full bg-[#0f1930]" />Ni får relevanta förslag baserat på era krav.</li>
+                        <li className="flex items-start gap-2"><span className="mt-1 inline-block h-2 w-2 rounded-full bg-[#0f1930]" />Matchningar prioriterar läge, storlek och budget.</li>
+                        <li className="flex items-start gap-2"><span className="mt-1 inline-block h-2 w-2 rounded-full bg-[#0f1930]" />Ni kan alltid ändra lokalprogrammet senare i Profil.</li>
+                      </ul>
+                      <div className="mt-4">
                         <button
                           type="button"
                           className="inline-flex min-h-0 items-center justify-center rounded-full border border-black/20 bg-white px-4 py-2 text-xs font-semibold text-ink-700"
@@ -319,98 +422,234 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
                     </div>
                   ) : null}
 
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    <label className="grid gap-1">
-                      <span className="text-xs font-semibold text-ink-600">Område</span>
-                      <select className="field select-chevron" value={renterProgram.district} onChange={(event) => setRenterProgram((prev) => ({ ...prev, district: event.target.value }))}>
-                        {districtOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-                      </select>
-                    </label>
-
-                    <label className="grid gap-1">
-                      <span className="text-xs font-semibold text-ink-600">Typ av lokal</span>
-                      <select
-                        className="field select-chevron"
-                        value={Array.isArray(renterProgram.type) && renterProgram.type.length ? renterProgram.type[0] : "Alla"}
-                        onChange={(event) =>
-                          setRenterProgram((prev) => ({
-                            ...prev,
-                            type: event.target.value === "Alla" ? [] : [event.target.value]
-                          }))
-                        }
-                      >
-                        <option value="Alla">Alla typer</option>
-                        {typeOptions.map((type) => (
-                          <option key={type} value={type}>
+                  <section>
+                    <h3 className="text-[1.4rem] font-semibold text-[#0f1930]">Vad söker ni för lokaltyp?</h3>
+                    <p className="mt-1 text-sm text-ink-600">Välj en eller flera typer som passar ert behov.</p>
+                    <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                      {typeOptions.map((type) => {
+                        const active = Array.isArray(renterProgram.type) && renterProgram.type.includes(type);
+                        return (
+                          <button
+                            key={type}
+                            type="button"
+                            className={`inline-flex items-center justify-center gap-2 !rounded-2xl border px-3 py-3 text-sm font-semibold transition ${
+                              active ? "border-[#0f1930] bg-[#0f1930] text-white" : "border-black/15 bg-white text-ink-700 hover:bg-black/5"
+                            }`}
+                            onClick={() => toggleProgramType(type)}
+                          >
                             {type}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </section>
 
-                    <label className="grid gap-1">
-                      <span className="text-xs font-semibold text-ink-600">Minst platser</span>
-                      <input className="field" type="number" min="0" value={renterProgram.teamSize} onChange={(event) => setRenterProgram((prev) => ({ ...prev, teamSize: event.target.value }))} placeholder="T.ex. 12" />
-                    </label>
+                  <section className="border-t border-black/10 pt-6">
+                    <h3 className="text-[1.4rem] font-semibold text-[#0f1930]">Var söker ni lokal?</h3>
+                    <p className="mt-1 text-sm text-ink-600">Välj område och använd snabba förslag.</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {districtOptions.map((district) => {
+                        const selectedDistricts = parseDistrictSelection(renterProgram.district);
+                        const active = district === "Alla"
+                          ? selectedDistricts.length === 1 && selectedDistricts[0] === "Alla"
+                          : selectedDistricts.includes(district);
+                        return (
+                          <button
+                            key={district}
+                            type="button"
+                            className={`inline-flex items-center !rounded-2xl border px-3 py-1.5 text-xs font-semibold transition ${
+                              active ? "border-[#0f1930] bg-[#0f1930] text-white" : "border-black/10 bg-white text-ink-700 hover:bg-black/5"
+                            }`}
+                            onClick={() => toggleProgramDistrict(district)}
+                          >
+                            {district}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </section>
 
-                    <label className="grid gap-1">
-                      <span className="text-xs font-semibold text-ink-600">Min yta (kvm)</span>
-                      <input className="field" type="number" min="0" value={renterProgram.minSize} onChange={(event) => setRenterProgram((prev) => ({ ...prev, minSize: event.target.value }))} placeholder="T.ex. 120" />
-                    </label>
+                  <section className="border-t border-black/10 pt-6">
+                    <h3 className="text-[1.4rem] font-semibold text-[#0f1930]">Hur stor lokal söker ni?</h3>
+                    <p className="mt-1 text-sm text-ink-600">Ange storlek och antal arbetsplatser.</p>
+                    <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                      <label className="grid gap-1">
+                        <span className="text-xs font-semibold text-ink-600">Antal platser</span>
+                        <div className={inputWithUnitClass}>
+                          <input
+                            className="w-full bg-transparent py-2.5 outline-none"
+                            type="number"
+                            min="0"
+                            value={renterProgram.teamSize}
+                            onChange={(event) => setRenterProgram((prev) => ({ ...prev, teamSize: event.target.value }))}
+                            placeholder="T.ex. 12"
+                          />
+                          <span className="ml-2 shrink-0 text-sm font-medium text-ink-700">st</span>
+                        </div>
+                      </label>
+                      <label className="grid gap-1">
+                        <span className="text-xs font-semibold text-ink-600">Min yta</span>
+                        <div className={inputWithUnitClass}>
+                          <input
+                            className="w-full bg-transparent py-2.5 outline-none"
+                            type="number"
+                            min="0"
+                            value={renterProgram.minSize}
+                            onChange={(event) => setRenterProgram((prev) => ({ ...prev, minSize: event.target.value }))}
+                            placeholder="T.ex. 120"
+                          />
+                          <span className="ml-2 shrink-0 text-sm font-medium text-ink-700">kvm</span>
+                        </div>
+                      </label>
+                      <label className="grid gap-1">
+                        <span className="text-xs font-semibold text-ink-600">Max yta</span>
+                        <div className={inputWithUnitClass}>
+                          <input
+                            className="w-full bg-transparent py-2.5 outline-none"
+                            type="number"
+                            min="0"
+                            value={renterProgram.maxSize}
+                            onChange={(event) => setRenterProgram((prev) => ({ ...prev, maxSize: event.target.value }))}
+                            placeholder="T.ex. 450"
+                          />
+                          <span className="ml-2 shrink-0 text-sm font-medium text-ink-700">kvm</span>
+                        </div>
+                      </label>
+                    </div>
+                    <div
+                      className={`grid overflow-hidden transition-[grid-template-rows,opacity,margin] duration-300 ease-out ${
+                        showSizeRecommendationCard ? "mt-3 opacity-100" : "mt-0 opacity-0"
+                      }`}
+                      style={{ gridTemplateRows: showSizeRecommendationCard ? "1fr" : "0fr" }}
+                    >
+                      <div className="min-h-0">
+                        <div className="rounded-2xl border border-[#4f46e5]/35 bg-white px-3 py-2.5">
+                          {recommendedSizeRange ? (
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <p className="text-sm text-ink-700">
+                                Rekommenderad yta: {recommendedSizeRange.min}-{recommendedSizeRange.max} kvm
+                                {" "}({recommendedSizeRange.sqmPerPerson} kvm/person).
+                              </p>
+                              <button
+                                type="button"
+                                className="inline-flex items-center gap-1.5 !rounded-2xl border border-[#4f46e5]/35 bg-white px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-black/5"
+                                onClick={() => {
+                                  setRenterProgram((prev) => ({
+                                    ...prev,
+                                    minSize: String(recommendedSizeRange.min),
+                                    maxSize: String(recommendedSizeRange.max)
+                                  }));
+                                  setShowSizeRecommendationCard(false);
+                                }}
+                              >
+                                <SparklesIcon className="h-3.5 w-3.5 text-[#4f46e5]" />
+                                Använd rekommenderad yta
+                              </button>
+                            </div>
+                          ) : (
+                            <p className="inline-flex min-h-[30px] items-center gap-1.5 text-sm leading-none text-ink-600">
+                              <SparklesIcon className="h-3.5 w-3.5 text-[#4f46e5]" />
+                              Ange antal platser för att få rekommenderad yta.
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </section>
 
-                    <label className="grid gap-1">
-                      <span className="text-xs font-semibold text-ink-600">Max yta (kvm)</span>
-                      <input className="field" type="number" min="0" value={renterProgram.maxSize} onChange={(event) => setRenterProgram((prev) => ({ ...prev, maxSize: event.target.value }))} placeholder="T.ex. 450" />
-                    </label>
+                  <section className="border-t border-black/10 pt-6">
+                    <h3 className="text-[1.4rem] font-semibold text-[#0f1930]">Vad är er flyttstatus?</h3>
+                    <p className="mt-1 text-sm text-ink-600">Inflyttning, avtalstid och budgetnivå.</p>
+                    <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                      <label className="grid gap-1">
+                        <span className="text-xs font-semibold text-ink-600">Önskad inflyttning</span>
+                        <input className="field" type="date" value={renterProgram.moveInDate} onChange={(event) => setRenterProgram((prev) => ({ ...prev, moveInDate: event.target.value }))} />
+                      </label>
+                      <label className="grid gap-1">
+                        <span className="text-xs font-semibold text-ink-600">Beräknad flytt inom</span>
+                        <div className={inputWithUnitClass}>
+                          <input
+                            className="w-full bg-transparent py-2.5 outline-none"
+                            type="number"
+                            min="0"
+                            value={renterProgram.moveWithinMonths}
+                            onChange={(event) => setRenterProgram((prev) => ({ ...prev, moveWithinMonths: event.target.value }))}
+                            placeholder="T.ex. 3"
+                          />
+                          <span className="ml-2 shrink-0 text-sm font-medium text-ink-700">mån</span>
+                        </div>
+                      </label>
+                      <label className="grid gap-1">
+                        <span className="text-xs font-semibold text-ink-600">Avtalsflexibilitet</span>
+                        <select className="field select-chevron" value={renterProgram.contractFlex || "Alla"} onChange={(event) => setRenterProgram((prev) => ({ ...prev, contractFlex: event.target.value === "Alla" ? "" : event.target.value }))}>
+                          {contractOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+                        </select>
+                      </label>
+                    </div>
+                    <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                      <label className="grid gap-1">
+                        <span className="text-xs font-semibold text-ink-600">Max budget / mån</span>
+                        <div className={inputWithUnitClass}>
+                          <input
+                            className="w-full bg-transparent py-2.5 outline-none"
+                            type="number"
+                            min="0"
+                            value={renterProgram.maxBudget}
+                            onChange={(event) => setRenterProgram((prev) => ({ ...prev, maxBudget: event.target.value }))}
+                            placeholder="T.ex. 90000"
+                          />
+                          <span className="ml-2 shrink-0 text-sm font-medium text-ink-700">kr/mån</span>
+                        </div>
+                      </label>
+                      <label className="grid gap-1">
+                        <span className="text-xs font-semibold text-ink-600">Max budget / kvm</span>
+                        <div className={inputWithUnitClass}>
+                          <input
+                            className="w-full bg-transparent py-2.5 outline-none"
+                            type="number"
+                            min="0"
+                            value={renterProgram.maxBudgetPerSqm}
+                            onChange={(event) => setRenterProgram((prev) => ({ ...prev, maxBudgetPerSqm: event.target.value }))}
+                            placeholder="T.ex. 2500"
+                          />
+                          <span className="ml-2 shrink-0 text-sm font-medium text-ink-700">kvm</span>
+                        </div>
+                      </label>
+                      <div className="hidden sm:block" />
+                    </div>
+                  </section>
 
-                    <label className="grid gap-1">
-                      <span className="text-xs font-semibold text-ink-600">Max budget / mån</span>
-                      <input className="field" type="number" min="0" value={renterProgram.maxBudget} onChange={(event) => setRenterProgram((prev) => ({ ...prev, maxBudget: event.target.value }))} placeholder="T.ex. 90000" />
-                    </label>
+                  <section className="border-t border-black/10 pt-6">
+                    <h3 className="text-[1.4rem] font-semibold text-[#0f1930]">Övriga krav och preferenser</h3>
+                    <p className="mt-1 text-sm text-ink-600">Fyll i tillgänglighet, parkering, planlösning och bekvämligheter.</p>
+                    <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                      <label className="grid gap-1">
+                        <span className="text-xs font-semibold text-ink-600">Kollektivtrafik</span>
+                        <select className="field select-chevron" value={renterProgram.transitDistance || "Alla"} onChange={(event) => setRenterProgram((prev) => ({ ...prev, transitDistance: event.target.value === "Alla" ? "" : event.target.value }))}>
+                          {transitOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+                        </select>
+                      </label>
+                      <label className="grid gap-1">
+                        <span className="text-xs font-semibold text-ink-600">Tillgång</span>
+                        <select className="field select-chevron" value={renterProgram.accessHours || "Alla"} onChange={(event) => setRenterProgram((prev) => ({ ...prev, accessHours: event.target.value === "Alla" ? "" : event.target.value }))}>
+                          {accessOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+                        </select>
+                      </label>
+                      <label className="grid gap-1">
+                        <span className="text-xs font-semibold text-ink-600">Parkering</span>
+                        <select className="field select-chevron" value={renterProgram.parkingType || "Alla"} onChange={(event) => setRenterProgram((prev) => ({ ...prev, parkingType: event.target.value === "Alla" ? "" : event.target.value }))}>
+                          {parkingOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+                        </select>
+                      </label>
+                      <label className="grid gap-1">
+                        <span className="text-xs font-semibold text-ink-600">Planlösning</span>
+                        <select className="field select-chevron" value={renterProgram.layoutType || "Alla"} onChange={(event) => setRenterProgram((prev) => ({ ...prev, layoutType: event.target.value === "Alla" ? "" : event.target.value }))}>
+                          {layoutOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+                        </select>
+                      </label>
+                    </div>
 
-                    <label className="grid gap-1">
-                      <span className="text-xs font-semibold text-ink-600">Inflyttning</span>
-                      <input className="field" type="date" value={renterProgram.moveInDate} onChange={(event) => setRenterProgram((prev) => ({ ...prev, moveInDate: event.target.value }))} />
-                    </label>
-
-                    <label className="grid gap-1">
-                      <span className="text-xs font-semibold text-ink-600">Avtalsflexibilitet</span>
-                      <select className="field select-chevron" value={renterProgram.contractFlex || "Alla"} onChange={(event) => setRenterProgram((prev) => ({ ...prev, contractFlex: event.target.value === "Alla" ? "" : event.target.value }))}>
-                        {contractOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-                      </select>
-                    </label>
-
-                    <label className="grid gap-1">
-                      <span className="text-xs font-semibold text-ink-600">Kollektivtrafik</span>
-                      <select className="field select-chevron" value={renterProgram.transitDistance || "Alla"} onChange={(event) => setRenterProgram((prev) => ({ ...prev, transitDistance: event.target.value === "Alla" ? "" : event.target.value }))}>
-                        {transitOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-                      </select>
-                    </label>
-
-                    <label className="grid gap-1">
-                      <span className="text-xs font-semibold text-ink-600">Tillgång</span>
-                      <select className="field select-chevron" value={renterProgram.accessHours || "Alla"} onChange={(event) => setRenterProgram((prev) => ({ ...prev, accessHours: event.target.value === "Alla" ? "" : event.target.value }))}>
-                        {accessOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-                      </select>
-                    </label>
-
-                    <label className="grid gap-1">
-                      <span className="text-xs font-semibold text-ink-600">Parkering</span>
-                      <select className="field select-chevron" value={renterProgram.parkingType || "Alla"} onChange={(event) => setRenterProgram((prev) => ({ ...prev, parkingType: event.target.value === "Alla" ? "" : event.target.value }))}>
-                        {parkingOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-                      </select>
-                    </label>
-
-                    <label className="grid gap-1">
-                      <span className="text-xs font-semibold text-ink-600">Planlösning</span>
-                      <select className="field select-chevron" value={renterProgram.layoutType || "Alla"} onChange={(event) => setRenterProgram((prev) => ({ ...prev, layoutType: event.target.value === "Alla" ? "" : event.target.value }))}>
-                        {layoutOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-                      </select>
-                    </label>
-                  </div>
-
-                  <div className="border-b border-black/10 pb-4">
-                    <div className="rounded-2xl border border-black/10 bg-white p-3">
+                    <div className="mt-4 rounded-2xl border border-black/10 bg-white p-3">
                       <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-700">Särskilda krav</p>
                       <div className="mt-2 grid grid-cols-1 gap-2">
                         <label className="inline-flex items-center gap-2 text-sm text-ink-700">
@@ -442,11 +681,10 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
                         </label>
                       </div>
                     </div>
-                  </div>
 
-                  <div>
-                    <p className="mb-2 text-xs font-semibold text-ink-600">Bekvämligheter</p>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="mt-4">
+                      <p className="mb-2 text-xs font-semibold text-ink-600">Bekvämligheter</p>
+                      <div className="flex flex-wrap gap-2">
                       {amenityOptions.map((option) => {
                         const Icon = option.icon;
                         const active = selectedProgramAmenities.some((item) => normalizeAmenity(item) === normalizeAmenity(option.value));
@@ -464,8 +702,9 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
                           </button>
                         );
                       })}
+                      </div>
                     </div>
-                  </div>
+                  </section>
                 </section>
               </div>
             ) : null}
