@@ -276,6 +276,7 @@ function AiGuidedAssistant({
   const [matchCount, setMatchCount] = useState(null);
   const [showCoreNextHint, setShowCoreNextHint] = useState(false);
   const [skippedSteps, setSkippedSteps] = useState([]);
+  const [isStepTransitioning, setIsStepTransitioning] = useState(false);
   const [answers, setAnswers] = useState(() => buildAnswersFromInitialState(initialFilters, initialAmenityQuery, initialFurnishedFilter));
   const [activeStep, setActiveStep] = useState(() => {
     if (forceStepId && questionOrder.includes(forceStepId)) {
@@ -286,6 +287,7 @@ function AiGuidedAssistant({
     });
   });
   const lastPreviewSignatureRef = useRef("");
+  const stepTransitionTimerRef = useRef(null);
   const activeQuestion = activeStep;
   const landingCoreView = forceStepId === "core" && activeQuestion === "core";
 
@@ -403,6 +405,26 @@ function AiGuidedAssistant({
     setActiveStep(forceStepId);
   }, [forceStepId]);
 
+  useEffect(() => {
+    return () => {
+      if (stepTransitionTimerRef.current) {
+        window.clearTimeout(stepTransitionTimerRef.current);
+      }
+    };
+  }, []);
+
+  function transitionToStep(nextStep) {
+    if (stepTransitionTimerRef.current) {
+      window.clearTimeout(stepTransitionTimerRef.current);
+    }
+    setIsStepTransitioning(true);
+    stepTransitionTimerRef.current = window.setTimeout(() => {
+      setActiveStep(nextStep);
+      setIsStepTransitioning(false);
+      stepTransitionTimerRef.current = null;
+    }, 180);
+  }
+
   function nextQuestion() {
     if (!activeQuestion) {
       void submitGuidedSearch();
@@ -410,17 +432,17 @@ function AiGuidedAssistant({
     }
     const currentIndex = questionOrder.indexOf(activeQuestion);
     if (currentIndex === -1 || currentIndex >= questionOrder.length - 1) {
-      setActiveStep(null);
+      transitionToStep(null);
       return;
     }
-    setActiveStep(questionOrder[currentIndex + 1]);
+    transitionToStep(questionOrder[currentIndex + 1]);
   }
 
   function previousQuestion() {
     if (!activeQuestion) return;
     const currentIndex = questionOrder.indexOf(activeQuestion);
     if (currentIndex <= 0) return;
-    setActiveStep(questionOrder[currentIndex - 1]);
+    transitionToStep(questionOrder[currentIndex - 1]);
   }
 
   async function submitGuidedSearch() {
@@ -455,17 +477,17 @@ function AiGuidedAssistant({
       }
       return prev;
     });
-    setActiveStep(groupId);
+    transitionToStep(groupId);
   }
 
   function applyRelaxArea() {
     setAnswers((prev) => ({ ...prev, district: "Alla områden" }));
-    setActiveStep("core");
+    transitionToStep("core");
   }
 
   function applyRelaxAmenities() {
     setAnswers((prev) => ({ ...prev, amenities: [], transitDistance: "Alla", parkingType: "Alla" }));
-    setActiveStep("amenities");
+    transitionToStep("amenities");
   }
 
   function applyRaiseBudget() {
@@ -474,7 +496,7 @@ function AiGuidedAssistant({
       const baseline = currentMax > 0 ? currentMax : 100000;
       return { ...prev, maxBudget: String(Math.round(baseline * 1.25)) };
     });
-    setActiveStep("budget");
+    transitionToStep("budget");
   }
 
   function openDatePicker(event) {
@@ -488,11 +510,64 @@ function AiGuidedAssistant({
     }
   }
 
+  function renderStepActions() {
+    return (
+      <>
+        {activeQuestion !== questionOrder[0] ? (
+          <button
+            type="button"
+            className="inline-flex h-[40px] items-center gap-1.5 rounded-2xl border border-black/10 bg-white px-4 text-xs font-semibold text-ink-700 hover:bg-white"
+            onClick={previousQuestion}
+          >
+            Föregående
+          </button>
+        ) : null}
+        <div className="relative inline-flex items-center group">
+          {isCoreNextDisabled ? (
+            <div
+              className={`pointer-events-none absolute right-full top-1/2 z-20 mr-2 -translate-y-1/2 whitespace-nowrap rounded-lg border border-black/10 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-ink-700 shadow-sm transition ${
+                showCoreNextHint ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+              }`}
+            >
+              Fyll i antal platser för att gå vidare.
+            </div>
+          ) : null}
+          <button
+            type="button"
+            aria-disabled={isCoreNextDisabled}
+            className={`inline-flex h-[40px] items-center gap-1.5 rounded-2xl px-4 text-xs font-semibold transition ${
+              isCoreNextDisabled
+                ? "cursor-not-allowed border border-black/10 bg-[#eceff3] text-ink-500"
+                : canAdvanceCurrentStep
+                ? "border border-[#0f1930] bg-[#0f1930] text-white hover:bg-[#16233f]"
+                : "border border-black/10 bg-white text-ink-700 hover:bg-white"
+            }`}
+            onMouseEnter={() => {
+              if (isCoreNextDisabled) setShowCoreNextHint(true);
+            }}
+            onClick={() => {
+              if (isCoreNextDisabled) {
+                setShowCoreNextHint(true);
+                return;
+              }
+              if (!currentQuestionHasInput && activeQuestion && activeQuestion !== "core" && activeQuestion !== "amenities") {
+                setSkippedSteps((prev) => (prev.includes(activeQuestion) ? prev : [...prev, activeQuestion]));
+              }
+              nextQuestion();
+            }}
+          >
+            {activeQuestion === "core" ? "Nästa" : activeQuestion === "amenities" ? "Klar" : (currentQuestionHasInput ? "Nästa" : "Hoppa över")}
+          </button>
+        </div>
+      </>
+    );
+  }
+
   function renderInput(questionId) {
     if (questionId === "amenities") {
       return (
-        <div className="w-full min-w-0 max-w-[46rem] space-y-3">
-          <div className="grid gap-3 sm:grid-cols-2">
+        <div className="w-full min-w-0 max-w-[64rem] space-y-3">
+          <div className="grid gap-3 lg:grid-cols-3">
             <label className="block min-w-0">
               <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Kommunaltrafik</span>
               <select
@@ -517,6 +592,7 @@ function AiGuidedAssistant({
                 ))}
               </select>
             </label>
+            <div className="hidden lg:block" />
           </div>
           <div className="flex flex-wrap gap-2">
             {amenityOptions.map((option) => {
@@ -550,8 +626,8 @@ function AiGuidedAssistant({
 
     if (questionId === "budget") {
       return (
-        <div className="max-w-[34rem]">
-          <div className="grid gap-3 sm:grid-cols-2">
+        <div className="max-w-[64rem]">
+          <div className="grid gap-3 lg:grid-cols-2">
             <label className="block">
               <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Budget min</span>
               <div className={inputWithUnitClass}>
@@ -581,13 +657,16 @@ function AiGuidedAssistant({
               </div>
             </label>
           </div>
+          <div className="mt-4 flex items-center justify-end gap-2">
+            {renderStepActions()}
+          </div>
         </div>
       );
     }
 
     if (questionId === "moveAndContract") {
       return (
-        <div className="max-w-[44rem] grid gap-3 sm:grid-cols-2">
+        <div className="grid max-w-[64rem] gap-3 lg:grid-cols-3">
           <label className="block">
             <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Inflyttningsdatum</span>
             <input
@@ -611,15 +690,27 @@ function AiGuidedAssistant({
               ))}
             </select>
           </label>
+          <label className="block">
+            <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Access</span>
+            <select
+              className="select-chevron w-full rounded-2xl border border-black/10 bg-transparent px-3 py-3 pr-10 text-sm text-ink-900 focus:border-[#0f1930] focus:outline-none"
+              value={answers.accessHours}
+              onChange={(event) => setAnswers((prev) => ({ ...prev, accessHours: event.target.value }))}
+            >
+              {(accessHoursOptions.length > 0 ? accessHoursOptions : ["Alla", "24/7", "Kontorstid", "Kväll/helg"]).map((option) => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
+          </label>
         </div>
       );
     }
 
     if (questionId === "compliance") {
       return (
-        <div className="w-full max-w-[46rem]">
-          <div className="grid gap-2 sm:grid-cols-2">
-            <label className="inline-flex min-h-[48px] items-center gap-2 rounded-2xl border border-black/10 bg-white px-3 py-2 text-sm font-medium text-ink-700 sm:col-span-2">
+        <div className="w-full max-w-[64rem]">
+          <div className="grid gap-2 lg:grid-cols-3">
+            <label className="inline-flex min-h-[48px] items-center gap-2 rounded-2xl border border-black/10 bg-white px-3 py-2 text-sm font-medium text-ink-700">
               <input
                 type="checkbox"
                 checked={Boolean(answers.includeOperatingCosts)}
@@ -653,11 +744,11 @@ function AiGuidedAssistant({
 
     if (questionId === "core") {
       return (
-        <div className="w-full max-w-3xl space-y-3">
-          <div className="grid gap-1.5 sm:grid-cols-[minmax(0,0.65fr)_minmax(0,1fr)]">
-            <label className="block min-w-0">
+        <div className="w-full max-w-[64rem]">
+          <div className="grid gap-3 lg:grid-cols-[minmax(0,0.7fr)_minmax(0,1fr)_auto] lg:items-end">
+            <label className="block min-w-0 lg:max-w-[14rem]">
               <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Antal platser</span>
-              <div className="flex h-[48px] items-center rounded-xl border border-black/10 px-3">
+              <div className="flex h-[48px] items-center rounded-2xl border border-black/10 px-3">
                 <input
                   type="number"
                   min="1"
@@ -670,11 +761,11 @@ function AiGuidedAssistant({
               </div>
             </label>
 
-            <label className="block min-w-0">
+            <label className="block min-w-0 lg:max-w-[25rem]">
               <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Område</span>
-              <div className="h-[48px] rounded-xl border border-black/10 px-3">
+              <div className="h-[48px] rounded-2xl border border-black/10 px-3 pr-2">
                 <select
-                  className="select-chevron h-full w-full bg-transparent pr-9 text-sm text-ink-900 focus:outline-none"
+                  className="select-chevron h-full w-full bg-transparent pr-10 text-sm text-ink-900 focus:outline-none"
                   value={answers.district}
                   onChange={(event) => setAnswers((prev) => ({ ...prev, district: event.target.value }))}
                 >
@@ -687,15 +778,17 @@ function AiGuidedAssistant({
                 </select>
               </div>
             </label>
+            <label className="block min-w-0 lg:w-fit">
+              <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Möblering</span>
+              <div className="w-fit">
+                <FurnishingToggle
+                  options={furnishedOptions}
+                  value={answers.furnishedFilter}
+                  onChange={(value) => setAnswers((prev) => ({ ...prev, furnishedFilter: value }))}
+                />
+              </div>
+            </label>
           </div>
-          <label className="block max-w-[18rem]">
-            <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Möblering</span>
-            <FurnishingToggle
-              options={furnishedOptions}
-              value={answers.furnishedFilter}
-              onChange={(value) => setAnswers((prev) => ({ ...prev, furnishedFilter: value }))}
-            />
-          </label>
         </div>
       );
     }
@@ -717,8 +810,8 @@ function AiGuidedAssistant({
 
     if (questionId === "type") {
       return (
-        <div className="max-w-[46rem] space-y-3">
-          <div className="grid gap-3 sm:grid-cols-2">
+        <div className="max-w-[64rem] space-y-3">
+          <div className="grid gap-3 lg:grid-cols-3">
             <label className="block">
               <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Typ</span>
               <select
@@ -746,8 +839,6 @@ function AiGuidedAssistant({
                 ))}
               </select>
             </label>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
             <label className="block">
               <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Hyresvärd</span>
               <select
@@ -786,8 +877,8 @@ function AiGuidedAssistant({
 
     if (questionId === "size") {
       return (
-        <div className="max-w-[56rem]">
-          <div className="grid min-w-0 flex-[1_1_26rem] gap-3 sm:grid-cols-2">
+        <div className="max-w-[64rem]">
+          <div className="grid min-w-0 flex-[1_1_26rem] gap-3 lg:grid-cols-2">
             <label className="block">
               <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Yta min</span>
               <div className={inputWithUnitClass}>
@@ -817,39 +908,39 @@ function AiGuidedAssistant({
               </div>
             </label>
           </div>
-          <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-ink-700">
-            {recommendedSizeRange ? (
-              <>
-                <span>
-                  Rekommenderad yta för {answers.teamSize} personer i {answers.type === "Alla typer" ? "kontor" : answers.type.toLowerCase()}:
-                  {" "}
-                  {recommendedSizeRange.min}-{recommendedSizeRange.max} kvm
-                  {" "}
+          {recommendedSizeRange ? (
+            <div className="mt-3 space-y-2 text-sm text-ink-700">
+              <p>
+                Rekommenderad yta: {recommendedSizeRange.min}-{recommendedSizeRange.max} kvm
+                <span className="ml-1 text-xs text-ink-500">
                   ({recommendedSizeRange.sqmPerPerson} kvm/person)
                 </span>
-              </>
-            ) : (
-              <span>Ange antal platser i första steget för att få rekommenderad yta.</span>
-            )}
-          </div>
-          {recommendedSizeRange && !currentQuestionHasInput ? (
-            <div className="mt-3">
-              <button
-                type="button"
-                className="inline-flex h-[40px] items-center gap-1.5 rounded-2xl border border-black/10 bg-white px-4 text-xs font-semibold text-ink-700 hover:bg-white"
-                onClick={() =>
-                  setAnswers((prev) => ({
-                    ...prev,
-                    minSize: String(recommendedSizeRange.min),
-                    maxSize: String(recommendedSizeRange.max)
-                  }))
-                }
-              >
-                <SparklesIcon className="h-3.5 w-3.5 text-[#4f46e5]" />
-                Fortsätt med rekommenderad yta
-              </button>
+              </p>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <button
+                  type="button"
+                  className="inline-flex h-[40px] items-center gap-1.5 rounded-2xl border border-black/10 bg-white px-4 text-xs font-semibold text-ink-700 hover:bg-white"
+                  onClick={() =>
+                    setAnswers((prev) => ({
+                      ...prev,
+                      minSize: String(recommendedSizeRange.min),
+                      maxSize: String(recommendedSizeRange.max)
+                    }))
+                  }
+                >
+                  <SparklesIcon className="h-3.5 w-3.5 text-[#4f46e5]" />
+                  Fortsätt med rekommenderad yta
+                </button>
+                <div className="flex items-center justify-end gap-2">
+                  {renderStepActions()}
+                </div>
+              </div>
             </div>
-          ) : null}
+          ) : (
+            <div className="mt-4 flex items-center justify-end gap-2">
+              {renderStepActions()}
+            </div>
+          )}
         </div>
       );
     }
@@ -961,17 +1052,35 @@ function AiGuidedAssistant({
 
         {activeQuestion ? (
           <div className="flex items-start gap-3">
-            <div className="w-full rounded-2xl border border-black/10 bg-white px-3 py-3 search-summary-dissolve-in">
+            <div className={`w-full rounded-2xl border border-black/10 bg-white px-3 py-3 ${
+              isStepTransitioning ? "search-summary-dissolve-out" : "search-summary-dissolve-in"
+            }`}>
               {activeQuestion !== "core" ? (
                 <p className="mt-2 text-[11px] font-semibold uppercase tracking-wide text-ink-700">{questionCopy(activeQuestion)}</p>
               ) : null}
               <div className="mt-3 flex flex-wrap items-end gap-3">
                 <div className="w-full">{renderInput(activeQuestion)}</div>
               </div>
+              {activeQuestion !== "budget" && activeQuestion !== "size" ? (
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                  {activeQuestion === "core" ? (
+                    <p className="min-w-0 flex-1 text-xs leading-tight text-ink-600">
+                      AI-söket uppdaterar träffarna efter varje steg. Du behöver inte fylla i allt, resultat visas live i listan.
+                    </p>
+                  ) : (
+                    <span className="min-w-0 flex-1" aria-hidden="true" />
+                  )}
+                  <div className="flex flex-wrap items-center justify-end gap-2">
+                    {renderStepActions()}
+                  </div>
+                </div>
+              ) : null}
             </div>
           </div>
         ) : (
-          <div className="w-full rounded-2xl border border-black/10 bg-white px-3 py-3 search-summary-dissolve-in">
+          <div className={`w-full rounded-2xl border border-black/10 bg-white px-3 py-3 ${
+            isStepTransitioning ? "search-summary-dissolve-out" : "search-summary-dissolve-in"
+          }`}>
             <h3 className="text-base font-semibold text-ink-900">Sökningen är klar</h3>
             {effectiveMatchCount > 0 ? (
               <p className="mt-1 text-sm text-ink-700">
@@ -1000,67 +1109,7 @@ function AiGuidedAssistant({
             </div>
           </div>
         )}
-
       </div>
-      {activeQuestion ? (
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-          {activeQuestion === "core" ? (
-            <p className="min-w-0 flex-1 text-xs leading-tight text-ink-600">
-              AI-söket uppdaterar träffarna efter varje steg. Du behöver inte fylla i allt, resultat visas live i listan.
-            </p>
-          ) : (
-            <span className="min-w-0 flex-1" aria-hidden="true" />
-          )}
-          <div className="flex shrink-0 items-center justify-end gap-2">
-          {activeQuestion !== questionOrder[0] ? (
-            <button
-              type="button"
-              className="inline-flex h-[40px] items-center gap-1.5 rounded-2xl border border-black/10 bg-white px-4 text-xs font-semibold text-ink-700 hover:bg-white"
-              onClick={previousQuestion}
-            >
-              Föregående
-            </button>
-          ) : null}
-          <div className="relative inline-flex items-center group">
-            {isCoreNextDisabled ? (
-              <div
-                className={`pointer-events-none absolute right-full top-1/2 z-20 mr-2 -translate-y-1/2 whitespace-nowrap rounded-lg border border-black/10 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-ink-700 shadow-sm transition ${
-                  showCoreNextHint ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                }`}
-              >
-                Fyll i antal platser för att gå vidare.
-              </div>
-            ) : null}
-            <button
-              type="button"
-              aria-disabled={isCoreNextDisabled}
-              className={`inline-flex h-[40px] items-center gap-1.5 rounded-2xl px-4 text-xs font-semibold transition ${
-                isCoreNextDisabled
-                  ? "cursor-not-allowed border border-black/10 bg-[#eceff3] text-ink-500"
-                  : canAdvanceCurrentStep
-                  ? "border border-[#0f1930] bg-[#0f1930] text-white hover:bg-[#16233f]"
-                  : "border border-black/10 bg-white text-ink-700 hover:bg-white"
-              }`}
-              onMouseEnter={() => {
-                if (isCoreNextDisabled) setShowCoreNextHint(true);
-              }}
-                onClick={() => {
-                  if (isCoreNextDisabled) {
-                    setShowCoreNextHint(true);
-                    return;
-                  }
-                  if (!currentQuestionHasInput && activeQuestion && activeQuestion !== "core" && activeQuestion !== "amenities") {
-                    setSkippedSteps((prev) => (prev.includes(activeQuestion) ? prev : [...prev, activeQuestion]));
-                  }
-                  nextQuestion();
-                }}
-              >
-                {activeQuestion === "core" ? "Nästa" : activeQuestion === "amenities" ? "Klar" : (currentQuestionHasInput ? "Nästa" : "Hoppa över")}
-              </button>
-          </div>
-          </div>
-        </div>
-      ) : null}
       <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
         {onSaveSearch ? (
           <button

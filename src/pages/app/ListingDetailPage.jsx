@@ -643,7 +643,9 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
   const [galleryOverlayOpen, setGalleryOverlayOpen] = useState(false);
   const [activeGalleryIndex, setActiveGalleryIndex] = useState(0);
   const [areaViewMode, setAreaViewMode] = useState("map");
+  const [aboutOverlayVisible, setAboutOverlayVisible] = useState(false);
   const [aboutOverlayOpen, setAboutOverlayOpen] = useState(false);
+  const [isClosingAboutOverlay, setIsClosingAboutOverlay] = useState(false);
   const [inquiryOverlayOpen, setInquiryOverlayOpen] = useState(false);
   const [inquiryType, setInquiryType] = useState("contact");
   const [inquiryMessage, setInquiryMessage] = useState("");
@@ -698,6 +700,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
     if (base.length <= 240) return base;
     return `${base.slice(0, 237).trim()}...`;
   }, [shortDescription, longDescription]);
+  const aboutOverlayTimerRef = useRef(null);
 
   const googleMapsHref = useMemo(
     () => `https://www.google.com/maps?q=${encodeURIComponent(`${insight.center.lat},${insight.center.lng}`)}`,
@@ -759,6 +762,31 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
   }, [listingId, isGalleryView]);
 
   useEffect(() => {
+    return () => {
+      if (aboutOverlayTimerRef.current) {
+        clearTimeout(aboutOverlayTimerRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!aboutOverlayVisible || aboutOverlayOpen || isClosingAboutOverlay) return;
+    if (aboutOverlayTimerRef.current) {
+      clearTimeout(aboutOverlayTimerRef.current);
+    }
+    aboutOverlayTimerRef.current = setTimeout(() => {
+      setAboutOverlayOpen(true);
+      aboutOverlayTimerRef.current = null;
+    }, 16);
+    return () => {
+      if (aboutOverlayTimerRef.current) {
+        clearTimeout(aboutOverlayTimerRef.current);
+        aboutOverlayTimerRef.current = null;
+      }
+    };
+  }, [aboutOverlayVisible, aboutOverlayOpen, isClosingAboutOverlay]);
+
+  useEffect(() => {
     if (!listing?.id || isGalleryView) return;
     trackListingViewed({
       listing_id: String(listing.id),
@@ -803,11 +831,27 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
   }
 
   function openAboutOverlay() {
-    setAboutOverlayOpen(true);
+    if (aboutOverlayTimerRef.current) {
+      clearTimeout(aboutOverlayTimerRef.current);
+      aboutOverlayTimerRef.current = null;
+    }
+    setAboutOverlayVisible(true);
+    setAboutOverlayOpen(false);
+    setIsClosingAboutOverlay(false);
   }
 
   function closeAboutOverlay() {
+    if (!aboutOverlayVisible || !aboutOverlayOpen) return;
+    setIsClosingAboutOverlay(true);
     setAboutOverlayOpen(false);
+    if (aboutOverlayTimerRef.current) {
+      clearTimeout(aboutOverlayTimerRef.current);
+    }
+    aboutOverlayTimerRef.current = setTimeout(() => {
+      setAboutOverlayVisible(false);
+      setIsClosingAboutOverlay(false);
+      aboutOverlayTimerRef.current = null;
+    }, 240);
   }
 
   function openInquiryOverlay(type) {
@@ -1314,9 +1358,21 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
           </div>
         ) : null}
 
-        {aboutOverlayOpen ? (
-          <div className="fixed inset-0 z-[72] flex items-center justify-center bg-black/45 p-4" onClick={closeAboutOverlay}>
-            <div className="w-full max-w-2xl rounded-3xl border border-black/10 bg-white p-6 shadow-[0_20px_60px_rgba(0,0,0,0.25)] sm:p-7" onClick={(event) => event.stopPropagation()}>
+        {aboutOverlayVisible ? (
+          <div
+            className={`fixed inset-0 z-[72] flex items-center justify-center p-4 transition-all duration-200 ${
+              aboutOverlayOpen ? "bg-black/45 opacity-100" : "bg-black/0 opacity-0"
+            }`}
+            onClick={closeAboutOverlay}
+          >
+            <div
+              className={`w-full max-w-2xl rounded-3xl border border-black/10 bg-white p-6 shadow-[0_20px_60px_rgba(0,0,0,0.25)] transition-all duration-200 sm:p-7 ${
+                aboutOverlayOpen
+                  ? "translate-y-0 scale-100 opacity-100"
+                  : "translate-y-2 scale-[0.985] opacity-0"
+              }`}
+              onClick={(event) => event.stopPropagation()}
+            >
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <h3 className="text-2xl font-semibold text-ink-900">{listing.title}</h3>

@@ -637,14 +637,16 @@ function PillToggle({ checked, onToggle, ariaLabel, className = "", thumbClassNa
       role="switch"
       aria-checked={checked}
       aria-label={ariaLabel}
-      className={`relative inline-flex h-6 w-10 min-h-0 items-center rounded-full p-0.5 transition-colors ${
-        checked ? "bg-[#0f1930]" : "bg-[#a8adb3]"
-      } ${checked ? "justify-end" : "justify-start"} ${className}`}
+      className={`relative inline-flex h-6 w-10 min-h-0 items-center rounded-full p-0.5 transition-[background-color,border-color] duration-200 ease-out ${
+        checked ? "bg-[#0f1930]" : "bg-[#d8dde5]"
+      } ${className}`}
       onClick={onToggle}
     >
       <span
         aria-hidden="true"
-        className={`h-5 w-5 rounded-full bg-white shadow-[0_1px_2px_rgba(15,25,48,0.35)] ${thumbClassName}`}
+        className={`rounded-full bg-white shadow-[0_1px_2px_rgba(15,25,48,0.35)] transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+          checked ? "translate-x-4" : "translate-x-0"
+        } ${thumbClassName}`}
       />
     </button>
   );
@@ -1421,6 +1423,9 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
   const [showSearchEditor, setShowSearchEditor] = useState(false);
   const [isClosingSearchEditor, setIsClosingSearchEditor] = useState(false);
   const [showAdvancedSearchEditor, setShowAdvancedSearchEditor] = useState(false);
+  const [showAdvancedSearchOverlay, setShowAdvancedSearchOverlay] = useState(false);
+  const [isAdvancedSearchOverlayActive, setIsAdvancedSearchOverlayActive] = useState(false);
+  const [isClosingAdvancedSearchOverlay, setIsClosingAdvancedSearchOverlay] = useState(false);
   const [showEditorAiPanel, setShowEditorAiPanel] = useState(false);
   const [sidePanelMode, setSidePanelMode] = useState("filter");
   const [isSwitchingSidePanel, setIsSwitchingSidePanel] = useState(false);
@@ -1485,6 +1490,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
   const resetToAvailableTimerRef = useRef(null);
   const sidePanelSwitchTimerRef = useRef(null);
   const advancedFiltersTimerRef = useRef(null);
+  const advancedSearchOverlayTimerRef = useRef(null);
   const localProgramQuickCardTimerRef = useRef(null);
   const localProgramResultsAnimationTimerRef = useRef(null);
   const liveFilterTimerRef = useRef(null);
@@ -1589,6 +1595,9 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
     setShowSearchSummaryCard(false);
     setAnimateSearchSummaryIn(false);
     setShowAdvancedSearchEditor(false);
+    setShowAdvancedSearchOverlay(false);
+    setIsAdvancedSearchOverlayActive(false);
+    setIsClosingAdvancedSearchOverlay(false);
     setShowEditorAiPanel(false);
     setSidePanelMode("filter");
     setIsSwitchingSidePanel(false);
@@ -1622,6 +1631,9 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
       }
       if (advancedFiltersTimerRef.current) {
         clearTimeout(advancedFiltersTimerRef.current);
+      }
+      if (advancedSearchOverlayTimerRef.current) {
+        clearTimeout(advancedSearchOverlayTimerRef.current);
       }
       if (localProgramQuickCardTimerRef.current) {
         clearTimeout(localProgramQuickCardTimerRef.current);
@@ -1700,6 +1712,9 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
 
   useEffect(() => {
     if (showAdvancedSearchEditor) {
+      setShowAdvancedSearchOverlay(true);
+      setIsAdvancedSearchOverlayActive(false);
+      setIsClosingAdvancedSearchOverlay(false);
       if (advancedFiltersTimerRef.current) {
         clearTimeout(advancedFiltersTimerRef.current);
         advancedFiltersTimerRef.current = null;
@@ -1716,6 +1731,38 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
       advancedFiltersTimerRef.current = null;
     }, 320);
   }, [showAdvancedSearchEditor, showAdvancedFiltersContent]);
+
+  useEffect(() => {
+    if (!showAdvancedSearchOverlay || isAdvancedSearchOverlayActive || isClosingAdvancedSearchOverlay) return;
+    if (advancedSearchOverlayTimerRef.current) {
+      clearTimeout(advancedSearchOverlayTimerRef.current);
+    }
+    advancedSearchOverlayTimerRef.current = setTimeout(() => {
+      setIsAdvancedSearchOverlayActive(true);
+      advancedSearchOverlayTimerRef.current = null;
+    }, 16);
+    return () => {
+      if (advancedSearchOverlayTimerRef.current) {
+        clearTimeout(advancedSearchOverlayTimerRef.current);
+        advancedSearchOverlayTimerRef.current = null;
+      }
+    };
+  }, [showAdvancedSearchOverlay, isAdvancedSearchOverlayActive, isClosingAdvancedSearchOverlay]);
+
+  function closeAdvancedSearchOverlay() {
+    if (!showAdvancedSearchOverlay || !isAdvancedSearchOverlayActive) return;
+    setIsClosingAdvancedSearchOverlay(true);
+    setIsAdvancedSearchOverlayActive(false);
+    setShowAdvancedSearchEditor(false);
+    if (advancedSearchOverlayTimerRef.current) {
+      clearTimeout(advancedSearchOverlayTimerRef.current);
+    }
+    advancedSearchOverlayTimerRef.current = setTimeout(() => {
+      setShowAdvancedSearchOverlay(false);
+      setIsClosingAdvancedSearchOverlay(false);
+      advancedSearchOverlayTimerRef.current = null;
+    }, 240);
+  }
 
   function transitionFromAvailableToResults() {
     if (availableTransitionTimerRef.current) {
@@ -3203,7 +3250,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
   );
 
   const aiGuideToggleControl = (
-    <div className="inline-flex h-[44px] items-center gap-1.5 rounded-full border border-black/10 bg-white px-3 text-xs font-semibold text-ink-700">
+    <div className="inline-flex h-[44px] items-center gap-1.5 rounded-full border border-[#4f46e5]/12 bg-gradient-to-r from-[#fbfaff] to-white px-3 text-xs font-semibold text-ink-700">
       <span className="inline-flex items-center gap-1">
         <SparklesIcon className="h-3.5 w-3.5 text-[#4f46e5]" />
         <span>AI-guide</span>
@@ -3250,7 +3297,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
             </label>
             <button
               type="button"
-              className="inline-flex h-[48px] items-center gap-1.5 rounded-2xl border border-black/10 bg-white px-4 text-xs font-semibold text-ink-700 hover:bg-white"
+              className="inline-flex h-[48px] w-auto justify-center justify-self-start self-end items-center gap-1.5 rounded-2xl border border-black/10 bg-white px-4 text-xs font-semibold text-ink-700 hover:bg-white"
               onClick={() => setShowAdvancedSearchEditor(true)}
             >
               <FilterIcon className="h-3.5 w-3.5" />
@@ -3296,7 +3343,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
     <div className="flex flex-wrap items-center gap-2">
       <button
         type="button"
-        className="group inline-flex items-center gap-1 px-1 py-1 text-xs font-semibold text-ink-700 transition hover:text-[#0f1930]"
+        className="group inline-flex min-h-0 items-center gap-1 rounded-full border border-black/10 px-2.5 py-1 text-xs font-semibold text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
         onClick={handleSaveSearchAction}
       >
         <StarIcon className="h-4 w-4 shrink-0 transition group-hover:text-[#0f1930]" />
@@ -3304,7 +3351,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
       </button>
       <button
         type="button"
-        className="group inline-flex items-center gap-1 px-1 py-1 text-xs font-semibold text-ink-700 transition hover:text-[#0f1930]"
+        className="group inline-flex min-h-0 items-center gap-1 rounded-full border border-black/10 px-2.5 py-1 text-xs font-semibold text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
         onClick={handleWatchSearchAction}
       >
         <EyeIcon className="h-4 w-4 shrink-0 transition group-hover:text-[#0f1930]" />
@@ -3312,7 +3359,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
       </button>
       <button
         type="button"
-        className="group inline-flex items-center gap-1 px-1 py-1 text-xs font-semibold text-ink-700 transition hover:text-[#0f1930]"
+        className="group inline-flex min-h-0 items-center gap-1 rounded-full border border-black/10 px-2.5 py-1 text-xs font-semibold text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
         onClick={() => {
           void handleResetSearchResults();
         }}
@@ -3897,16 +3944,21 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                           <div className="relative">
                             {preferencesSummaryCard}
                           </div>
-                          <div className="flex flex-wrap items-center justify-end gap-2 xl:hidden">
+                          <div className="hidden md:flex md:flex-nowrap items-center justify-end gap-2 xl:hidden">
+                            {summaryControls}
+                          </div>
+                          <div className="flex flex-wrap items-center justify-end gap-2 md:hidden">
                             {summaryControls}
                           </div>
                         </div>
                       ) : (
-                        <div className="hidden items-center justify-between xl:flex">
+                        <div className="hidden items-center justify-between md:flex md:flex-nowrap xl:flex">
                           <p className="inline-flex min-h-[36px] items-center gap-1.5 rounded-full border border-black/10 bg-white px-3 py-1 text-sm font-semibold text-ink-800">
                             {displayedVisibleListings.length} lediga lokaler
                           </p>
-                          {sortControl}
+                          <div className="flex flex-nowrap items-center justify-end gap-2">
+                            {summaryControls}
+                          </div>
                         </div>
                       )}
 
@@ -3962,17 +4014,17 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                     <div className="bg-white pb-4">
                       <div className="relative">
                         {preferencesSummaryCard}
-                        <div className={`pointer-events-none absolute right-0 hidden lg:flex pr-4 ${
+                        <div className={`pointer-events-none absolute right-0 hidden md:flex pr-4 ${
                           hasBegunSearch ? "top-4 items-start" : "inset-y-0 items-center"
-                        }`}>
+                        } xl:hidden`}>
                           <div className="flex justify-end">
-                            <div className="pointer-events-auto flex flex-wrap items-center justify-end gap-2">
+                            <div className="pointer-events-auto flex flex-nowrap items-center justify-end gap-2">
                               {summaryControls}
                             </div>
                           </div>
                         </div>
                       </div>
-                      <div className="mt-3 flex flex-wrap items-center gap-2 lg:hidden">
+                      <div className="mt-3 flex flex-wrap items-center gap-2 md:hidden">
                         {summaryControls}
                       </div>
                     </div>
@@ -3986,15 +4038,27 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
         )}
       </div>
 
-      {showAdvancedSearchEditor ? (
-        <div className="fixed inset-0 z-[72] flex items-center justify-center bg-black/35 p-4 backdrop-blur-[2px]" onClick={() => setShowAdvancedSearchEditor(false)}>
-          <div className="relative w-full max-w-4xl rounded-[32px] border border-black/10 bg-white shadow-[0_24px_64px_rgba(15,25,48,0.18)]" onClick={(event) => event.stopPropagation()}>
+      {showAdvancedSearchOverlay ? (
+        <div
+          className={`fixed inset-0 z-[72] flex items-center justify-center p-4 backdrop-blur-[2px] transition-all duration-200 ${
+            isAdvancedSearchOverlayActive ? "bg-black/35 opacity-100" : "bg-black/0 opacity-0"
+          }`}
+          onClick={closeAdvancedSearchOverlay}
+        >
+          <div
+            className={`relative w-full max-w-4xl rounded-[32px] border border-black/10 bg-white shadow-[0_24px_64px_rgba(15,25,48,0.18)] transition-all duration-200 ${
+              isAdvancedSearchOverlayActive
+                ? "translate-y-0 scale-100 opacity-100"
+                : "translate-y-2 scale-[0.985] opacity-0"
+            }`}
+            onClick={(event) => event.stopPropagation()}
+          >
             <div className="flex items-center justify-between gap-3 border-b border-black/10 px-6 py-4">
               <h3 className="text-lg font-semibold text-ink-900">Alla filter</h3>
               <button
                 type="button"
                 className="close-circle-button inline-flex items-center justify-center rounded-full border border-black/10 text-lg font-semibold leading-none text-ink-700 hover:bg-white"
-                onClick={() => setShowAdvancedSearchEditor(false)}
+                onClick={closeAdvancedSearchOverlay}
                 aria-label="Stäng filter"
               >
                 ×
@@ -4006,7 +4070,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
               onSubmit={(event) => {
                 event.preventDefault();
                 void submitSideFilterSearch(event);
-                setShowAdvancedSearchEditor(false);
+                closeAdvancedSearchOverlay();
               }}
             >
               <div className="space-y-6">
