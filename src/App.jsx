@@ -3,6 +3,7 @@ import ViewingRequestModal from "./components/app/ViewingRequestModal";
 import AppShell from "./components/layout/AppShell";
 import ToastStack from "./components/layout/ToastStack";
 import LandingPage from "./pages/LandingPage";
+import CallbackPage from "./pages/CallbackPage";
 import LoginPage from "./pages/LoginPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import OnboardingPage from "./pages/OnboardingPage";
@@ -26,14 +27,15 @@ function AppContent() {
   const [bookingListing, setBookingListing] = useState(null);
 
   function openAuthOverlay(mode = "login", preferredRole = "renter") {
-    const target = mode === "signup"
-      ? `/signup${preferredRole === "publisher" ? "?role=publisher" : ""}`
-      : "/login";
+    const target =
+      mode === "signup"
+        ? `/signup${preferredRole === "publisher" ? "?role=publisher" : ""}`
+        : "/login";
     navigateTo(target);
   }
 
   useEffect(() => {
-    if (app.isBootstrapping) {
+    if (app.isBootstrapping || app.isAuthPending) {
       return;
     }
 
@@ -42,25 +44,35 @@ function AppContent() {
     const isAppPath = pathname === "/app" || pathname.startsWith("/app/");
     const isPublicRentPath = pathname === "/app/rent";
     const isPublicListingPath = pathname.startsWith("/app/listings/");
-    const isAuthPath = pathname === "/login" || pathname === "/signup" || pathname === "/forgot-password";
+    const isCallbackPath = pathname === "/callback";
+    const isAuthPath = pathname === "/login" || pathname === "/signup" || pathname === "/forgot-password" || isCallbackPath;
 
     if (!isAuthenticated && pathname === "/app") {
-      navigateTo("/login", { replace: true });
+      navigateTo("/login?returnTo=/app", { replace: true });
       return;
     }
 
     if (!isAuthenticated && isAppPath && !isPublicRentPath && !isPublicListingPath) {
-      navigateTo("/login", { replace: true });
+      navigateTo(`/login?returnTo=${encodeURIComponent(pathname)}`, { replace: true });
       return;
     }
 
     if (!isAuthenticated && isOnboardingPath) {
-      openAuthOverlay("signup", "renter");
-      navigateTo("/", { replace: true });
+      navigateTo("/signup?role=renter", { replace: true });
+      return;
+    }
+
+    if (!isAuthenticated && isCallbackPath) {
+      navigateTo("/login", { replace: true });
       return;
     }
 
     if (isAuthenticated && !app.user.onboardingCompleted && !isOnboardingPath && (pathname === "/app" || pathname.startsWith("/app/"))) {
+      navigateTo("/onboarding", { replace: true });
+      return;
+    }
+
+    if (isAuthenticated && !app.user.onboardingCompleted && isCallbackPath) {
       navigateTo("/onboarding", { replace: true });
       return;
     }
@@ -105,7 +117,7 @@ function AppContent() {
         navigateTo("/app/my-listings", { replace: true });
       }
     }
-  }, [app.isBootstrapping, app.user, pathname]);
+  }, [app.isAuthPending, app.isBootstrapping, app.user, pathname]);
 
   useEffect(() => {
     if (typeof window === "undefined") return undefined;
@@ -162,9 +174,11 @@ function AppContent() {
       />
     );
   } else if (pathname === "/login") {
-    content = <LoginPage onClerkContinue={app.loginWithClerk} onDemoLogin={app.loginDemoKombi} />;
+    content = <LoginPage />;
   } else if (pathname === "/signup") {
-    content = <SignupPage onClerkContinue={app.loginWithClerk} onDemoLogin={app.loginDemoKombi} onTestSignup={app.signup} onUpdateProfile={app.updateProfile} />;
+    content = <SignupPage onCompleteSignup={app.completeSignup} />;
+  } else if (pathname === "/callback") {
+    content = <CallbackPage />;
   } else if (pathname === "/forgot-password") {
     content = <ForgotPasswordPage />;
   } else if (pathname === "/onboarding" || pathname.startsWith("/onboarding/")) {
