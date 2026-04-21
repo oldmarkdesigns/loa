@@ -402,10 +402,12 @@ function ProfilePage({ app }) {
 
   const roleSet = useMemo(() => new Set(Array.isArray(user?.roles) ? user.roles : [user?.role || "renter"]), [user?.role, user?.roles]);
   const hasRenter = roleSet.has("renter");
-  const hasPublisher = roleSet.has("publisher");
+  const hasPublisher = roleSet.has("publisher") || roleSet.has("company_admin");
   const canSwitchRoles = hasRenter && hasPublisher;
-  const currentRoleLabel = useMemo(() => (user?.role === "publisher" ? "Hyresvärd" : "Hyresgäst"), [user?.role]);
-  const showPublisherWorkspaceTabs = hasPublisher && user?.role === "publisher";
+  const currentRoleLabel = useMemo(() => (
+    user?.role === "publisher" ? "Hyresvärd" : user?.role === "company_admin" ? "Bolagsadmin" : "Hyresgäst"
+  ), [user?.role]);
+  const showPublisherWorkspaceTabs = hasPublisher && (user?.role === "publisher" || user?.role === "company_admin");
 
   const renterProgram = useMemo(() => user?.profile?.renterProgram || {}, [user?.profile?.renterProgram]);
   const preferredTypes = useMemo(() => listFromDelimitedValue(renterProgram.type), [renterProgram.type]);

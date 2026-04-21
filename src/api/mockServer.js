@@ -227,7 +227,7 @@ function migrateDb(db) {
 
   db.users.forEach((user) => {
     if (!Array.isArray(user.roles) || user.roles.length === 0) {
-      user.roles = [user.role === "publisher" ? "publisher" : "renter"];
+      user.roles = [user.role === "publisher" || user.role === "company_admin" ? user.role : "renter"];
       changed = true;
     }
 
@@ -525,9 +525,9 @@ async function handleRequest(method, endpoint, body = {}) {
     }
 
     const requestedRoles = Array.isArray(body.roles)
-      ? body.roles.filter((role) => role === "renter" || role === "publisher")
+      ? body.roles.filter((role) => role === "renter" || role === "publisher" || role === "company_admin")
       : [];
-    const roles = requestedRoles.length ? Array.from(new Set(requestedRoles)) : [body.role === "publisher" ? "publisher" : "renter"];
+    const roles = requestedRoles.length ? Array.from(new Set(requestedRoles)) : [body.role === "publisher" || body.role === "company_admin" ? body.role : "renter"];
     const primaryRole = roles.includes(body.role) ? body.role : roles[0];
     const user = {
       id: slugId("u"),
@@ -569,9 +569,9 @@ async function handleRequest(method, endpoint, body = {}) {
     }
 
     const requestedRoles = Array.isArray(body.roles)
-      ? body.roles.filter((role) => role === "renter" || role === "publisher")
+      ? body.roles.filter((role) => role === "renter" || role === "publisher" || role === "company_admin")
       : [];
-    const hasRoleOverride = body.role === "publisher" || body.role === "renter";
+    const hasRoleOverride = body.role === "publisher" || body.role === "company_admin" || body.role === "renter";
     const rolesFromPayload = requestedRoles.length
       ? Array.from(new Set(requestedRoles))
       : (hasRoleOverride ? [body.role] : []);

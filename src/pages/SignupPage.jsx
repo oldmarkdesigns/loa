@@ -24,7 +24,8 @@ function SignupPage({ onClerkContinue, onDemoLogin, onTestSignup, onUpdateProfil
     phone: "",
     password: "",
     roles: ["renter"],
-    role: "renter"
+    role: "renter",
+    roleSelection: "renter"
   });
   const [phoneCountryCode, setPhoneCountryCode] = useState("+46");
   const [pending, setPending] = useState(false);
@@ -49,7 +50,8 @@ function SignupPage({ onClerkContinue, onDemoLogin, onTestSignup, onUpdateProfil
 
   const roleFromUrl = useMemo(() => {
     const params = new URLSearchParams(window.location.search);
-    return params.get("role") === "publisher" ? "publisher" : "renter";
+    const requestedRole = params.get("role");
+    return requestedRole === "publisher" || requestedRole === "company_admin" ? requestedRole : "renter";
   }, []);
 
   useEffect(() => {
@@ -73,7 +75,7 @@ function SignupPage({ onClerkContinue, onDemoLogin, onTestSignup, onUpdateProfil
   }, [isLoaded]);
 
   useEffect(() => {
-    setForm((previous) => ({ ...previous, role: roleFromUrl, roles: [roleFromUrl] }));
+    setForm((previous) => ({ ...previous, role: roleFromUrl, roles: [roleFromUrl], roleSelection: roleFromUrl }));
   }, [roleFromUrl]);
 
   useEffect(() => {
@@ -93,13 +95,17 @@ function SignupPage({ onClerkContinue, onDemoLogin, onTestSignup, onUpdateProfil
   }, []);
 
   function setRoleSelection(selection) {
-    const role = selection === "publisher" ? "publisher" : "renter";
-    setForm((previous) => ({ ...previous, role, roles: [role] }));
+    const role = selection;
+    setForm((previous) => ({ ...previous, role, roles: [role], roleSelection: selection }));
   }
 
   async function submit(event) {
     event.preventDefault();
-    if (detailsStep === 1) {
+    if (detailsStep < 3) {
+      if (detailsStep === 2) {
+        setDetailsStep(3);
+        return;
+      }
       setError("Skapa konto med Clerk först.");
       return;
     }
@@ -135,7 +141,7 @@ function SignupPage({ onClerkContinue, onDemoLogin, onTestSignup, onUpdateProfil
   async function handleSkip() {
     if (pending) return;
 
-    if (detailsStep === 1) {
+    if (detailsStep < 3) {
       setError("Skapa konto med Clerk först.");
       return;
     }
@@ -242,102 +248,113 @@ function SignupPage({ onClerkContinue, onDemoLogin, onTestSignup, onUpdateProfil
       <div className="w-full max-w-[460px]">
         <div className="rounded-[30px] border border-black/10 bg-white px-6 py-7 sm:px-7 sm:py-8">
           <h1 className="text-[1.95rem] font-semibold leading-tight text-[#0f1930]">
-            {detailsStep === 2 ? "Välkommen!" : "Skapa konto"}
+            {detailsStep === 2 ? "Välkommen!" : detailsStep === 3 ? "Berätta om dig själv" : "Skapa konto"}
           </h1>
           <p className="mt-1 text-sm text-ink-600">
-            {detailsStep === 1 ? "Skapa konto med Clerk för att fortsätta." : "Berätta om dig själv."}
+            {detailsStep === 1
+              ? "Skapa konto med Clerk för att fortsätta."
+              : detailsStep === 2
+                ? "Välj vilken roll som passar dig bäst."
+                : "Fyll i dina personuppgifter."}
           </p>
 
           <form className="mt-5 space-y-3" onSubmit={submit}>
-            <div className="mt-1">
-              <p className="mb-2 text-sm font-semibold text-ink-700">Jag vill</p>
-              <div className="grid grid-cols-1 gap-2.5" role="radiogroup" aria-label="Välj kontotyp">
-                {[
-                  { value: "renter", label: "Hyra en lokal" },
-                  { value: "publisher", label: "Hyra ut en lokal" }
-                ].map((option) => {
-                  const selected = form.roles.length === 1 && form.roles[0] === option.value;
-                  return (
+            {detailsStep === 2 ? (
+              <div className="mt-1">
+                <p className="mb-2 text-sm font-semibold text-ink-700">Jag vill</p>
+                <div className="grid grid-cols-1 gap-2.5" role="radiogroup" aria-label="Välj kontotyp">
+                  {[
+                    { value: "renter", label: "Hyra en lokal" },
+                    { value: "publisher", label: "Hyra ut en lokal" },
+                    { value: "company_admin", label: "Bolagsadmin" }
+                  ].map((option) => {
+                    const selected = form.roleSelection === option.value;
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        role="radio"
+                        aria-checked={selected}
+                        onClick={() => setRoleSelection(option.value)}
+                        className={`role-option-button flex w-full items-center justify-between border px-4 py-3 text-left transition ${
+                          selected ? "border-[#0f1930] bg-white text-[#0f1930] shadow-[0_0_0_1px_rgba(15,25,48,0.2)]" : "border-black/15 bg-white text-ink-700"
+                        }`}
+                      >
+                        <span className="text-sm font-medium leading-tight">{option.label}</span>
+                        <span className={`inline-flex h-5 w-5 items-center justify-center rounded-full border ${selected ? "border-[#0f1930]" : "border-black/20"}`}>
+                          <span className={`h-2 w-2 rounded-full ${selected ? "bg-[#0f1930]" : "bg-transparent"}`} />
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
+
+            {detailsStep === 3 ? (
+              <>
+                <div className="mt-1 flex flex-col items-center">
+                  <div className="relative mb-8">
+                    {avatarPreviewUrl ? (
+                      <img src={avatarPreviewUrl} alt="Förhandsvisning profilbild" className="h-28 w-28 rounded-full border border-black/10 object-cover" />
+                    ) : (
+                      <div className="inline-flex h-28 w-28 items-center justify-center rounded-full bg-black/5 text-4xl font-semibold text-ink-500">
+                        {avatarInitial || "A"}
+                      </div>
+                    )}
                     <button
-                      key={option.value}
                       type="button"
-                      role="radio"
-                      aria-checked={selected}
-                      onClick={() => setRoleSelection(option.value)}
-                      className={`role-option-button flex w-full items-center justify-between border px-4 py-3 text-left transition ${
-                        selected ? "border-[#0f1930] bg-white text-[#0f1930] shadow-[0_0_0_1px_rgba(15,25,48,0.2)]" : "border-black/15 bg-white text-ink-700"
-                      }`}
+                      className="absolute left-1/2 top-full inline-flex min-h-0 -translate-x-1/2 -translate-y-1/2 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-black/15 bg-[#0f1930] px-4 py-2 text-xs font-semibold text-white"
+                      onClick={() => avatarInputRef.current?.click()}
                     >
-                      <span className="text-sm font-medium leading-tight">{option.label}</span>
-                      <span className={`inline-flex h-5 w-5 items-center justify-center rounded-full border ${selected ? "border-[#0f1930]" : "border-black/20"}`}>
-                        <span className={`h-2 w-2 rounded-full ${selected ? "bg-[#0f1930]" : "bg-transparent"}`} />
-                      </span>
+                      <CameraIcon className="h-4 w-4" />
+                      Lägg till foto (frivilligt)
                     </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="mt-1 flex flex-col items-center">
-              <div className="relative mb-8">
-                {avatarPreviewUrl ? (
-                  <img src={avatarPreviewUrl} alt="Förhandsvisning profilbild" className="h-28 w-28 rounded-full border border-black/10 object-cover" />
-                ) : (
-                  <div className="inline-flex h-28 w-28 items-center justify-center rounded-full bg-black/5 text-4xl font-semibold text-ink-500">
-                    {avatarInitial || "A"}
                   </div>
-                )}
-                <button
-                  type="button"
-                  className="absolute left-1/2 top-full inline-flex min-h-0 -translate-x-1/2 -translate-y-1/2 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-black/15 bg-[#0f1930] px-4 py-2 text-xs font-semibold text-white"
-                  onClick={() => avatarInputRef.current?.click()}
-                >
-                  <CameraIcon className="h-4 w-4" />
-                  Lägg till foto (frivilligt)
-                </button>
-              </div>
-              <input
-                ref={avatarInputRef}
-                className="hidden"
-                type="file"
-                accept="image/*"
-                onChange={(event) => {
-                  const file = event.target.files?.[0];
-                  if (!file) return;
-                  setAvatarPreviewUrl((previous) => {
-                    if (previous) URL.revokeObjectURL(previous);
-                    return URL.createObjectURL(file);
-                  });
-                }}
-              />
-            </div>
+                  <input
+                    ref={avatarInputRef}
+                    className="hidden"
+                    type="file"
+                    accept="image/*"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      if (!file) return;
+                      setAvatarPreviewUrl((previous) => {
+                        if (previous) URL.revokeObjectURL(previous);
+                        return URL.createObjectURL(file);
+                      });
+                    }}
+                  />
+                </div>
 
-            <label className="block">
-              <span className="mb-1 block text-xs font-semibold text-ink-700">Förnamn</span>
-              <input className="field" value={form.firstName} onChange={(e) => setForm((p) => ({ ...p, firstName: e.target.value }))} required />
-            </label>
-            <label className="block">
-              <span className="mb-1 block text-xs font-semibold text-ink-700">Efternamn</span>
-              <input className="field" value={form.lastName} onChange={(e) => setForm((p) => ({ ...p, lastName: e.target.value }))} required />
-            </label>
-            <label className="block">
-              <span className="mb-1 block text-xs font-semibold text-ink-700">Telefon (valfritt)</span>
-              <div className="grid grid-cols-[152px_1fr] gap-2">
-                <select className="field select-chevron" value={phoneCountryCode} onChange={(e) => setPhoneCountryCode(e.target.value)}>
-                  {countryCodeOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-                <input
-                  className="field"
-                  value={form.phone}
-                  onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
-                  placeholder="70 123 45 67"
-                />
-              </div>
-            </label>
+                <label className="block">
+                  <span className="mb-1 block text-xs font-semibold text-ink-700">Förnamn</span>
+                  <input className="field" value={form.firstName} onChange={(e) => setForm((p) => ({ ...p, firstName: e.target.value }))} required />
+                </label>
+                <label className="block">
+                  <span className="mb-1 block text-xs font-semibold text-ink-700">Efternamn</span>
+                  <input className="field" value={form.lastName} onChange={(e) => setForm((p) => ({ ...p, lastName: e.target.value }))} required />
+                </label>
+                <label className="block">
+                  <span className="mb-1 block text-xs font-semibold text-ink-700">Telefon (valfritt)</span>
+                  <div className="grid grid-cols-[152px_1fr] gap-2">
+                    <select className="field select-chevron" value={phoneCountryCode} onChange={(e) => setPhoneCountryCode(e.target.value)}>
+                      {countryCodeOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      className="field"
+                      value={form.phone}
+                      onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
+                      placeholder="70 123 45 67"
+                    />
+                  </div>
+                </label>
+              </>
+            ) : null}
 
             {error ? <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">{error}</p> : null}
 
@@ -347,7 +364,7 @@ function SignupPage({ onClerkContinue, onDemoLogin, onTestSignup, onUpdateProfil
                 className="inline-flex w-full items-center justify-center rounded-full bg-[#0f1930] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#16233f]"
                 disabled={pending}
               >
-                {pending ? "Skapar konto..." : "Fortsätt"}
+                {pending ? "Skapar konto..." : detailsStep === 2 ? "Fortsätt" : "Fortsätt"}
               </button>
             </div>
           </form>
@@ -364,7 +381,7 @@ function SignupPage({ onClerkContinue, onDemoLogin, onTestSignup, onUpdateProfil
           </div>
         </div>
 
-        {detailsStep === 2 ? (
+        {detailsStep >= 2 ? (
           <div className="mt-3 flex items-center justify-between px-1">
             <button
               type="button"

@@ -203,11 +203,12 @@ function mapRenterProgramToFilters(program) {
 }
 
 export function AppProvider({ children }) {
-  const { user: clerkUser, isLoaded: isClerkLoaded } = useUser();
+  const { user: clerkUser, isLoaded: isClerkLoaded, isSignedIn: isClerkSignedIn } = useUser();
   const { signOut: signOutClerk } = useClerk();
   const clerkSyncInFlightRef = useRef(false);
   const lastSyncedClerkUserIdRef = useRef(null);
   const clerkSignoutSyncInFlightRef = useRef(false);
+  const clerkSignoutTimeoutRef = useRef(null);
 
   const [isBootstrapping, setIsBootstrapping] = useState(true);
   const [user, setUser] = useState(null);
@@ -377,10 +378,10 @@ export function AppProvider({ children }) {
       throw new Error("Kunde inte läsa e-post från Clerk-konto.");
     }
 
-    const hasRoleOverride = payload.role === "publisher" || payload.role === "renter";
+    const hasRoleOverride = payload.role === "publisher" || payload.role === "company_admin" || payload.role === "renter";
     const safeRole = hasRoleOverride ? payload.role : undefined;
     const safeRoles = Array.isArray(payload.roles)
-      ? payload.roles.filter((role) => role === "renter" || role === "publisher")
+      ? payload.roles.filter((role) => role === "renter" || role === "publisher" || role === "company_admin")
       : [];
     const uniqueRoles = Array.from(new Set(safeRoles));
     const fullName = String(payload.name || clerkUser.fullName || "").trim();
@@ -444,25 +445,39 @@ export function AppProvider({ children }) {
   }
 
   useEffect(() => {
-    if (!isClerkLoaded || clerkUser || !user || user.authProvider !== "clerk") {
+    if (!isClerkLoaded || isClerkSignedIn !== false || clerkUser || !user || user.authProvider !== "clerk") {
+      if (clerkSignoutTimeoutRef.current) {
+        window.clearTimeout(clerkSignoutTimeoutRef.current);
+        clerkSignoutTimeoutRef.current = null;
+      }
       return;
     }
 
     if (clerkSignoutSyncInFlightRef.current) {
       return;
     }
-    clerkSignoutSyncInFlightRef.current = true;
+    clerkSignoutTimeoutRef.current = window.setTimeout(() => {
+      clerkSignoutSyncInFlightRef.current = true;
 
-    authApi.logout()
-      .catch(() => {
-        // Continue and clear local session state.
-      })
-      .finally(async () => {
-        await clearLocalSessionState();
-        pushToast("Du är utloggad.", "info");
-        clerkSignoutSyncInFlightRef.current = false;
-      });
-  }, [clerkUser, isClerkLoaded, user]);
+      authApi.logout()
+        .catch(() => {
+          // Continue and clear local session state.
+        })
+        .finally(async () => {
+          await clearLocalSessionState();
+          pushToast("Du är utloggad.", "info");
+          clerkSignoutSyncInFlightRef.current = false;
+          clerkSignoutTimeoutRef.current = null;
+        });
+    }, 2000);
+
+    return () => {
+      if (clerkSignoutTimeoutRef.current) {
+        window.clearTimeout(clerkSignoutTimeoutRef.current);
+        clerkSignoutTimeoutRef.current = null;
+      }
+    };
+  }, [clerkUser, isClerkLoaded, isClerkSignedIn, user]);
 
   async function completeOnboarding(payload) {
     const { user: nextUser } = await profileApi.completeOnboarding(payload);
@@ -523,7 +538,7 @@ export function AppProvider({ children }) {
         // Keep role switch successful even if secondary data refresh fails.
       }
 
-      pushToast(`Du bytte till ${role === "publisher" ? "hyresvärdsläge" : "hyresgästläge"}.`, "info");
+      pushToast(`Du bytte till ${role === "renter" ? "hyresgästläge" : role === "company_admin" ? "bolagsadminläge" : "hyresvärdsläge"}.`, "info");
       return nextUser;
     } catch (error) {
       pushToast(error.message || "Kunde inte byta roll just nu.", "error");
