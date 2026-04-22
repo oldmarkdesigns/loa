@@ -12,16 +12,16 @@ const publisherWorkspaceItems = [
 ];
 
 function AppShell({ pathname, user, onSwitchRole, onLogout, onRequireAuth, isGuest = false, children }) {
-  const activeRole = user?.role === "publisher" ? "publisher" : "renter";
+  const activeRole = user?.role === "publisher" || user?.role === "company_admin" ? user.role : "renter";
   const rawRoles = isGuest ? ["renter"] : (Array.isArray(user?.roles) ? user.roles : [activeRole]);
-  const roleSet = new Set(rawRoles.filter((item) => item === "renter" || item === "publisher"));
-  const hasPublisherAccess = roleSet.has("publisher");
+  const roleSet = new Set(rawRoles.filter((item) => item === "renter" || item === "publisher" || item === "company_admin"));
+  const hasPublisherAccess = roleSet.has("publisher") || roleSet.has("company_admin");
   const isPublisherWorkspacePath = (
     routeMatches(pathname, "/app/publish")
     || routeMatches(pathname, "/app/my-listings")
     || routeMatches(pathname, "/app/leads")
   );
-  const showPublisherWorkspaceNav = !isGuest && hasPublisherAccess && (activeRole === "publisher" || isPublisherWorkspacePath);
+  const showPublisherWorkspaceNav = !isGuest && hasPublisherAccess && ((activeRole === "publisher" || activeRole === "company_admin") || isPublisherWorkspacePath);
   const deferPublisherWorkspaceNavToProfile = routeMatches(pathname, "/app/profile");
   const currentSearch = typeof window !== "undefined" ? window.location.search : "";
   const hasProfileSource = isPublisherWorkspacePath && new URLSearchParams(currentSearch).get("from") === "profile";

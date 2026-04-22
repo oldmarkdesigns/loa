@@ -3,7 +3,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Hosted auth cards: match flat app surface style */
+/* Clerk auth cards: match flat app surface style */
 .cl-card {
   box-shadow: none !important;
 }

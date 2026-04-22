@@ -10,6 +10,7 @@ import {
 } from "../lib/analytics";
 
 const AppStateContext = createContext(null);
+const TEST_SESSION_STORAGE_KEY = "office_rental_test_session_token";
 
 const defaultFilters = {
   county: "Stockholms län",
@@ -197,6 +198,11 @@ function mapRenterProgramToFilters(program) {
   });
 }
 
+function normalizeUserRole(role) {
+  if (role === "publisher") return "broker";
+  return role === "company_admin" || role === "broker" ? role : "renter";
+}
+
 export function AppProvider({ children }) {
   const { user: authUser, isLoading: isAuthLoading, signOut } = useAuth();
   const { isAuthenticated: isConvexAuthenticated, isLoading: isConvexAuthLoading } = useConvexAuth();
@@ -241,9 +247,18 @@ export function AppProvider({ children }) {
       return;
     }
 
-    const activeRoles = Array.isArray(activeUser.roles) ? activeUser.roles : [activeUser.role || "renter"];
-    const hasPublisherAccess = activeRoles.includes("publisher");
+    const activeRoles = (Array.isArray(activeUser.roles) ? activeUser.roles : [activeUser.role || "renter"]).map(normalizeUserRole);
+    const hasPublisherAccess = activeRoles.includes("broker") || activeRoles.includes("company_admin");
     const hasRenterAccess = activeRoles.includes("renter");
+
+    if (activeUser.authProvider === "test") {
+      const { listings: listingsData } = await listingApi.getListings(allListingsFilters);
+      setListings(listingsData);
+      setFavorites([]);
+      setViewings([]);
+      setLeads([]);
+      return;
+    }
 
     const [{ listings: listingsData }, { favorites: favoriteData }, { viewings: viewingData }] = await Promise.all([
       listingApi.getListings(allListingsFilters),
@@ -298,7 +313,18 @@ export function AppProvider({ children }) {
     try {
       await setupApi.ensureSeeded();
 
+      const storedTestToken = typeof window !== "undefined" ? window.localStorage.getItem(TEST_SESSION_STORAGE_KEY) : null;
+
       if (!isConvexAuthenticated || !authUser) {
+        if (storedTestToken) {
+          const { user: testUser } = await authApi.getTestSession(storedTestToken);
+          if (testUser) {
+            hydrateLocalUserState(testUser);
+            await refreshCoreData(testUser);
+            return;
+          }
+          window.localStorage.removeItem(TEST_SESSION_STORAGE_KEY);
+        }
         await clearLocalSessionState();
         return;
       }
@@ -345,7 +371,19 @@ export function AppProvider({ children }) {
       throw new Error("Skapa konto med WorkOS först.");
     }
 
-    const { user: nextUser } = await profileApi.updateMe(payload);
+    const normalizedRole = normalizeUserRole(payload.role);
+    const testToken = typeof window !== "undefined" ? window.localStorage.getItem(TEST_SESSION_STORAGE_KEY) : null;
+    const { user: nextUser } = user?.authProvider === "test" && testToken
+      ? await profileApi.updateTestMe(testToken, {
+          ...payload,
+          role: normalizedRole,
+          roles: [normalizedRole]
+        })
+      : await profileApi.updateMe({
+          ...payload,
+          role: normalizedRole,
+          roles: [normalizedRole]
+        });
     hydrateLocalUserState(nextUser);
     await refreshCoreData(nextUser);
     trackSignupCompleted({
@@ -357,16 +395,24 @@ export function AppProvider({ children }) {
 
   async function logout() {
     try {
+      if (typeof window !== "undefined") {
+        window.localStorage.removeItem(TEST_SESSION_STORAGE_KEY);
+      }
       await clearLocalSessionState();
     } finally {
-      await Promise.resolve(signOut({
-        returnTo: `${window.location.origin}/`
-      }));
+      if (user?.authProvider !== "test") {
+        await Promise.resolve(signOut({
+          returnTo: `${window.location.origin}/`
+        }));
+      }
     }
   }
 
   async function completeOnboarding(payload) {
-    const { user: nextUser } = await profileApi.completeOnboarding(payload);
+    const testToken = typeof window !== "undefined" ? window.localStorage.getItem(TEST_SESSION_STORAGE_KEY) : null;
+    const { user: nextUser } = user?.authProvider === "test" && testToken
+      ? await profileApi.completeTestOnboarding(testToken, payload)
+      : await profileApi.completeOnboarding(payload);
     hydrateLocalUserState(nextUser);
     const renterProgram = payload?.primaryRole === "renter" ? payload?.profile?.renterProgram : null;
     const onboardingFilters = renterProgram ? mapRenterProgramToFilters(renterProgram) : null;
@@ -406,10 +452,11 @@ export function AppProvider({ children }) {
     }
 
     try {
-      const currentRoles = Array.isArray(user.roles) ? user.roles : [user.role || "renter"];
-      const roles = currentRoles.includes(role) ? currentRoles : [...currentRoles, role];
+      const normalizedRole = normalizeUserRole(role);
+      const currentRoles = (Array.isArray(user.roles) ? user.roles : [user.role || "renter"]).map(normalizeUserRole);
+      const roles = currentRoles.includes(normalizedRole) ? currentRoles : [...currentRoles, normalizedRole];
       const { user: nextUser } = await profileApi.updateMe({
-        role,
+        role: normalizedRole,
         roles
       });
 
@@ -421,7 +468,7 @@ export function AppProvider({ children }) {
         // Keep role switch successful even if secondary data refresh fails.
       }
 
-      pushToast(`Du bytte till ${role === "publisher" ? "hyresvärdsläge" : "hyresgästläge"}.`, "info");
+      pushToast(`Du bytte till ${normalizedRole === "company_admin" ? "bolagsadminläge" : normalizedRole === "broker" ? "mäklarläge" : "hyresgästläge"}.`, "info");
       return nextUser;
     } catch (error) {
       pushToast(error.message || "Kunde inte byta roll just nu.", "error");
@@ -431,8 +478,21 @@ export function AppProvider({ children }) {
 
   async function updateProfile(payload) {
     if (!user) return null;
-    const { user: nextUser } = await profileApi.updateMe(payload);
+    const testToken = typeof window !== "undefined" ? window.localStorage.getItem(TEST_SESSION_STORAGE_KEY) : null;
+    const { user: nextUser } = user?.authProvider === "test" && testToken
+      ? await profileApi.updateTestMe(testToken, payload)
+      : await profileApi.updateMe(payload);
     hydrateLocalUserState(nextUser);
+    return nextUser;
+  }
+
+  async function createTestSignup(role) {
+    const { user: nextUser, token } = await authApi.createTestUser(role);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(TEST_SESSION_STORAGE_KEY, token);
+    }
+    hydrateLocalUserState(nextUser);
+    await refreshCoreData(nextUser);
     return nextUser;
   }
 
@@ -666,6 +726,7 @@ export function AppProvider({ children }) {
       toasts,
       pushToast,
       completeSignup,
+      createTestSignup,
       logout,
       completeOnboarding,
       switchRole,

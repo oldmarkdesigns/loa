@@ -24,9 +24,13 @@ export const convexApiRefs = {
   },
   users: {
     me: queryRef("users:me"),
+    getTestSession: queryRef("users:getTestSession"),
+    createTestUser: mutationRef("users:createTestUser"),
     upsertFromAuth: mutationRef("users:upsertFromAuth"),
     updateMe: mutationRef("users:updateMe"),
-    completeOnboarding: mutationRef("users:completeOnboarding")
+    updateTestUser: mutationRef("users:updateTestUser"),
+    completeOnboarding: mutationRef("users:completeOnboarding"),
+    completeTestOnboarding: mutationRef("users:completeTestOnboarding")
   },
   listings: {
     list: queryRef("listings:list"),

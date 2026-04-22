@@ -3,6 +3,7 @@ import { navigateTo } from "../lib/router";
 import AuthFlowNav from "../components/layout/AuthFlowNav";
 import infoPictogram from "../../Assets/Pictograms/info.png";
 import {
+  ArrowUpIcon,
   BalconyIcon,
   BikeIcon,
   BuildingIcon,
@@ -29,6 +30,7 @@ import {
 
 const RENTER_STEPS = ["program-core", "review"];
 const PUBLISHER_STEPS = ["publisher-profile", "review"];
+const COMPANY_ADMIN_STEPS = ["company-admin-profile"];
 
 const districtOptions = ["Alla", "Norrmalm", "Södermalm", "Vasastan", "Östermalm", "Kungsholmen", "Solna", "Sundbyberg"];
 const typeOptions = [
@@ -56,6 +58,232 @@ const typeOptions = [
   "Logistiklokal"
 ];
 const contractOptions = ["Alla", "Kort (0-6 mån)", "Mellan (6-12 mån)", "Lång (12+ mån)"];
+const publisherCompanyOptions = [
+  "Familjebostäder",
+  "Stadsholmen",
+  "Stockholmshem",
+  "Svenska Bostäder",
+  "SKB",
+  "Arbetarebostadsfonden",
+  "Drottninghuset",
+  "Bo Bra",
+  "Derbo Förvaltning",
+  "Franklin Fastigheter",
+  "Godsfinkan Hammarby",
+  "Hässelby Hem",
+  "Liljeroth Fastigheter",
+  "Liljeroth Fastighets AB",
+  "Magnussons Fastigheter",
+  "Pemox",
+  "Primula",
+  "Sigillet",
+  "Genesta",
+  "Hufvudstaden",
+  "Slussgården",
+  "Vasakronan",
+  "Einar Mattsson",
+  "Gyllenforsen Fastigheter",
+  "Holmström Gruppen",
+  "Malmegårds Fastigheter",
+  "MOFAB",
+  "Nordemo",
+  "Olov Lindgren",
+  "SM Fastigheter",
+  "Stockholms Studentbostäder (SSSB)",
+  "Micasa Fastigheter",
+  "SHIS Bostäder",
+  "Botkyrkabyggen",
+  "Ekerö Bostäder",
+  "Förvaltaren",
+  "Haninge Bostäder",
+  "Huge Bostäder",
+  "Järfällahus",
+  "Signalisten",
+  "SigtunaHem",
+  "Sollentunahem",
+  "Telge Bostäder",
+  "Tyresö Bostäder",
+  "Upplands-Brohus",
+  "Värmdöbostäder",
+  "Väsbyhem",
+  "Össebyhus",
+  "HSB Arlanda",
+  "HSB Stockholm",
+  "Riksbyggen",
+  "AB Flink & Partners",
+  "AB Karby Backa Fastigheter",
+  "Ankarbulten AB",
+  "Aspholmen Fastigheter",
+  "Backman",
+  "Baldersro AB",
+  "Bimery Fastigheter AB",
+  "Björn Isberg",
+  "Bladh Familjeinvest",
+  "Blom & Co",
+  "Bo i Väsby",
+  "Boetten AB",
+  "Bouwvei Vitnos AB",
+  "Bovisalhuset i Södertälje AB",
+  "Br A Fastigheter KB",
+  "Bro Byggnads AB",
+  "Bsf Förvaltning KB",
+  "ByggVesta",
+  "Byggvesta Bo Kajutan AB",
+  "Capicon Fastighets AB",
+  "Catalina Fastigheter",
+  "CJ Hall & Co",
+  "Claes Trollestad Förvaltning",
+  "Colive",
+  "Creantum Fastigheter AB",
+  "Develop Fastigheter AB",
+  "Ekhart Motor AB",
+  "Eric F. Ericson",
+  "Facasea AB",
+  "Faccita Förvaltnings AB",
+  "Fahlin Förvaltning",
+  "Fanerkompaniets Fastighets AB",
+  "Fastighets AB Blåtunga",
+  "Fastighets AB Thojan",
+  "Fastighets AB Varubalen",
+  "Fastighetsaktiebolaget Kvasten 8",
+  "Fastighetsaktiebolaget Poppeln",
+  "Fastighetsaktiebolaget Sycorax",
+  "Fastighetsförvaltnings AB Heimdall",
+  "Flodin",
+  "Framnäs Förvaltning i Lidingö/Stockholm",
+  "Fransbo HB",
+  "Frestahuset AB",
+  "Fundamentia",
+  "Förvaltningsaktiebolaget Kanalen",
+  "Gastir Fastigheter",
+  "GMS Sverige",
+  "Graflunds",
+  "Grannstalten AB",
+  "Gunnar Bystedt",
+  "Harry Berglund Förvaltning",
+  "HEBA",
+  "Heimstaden",
+  "HMCA Investment",
+  "Holmborn",
+  "Ikano Bostad",
+  "Inari AB",
+  "Intor Holding",
+  "Iverot",
+  "J. Ringborg AB",
+  "JCP Fastigheter KB",
+  "John Mattson",
+  "K2A",
+  "Kaptensvillan KB",
+  "Kommanditbolaget Bussningen",
+  "Kopparhus",
+  "Lindahl Görling",
+  "Linfast AB",
+  "Lunda Gård Förvaltnings AB",
+  "Lunden Care And Tech HB",
+  "Mandel Fastigheter",
+  "Markarydsbostäder i Södertälje AB",
+  "Marums Gård AB",
+  "Midano AB",
+  "Minifast",
+  "Mor Jacob Förvaltning AB",
+  "Månsbro Nr Fyra AB",
+  "Möller & Partner",
+  "Neidemans AB Fastigheter",
+  "Ove & Christina Ahlström AB",
+  "Parc De Chateau AB",
+  "Per Hans Fastigheter AB",
+  "Pertre AB",
+  "Ramsmora Investment AB",
+  "Råsunda Förstadsaktiebolag",
+  "Sjödin Fastigheter",
+  "Skäludden AB",
+  "Skålpundet Fastigheter AB",
+  "Slaghöken Fastighets AB",
+  "Slättö Bostad",
+  "Solnabostäder AB",
+  "Stånghammaren AB",
+  "Sveafastigheter",
+  "Svensk Villaförsäljning AB",
+  "Svenska Kulturhus",
+  "Swedinside Group",
+  "Tallquist Fastighets AB",
+  "Togust Fastigheter i Vaxholm AB",
+  "Torekälla Fastighets AB",
+  "Tornet",
+  "Tälleby Fastighet AB",
+  "Utvecklingspedagogik Förvaltning Sverige",
+  "Victoriahem",
+  "Viggbyholms Gård Fastighets AB",
+  "Vipra Tech",
+  "Värmdö-Ösby Fastighets AB",
+  "Wallfast",
+  "Weimer Fastighets AB",
+  "Wennerström",
+  "Wermelns Fastighets AB",
+  "Willhem",
+  "Åx Fastigheter HB",
+  "Telge Hovsjö",
+  "Svenska Hus",
+  "Fabege",
+  "Fastighetsägarna Service Stockholm",
+  "Humlegården",
+  "Skandia Fastigheter",
+  "Alecta Fastigheter",
+  "AMF Fastigheter",
+  "Atrium Ljungberg",
+  "Märsta Centrum AB",
+  "Lagerfastigheter Stockholm AB",
+  "Areim",
+  "Castellum",
+  "Catena",
+  "Corem",
+  "Fastpartner",
+  "Stendörren",
+  "Armada Fastighets AB",
+  "Värmdö Kommun Fastigheter",
+  "Akelius",
+  "Balder",
+  "Botrygg",
+  "Ekerö Mark & Fastighetsservice",
+  "Erstaviken Fastigheter",
+  "Företagssupport i Åkersberga AB",
+  "Gotlands Country Club AB",
+  "KF Fastigheter",
+  "L E Lundberg",
+  "Nordic Vicinity Group",
+  "Podium Fastigheter",
+  "Proventum",
+  "Rescado Fastigheter AB",
+  "Riflex",
+  "Solporten Fastighets AB",
+  "Stena Fastigheter",
+  "Vallentuna Rickeby 1:40 KB (BFBER Sweden/Savills)",
+  "Wallenstam",
+  "Wåhlin Fastigheter",
+  "Bonnier Fastigheter",
+  "Fastighetsägarna Stockholm AB",
+  "SBB",
+  "Telge Företags Invest",
+  "HGF Förvaltning i Åkersberga AB",
+  "Manzang Fastighetsförvaltning AB",
+  "Skellefteå Fastighetsförvaltning Komman",
+  "Stuckteknik Fastighetsförvaltning AB",
+  "Svealands Förvaltning AB",
+  "Nykvarnsbostäder",
+  "Roslagsbostäder",
+  "Edsbro Hyresfastigheter AB",
+  "Herräng i Norrtälje Fastighets AB",
+  "Häveröhus AB",
+  "KJ Förvaltning AB",
+  "MälarBo",
+  "Skebobruk Hyresfastigheter AB",
+  "Tre Rospiggar AB",
+  "Norrtälje Roslagsmark AB",
+  "Millny Förvaltning AB",
+];
+const publisherPortfolioOptions = ["1-10 objekt", "11-50 objekt", "51-200 objekt", "200+ objekt"];
+const companyAdminCompanyTypeOptions = ["Privat fastighetsbolag", "Kommunalt bostadsbolag", "Kommersiell förvaltare", "Bostadsutvecklare", "Blandad portfölj"];
+const companyAdminPortfolioOptions = ["1-10 fastigheter", "11-50 fastigheter", "51-200 fastigheter", "200+ fastigheter"];
 const transitOptions = ["Alla", "0-300 meter", "0-600 meter", "0-1000 meter", "0-1100 meter"];
 const parkingOptions = ["Alla", "Ingen preferens", "Bilparkering", "Laddplats", "Garage"];
 const layoutOptions = ["Alla", "Öppet landskap", "Mixat", "Cellkontor", "Flexibelt"];
@@ -135,8 +363,21 @@ function parseDistrictSelection(rawDistrict) {
   return values.length > 0 ? values : ["Alla"];
 }
 
+function buildInviteCode(companyName = "") {
+  const normalized = String(companyName || "")
+    .trim()
+    .toUpperCase()
+    .replace(/AB$|AKTIEBOLAG$/g, "")
+    .replace(/[^A-Z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 12) || "BOLAG";
+  return `${normalized}-2026-XK9`;
+}
+
 function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
-  const [primaryRole, setPrimaryRole] = useState(user?.role === "publisher" ? "publisher" : "renter");
+  const [primaryRole, setPrimaryRole] = useState(
+    user?.role === "publisher" || user?.role === "company_admin" ? user.role : "renter"
+  );
   const [account, setAccount] = useState({
     name: user?.name || "",
     email: user?.email || "",
@@ -167,8 +408,44 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
     propertyType: user?.profile?.propertyType || "",
     legalEntity: user?.profile?.legalEntity || "",
     contactRole: user?.profile?.contactRole || "",
-    portfolioSize: user?.profile?.portfolioSize || ""
+    portfolioSize: user?.profile?.portfolioSize || "",
+    fmiNumber: user?.profile?.fmiNumber || "",
+    verificationMethod: user?.profile?.verificationMethod || "invite_code",
+    inviteCode: user?.profile?.inviteCode || "",
+    workEmailDomain: user?.profile?.workEmailDomain || "",
+    termsEmployerAuthority: Boolean(user?.profile?.termsEmployerAuthority),
+    termsPublishingRules: Boolean(user?.profile?.termsPublishingRules),
+    termsSuspensionAware: Boolean(user?.profile?.termsSuspensionAware)
   });
+  const [publisherFlowStep, setPublisherFlowStep] = useState(0);
+  const [companyAdminProfile, setCompanyAdminProfile] = useState({
+    legalEntity: user?.profile?.legalEntity || "",
+    organizationNumber: user?.profile?.organizationNumber || "",
+    companyType: user?.profile?.companyType || "",
+    portfolioSize: user?.profile?.portfolioSize || "",
+    logoUrl: user?.profile?.logoUrl || "",
+    companyDescription: user?.profile?.companyDescription || "",
+    websiteUrl: user?.profile?.websiteUrl || "",
+    contactEmail: user?.profile?.contactEmail || user?.email || "",
+    approvedEmailDomain: user?.profile?.approvedEmailDomain || "",
+    inviteCode: user?.profile?.inviteCode || buildInviteCode(user?.profile?.legalEntity || ""),
+    inviteEmail: "",
+    inviteRole: user?.profile?.inviteRole || "Mäklare",
+    invitedMembers: Array.isArray(user?.profile?.invitedMembers) ? user.profile.invitedMembers : [
+      { name: "Anna Lindqvist", email: "anna.lindqvist@rikshem.se", status: "Väntar" },
+      { name: "Erik Holm", email: "erik.holm@rikshem.se", status: "Väntar" }
+    ],
+    approvalFlow: user?.profile?.approvalFlow || "admin_approves_broker",
+    listingModeration: user?.profile?.listingModeration || "broker_publishes_direct",
+    termsAdminAuthority: Boolean(user?.profile?.termsAdminAuthority),
+    termsPlatformRules: Boolean(user?.profile?.termsPlatformRules)
+  });
+  const [companyAdminFlowStep, setCompanyAdminFlowStep] = useState(0);
+  const [companyAdminActivationComplete, setCompanyAdminActivationComplete] = useState(false);
+  const [companyAdminInviteCodeCopied, setCompanyAdminInviteCodeCopied] = useState(false);
+  const [publisherCompanyQuery, setPublisherCompanyQuery] = useState(user?.profile?.legalEntity || "");
+  const [showPublisherCompanyMenu, setShowPublisherCompanyMenu] = useState(false);
+  const [isPublisherCompanyEditing, setIsPublisherCompanyEditing] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const [showProgramInfoCard, setShowProgramInfoCard] = useState(true);
@@ -191,6 +468,7 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
       if (draft?.account) setAccount((previous) => ({ ...previous, ...draft.account }));
       if (draft?.renterProgram) setRenterProgram((previous) => ({ ...previous, ...draft.renterProgram }));
       if (draft?.publisherProfile) setPublisherProfile((previous) => ({ ...previous, ...draft.publisherProfile }));
+      if (draft?.companyAdminProfile) setCompanyAdminProfile((previous) => ({ ...previous, ...draft.companyAdminProfile }));
     } catch (_error) {
       // ignore invalid local draft
     }
@@ -201,28 +479,33 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
       primaryRole,
       account,
       renterProgram,
-      publisherProfile
+      publisherProfile,
+      companyAdminProfile
     };
     window.localStorage.setItem(draftStorageKey, JSON.stringify(payload));
-  }, [draftStorageKey, primaryRole, account, renterProgram, publisherProfile]);
+  }, [draftStorageKey, primaryRole, account, renterProgram, publisherProfile, companyAdminProfile]);
 
   useEffect(() => {
     setShowSizeRecommendationCard(true);
   }, [selectedProgramType, renterProgram.teamSize]);
 
   useEffect(() => {
+    setPublisherCompanyQuery(user?.profile?.legalEntity || "");
+  }, [user?.profile?.legalEntity]);
+
+  useEffect(() => {
     if (pathname === "/onboarding") {
-      const firstStep = primaryRole === "publisher" ? "publisher-profile" : "program-core";
+      const firstStep = primaryRole === "publisher" ? "publisher-profile" : primaryRole === "company_admin" ? "company-admin-profile" : "program-core";
       navigateTo(`/onboarding/${firstStep}`, { replace: true });
     }
   }, [pathname, primaryRole]);
 
   const routeStep = useMemo(() => {
     const parts = String(pathname || "").split("/").filter(Boolean);
-    return parts[1] || (primaryRole === "publisher" ? "publisher-profile" : "program-core");
+    return parts[1] || (primaryRole === "publisher" ? "publisher-profile" : primaryRole === "company_admin" ? "company-admin-profile" : "program-core");
   }, [pathname, primaryRole]);
 
-  const activeSteps = primaryRole === "publisher" ? PUBLISHER_STEPS : RENTER_STEPS;
+  const activeSteps = primaryRole === "publisher" ? PUBLISHER_STEPS : primaryRole === "company_admin" ? COMPANY_ADMIN_STEPS : RENTER_STEPS;
   const stepIndex = Math.max(0, activeSteps.indexOf(routeStep));
   const currentStep = activeSteps[stepIndex] || activeSteps[0];
 
@@ -237,11 +520,27 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
   }
 
   function goNext() {
+    if (currentStep === "publisher-profile") {
+      setPublisherFlowStep((current) => Math.min(2, current + 1));
+      return;
+    }
+    if (currentStep === "company-admin-profile") {
+      setCompanyAdminFlowStep((current) => Math.min(3, current + 1));
+      return;
+    }
     const nextIndex = Math.min(activeSteps.length - 1, stepIndex + 1);
     gotoStep(activeSteps[nextIndex]);
   }
 
   function goBack() {
+    if (currentStep === "publisher-profile" && publisherFlowStep > 0) {
+      setPublisherFlowStep((current) => Math.max(0, current - 1));
+      return;
+    }
+    if (currentStep === "company-admin-profile" && companyAdminFlowStep > 0) {
+      setCompanyAdminFlowStep((current) => Math.max(0, current - 1));
+      return;
+    }
     if (stepIndex === 0) {
       navigateTo(`/signup?step=details&role=${primaryRole}`);
       return;
@@ -249,6 +548,12 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
     const prevIndex = Math.max(0, stepIndex - 1);
     gotoStep(activeSteps[prevIndex]);
   }
+
+  const publisherCompanySuggestions = useMemo(() => {
+    const query = String(publisherCompanyQuery || "").trim().toLowerCase();
+    if (!query) return publisherCompanyOptions;
+    return publisherCompanyOptions.filter((company) => company.toLowerCase().includes(query));
+  }, [publisherCompanyQuery]);
 
   function toggleProgramAmenity(amenityValue) {
     setRenterProgram((prev) => {
@@ -330,6 +635,12 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
               preferredAreas: renterProgram.district || "Alla",
               moveInTimeline: renterProgram.moveInDate || ""
             }
+          : primaryRole === "company_admin"
+            ? {
+                ...companyAdminProfile,
+                inviteEmail: "",
+                inviteRole: "Mäklare"
+              }
           : {
               ...publisherProfile
             };
@@ -341,7 +652,11 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
       });
 
       window.localStorage.removeItem(draftStorageKey);
-      navigateTo("/app/profile");
+      if (primaryRole === "company_admin") {
+        setCompanyAdminActivationComplete(true);
+      } else {
+        navigateTo("/app/profile");
+      }
     } catch (submitError) {
       setError(submitError.message || "Kunde inte slutföra introduktionen.");
     } finally {
@@ -352,6 +667,7 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
   const stepMeta = {
     "program-core": { title: "Lokalprogram", subtitle: "Grundkrav för vad ni söker." },
     "publisher-profile": { title: "Profil", subtitle: "Berätta mer om din publicering." },
+    "company-admin-profile": { title: "Bolagsadmin", subtitle: "Ställ in bolag, profil och publicering." },
     review: { title: "Klar", subtitle: "Granska innan du slutför." }
   };
 
@@ -377,15 +693,77 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
     { label: "Parkering", value: renterProgram.parkingType || "Alla", Icon: CarIcon },
     { label: "Preferenser", value: preferenceLabel, Icon: LightbulbIcon }
   ];
+  const publisherStepDots = [0, 1, 2];
+  const publisherVerificationMethodCards = [
+    {
+      key: "invite_code",
+      title: "Inbjudningskod",
+      description: "Ange koden du fått från din arbetsgivare",
+      badge: "Rekommenderat",
+      Icon: ShieldIcon
+    },
+    {
+      key: "email_domain",
+      title: "E-postdomän",
+      description: "Verifiera via din jobbmejladress",
+      Icon: BuildingIcon
+    },
+    {
+      key: "manual_review",
+      title: "Manuell granskning",
+      description: "Vi granskar din ansökan inom 1-2 arbetsdagar",
+      Icon: UserIcon
+    }
+  ];
+  const canAdvancePublisherFlow =
+    publisherFlowStep === 0
+      ? Boolean(publisherProfile.propertyType && publisherProfile.legalEntity && publisherProfile.portfolioSize)
+      : publisherFlowStep === 1
+        ? Boolean(
+          publisherProfile.verificationMethod === "invite_code"
+            ? publisherProfile.inviteCode
+            : publisherProfile.verificationMethod === "email_domain"
+              ? publisherProfile.workEmailDomain
+              : true
+        )
+        : Boolean(
+          publisherProfile.termsEmployerAuthority &&
+          publisherProfile.termsPublishingRules &&
+          publisherProfile.termsSuspensionAware
+        );
+  const canAdvanceCompanyAdminFlow =
+    companyAdminFlowStep === 0
+      ? Boolean(companyAdminProfile.legalEntity && companyAdminProfile.organizationNumber && companyAdminProfile.companyType && companyAdminProfile.portfolioSize)
+      : companyAdminFlowStep === 1
+        ? Boolean(companyAdminProfile.companyDescription && companyAdminProfile.websiteUrl && companyAdminProfile.contactEmail)
+        : companyAdminFlowStep === 2
+          ? Boolean(companyAdminProfile.inviteCode)
+          : Boolean(
+            companyAdminProfile.approvalFlow &&
+            companyAdminProfile.listingModeration &&
+            companyAdminProfile.termsAdminAuthority &&
+            companyAdminProfile.termsPlatformRules
+          );
+  const hasSelectedPublisherCompany = Boolean(
+    publisherProfile.legalEntity &&
+    publisherCompanyQuery &&
+    publisherProfile.legalEntity === publisherCompanyQuery
+  );
+  const lockPublisherCompanyField = hasSelectedPublisherCompany && !isPublisherCompanyEditing;
+  const companyAdminStepDots = [0, 1, 2, 3];
 
   return (
     <main className="grid min-h-screen content-start justify-items-center bg-white px-4 pb-8 pt-28">
       <AuthFlowNav />
-      <div className="w-full max-w-[980px]">
+      <div className="w-full max-w-[760px]">
         <section className="rounded-[30px] border border-black/10 bg-white px-6 py-7 sm:px-7 sm:py-8">
-          <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Steg {stepIndex + 1} av {activeSteps.length}</p>
-          <h1 className="mt-2 text-[1.95rem] font-semibold leading-tight text-[#0f1930]">{currentMeta.title}</h1>
-          <p className="mt-1 text-sm text-ink-600">{currentMeta.subtitle}</p>
+          {!(currentStep === "publisher-profile" || currentStep === "company-admin-profile") ? (
+            <>
+              <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Steg {stepIndex + 1} av {activeSteps.length}</p>
+              <h1 className="mt-2 text-[1.95rem] font-semibold leading-tight text-[#0f1930]">{currentMeta.title}</h1>
+              <p className="mt-1 text-sm text-ink-600">{currentMeta.subtitle}</p>
+            </>
+          ) : null}
 
           <div className="mt-5 space-y-3">
             {currentStep === "program-core" ? (
@@ -710,11 +1088,700 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
             ) : null}
 
             {currentStep === "publisher-profile" ? (
-              <div className="grid gap-3">
-                <input className="field" value={publisherProfile.propertyType} onChange={(event) => setPublisherProfile((prev) => ({ ...prev, propertyType: event.target.value }))} placeholder="Fastighetstyp" />
-                <input className="field" value={publisherProfile.legalEntity} onChange={(event) => setPublisherProfile((prev) => ({ ...prev, legalEntity: event.target.value }))} placeholder="Juridisk enhet" />
-                <input className="field" value={publisherProfile.contactRole} onChange={(event) => setPublisherProfile((prev) => ({ ...prev, contactRole: event.target.value }))} placeholder="Din roll" />
-                <input className="field" value={publisherProfile.portfolioSize} onChange={(event) => setPublisherProfile((prev) => ({ ...prev, portfolioSize: event.target.value }))} placeholder="Portföljstorlek" />
+              <div className="space-y-6">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Steg {publisherFlowStep + 1} av 3</p>
+                  <h1 className="mt-2 text-[1.95rem] font-semibold leading-tight text-[#0f1930]">
+                    {publisherFlowStep === 0 ? "Profil" : publisherFlowStep === 1 ? "Verifiering" : "Villkor"}
+                  </h1>
+                  <p className="mt-1 text-sm text-ink-600">
+                    {publisherFlowStep === 0
+                      ? "Berätta mer om din publicering."
+                      : publisherFlowStep === 1
+                        ? "Vi behöver bekräfta att du arbetar på det valda bolaget."
+                        : "Granska och godkänn innan du börjar publicera."}
+                  </p>
+                </div>
+
+                {publisherFlowStep === 0 ? (
+                  <div className="grid gap-4">
+                    <div className="grid max-w-[75%] gap-1.5">
+                      <span className="text-sm font-semibold text-ink-700">Fastighetsbolag</span>
+                      <div className="relative">
+                        <input
+                          className={`field ${lockPublisherCompanyField ? "cursor-pointer text-transparent caret-transparent" : ""}`}
+                          value={publisherCompanyQuery}
+                          placeholder="Sök bland registrerade bolag"
+                          readOnly={lockPublisherCompanyField}
+                          onFocus={() => {
+                            if (!lockPublisherCompanyField) {
+                              setIsPublisherCompanyEditing(true);
+                              setShowPublisherCompanyMenu(true);
+                            }
+                          }}
+                          onClick={() => {
+                            if (lockPublisherCompanyField) {
+                              setIsPublisherCompanyEditing(true);
+                              setShowPublisherCompanyMenu(true);
+                            }
+                          }}
+                          onChange={(event) => {
+                            const value = event.target.value;
+                            setIsPublisherCompanyEditing(true);
+                            setPublisherCompanyQuery(value);
+                            setPublisherProfile((prev) => ({ ...prev, legalEntity: value }));
+                            setShowPublisherCompanyMenu(true);
+                          }}
+                          onBlur={() => {
+                            setIsPublisherCompanyEditing(false);
+                            window.setTimeout(() => setShowPublisherCompanyMenu(false), 120);
+                          }}
+                        />
+                        {lockPublisherCompanyField ? (
+                          <div className="absolute inset-y-0 left-4 flex items-center">
+                            <button
+                              type="button"
+                              aria-label="Rensa valt fastighetsbolag"
+                              className="inline-flex items-center gap-2 text-left"
+                              onMouseDown={(event) => {
+                                event.preventDefault();
+                                setPublisherCompanyQuery("");
+                                setPublisherProfile((prev) => ({ ...prev, legalEntity: "" }));
+                                setIsPublisherCompanyEditing(true);
+                                setShowPublisherCompanyMenu(true);
+                              }}
+                            >
+                              <span className="text-[15px] font-medium text-ink-900">{publisherCompanyQuery}</span>
+                              <span className="inline-flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full bg-[#f3f4f6] p-0 text-[14px] font-medium leading-none text-[#8f949b] transition hover:bg-[#eceef1]">
+                                ×
+                              </span>
+                            </button>
+                          </div>
+                        ) : null}
+                        {showPublisherCompanyMenu && publisherCompanySuggestions.length ? (
+                          <div className="absolute z-10 mt-2 max-h-[320px] w-full overflow-y-auto rounded-2xl border border-black/10 bg-white p-3 shadow-[0_16px_40px_rgba(15,25,48,0.12)]">
+                            {publisherCompanySuggestions.map((company) => (
+                              <button
+                                key={company}
+                                type="button"
+                                className="menu-hover-row flex w-full items-center px-4 py-3 text-left text-sm font-semibold text-ink-700 transition hover:bg-black/5"
+                                onMouseDown={(event) => {
+                                  event.preventDefault();
+                                  setPublisherCompanyQuery(company);
+                                  setPublisherProfile((prev) => ({ ...prev, legalEntity: company }));
+                                  setIsPublisherCompanyEditing(false);
+                                  setShowPublisherCompanyMenu(false);
+                                }}
+                              >
+                                {company}
+                              </button>
+                            ))}
+                          </div>
+                        ) : null}
+                      </div>
+                      <p className="text-sm text-ink-500">Hittar du inte ditt bolag? <button type="button" className="font-semibold text-[#0f1930] underline underline-offset-2">Kontakta oss</button> så lägger vi till det.</p>
+                    </div>
+
+                    <div className="grid gap-4 md:grid-cols-2 md:items-start">
+                      <label className="grid gap-1.5">
+                        <span className="text-sm font-semibold text-ink-700">Typ av lokal</span>
+                        <select
+                          className="field select-chevron"
+                          value={publisherProfile.propertyType}
+                          onChange={(event) => setPublisherProfile((prev) => ({ ...prev, propertyType: event.target.value }))}
+                        >
+                          <option value="">Välj typ</option>
+                          {typeOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+                        </select>
+                      </label>
+
+                      <label className="grid gap-1.5">
+                        <span className="text-sm font-semibold text-ink-700">Portföljstorlek</span>
+                        <select
+                          className="field select-chevron"
+                          value={publisherProfile.portfolioSize}
+                          onChange={(event) => setPublisherProfile((prev) => ({ ...prev, portfolioSize: event.target.value }))}
+                        >
+                          <option value="">Antal objekt du hanterar</option>
+                          {publisherPortfolioOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+                        </select>
+                      </label>
+                    </div>
+                  </div>
+                ) : null}
+
+                {publisherFlowStep === 1 ? (
+                  <div className="space-y-5">
+                    <div className="grid gap-1.5">
+                      <span className="text-sm font-semibold text-ink-700">Fastighetsmäklarnummer (FMI)</span>
+                      <input
+                        className="field"
+                        value={publisherProfile.fmiNumber}
+                        onChange={(event) => setPublisherProfile((prev) => ({ ...prev, fmiNumber: event.target.value }))}
+                        placeholder="t.ex. 20230456"
+                      />
+                      <p className="text-sm text-ink-500">Kontrolleras mot Fastighetsmäklarinspektionens register.</p>
+                    </div>
+
+                    <div className="border-t border-black/10 pt-5">
+                      <p className="text-sm font-semibold text-ink-700">Hur vill du verifiera din anknytning till bolaget?</p>
+                      <div className="mt-3 space-y-3">
+                        {publisherVerificationMethodCards.map(({ key, title, description, badge, Icon }) => {
+                          const active = publisherProfile.verificationMethod === key;
+                          return (
+                            <div
+                              key={key}
+                              className={`rounded-2xl border p-4 transition ${active ? "border-[#0f1930] bg-[#f8fafc]" : "border-black/10 bg-white"}`}
+                            >
+                              <button
+                                type="button"
+                                className="flex w-full items-start gap-3 text-left"
+                                onClick={() => setPublisherProfile((prev) => ({ ...prev, verificationMethod: key }))}
+                              >
+                                <span className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border ${active ? "border-[#0f1930] bg-white text-[#0f1930]" : "border-black/10 bg-white text-ink-700"}`}>
+                                  <Icon className="h-4 w-4" />
+                                </span>
+                                <span className="min-w-0 flex-1">
+                                  <span className="flex flex-wrap items-center gap-2">
+                                    <span className="text-base font-semibold text-[#0f1930]">{title}</span>
+                                    {badge ? <span className="rounded-full bg-[#dff4d8] px-2 py-0.5 text-[11px] font-semibold text-[#3f7f2d]">{badge}</span> : null}
+                                  </span>
+                                  <span className="mt-0.5 block text-sm text-ink-600">{description}</span>
+                                </span>
+                              </button>
+
+                              {active && key === "invite_code" ? (
+                                <input
+                                  className="field mt-3"
+                                  value={publisherProfile.inviteCode}
+                                  onChange={(event) => setPublisherProfile((prev) => ({ ...prev, inviteCode: event.target.value }))}
+                                  placeholder="t.ex. RIKSHEM-2024-XK9"
+                                />
+                              ) : null}
+
+                              {active && key === "email_domain" ? (
+                                <input
+                                  className="field mt-3"
+                                  value={publisherProfile.workEmailDomain}
+                                  onChange={(event) => setPublisherProfile((prev) => ({ ...prev, workEmailDomain: event.target.value }))}
+                                  placeholder="t.ex. @rikshem.se"
+                                />
+                              ) : null}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+
+                {publisherFlowStep === 2 ? (
+                  <div className="space-y-4 pt-1">
+                    <label className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        className="h-5 w-5 shrink-0 rounded border-black/20"
+                        checked={publisherProfile.termsEmployerAuthority}
+                        onChange={(event) => setPublisherProfile((prev) => ({ ...prev, termsEmployerAuthority: event.target.checked }))}
+                      />
+                      <span className="text-[0.88rem] leading-snug text-ink-700">Jag intygar att jag är anställd på det valda fastighetsbolaget och har rätt att publicera annonser för bolagets räkning.</span>
+                    </label>
+                    <label className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        className="h-5 w-5 shrink-0 rounded border-black/20"
+                        checked={publisherProfile.termsPublishingRules}
+                        onChange={(event) => setPublisherProfile((prev) => ({ ...prev, termsPublishingRules: event.target.checked }))}
+                      />
+                      <span className="flex-1 text-[0.88rem] leading-snug text-ink-700">Jag har läst och godkänner plattformens <button type="button" className="font-semibold text-[#0f1930] underline underline-offset-2">publiceringsregler</button> och <button type="button" className="font-semibold text-[#0f1930] underline underline-offset-2">användarvillkor</button>.</span>
+                    </label>
+                    <label className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        className="h-5 w-5 shrink-0 rounded border-black/20"
+                        checked={publisherProfile.termsSuspensionAware}
+                        onChange={(event) => setPublisherProfile((prev) => ({ ...prev, termsSuspensionAware: event.target.checked }))}
+                      />
+                      <span className="text-[0.88rem] leading-snug text-ink-700">Jag förstår att mitt konto kan spärras av bolagsadmin eller plattformen om reglerna inte följs.</span>
+                    </label>
+                  </div>
+                ) : null}
+
+                <div className="flex items-center justify-between border-t border-black/10 pt-5">
+                  <button
+                    type="button"
+                    className="inline-flex min-h-0 min-w-[132px] items-center justify-center rounded-full border border-black/20 bg-white px-4 py-2 text-xs font-semibold text-ink-700 disabled:opacity-50"
+                    onClick={goBack}
+                    disabled={pending}
+                  >
+                    Föregående
+                  </button>
+
+                  <div className="flex items-center gap-2">
+                    {publisherStepDots.map((dot) => (
+                      <span key={dot} className={`h-2.5 rounded-full transition-all ${dot === publisherFlowStep ? "w-7 bg-[#0f1930]" : "w-2.5 bg-black/15"}`} />
+                    ))}
+                  </div>
+
+                  <button
+                    type="button"
+                    className="inline-flex min-h-0 min-w-[132px] items-center justify-center rounded-full border border-[#0f1930] bg-[#0f1930] px-4 py-2 text-xs font-semibold text-white disabled:opacity-50"
+                    onClick={publisherFlowStep === 2 ? () => gotoStep("review") : goNext}
+                    disabled={pending || !canAdvancePublisherFlow}
+                  >
+                    Nästa
+                  </button>
+                </div>
+              </div>
+            ) : null}
+
+            {currentStep === "company-admin-profile" ? (
+              <div className="space-y-6">
+                {companyAdminActivationComplete ? (
+                  <div className="space-y-6 py-6 text-center">
+                    <div className="mx-auto inline-flex h-16 w-16 items-center justify-center rounded-full bg-[#2f6b16] text-white">
+                      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-7 w-7">
+                        <path d="M5.5 12.5l4 4 9-9" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h1 className="text-[2.2rem] font-semibold leading-tight text-[#0f1930]">
+                        {companyAdminProfile.legalEntity || "Bolaget"} är aktivt
+                      </h1>
+                      <p className="mx-auto mt-3 max-w-[640px] text-[1.1rem] leading-relaxed text-ink-600">
+                        Ert bolag är nu synligt på plattformen. Mäklare som fått inbjudan kan börja registrera sig.
+                      </p>
+                    </div>
+                    <div className="mx-auto flex w-full max-w-[640px] flex-col gap-3">
+                      <button
+                        type="button"
+                        className="btn-primary w-full py-3 text-base"
+                        onClick={() => navigateTo("/app/my-listings")}
+                      >
+                        Gå till admin-panelen
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-secondary w-full py-3 text-base"
+                        onClick={() => navigateTo("/app/profile")}
+                      >
+                        Visa admin-panelen
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Steg {companyAdminFlowStep + 1} av 4</p>
+                      <h1 className="mt-2 text-[1.95rem] font-semibold leading-tight text-[#0f1930]">
+                        {companyAdminFlowStep === 0
+                          ? "Bolagsprofil"
+                          : companyAdminFlowStep === 1
+                            ? "Profil och varumärke"
+                            : companyAdminFlowStep === 2
+                              ? "Bjud in mäklare"
+                              : "Publiceringsinställningar"}
+                      </h1>
+                      <p className="mt-1 text-sm text-ink-600">
+                        {companyAdminFlowStep === 0
+                          ? "Grundläggande information om er organisation."
+                          : companyAdminFlowStep === 1
+                            ? "Hur ert bolag visas på plattformen."
+                            : companyAdminFlowStep === 2
+                              ? "Sätt upp hur era mäklare kommer in på plattformen."
+                              : "Bestäm hur mäklare publicerar under ert bolag."}
+                      </p>
+                    </div>
+
+                    {companyAdminFlowStep === 0 ? (
+                      <div className="grid gap-4">
+                        <div className="grid gap-4 md:grid-cols-2">
+                          <label className="grid gap-1.5">
+                            <span className="text-sm font-semibold text-ink-700">Organisationsnummer</span>
+                            <input
+                              className="field"
+                              value={companyAdminProfile.organizationNumber}
+                              onChange={(event) => setCompanyAdminProfile((prev) => ({ ...prev, organizationNumber: event.target.value }))}
+                              placeholder="556xxx-xxxx"
+                            />
+                          </label>
+
+                          <label className="grid gap-1.5">
+                            <span className="text-sm font-semibold text-ink-700">Bolagets namn</span>
+                            <input
+                              className="field"
+                              value={companyAdminProfile.legalEntity}
+                              onChange={(event) => setCompanyAdminProfile((prev) => ({
+                                ...prev,
+                                legalEntity: event.target.value,
+                                inviteCode: buildInviteCode(event.target.value)
+                              }))}
+                              placeholder="t.ex. Rikshem AB"
+                            />
+                          </label>
+                        </div>
+
+                        <p className="-mt-1 text-sm text-ink-500">Verifieras mot Bolagsverket för att bekräfta att bolaget existerar.</p>
+
+                        <div className="grid gap-4 md:grid-cols-2">
+                          <label className="grid gap-1.5">
+                            <span className="text-sm font-semibold text-ink-700">Typ av fastighetsbolag</span>
+                            <select
+                              className="field select-chevron"
+                              value={companyAdminProfile.companyType}
+                              onChange={(event) => setCompanyAdminProfile((prev) => ({ ...prev, companyType: event.target.value }))}
+                            >
+                              <option value="">Välj typ</option>
+                              {companyAdminCompanyTypeOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+                            </select>
+                          </label>
+
+                          <label className="grid gap-1.5">
+                            <span className="text-sm font-semibold text-ink-700">Antal fastigheter i portföljen</span>
+                            <select
+                              className="field select-chevron"
+                              value={companyAdminProfile.portfolioSize}
+                              onChange={(event) => setCompanyAdminProfile((prev) => ({ ...prev, portfolioSize: event.target.value }))}
+                            >
+                              <option value="">Ungefärlig storlek</option>
+                              {companyAdminPortfolioOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+                            </select>
+                          </label>
+                        </div>
+                      </div>
+                    ) : null}
+
+                    {companyAdminFlowStep === 1 ? (
+                      <div className="grid gap-4">
+                        <div className="grid gap-1.5">
+                          <span className="text-sm font-semibold text-ink-700">Logotyp</span>
+                          <label className="flex min-h-[132px] cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-black/15 bg-[#fafafa] px-5 py-6 text-center transition hover:bg-black/5">
+                            <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-black/10 bg-white text-ink-700">
+                              <ArrowUpIcon className="h-4 w-4" />
+                            </span>
+                            <span className="mt-3 text-base font-semibold text-ink-700">Dra och släpp eller klicka för att ladda upp</span>
+                            <span className="mt-1 text-sm text-ink-500">PNG eller SVG · max 2 MB · rekommenderat 400 × 400 px</span>
+                            <input
+                              type="file"
+                              accept="image/png,image/svg+xml,image/jpeg,image/webp"
+                              className="hidden"
+                              onChange={async (event) => {
+                                const file = event.target.files?.[0];
+                                if (!file) return;
+                                const reader = new FileReader();
+                                reader.onload = () => {
+                                  setCompanyAdminProfile((prev) => ({ ...prev, logoUrl: String(reader.result || "") }));
+                                };
+                                reader.readAsDataURL(file);
+                              }}
+                            />
+                          </label>
+                        </div>
+
+                        <label className="grid gap-1.5">
+                          <span className="text-sm font-semibold text-ink-700">Bolagsbeskrivning</span>
+                          <textarea
+                            className="field min-h-28 resize-none py-3"
+                            value={companyAdminProfile.companyDescription}
+                            onChange={(event) => setCompanyAdminProfile((prev) => ({ ...prev, companyDescription: event.target.value }))}
+                            placeholder="Kort beskrivning av ert bolag och er verksamhet..."
+                          />
+                          <p className="text-sm text-ink-500">Visas på er bolagssida för hyresgäster och mäklare.</p>
+                        </label>
+
+                        <div className="grid gap-4 md:grid-cols-2">
+                          <label className="grid gap-1.5">
+                            <span className="text-sm font-semibold text-ink-700">Webbplats</span>
+                            <input
+                              className="field"
+                              value={companyAdminProfile.websiteUrl}
+                              onChange={(event) => setCompanyAdminProfile((prev) => ({ ...prev, websiteUrl: event.target.value }))}
+                              placeholder="https://rikshem.se"
+                            />
+                          </label>
+
+                          <label className="grid gap-1.5">
+                            <span className="text-sm font-semibold text-ink-700">Kontakt-e-post (synlig på plattformen)</span>
+                            <input
+                              className="field"
+                              type="email"
+                              value={companyAdminProfile.contactEmail}
+                              onChange={(event) => setCompanyAdminProfile((prev) => ({ ...prev, contactEmail: event.target.value }))}
+                              placeholder="kontakt@rikshem.se"
+                            />
+                          </label>
+                        </div>
+                      </div>
+                    ) : null}
+
+                    {companyAdminFlowStep === 2 ? (
+                      <div className="space-y-5">
+                        <div className="rounded-2xl border border-[#2563eb]/15 bg-[#eff6ff] px-4 py-3 text-sm leading-relaxed text-[#36568a]">
+                          Mäklare kan gå med via inbjudningskod eller via er e-postdomän. Ni kan alltid bjuda in fler senare från er admin-panel.
+                        </div>
+
+                        <label className="grid gap-1.5">
+                          <span className="text-sm font-semibold text-ink-700">Godkänd e-postdomän</span>
+                          <input
+                            className="field"
+                            value={companyAdminProfile.approvedEmailDomain}
+                            onChange={(event) => setCompanyAdminProfile((prev) => ({ ...prev, approvedEmailDomain: event.target.value }))}
+                            placeholder="@rikshem.se"
+                          />
+                          <p className="text-sm text-ink-500">Mäklare med matchande jobbmejl verifieras automatiskt utan kod.</p>
+                        </label>
+
+                        <div className="rounded-2xl border border-black/10 bg-[#fafafa] px-4 py-4">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="min-w-0">
+                              <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Inbjudningskod · giltig i 30 dagar</p>
+                              <p className="mt-2 text-[1.35rem] font-semibold text-[#0f1930]">{companyAdminProfile.inviteCode}</p>
+                              <p className="mt-1 text-sm text-ink-500">Dela med era mäklare via e-post eller internt system.</p>
+                            </div>
+                            <div className="flex shrink-0 items-center gap-2">
+                              <button
+                                type="button"
+                                className="btn-secondary px-3 py-1.5 text-xs"
+                                onClick={async () => {
+                                  try {
+                                    await navigator.clipboard.writeText(companyAdminProfile.inviteCode);
+                                    setCompanyAdminInviteCodeCopied(true);
+                                    window.setTimeout(() => setCompanyAdminInviteCodeCopied(false), 1800);
+                                  } catch (_error) {
+                                    // no-op in fallback environments
+                                  }
+                                }}
+                              >
+                                <span className="inline-flex items-center gap-1.5">
+                                  {companyAdminInviteCodeCopied ? (
+                                    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-3.5 w-3.5">
+                                      <path d="M5.5 12.5l4 4 9-9" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                  ) : (
+                                    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-3.5 w-3.5">
+                                      <path d="M9 9.75A2.75 2.75 0 0 1 11.75 7h6.5A2.75 2.75 0 0 1 21 9.75v8.5A2.75 2.75 0 0 1 18.25 21h-6.5A2.75 2.75 0 0 1 9 18.25z" fill="none" stroke="currentColor" strokeWidth="1.8" />
+                                      <path d="M15 7V5.75A2.75 2.75 0 0 0 12.25 3h-6.5A2.75 2.75 0 0 0 3 5.75v8.5A2.75 2.75 0 0 0 5.75 17H9" fill="none" stroke="currentColor" strokeWidth="1.8" />
+                                    </svg>
+                                  )}
+                                  {companyAdminInviteCodeCopied ? "Kopierad" : "Kopiera"}
+                                </span>
+                              </button>
+                              <button
+                                type="button"
+                                className="btn-secondary px-3 py-1.5 text-xs"
+                                onClick={() => setCompanyAdminProfile((prev) => ({ ...prev, inviteCode: buildInviteCode(`${prev.legalEntity}-${Date.now()}`) }))}
+                              >
+                                <span className="inline-flex items-center gap-1.5">
+                                  <span aria-hidden="true" className="text-sm leading-none">+</span>
+                                  Ny kod
+                                </span>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="border-t border-black/10 pt-5">
+                          <p className="text-sm font-semibold text-ink-700">Bjud in direkt via e-post</p>
+                          <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_160px]">
+                            <input
+                              className="field"
+                              type="email"
+                              value={companyAdminProfile.inviteEmail}
+                              onChange={(event) => setCompanyAdminProfile((prev) => ({ ...prev, inviteEmail: event.target.value }))}
+                              placeholder="kollega@rikshem.se"
+                            />
+                            <button
+                              type="button"
+                              className="btn-primary inline-flex w-full items-center justify-center rounded-2xl px-4 py-2.5 text-sm font-semibold leading-none"
+                              onClick={() => {
+                                const email = String(companyAdminProfile.inviteEmail || "").trim();
+                                if (!email) return;
+                                const name = email.split("@")[0]
+                                  .split(/[._-]/)
+                                  .filter(Boolean)
+                                  .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+                                  .join(" ");
+                                setCompanyAdminProfile((prev) => ({
+                                  ...prev,
+                                  inviteEmail: "",
+                                  invitedMembers: [
+                                    ...prev.invitedMembers,
+                                    {
+                                      name: name || "Ny mäklare",
+                                      email,
+                                      status: "Väntar"
+                                    }
+                                  ]
+                                }));
+                              }}
+                            >
+                              <span className="inline-flex items-center gap-2">
+                                <span aria-hidden="true" className="text-base leading-none">+</span>
+                                Bjud in
+                              </span>
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="border-t border-black/10 pt-5">
+                          <p className="text-sm font-semibold text-ink-700">Inbjudna (väntar på svar)</p>
+                          <div className="mt-3 space-y-3">
+                            {companyAdminProfile.invitedMembers.map((member) => {
+                              const initials = String(member.name || member.email || "AA")
+                                .split(" ")
+                                .filter(Boolean)
+                                .slice(0, 2)
+                                .map((part) => part[0])
+                                .join("")
+                                .toUpperCase();
+                              return (
+                                <div key={`${member.email}-${member.name}`} className="flex items-center justify-between gap-3 border-b border-black/10 pb-3 last:border-b-0 last:pb-0">
+                                  <div className="flex items-center gap-3">
+                                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#e6eefc] text-xs font-semibold text-[#2d4f83]">
+                                      {initials}
+                                    </span>
+                                    <div>
+                                      <p className="text-sm font-semibold text-ink-800">{member.name}</p>
+                                      <p className="text-xs text-ink-500">{member.email}</p>
+                                    </div>
+                                  </div>
+                                  <span className="inline-flex items-center rounded-full bg-[#f9edbe] px-2.5 py-1 text-[11px] font-semibold text-[#8a6b13]">
+                                    {member.status}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    ) : null}
+
+                    {companyAdminFlowStep === 3 ? (
+                      <div className="space-y-5">
+                        <div>
+                          <p className="text-sm font-semibold text-ink-700">Godkännandeflöde för nya mäklare</p>
+                          <div className="mt-3 space-y-3">
+                            {[
+                              {
+                                key: "admin_approves_broker",
+                                title: "Admin godkänner varje mäklare",
+                                description: "Ni behåller full kontroll över vem som publicerar"
+                              },
+                              {
+                                key: "auto_approve_domain",
+                                title: "Automatgodkänn vid verifierad domän",
+                                description: "Mäklare med rätt e-postdomän kommer in direkt"
+                              }
+                            ].map((option) => {
+                              const active = companyAdminProfile.approvalFlow === option.key;
+                              return (
+                                <button
+                                  key={option.key}
+                                  type="button"
+                                  className={`flex w-full items-center gap-3 !rounded-2xl border px-4 py-3 text-left transition ${active ? "border-[#0f1930] bg-[#f8fafc]" : "border-black/10 bg-white hover:bg-black/5"}`}
+                                  onClick={() => setCompanyAdminProfile((prev) => ({ ...prev, approvalFlow: option.key }))}
+                                >
+                                  <span className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${active ? "border-[#0f1930]" : "border-black/20"}`}>
+                                    <span className={`h-2.5 w-2.5 rounded-full ${active ? "bg-[#0f1930]" : "bg-transparent"}`} />
+                                  </span>
+                                  <span>
+                                    <span className="block text-[0.92rem] font-semibold leading-tight text-[#0f1930]">{option.title}</span>
+                                    <span className="mt-1 block text-[0.8rem] leading-snug text-ink-600">{option.description}</span>
+                                  </span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        <div>
+                          <p className="text-sm font-semibold text-ink-700">Annonsmoderering</p>
+                          <div className="mt-3 space-y-3">
+                            {[
+                              {
+                                key: "broker_publishes_direct",
+                                title: "Mäklare publicerar direkt",
+                                description: "Automatisk granskning flaggar avvikelser"
+                              },
+                              {
+                                key: "admin_approves_listing",
+                                title: "Admin godkänner varje annons",
+                                description: "Mer kontroll, kräver aktiv admin-närvaro"
+                              }
+                            ].map((option) => {
+                              const active = companyAdminProfile.listingModeration === option.key;
+                              return (
+                                <button
+                                  key={option.key}
+                                  type="button"
+                                  className={`flex w-full items-center gap-3 !rounded-2xl border px-4 py-3 text-left transition ${active ? "border-[#0f1930] bg-[#f8fafc]" : "border-black/10 bg-white hover:bg-black/5"}`}
+                                  onClick={() => setCompanyAdminProfile((prev) => ({ ...prev, listingModeration: option.key }))}
+                                >
+                                  <span className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${active ? "border-[#0f1930]" : "border-black/20"}`}>
+                                    <span className={`h-2.5 w-2.5 rounded-full ${active ? "bg-[#0f1930]" : "bg-transparent"}`} />
+                                  </span>
+                                  <span>
+                                    <span className="block text-[0.92rem] font-semibold leading-tight text-[#0f1930]">{option.title}</span>
+                                    <span className="mt-1 block text-[0.8rem] leading-snug text-ink-600">{option.description}</span>
+                                  </span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        <div className="border-t border-black/10 pt-5">
+                          <div className="space-y-4">
+                            <label className="flex items-center gap-3">
+                              <input
+                                type="checkbox"
+                                className="h-5 w-5 shrink-0 rounded border-black/20"
+                                checked={companyAdminProfile.termsAdminAuthority}
+                                onChange={(event) => setCompanyAdminProfile((prev) => ({ ...prev, termsAdminAuthority: event.target.checked }))}
+                              />
+                              <span className="text-[0.88rem] leading-snug text-ink-700">Jag bekräftar att jag har rätt att representera bolaget på plattformen.</span>
+                            </label>
+                            <label className="flex items-center gap-3">
+                              <input
+                                type="checkbox"
+                                className="h-5 w-5 shrink-0 rounded border-black/20"
+                                checked={companyAdminProfile.termsPlatformRules}
+                                onChange={(event) => setCompanyAdminProfile((prev) => ({ ...prev, termsPlatformRules: event.target.checked }))}
+                              />
+                              <span className="flex-1 text-[0.88rem] leading-snug text-ink-700">Jag har läst och godkänner <button type="button" className="font-semibold text-[#0f1930] underline underline-offset-2">användarvillkoren</button> och <button type="button" className="font-semibold text-[#0f1930] underline underline-offset-2">publiceringsreglerna</button>.</span>
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                    ) : null}
+
+                    <div className="flex items-center justify-between border-t border-black/10 pt-5">
+                      <button
+                        type="button"
+                        className="inline-flex min-h-0 min-w-[132px] items-center justify-center rounded-full border border-black/20 bg-white px-4 py-2 text-xs font-semibold text-ink-700 disabled:opacity-50"
+                        onClick={goBack}
+                        disabled={pending}
+                      >
+                        Föregående
+                      </button>
+
+                      <div className="flex items-center gap-2">
+                        {companyAdminStepDots.map((dot) => (
+                          <span key={dot} className={`h-2.5 rounded-full transition-all ${dot === companyAdminFlowStep ? "w-7 bg-[#0f1930]" : "w-2.5 bg-black/15"}`} />
+                        ))}
+                      </div>
+
+                      <button
+                        type="button"
+                        className="inline-flex min-h-0 min-w-[132px] items-center justify-center rounded-full border border-[#0f1930] bg-[#0f1930] px-4 py-2 text-xs font-semibold text-white disabled:opacity-50"
+                        onClick={companyAdminFlowStep === 3 ? finish : goNext}
+                        disabled={pending || !canAdvanceCompanyAdminFlow}
+                      >
+                        {companyAdminFlowStep === 3 ? (pending ? "Aktiverar..." : "Aktivera konto") : "Nästa"}
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             ) : null}
 
@@ -731,7 +1798,7 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
                     <p className="mt-0.5 text-sm text-ink-600">{account.phone || "Telefon ej angivet"}</p>
                   </div>
                   <span className="inline-flex items-center rounded-full border border-black/10 bg-white px-3 py-1.5 text-xs font-semibold text-ink-700">
-                    {primaryRole === "publisher" ? "Hyresvärd" : "Hyresgäst"}
+                    {primaryRole === "publisher" ? "Hyresvärd" : primaryRole === "company_admin" ? "Bolagsadmin" : "Hyresgäst"}
                   </span>
                 </div>
                 <div className="my-0 border-t border-black/10" />
@@ -777,13 +1844,35 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
                     ) : null}
                   </div>
                 ) : null}
+
+                {primaryRole === "publisher" ? (
+                  <div className="px-1 pt-5">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Publiceringsprofil</p>
+                    <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                      {[
+                        { label: "Fastighetstyp", value: publisherProfile.propertyType || "-" },
+                        { label: "Fastighetsbolag", value: publisherProfile.legalEntity || "-" },
+                        { label: "Portföljstorlek", value: publisherProfile.portfolioSize || "-" },
+                        { label: "Verifiering", value: publisherProfile.verificationMethod === "invite_code" ? "Inbjudningskod" : publisherProfile.verificationMethod === "email_domain" ? "E-postdomän" : "Manuell granskning" },
+                        { label: "FMI", value: publisherProfile.fmiNumber || "Ej angivet" },
+                        { label: "Godkända villkor", value: publisherProfile.termsEmployerAuthority && publisherProfile.termsPublishingRules && publisherProfile.termsSuspensionAware ? "Ja" : "Nej" }
+                      ].map(({ label, value }) => (
+                        <div key={label} className="rounded-2xl border border-black/10 bg-white px-4 py-3">
+                          <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">{label}</p>
+                          <p className="mt-1 text-[1rem] font-semibold text-ink-800">{value}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+
               </div>
             ) : null}
           </div>
 
           {error ? <p className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">{error}</p> : null}
 
-          <div className="mt-6 flex items-center justify-between">
+          <div className={`mt-6 flex items-center justify-between ${currentStep === "publisher-profile" || currentStep === "company-admin-profile" ? "hidden" : ""}`}>
             <button
               type="button"
               className="inline-flex min-h-0 items-center justify-center rounded-full border border-black/20 bg-white px-4 py-2 text-xs font-semibold text-ink-700 disabled:opacity-50"

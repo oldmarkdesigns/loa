@@ -15,12 +15,14 @@ const countryCodeOptions = [
   { label: "USA (+1)", value: "+1" }
 ];
 
-function SignupPage({ onCompleteSignup }) {
+function SignupPage({ onCompleteSignup, onTestSignup, currentUser }) {
   const { isLoading, user, signUp } = useAuth();
   const params = new URLSearchParams(window.location.search);
-  const roleFromUrl = params.get("role") === "publisher" ? "publisher" : "renter";
+  const rawRole = params.get("role");
+  const roleFromUrl = rawRole === "broker" || rawRole === "company_admin" ? rawRole : "renter";
   const returnTo = params.get("returnTo") || "/onboarding";
   const isConfigured = hasConvexConfig && hasWorkosConfig;
+  const signupUser = user || (currentUser?.authProvider === "test" ? currentUser : null);
 
   const [form, setForm] = useState({
     firstName: "",
@@ -42,16 +44,16 @@ function SignupPage({ onCompleteSignup }) {
   }, [roleFromUrl]);
 
   useEffect(() => {
-    if (!user) {
+    if (!signupUser) {
       return;
     }
 
     setForm((current) => ({
       ...current,
-      firstName: current.firstName || user.firstName || "",
-      lastName: current.lastName || user.lastName || ""
+      firstName: current.firstName || signupUser.firstName || signupUser.profile?.firstName || "",
+      lastName: current.lastName || signupUser.lastName || signupUser.profile?.lastName || ""
     }));
-  }, [user]);
+  }, [signupUser]);
 
   async function startSignup() {
     if (!isConfigured) {
@@ -78,7 +80,7 @@ function SignupPage({ onCompleteSignup }) {
   async function submit(event) {
     event.preventDefault();
 
-    if (!user) {
+    if (!signupUser) {
       setError("Skapa konto med WorkOS först.");
       return;
     }
@@ -90,8 +92,12 @@ function SignupPage({ onCompleteSignup }) {
       const fullName = `${form.firstName} ${form.lastName}`.trim();
       const phone = String(form.phone || "").trim();
       const nextUser = await onCompleteSignup({
-        name: fullName || [user.firstName, user.lastName].filter(Boolean).join(" ").trim() || user.email,
+        name: fullName || [signupUser.firstName, signupUser.lastName].filter(Boolean).join(" ").trim() || signupUser.email,
         phone: phone ? `${phoneCountryCode} ${phone}` : "",
+        profile: {
+          firstName: form.firstName,
+          lastName: form.lastName
+        },
         role: form.role,
         roles: [form.role]
       });
@@ -105,7 +111,7 @@ function SignupPage({ onCompleteSignup }) {
   }
 
   async function handleSkip() {
-    if (!user || pending) {
+    if (!signupUser || pending) {
       return;
     }
 
@@ -114,7 +120,7 @@ function SignupPage({ onCompleteSignup }) {
 
     try {
       const nextUser = await onCompleteSignup({
-        name: [user.firstName, user.lastName].filter(Boolean).join(" ").trim() || user.email,
+        name: [signupUser.firstName, signupUser.lastName].filter(Boolean).join(" ").trim() || signupUser.email,
         phone: "",
         role: form.role,
         roles: [form.role]
@@ -128,7 +134,21 @@ function SignupPage({ onCompleteSignup }) {
     }
   }
 
-  const isDetailsStep = Boolean(user);
+  async function handleTestSignup(role) {
+    if (!onTestSignup) return;
+    setPending(true);
+    setError("");
+    try {
+      await onTestSignup(role);
+      navigateTo(`/signup?step=details&role=${role}`, { replace: true });
+    } catch (submitError) {
+      setError(submitError.message || "Kunde inte skapa testkonto.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  const isDetailsStep = Boolean(signupUser);
 
   if (!isDetailsStep) {
     return (
@@ -144,8 +164,9 @@ function SignupPage({ onCompleteSignup }) {
             <p className="mb-2 text-sm font-semibold text-ink-700">Jag vill</p>
             <div className="grid grid-cols-1 gap-2.5" role="radiogroup" aria-label="Välj kontotyp">
               {[
-                { value: "renter", label: "Hyra en lokal" },
-                { value: "publisher", label: "Hyra ut en lokal" }
+                { value: "renter", label: "Hyresgäst" },
+                { value: "broker", label: "Mäklare" },
+                { value: "company_admin", label: "Bolagsadmin" }
               ].map((option) => {
                 const selected = form.role === option.value;
                 return (
@@ -202,6 +223,27 @@ function SignupPage({ onCompleteSignup }) {
             </div>
           )}
 
+          <div className="mt-5 border-t border-black/10 pt-5">
+            <p className="mb-2 text-sm font-semibold text-ink-700">Testa utan WorkOS</p>
+            <div className="grid grid-cols-1 gap-2.5">
+              {[
+                { value: "renter", label: "Testkonto: Hyresgäst" },
+                { value: "broker", label: "Testkonto: Mäklare" },
+                { value: "company_admin", label: "Testkonto: Bolagsadmin" }
+              ].map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  className="inline-flex items-center justify-center rounded-full border border-black/10 bg-[#f8fafc] px-6 py-3 text-sm font-semibold text-ink-700 hover:bg-white"
+                  disabled={pending}
+                  onClick={() => handleTestSignup(option.value)}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
         </div>
       </main>
@@ -237,7 +279,7 @@ function SignupPage({ onCompleteSignup }) {
 
           <label className="space-y-1.5">
             <span className="text-sm font-medium text-ink-700">E-post</span>
-            <input className="field bg-[#f8fafc]" value={user.email} disabled />
+            <input className="field bg-[#f8fafc]" value={signupUser?.email || ""} disabled />
           </label>
 
           <div className="grid grid-cols-[140px_minmax(0,1fr)] gap-3">
@@ -265,8 +307,9 @@ function SignupPage({ onCompleteSignup }) {
             <p className="mb-2 text-sm font-semibold text-ink-700">Primär roll</p>
             <div className="grid grid-cols-1 gap-2.5" role="radiogroup" aria-label="Välj kontotyp">
               {[
-                { value: "renter", label: "Hyra en lokal" },
-                { value: "publisher", label: "Hyra ut en lokal" }
+                { value: "renter", label: "Hyresgäst" },
+                { value: "broker", label: "Mäklare" },
+                { value: "company_admin", label: "Bolagsadmin" }
               ].map((option) => {
                 const selected = form.role === option.value;
                 return (

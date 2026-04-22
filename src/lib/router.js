@@ -34,5 +34,5 @@ export function routeMatches(pathname, basePath) {
 }
 
 export function defaultAppPathForRole(role) {
-  return role === "publisher" ? "/app/my-listings" : "/app/rent";
+  return role === "broker" || role === "company_admin" || role === "publisher" ? "/app/my-listings" : "/app/rent";
 }

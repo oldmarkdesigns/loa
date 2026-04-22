@@ -9,6 +9,7 @@ export default defineSchema({
   users: defineTable({
     id: v.string(),
     tokenIdentifier: v.string(),
+    testSessionToken: v.optional(v.string()),
     subject: v.optional(v.string()),
     email: v.string(),
     name: v.string(),

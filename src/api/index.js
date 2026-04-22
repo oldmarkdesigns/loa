@@ -3,6 +3,8 @@ import { convexApiRefs } from "../lib/convex";
 
 export const authApi = {
   session: () => apiClient.query(convexApiRefs.users.me, {}, "Kunde inte läsa aktuell session."),
+  getTestSession: (token) => apiClient.query(convexApiRefs.users.getTestSession, { token }, "Kunde inte läsa testsessionen."),
+  createTestUser: (role) => apiClient.mutation(convexApiRefs.users.createTestUser, { role }, "Kunde inte skapa testkonto."),
   syncWorkosSession: (payload = {}) =>
     apiClient.mutation(convexApiRefs.users.upsertFromAuth, payload, "Kunde inte synka WorkOS-sessionen."),
   signup: async () => {
@@ -21,8 +23,11 @@ export const setupApi = {
 export const profileApi = {
   getMe: () => apiClient.query(convexApiRefs.users.me, {}, "Kunde inte läsa användarprofilen."),
   updateMe: (payload) => apiClient.mutation(convexApiRefs.users.updateMe, payload, "Kunde inte uppdatera profilen."),
+  updateTestMe: (token, payload) => apiClient.mutation(convexApiRefs.users.updateTestUser, { token, ...payload }, "Kunde inte uppdatera testprofilen."),
   completeOnboarding: (payload) =>
-    apiClient.mutation(convexApiRefs.users.completeOnboarding, payload, "Kunde inte slutföra onboarding.")
+    apiClient.mutation(convexApiRefs.users.completeOnboarding, payload, "Kunde inte slutföra onboarding."),
+  completeTestOnboarding: (token, payload) =>
+    apiClient.mutation(convexApiRefs.users.completeTestOnboarding, { token, ...payload }, "Kunde inte slutföra test-onboarding.")
 };
 
 export const listingApi = {

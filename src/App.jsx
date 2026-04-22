@@ -29,7 +29,7 @@ function AppContent() {
   function openAuthOverlay(mode = "login", preferredRole = "renter") {
     const target =
       mode === "signup"
-        ? `/signup${preferredRole === "publisher" ? "?role=publisher" : ""}`
+        ? `/signup${preferredRole !== "renter" ? `?role=${preferredRole}` : ""}`
         : "/login";
     navigateTo(target);
   }
@@ -58,12 +58,7 @@ function AppContent() {
     }
 
     if (!isAuthenticated && isOnboardingPath) {
-      navigateTo("/signup?role=renter", { replace: true });
-      return;
-    }
-
-    if (!isAuthenticated && isCallbackPath) {
-      navigateTo("/login", { replace: true });
+      navigateTo(`/signup?role=${app.user?.role || "renter"}`, { replace: true });
       return;
     }
 
@@ -88,10 +83,11 @@ function AppContent() {
     }
 
     if (isAuthenticated && app.user.onboardingCompleted) {
-      const role = app.user.role === "publisher" ? "publisher" : "renter";
-      const rawRoles = Array.isArray(app.user.roles) ? app.user.roles : [role];
-      const roleSet = new Set(rawRoles.filter((item) => item === "renter" || item === "publisher"));
-      const hasPublisherRole = roleSet.has("publisher");
+      const normalizedRole = app.user.role === "publisher" ? "broker" : app.user.role;
+      const role = normalizedRole === "broker" || normalizedRole === "company_admin" ? normalizedRole : "renter";
+      const rawRoles = Array.isArray(app.user.roles) ? app.user.roles.map((item) => item === "publisher" ? "broker" : item) : [role];
+      const roleSet = new Set(rawRoles.filter((item) => item === "renter" || item === "broker" || item === "company_admin"));
+      const hasPublisherRole = roleSet.has("broker") || roleSet.has("company_admin");
       const renterAllowed = ["/app/rent", "/app/viewings", "/app/profile", "/app/settings", "/app/listings"];
       const publisherAllowed = ["/app/my-listings", "/app/publish", "/app/leads", "/app/profile", "/app/settings", "/app/rent", "/app/listings"];
       const extraForPublisherMembers = hasPublisherRole ? ["/app/my-listings", "/app/publish", "/app/leads"] : [];
@@ -108,12 +104,12 @@ function AppContent() {
         return;
       }
 
-      if (role === "publisher" && pathname === "/app/viewings") {
+      if ((role === "broker" || role === "company_admin") && pathname === "/app/viewings") {
         navigateTo("/app/leads", { replace: true });
         return;
       }
 
-      if (role === "publisher" && pathname.startsWith("/app/") && !pathnameAllowed) {
+      if ((role === "broker" || role === "company_admin") && pathname.startsWith("/app/") && !pathnameAllowed) {
         navigateTo("/app/my-listings", { replace: true });
       }
     }
@@ -176,7 +172,7 @@ function AppContent() {
   } else if (pathname === "/login") {
     content = <LoginPage />;
   } else if (pathname === "/signup") {
-    content = <SignupPage onCompleteSignup={app.completeSignup} />;
+    content = <SignupPage onCompleteSignup={app.completeSignup} onTestSignup={app.createTestSignup} currentUser={app.user} />;
   } else if (pathname === "/callback") {
     content = <CallbackPage />;
   } else if (pathname === "/forgot-password") {
@@ -218,7 +214,7 @@ function AppContent() {
       }
     } else {
     let appRouteContent = null;
-    const activeRole = app.user?.role === "publisher" ? "publisher" : "renter";
+    const activeRole = app.user?.role === "publisher" ? "broker" : (app.user?.role || "renter");
 
     if (pathname === "/app/rent") {
       appRouteContent = <RentPage app={app} onRequireAuth={openAuthOverlay} />;
@@ -229,7 +225,7 @@ function AppContent() {
     } else if (pathname === "/app/my-listings") {
       appRouteContent = <PublisherOverviewPage app={app} />;
     } else if (pathname === "/app/viewings") {
-      appRouteContent = app.user?.role === "publisher" ? <LeadsPage app={app} /> : <ViewingsPage app={app} />;
+      appRouteContent = activeRole === "broker" || activeRole === "company_admin" ? <LeadsPage app={app} /> : <ViewingsPage app={app} />;
     } else if (pathname === "/app/leads") {
       appRouteContent = <LeadsPage app={app} />;
     } else if (pathname === "/app/profile") {
@@ -239,7 +235,7 @@ function AppContent() {
     } else if (pathname === "/app/publish") {
       appRouteContent = <PublishPage app={app} />;
     } else {
-      appRouteContent = activeRole === "publisher" ? <PublisherOverviewPage app={app} /> : <RentPage app={app} />;
+      appRouteContent = activeRole === "broker" || activeRole === "company_admin" ? <PublisherOverviewPage app={app} /> : <RentPage app={app} />;
     }
 
       content = (
