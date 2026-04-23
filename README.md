@@ -1,12 +1,13 @@
 # Office Flow Prototype
 
-Frontend-only prototype for an office-rental marketplace.
+Office-rental marketplace prototype with WorkOS auth and a Convex backend.
 
 ## Stack
 - Vite
 - React
 - Tailwind CSS
-- Fully mocked listings and mocked images
+- WorkOS AuthKit
+- Convex
 
 ## Main flows
 - Tenant flow: standard search, AI chat search, shortlist, booking request
@@ -15,11 +16,14 @@ Frontend-only prototype for an office-rental marketplace.
 ## Run
 1. Install dependencies:
    `npm install`
-2. Start dev server:
+2. Start Convex in one terminal:
+   `npm run convex:dev`
+3. Start Vite in a second terminal:
    `npm run dev`
-3. Build:
+4. Build:
    `npm run build`
 
 ## Notes
-- This environment had no npm network access, so dependencies were not installed here.
-- All data is static and local in `src/data/mockData.js`.
+- The first app boot seeds Convex with the local sample listings from `src/data/mockData.js`.
+- For local auth, configure WorkOS CORS for `http://localhost:5173`, set the redirect URI to `/callback`, and set the sign-in endpoint to `/login`.
+- After adding `convex/auth.config.js` or changing auth providers, run `npm run convex:dev` again so the backend picks up the new config.

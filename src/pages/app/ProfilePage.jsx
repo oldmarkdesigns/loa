@@ -400,14 +400,19 @@ function ProfilePage({ app }) {
     ];
   });
 
-  const roleSet = useMemo(() => new Set(Array.isArray(user?.roles) ? user.roles : [user?.role || "renter"]), [user?.role, user?.roles]);
+  const roleSet = useMemo(() => {
+    const merged = Array.from(new Set([...(Array.isArray(user?.roles) ? user.roles : []), user?.role].filter(Boolean)));
+    return new Set(merged.map((role) => role === "publisher" ? "broker" : role));
+  }, [user?.role, user?.roles]);
   const hasRenter = roleSet.has("renter");
-  const hasPublisher = roleSet.has("publisher") || roleSet.has("company_admin");
+  const hasPublisher = roleSet.has("broker") || roleSet.has("company_admin");
   const canSwitchRoles = hasRenter && hasPublisher;
+  const activeRole = user?.role === "publisher" ? "broker" : user?.role;
+  const hasOnlyRenterAccess = hasRenter && !hasPublisher;
   const currentRoleLabel = useMemo(() => (
-    user?.role === "publisher" ? "Hyresvärd" : user?.role === "company_admin" ? "Bolagsadmin" : "Hyresgäst"
-  ), [user?.role]);
-  const showPublisherWorkspaceTabs = hasPublisher && (user?.role === "publisher" || user?.role === "company_admin");
+    activeRole === "broker" ? "Mäklare" : activeRole === "company_admin" ? "Bolagsadmin" : "Hyresgäst"
+  ), [activeRole]);
+  const showPublisherWorkspaceTabs = hasPublisher && (activeRole === "broker" || activeRole === "company_admin");
 
   const renterProgram = useMemo(() => user?.profile?.renterProgram || {}, [user?.profile?.renterProgram]);
   const preferredTypes = useMemo(() => listFromDelimitedValue(renterProgram.type), [renterProgram.type]);
@@ -809,61 +814,45 @@ function ProfilePage({ app }) {
                           Lägg till Hyresgäst
                         </button>
                       ) : null}
-                      {!hasPublisher ? (
+                      {!hasPublisher && !hasRenter ? (
                         <button
                           type="button"
                           className="rounded-full border border-black/20 bg-white px-3 py-2 text-xs font-semibold"
                           disabled={pendingRole}
+                          onClick={() => {
+                            navigateTo("/onboarding/publisher-profile?role=broker&intent=add-role");
+                          }}
+                        >
+                          Verifiera dig som mäklare
+                        </button>
+                      ) : null}
+                      {canSwitchRoles && activeRole === "renter" ? (
+                        <button
+                          type="button"
+                          className="inline-flex items-center gap-1.5 rounded-full border border-black/20 bg-white px-3 py-2 text-xs font-semibold text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
+                          disabled={pendingRole}
                           onClick={async () => {
                             setPendingRole(true);
                             try {
-                              await switchRole("publisher");
+                              await switchRole("broker");
                             } finally {
                               setPendingRole(false);
                             }
                           }}
                         >
-                          Lägg till Hyresvärd
+                          <SwitchHorizontalIcon className="h-4 w-4" />
+                          Växla till Hyresvärd
                         </button>
                       ) : null}
-                      {canSwitchRoles ? (
-                        <>
-                          {user?.role === "renter" ? (
-                            <button
-                              type="button"
-                              className="inline-flex items-center gap-1.5 rounded-full border border-black/20 bg-white px-3 py-2 text-xs font-semibold text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
-                              disabled={pendingRole}
-                              onClick={async () => {
-                                setPendingRole(true);
-                                try {
-                                  await switchRole("publisher");
-                                } finally {
-                                  setPendingRole(false);
-                                }
-                              }}
-                            >
-                              <SwitchHorizontalIcon className="h-4 w-4" />
-                              Växla till Hyresvärd
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              className="inline-flex items-center gap-1.5 rounded-full border border-black/20 bg-white px-3 py-2 text-xs font-semibold text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
-                              disabled={pendingRole}
-                              onClick={async () => {
-                                setPendingRole(true);
-                                try {
-                                  await switchRole("renter");
-                                } finally {
-                                  setPendingRole(false);
-                                }
-                              }}
-                            >
-                              <SwitchHorizontalIcon className="h-4 w-4" />
-                              Växla till Hyresgäst
-                            </button>
-                          )}
-                        </>
+                      {hasOnlyRenterAccess ? (
+                        <button
+                          type="button"
+                          className="inline-flex items-center gap-1.5 rounded-full border border-black/20 bg-white px-3 py-2 text-xs font-semibold text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
+                          onClick={() => navigateTo("/onboarding/publisher-profile?role=broker&intent=add-role")}
+                        >
+                          <SwitchHorizontalIcon className="h-4 w-4" />
+                          Verifiera dig som mäklare
+                        </button>
                       ) : null}
                       <button
                         type="button"

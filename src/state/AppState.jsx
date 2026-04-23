@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { useClerk, useUser } from "@clerk/react";
-import { aiApi, authApi, favoriteApi, leadsApi, listingApi, profileApi, viewingsApi } from "../api";
+import { useAuth } from "@workos-inc/authkit-react";
+import { useConvexAuth } from "convex/react";
+import { aiApi, authApi, favoriteApi, leadsApi, listingApi, profileApi, setupApi, viewingsApi } from "../api";
 import {
   analyticsEventNames,
   trackEvent,
@@ -9,12 +10,7 @@ import {
 } from "../lib/analytics";
 
 const AppStateContext = createContext(null);
-const OPEN_ACCESS_MODE = false;
-const OPEN_ACCESS_CREDENTIALS = [
-  { email: "kombi@demo.se", password: "demo123" },
-  { email: "annonsor@demo.se", password: "demo123" },
-  { email: "hyresgast@demo.se", password: "demo123" }
-];
+const TEST_SESSION_STORAGE_KEY = "office_rental_test_session_token";
 
 const defaultFilters = {
   county: "Stockholms län",
@@ -202,15 +198,18 @@ function mapRenterProgramToFilters(program) {
   });
 }
 
+function normalizeUserRole(role) {
+  if (role === "publisher") return "broker";
+  return role === "company_admin" || role === "broker" ? role : "renter";
+}
+
 export function AppProvider({ children }) {
-  const { user: clerkUser, isLoaded: isClerkLoaded, isSignedIn: isClerkSignedIn } = useUser();
-  const { signOut: signOutClerk } = useClerk();
-  const clerkSyncInFlightRef = useRef(false);
-  const lastSyncedClerkUserIdRef = useRef(null);
-  const clerkSignoutSyncInFlightRef = useRef(false);
-  const clerkSignoutTimeoutRef = useRef(null);
+  const { user: authUser, isLoading: isAuthLoading, signOut } = useAuth();
+  const { isAuthenticated: isConvexAuthenticated, isLoading: isConvexAuthLoading } = useConvexAuth();
+  const authSyncInFlightRef = useRef(false);
 
   const [isBootstrapping, setIsBootstrapping] = useState(true);
+  const [isSessionSyncing, setIsSessionSyncing] = useState(true);
   const [user, setUser] = useState(null);
   const [listings, setListings] = useState([]);
   const [favorites, setFavorites] = useState([]);
@@ -248,18 +247,28 @@ export function AppProvider({ children }) {
       return;
     }
 
+    const activeRoles = (Array.isArray(activeUser.roles) ? activeUser.roles : [activeUser.role || "renter"]).map(normalizeUserRole);
+    const hasPublisherAccess = activeRoles.includes("broker") || activeRoles.includes("company_admin");
+    const hasRenterAccess = activeRoles.includes("renter");
+
+    if (activeUser.authProvider === "test") {
+      const { listings: listingsData } = await listingApi.getListings(allListingsFilters);
+      setListings(listingsData);
+      setFavorites([]);
+      setViewings([]);
+      setLeads([]);
+      return;
+    }
+
     const [{ listings: listingsData }, { favorites: favoriteData }, { viewings: viewingData }] = await Promise.all([
       listingApi.getListings(allListingsFilters),
-      favoriteApi.getFavorites(),
-      viewingsApi.getViewings()
+      hasRenterAccess ? favoriteApi.getFavorites() : Promise.resolve({ favorites: [] }),
+      hasRenterAccess ? viewingsApi.getViewings() : Promise.resolve({ viewings: [] })
     ]);
 
     setListings(listingsData);
     setFavorites(favoriteData);
     setViewings(viewingData);
-
-    const activeRoles = Array.isArray(activeUser.roles) ? activeUser.roles : [activeUser.role || "renter"];
-    const hasPublisherAccess = activeRoles.includes("publisher");
 
     if (hasPublisherAccess) {
       const { leads: leadData } = await leadsApi.getLeads();
@@ -269,219 +278,150 @@ export function AppProvider({ children }) {
     }
   }
 
-  async function bootstrapSession() {
-    try {
-      const { user: existingSessionUser } = await authApi.session();
-      let sessionUser = existingSessionUser;
+  function hydrateLocalUserState(nextUser) {
+    setUser(nextUser);
 
-      if (OPEN_ACCESS_MODE && !sessionUser) {
-        for (const credentials of OPEN_ACCESS_CREDENTIALS) {
-          try {
-            const response = await authApi.login(credentials);
-            sessionUser = response.user;
-            break;
-          } catch (_error) {
-            // Keep trying fallback demo accounts.
-          }
-        }
-      }
-
-      setUser(sessionUser);
-      if (sessionUser) {
-        setSavedFiltersState(readSavedFilters(sessionUser.id));
-        setFilterPresets(readSavedFilterPresets(sessionUser.id));
-        setSavedAiSearches(readSavedAiSearches(sessionUser.id));
-        await refreshCoreData(sessionUser);
-      } else {
-        await loadPublicListings();
-      }
-    } catch (_error) {
-      setUser(null);
+    if (!nextUser) {
       setSavedFiltersState(defaultFilters);
       setFilterPresets([]);
       setSavedAiSearches([]);
-      await loadPublicListings();
+      return;
+    }
+
+    setSavedFiltersState(readSavedFilters(nextUser.id));
+    setFilterPresets(readSavedFilterPresets(nextUser.id));
+    setSavedAiSearches(readSavedAiSearches(nextUser.id));
+  }
+
+  async function clearLocalSessionState() {
+    hydrateLocalUserState(null);
+    setFavorites([]);
+    setViewings([]);
+    setLeads([]);
+    setAiHistory([]);
+    await loadPublicListings();
+  }
+
+  async function bootstrapSession() {
+    if (authSyncInFlightRef.current) {
+      return;
+    }
+
+    authSyncInFlightRef.current = true;
+    setIsSessionSyncing(true);
+
+    try {
+      await setupApi.ensureSeeded();
+
+      const storedTestToken = typeof window !== "undefined" ? window.localStorage.getItem(TEST_SESSION_STORAGE_KEY) : null;
+
+      if (!isConvexAuthenticated || !authUser) {
+        if (storedTestToken) {
+          const { user: testUser } = await authApi.getTestSession(storedTestToken);
+          if (testUser) {
+            hydrateLocalUserState(testUser);
+            await refreshCoreData(testUser);
+            return;
+          }
+          window.localStorage.removeItem(TEST_SESSION_STORAGE_KEY);
+        }
+        await clearLocalSessionState();
+        return;
+      }
+
+      const { user: syncedUser } = await authApi.syncWorkosSession({
+        email: authUser.email,
+        name: [authUser.firstName, authUser.lastName].filter(Boolean).join(" ").trim(),
+        firstName: authUser.firstName || "",
+        lastName: authUser.lastName || "",
+        imageUrl: authUser.profilePictureUrl || ""
+      });
+
+      hydrateLocalUserState(syncedUser);
+      await refreshCoreData(syncedUser);
+    } catch (_error) {
+      hydrateLocalUserState(null);
+      setFavorites([]);
+      setViewings([]);
+      setLeads([]);
+      setAiHistory([]);
+      try {
+        await loadPublicListings();
+      } catch (_loadError) {
+        setListings([]);
+      }
     } finally {
       setIsBootstrapping(false);
+      setIsSessionSyncing(false);
+      authSyncInFlightRef.current = false;
     }
   }
 
   useEffect(() => {
+    if (isAuthLoading || isConvexAuthLoading) {
+      setIsSessionSyncing(true);
+      return undefined;
+    }
     bootstrapSession();
-  }, []);
+    return undefined;
+  }, [authUser?.id, isAuthLoading, isConvexAuthLoading, isConvexAuthenticated]);
 
-  useEffect(() => {
-    if (!isClerkLoaded || !clerkUser) {
-      return;
+  async function completeSignup(payload) {
+    if (!user) {
+      throw new Error("Skapa konto med WorkOS först.");
     }
 
-    if (user?.id || clerkSyncInFlightRef.current) {
-      return;
-    }
-
-    if (lastSyncedClerkUserIdRef.current === clerkUser.id) {
-      return;
-    }
-
-    clerkSyncInFlightRef.current = true;
-
-    loginWithClerk()
-      .then(() => {
-        lastSyncedClerkUserIdRef.current = clerkUser.id;
-      })
-      .catch(() => {
-        // Keep app usable even if Clerk bridge fails.
-      })
-      .finally(() => {
-        clerkSyncInFlightRef.current = false;
-      });
-  }, [clerkUser, isClerkLoaded, user?.id]);
-
-  async function signup(payload) {
-    const response = await authApi.signup(payload);
-    setUser(response.user);
-    setSavedFiltersState(readSavedFilters(response.user.id));
-    setFilterPresets(readSavedFilterPresets(response.user.id));
-    setSavedAiSearches(readSavedAiSearches(response.user.id));
+    const normalizedRole = normalizeUserRole(payload.role);
+    const testToken = typeof window !== "undefined" ? window.localStorage.getItem(TEST_SESSION_STORAGE_KEY) : null;
+    const { user: nextUser } = user?.authProvider === "test" && testToken
+      ? await profileApi.updateTestMe(testToken, {
+          ...payload,
+          role: normalizedRole,
+          roles: [normalizedRole]
+        })
+      : await profileApi.updateMe({
+          ...payload,
+          role: normalizedRole,
+          roles: [normalizedRole]
+        });
+    hydrateLocalUserState(nextUser);
+    await refreshCoreData(nextUser);
     trackSignupCompleted({
       role: payload.role
     });
     pushToast("Konto skapat. Fortsätt med onboarding.", "success");
-    return response.user;
-  }
-
-  async function login(payload) {
-    const response = await authApi.login(payload);
-    setUser(response.user);
-    setSavedFiltersState(readSavedFilters(response.user.id));
-    setFilterPresets(readSavedFilterPresets(response.user.id));
-    setSavedAiSearches(readSavedAiSearches(response.user.id));
-    await refreshCoreData(response.user);
-    await trackEvent(analyticsEventNames.LOGIN_COMPLETED, {
-      role: response.user.role
-    });
-    pushToast("Inloggning lyckades.", "success");
-    return response.user;
-  }
-
-  async function loginWithClerk(payload = {}) {
-    if (!clerkUser) {
-      throw new Error("Clerk-session saknas.");
-    }
-
-    const primaryEmail =
-      clerkUser.primaryEmailAddress?.emailAddress ||
-      clerkUser.emailAddresses?.[0]?.emailAddress ||
-      "";
-
-    if (!primaryEmail) {
-      throw new Error("Kunde inte läsa e-post från Clerk-konto.");
-    }
-
-    const hasRoleOverride = payload.role === "publisher" || payload.role === "company_admin" || payload.role === "renter";
-    const safeRole = hasRoleOverride ? payload.role : undefined;
-    const safeRoles = Array.isArray(payload.roles)
-      ? payload.roles.filter((role) => role === "renter" || role === "publisher" || role === "company_admin")
-      : [];
-    const uniqueRoles = Array.from(new Set(safeRoles));
-    const fullName = String(payload.name || clerkUser.fullName || "").trim();
-    const phone = String(payload.phone || "").trim();
-
-    const response = await authApi.clerkSession({
-      clerkUserId: clerkUser.id,
-      email: primaryEmail,
-      name: fullName || primaryEmail.split("@")[0],
-      phone,
-      ...(safeRole ? { role: safeRole } : {}),
-      ...(uniqueRoles.length ? { roles: uniqueRoles } : {}),
-      imageUrl: clerkUser.imageUrl || ""
-    });
-
-    setUser(response.user);
-    setSavedFiltersState(readSavedFilters(response.user.id));
-    setFilterPresets(readSavedFilterPresets(response.user.id));
-    setSavedAiSearches(readSavedAiSearches(response.user.id));
-    await refreshCoreData(response.user);
-    return response.user;
-  }
-
-  async function loginDemoKombi() {
-    return login({
-      email: "kombi@demo.se",
-      password: "demo123"
-    });
-  }
-
-  async function clearLocalSessionState() {
-    setUser(null);
-    setFavorites([]);
-    setViewings([]);
-    setLeads([]);
-    setSavedFiltersState(defaultFilters);
-    setFilterPresets([]);
-    setSavedAiSearches([]);
-    setAiHistory([]);
-    await loadPublicListings();
-    lastSyncedClerkUserIdRef.current = null;
+    return nextUser;
   }
 
   async function logout() {
-    if (OPEN_ACCESS_MODE) {
-      pushToast("Öppet läge är aktivt. Utloggning är tillfälligt avstängd.", "info");
-      return user;
-    }
-
     try {
-      if (clerkUser) {
-        await signOutClerk();
+      if (typeof window !== "undefined") {
+        window.localStorage.removeItem(TEST_SESSION_STORAGE_KEY);
       }
-      await authApi.logout();
-    } catch (_error) {
-      // Always clear local session state even if mock logout request fails.
-    } finally {
       await clearLocalSessionState();
-      pushToast("Du är utloggad.", "info");
+    } finally {
+      if (user?.authProvider !== "test") {
+        await Promise.resolve(signOut({
+          returnTo: `${window.location.origin}/`
+        }));
+      }
     }
   }
 
-  useEffect(() => {
-    if (!isClerkLoaded || isClerkSignedIn !== false || clerkUser || !user || user.authProvider !== "clerk") {
-      if (clerkSignoutTimeoutRef.current) {
-        window.clearTimeout(clerkSignoutTimeoutRef.current);
-        clerkSignoutTimeoutRef.current = null;
-      }
-      return;
-    }
-
-    if (clerkSignoutSyncInFlightRef.current) {
-      return;
-    }
-    clerkSignoutTimeoutRef.current = window.setTimeout(() => {
-      clerkSignoutSyncInFlightRef.current = true;
-
-      authApi.logout()
-        .catch(() => {
-          // Continue and clear local session state.
-        })
-        .finally(async () => {
-          await clearLocalSessionState();
-          pushToast("Du är utloggad.", "info");
-          clerkSignoutSyncInFlightRef.current = false;
-          clerkSignoutTimeoutRef.current = null;
-        });
-    }, 2000);
-
-    return () => {
-      if (clerkSignoutTimeoutRef.current) {
-        window.clearTimeout(clerkSignoutTimeoutRef.current);
-        clerkSignoutTimeoutRef.current = null;
-      }
-    };
-  }, [clerkUser, isClerkLoaded, isClerkSignedIn, user]);
-
   async function completeOnboarding(payload) {
-    const { user: nextUser } = await profileApi.completeOnboarding(payload);
-    setUser(nextUser);
+    const testToken = typeof window !== "undefined" ? window.localStorage.getItem(TEST_SESSION_STORAGE_KEY) : null;
+    let { user: nextUser } = user?.authProvider === "test" && testToken
+      ? await profileApi.completeTestOnboarding(testToken, payload)
+      : await profileApi.completeOnboarding(payload);
+
+    if (payload?.primaryRole === "broker") {
+      const response = user?.authProvider === "test" && testToken
+        ? await profileApi.addRoleToTestUser(testToken, "broker")
+        : await profileApi.addRoleToMe("broker");
+      nextUser = response.user;
+    }
+
+    hydrateLocalUserState(nextUser);
     const renterProgram = payload?.primaryRole === "renter" ? payload?.profile?.renterProgram : null;
     const onboardingFilters = renterProgram ? mapRenterProgramToFilters(renterProgram) : null;
 
@@ -520,17 +460,15 @@ export function AppProvider({ children }) {
     }
 
     try {
-      const currentRoles = Array.isArray(user.roles) ? user.roles : [user.role || "renter"];
-      const roles = currentRoles.includes(role) ? currentRoles : [...currentRoles, role];
+      const normalizedRole = normalizeUserRole(role);
+      const currentRoles = (Array.isArray(user.roles) ? user.roles : [user.role || "renter"]).map(normalizeUserRole);
+      const roles = currentRoles.includes(normalizedRole) ? currentRoles : [...currentRoles, normalizedRole];
       const { user: nextUser } = await profileApi.updateMe({
-        role,
+        role: normalizedRole,
         roles
       });
 
-      setUser(nextUser);
-      setSavedFiltersState(readSavedFilters(nextUser.id));
-      setFilterPresets(readSavedFilterPresets(nextUser.id));
-      setSavedAiSearches(readSavedAiSearches(nextUser.id));
+      hydrateLocalUserState(nextUser);
 
       try {
         await refreshCoreData(nextUser);
@@ -538,7 +476,7 @@ export function AppProvider({ children }) {
         // Keep role switch successful even if secondary data refresh fails.
       }
 
-      pushToast(`Du bytte till ${role === "renter" ? "hyresgästläge" : role === "company_admin" ? "bolagsadminläge" : "hyresvärdsläge"}.`, "info");
+      pushToast(`Du bytte till ${normalizedRole === "company_admin" ? "bolagsadminläge" : normalizedRole === "broker" ? "mäklarläge" : "hyresgästläge"}.`, "info");
       return nextUser;
     } catch (error) {
       pushToast(error.message || "Kunde inte byta roll just nu.", "error");
@@ -548,8 +486,21 @@ export function AppProvider({ children }) {
 
   async function updateProfile(payload) {
     if (!user) return null;
-    const { user: nextUser } = await profileApi.updateMe(payload);
-    setUser(nextUser);
+    const testToken = typeof window !== "undefined" ? window.localStorage.getItem(TEST_SESSION_STORAGE_KEY) : null;
+    const { user: nextUser } = user?.authProvider === "test" && testToken
+      ? await profileApi.updateTestMe(testToken, payload)
+      : await profileApi.updateMe(payload);
+    hydrateLocalUserState(nextUser);
+    return nextUser;
+  }
+
+  async function createTestSignup() {
+    const { user: nextUser, token } = await authApi.createTestUser();
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(TEST_SESSION_STORAGE_KEY, token);
+    }
+    hydrateLocalUserState(nextUser);
+    await refreshCoreData(nextUser);
     return nextUser;
   }
 
@@ -769,6 +720,7 @@ export function AppProvider({ children }) {
 
   const value = useMemo(
     () => ({
+      isAuthPending: isAuthLoading || isConvexAuthLoading || isSessionSyncing,
       isBootstrapping,
       user,
       listings,
@@ -781,10 +733,8 @@ export function AppProvider({ children }) {
       aiHistory,
       toasts,
       pushToast,
-      signup,
-      login,
-      loginWithClerk,
-      loginDemoKombi,
+      completeSignup,
+      createTestSignup,
       logout,
       completeOnboarding,
       switchRole,
@@ -812,6 +762,9 @@ export function AppProvider({ children }) {
       aiHistory,
       filterPresets,
       favorites,
+      isAuthLoading,
+      isConvexAuthLoading,
+      isSessionSyncing,
       isBootstrapping,
       leads,
       listings,

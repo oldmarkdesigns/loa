@@ -1,22 +1,35 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { ClerkProvider } from "@clerk/react";
-import { svSE } from "@clerk/localizations";
+import { AuthKitProvider, useAuth } from "@workos-inc/authkit-react";
+import { ConvexProviderWithAuthKit } from "@convex-dev/workos";
 import App from "./App";
 import { initAnalytics } from "./lib/analytics";
+import { convex, workosRedirectUri } from "./lib/convex";
+import { navigateTo } from "./lib/router";
 import "./index.css";
 
 initAnalytics();
 
-const svSEWithOverrides = {
-  ...svSE,
-  formFieldInputPlaceholder__signUpPassword: "Skapa ett lösenord"
-};
-
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <ClerkProvider localization={svSEWithOverrides} afterSignOutUrl="/">
-      <App />
-    </ClerkProvider>
+    <AuthKitProvider
+      clientId={import.meta.env.VITE_WORKOS_CLIENT_ID || "client_placeholder"}
+      redirectUri={workosRedirectUri}
+      devMode={import.meta.env.DEV}
+      onRedirectCallback={({ state }) => {
+        const returnTo = typeof state?.returnTo === "string" && state.returnTo.startsWith("/")
+          ? state.returnTo
+          : "/callback";
+        navigateTo(returnTo, { replace: true });
+      }}
+      onRefreshFailure={({ signIn }) => {
+        const returnTo = `${window.location.pathname}${window.location.search}`;
+        signIn({ state: { returnTo } }).catch(() => {});
+      }}
+    >
+      <ConvexProviderWithAuthKit client={convex} useAuth={useAuth}>
+        <App />
+      </ConvexProviderWithAuthKit>
+    </AuthKitProvider>
   </React.StrictMode>
 );

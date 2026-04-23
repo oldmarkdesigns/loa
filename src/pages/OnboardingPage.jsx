@@ -375,8 +375,15 @@ function buildInviteCode(companyName = "") {
 }
 
 function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
+  const search = typeof window !== "undefined" ? window.location.search : "";
+  const searchParams = new URLSearchParams(search);
+  const requestedRole = searchParams.get("role");
+  const isAddRoleIntent = searchParams.get("intent") === "add-role";
+  const normalizedInitialRole = requestedRole === "broker" || requestedRole === "company_admin"
+    ? requestedRole
+    : user?.role === "publisher" ? "broker" : user?.role;
   const [primaryRole, setPrimaryRole] = useState(
-    user?.role === "publisher" || user?.role === "company_admin" ? user.role : "renter"
+    normalizedInitialRole === "broker" || normalizedInitialRole === "company_admin" ? normalizedInitialRole : "renter"
   );
   const [account, setAccount] = useState({
     name: user?.name || "",
@@ -495,28 +502,39 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
 
   useEffect(() => {
     if (pathname === "/onboarding") {
-      const firstStep = primaryRole === "publisher" ? "publisher-profile" : primaryRole === "company_admin" ? "company-admin-profile" : "program-core";
-      navigateTo(`/onboarding/${firstStep}`, { replace: true });
+      const firstStep = primaryRole === "broker" ? "publisher-profile" : primaryRole === "company_admin" ? "company-admin-profile" : "program-core";
+      gotoStep(firstStep, { replace: true });
     }
   }, [pathname, primaryRole]);
 
   const routeStep = useMemo(() => {
     const parts = String(pathname || "").split("/").filter(Boolean);
-    return parts[1] || (primaryRole === "publisher" ? "publisher-profile" : primaryRole === "company_admin" ? "company-admin-profile" : "program-core");
+    return parts[1] || (primaryRole === "broker" ? "publisher-profile" : primaryRole === "company_admin" ? "company-admin-profile" : "program-core");
   }, [pathname, primaryRole]);
 
-  const activeSteps = primaryRole === "publisher" ? PUBLISHER_STEPS : primaryRole === "company_admin" ? COMPANY_ADMIN_STEPS : RENTER_STEPS;
+  const activeSteps = primaryRole === "broker" ? PUBLISHER_STEPS : primaryRole === "company_admin" ? COMPANY_ADMIN_STEPS : RENTER_STEPS;
   const stepIndex = Math.max(0, activeSteps.indexOf(routeStep));
   const currentStep = activeSteps[stepIndex] || activeSteps[0];
 
   useEffect(() => {
     if (!activeSteps.includes(routeStep)) {
-      navigateTo(`/onboarding/${activeSteps[0]}`, { replace: true });
+      gotoStep(activeSteps[0], { replace: true });
     }
   }, [routeStep, activeSteps]);
 
-  function gotoStep(step) {
-    navigateTo(`/onboarding/${step}`);
+  function onboardingStepUrl(step) {
+    const base = `/onboarding/${step}`;
+    if (!isAddRoleIntent) return base;
+
+    const params = new URLSearchParams(searchParams);
+    params.set("intent", "add-role");
+    params.set("role", primaryRole === "company_admin" ? "company_admin" : primaryRole === "broker" ? "broker" : "renter");
+    const nextQuery = params.toString();
+    return nextQuery ? `${base}?${nextQuery}` : base;
+  }
+
+  function gotoStep(step, options = {}) {
+    navigateTo(onboardingStepUrl(step), options);
   }
 
   function goNext() {
@@ -542,7 +560,11 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
       return;
     }
     if (stepIndex === 0) {
-      navigateTo(`/signup?step=details&role=${primaryRole}`);
+      if (isAddRoleIntent) {
+        navigateTo("/app/profile");
+        return;
+      }
+      navigateTo("/signup?step=details");
       return;
     }
     const prevIndex = Math.max(0, stepIndex - 1);
@@ -654,6 +676,8 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
       window.localStorage.removeItem(draftStorageKey);
       if (primaryRole === "company_admin") {
         setCompanyAdminActivationComplete(true);
+      } else if (primaryRole === "broker") {
+        navigateTo("/app/my-listings");
       } else {
         navigateTo("/app/profile");
       }
@@ -1798,7 +1822,7 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
                     <p className="mt-0.5 text-sm text-ink-600">{account.phone || "Telefon ej angivet"}</p>
                   </div>
                   <span className="inline-flex items-center rounded-full border border-black/10 bg-white px-3 py-1.5 text-xs font-semibold text-ink-700">
-                    {primaryRole === "publisher" ? "Hyresvärd" : primaryRole === "company_admin" ? "Bolagsadmin" : "Hyresgäst"}
+                    {primaryRole === "broker" ? "Mäklare" : primaryRole === "company_admin" ? "Bolagsadmin" : "Hyresgäst"}
                   </span>
                 </div>
                 <div className="my-0 border-t border-black/10" />
@@ -1845,7 +1869,7 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
                   </div>
                 ) : null}
 
-                {primaryRole === "publisher" ? (
+                {primaryRole === "broker" ? (
                   <div className="px-1 pt-5">
                     <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Publiceringsprofil</p>
                     <div className="mt-5 grid gap-4 sm:grid-cols-2">

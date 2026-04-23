@@ -1,61 +1,74 @@
-import { apiClient } from "./client";
+import { apiClient, ApiError } from "./client";
+import { convexApiRefs } from "../lib/convex";
 
 export const authApi = {
-  signup: (payload) => apiClient.request("POST", "/api/auth/signup", payload),
-  login: (payload) => apiClient.request("POST", "/api/auth/login", payload),
-  clerkSession: (payload) => apiClient.request("POST", "/api/auth/clerk-session", payload),
-  logout: () => apiClient.request("POST", "/api/auth/logout"),
-  session: () => apiClient.request("GET", "/api/auth/session")
+  session: () => apiClient.query(convexApiRefs.users.me, {}, "Kunde inte läsa aktuell session."),
+  getTestSession: (token) => apiClient.query(convexApiRefs.users.getTestSession, { token }, "Kunde inte läsa testsessionen."),
+  createTestUser: (role) => apiClient.mutation(convexApiRefs.users.createTestUser, role ? { role } : {}, "Kunde inte skapa testkonto."),
+  syncWorkosSession: (payload = {}) =>
+    apiClient.mutation(convexApiRefs.users.upsertFromAuth, payload, "Kunde inte synka WorkOS-sessionen."),
+  signup: async () => {
+    throw new ApiError(410, "Registrering hanteras av WorkOS.");
+  },
+  login: async () => {
+    throw new ApiError(410, "Inloggning hanteras av WorkOS.");
+  },
+  logout: async () => ({ ok: true })
+};
+
+export const setupApi = {
+  ensureSeeded: () => apiClient.ensureSeeded()
 };
 
 export const profileApi = {
-  getMe: () => apiClient.request("GET", "/api/me"),
-  updateMe: (payload) => apiClient.request("PATCH", "/api/me", payload),
-  completeOnboarding: (payload) => apiClient.request("POST", "/api/onboarding/complete", payload)
+  getMe: () => apiClient.query(convexApiRefs.users.me, {}, "Kunde inte läsa användarprofilen."),
+  updateMe: (payload) => apiClient.mutation(convexApiRefs.users.updateMe, payload, "Kunde inte uppdatera profilen."),
+  updateTestMe: (token, payload) => apiClient.mutation(convexApiRefs.users.updateTestUser, { token, ...payload }, "Kunde inte uppdatera testprofilen."),
+  addRoleToMe: (role) => apiClient.mutation(convexApiRefs.users.addRoleToMe, { role }, "Kunde inte lägga till rollen."),
+  addRoleToTestUser: (token, role) => apiClient.mutation(convexApiRefs.users.addRoleToTestUser, { token, role }, "Kunde inte lägga till testrollen."),
+  completeOnboarding: (payload) =>
+    apiClient.mutation(convexApiRefs.users.completeOnboarding, payload, "Kunde inte slutföra onboarding."),
+  completeTestOnboarding: (token, payload) =>
+    apiClient.mutation(convexApiRefs.users.completeTestOnboarding, { token, ...payload }, "Kunde inte slutföra test-onboarding.")
 };
 
 export const listingApi = {
-  getListings: (filters = {}) => {
-    const params = new URLSearchParams();
-    Object.entries(filters).forEach(([key, value]) => {
-      if (Array.isArray(value)) {
-        if (value.length > 0) {
-          params.set(key, value.join(","));
-        }
-        return;
-      }
-
-      if (value !== undefined && value !== null && value !== "") {
-        params.set(key, String(value));
-      }
-    });
-    const suffix = params.toString() ? `?${params.toString()}` : "";
-    return apiClient.request("GET", `/api/listings${suffix}`);
-  },
-  getListing: (id) => apiClient.request("GET", `/api/listings/${id}`),
-  createListing: (payload) => apiClient.request("POST", "/api/listings", payload),
-  updateListing: (id, payload) => apiClient.request("PATCH", `/api/listings/${id}`, payload),
-  deleteListing: (id) => apiClient.request("DELETE", `/api/listings/${id}`),
-  publishListing: (id) => apiClient.request("POST", `/api/listings/${id}/publish`),
-  requestVerification: (id) => apiClient.request("POST", `/api/listings/${id}/verify-request`)
+  getListings: (filters = {}) => apiClient.query(convexApiRefs.listings.list, { filters }, "Kunde inte läsa objekt."),
+  getListing: (id) => apiClient.query(convexApiRefs.listings.get, { id }, "Objektet hittades inte."),
+  createListing: (payload) => apiClient.mutation(convexApiRefs.listings.create, { payload }, "Kunde inte skapa objektet."),
+  updateListing: (id, payload) =>
+    apiClient.mutation(convexApiRefs.listings.update, { id, payload }, "Kunde inte uppdatera objektet."),
+  deleteListing: (id) => apiClient.mutation(convexApiRefs.listings.remove, { id }, "Kunde inte radera objektet."),
+  publishListing: (id) =>
+    apiClient.mutation(convexApiRefs.listings.publish, { id }, "Kunde inte publicera objektet."),
+  requestVerification: (id) =>
+    apiClient.mutation(
+      convexApiRefs.listings.requestVerification,
+      { id },
+      "Kunde inte skicka verifieringsförfrågan."
+    )
 };
 
 export const favoriteApi = {
-  getFavorites: () => apiClient.request("GET", "/api/favorites"),
-  addFavorite: (listingId) => apiClient.request("POST", `/api/favorites/${listingId}`),
-  removeFavorite: (listingId) => apiClient.request("DELETE", `/api/favorites/${listingId}`)
+  getFavorites: () => apiClient.query(convexApiRefs.favorites.list, {}, "Kunde inte läsa sparade objekt."),
+  addFavorite: (listingId) =>
+    apiClient.mutation(convexApiRefs.favorites.add, { listingId }, "Kunde inte spara objektet."),
+  removeFavorite: (listingId) =>
+    apiClient.mutation(convexApiRefs.favorites.remove, { listingId }, "Kunde inte ta bort objektet.")
 };
 
 export const viewingsApi = {
-  createViewing: (payload) => apiClient.request("POST", "/api/viewings", payload),
-  getViewings: () => apiClient.request("GET", "/api/viewings")
+  createViewing: (payload) =>
+    apiClient.mutation(convexApiRefs.viewings.create, payload, "Kunde inte skapa visningsförfrågan."),
+  getViewings: () => apiClient.query(convexApiRefs.viewings.list, {}, "Kunde inte läsa visningar.")
 };
 
 export const leadsApi = {
-  getLeads: () => apiClient.request("GET", "/api/leads"),
-  updateLead: (id, payload) => apiClient.request("PATCH", `/api/leads/${id}`, payload)
+  getLeads: () => apiClient.query(convexApiRefs.leads.list, {}, "Kunde inte läsa intresseanmälningar."),
+  updateLead: (id, payload) =>
+    apiClient.mutation(convexApiRefs.leads.update, { id, payload }, "Kunde inte uppdatera intresseanmälan.")
 };
 
 export const aiApi = {
-  runSearch: (payload) => apiClient.request("POST", "/api/ai/search", payload)
+  runSearch: (payload) => apiClient.query(convexApiRefs.ai.search, payload, "Kunde inte köra AI-sökningen.")
 };

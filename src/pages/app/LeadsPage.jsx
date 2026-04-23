@@ -19,8 +19,9 @@ function viewingStatusDetail(status) {
 
 function LeadsPage({ app }) {
   const { user, leads, viewings, updateLead } = app;
-  const roles = Array.isArray(user?.roles) ? user.roles : [user?.role || "renter"];
-  const hasPublisherAccess = roles.includes("publisher");
+  const roles = (Array.isArray(user?.roles) ? user.roles : [user?.role || "renter"])
+    .map((role) => role === "publisher" ? "broker" : role);
+  const hasPublisherAccess = roles.includes("broker") || roles.includes("company_admin");
   const viewingItems = useMemo(() => {
     const bookedLeadViewings = leads
       .filter((lead) => String(lead.status || "").trim().toLowerCase() === "visning bokad")
