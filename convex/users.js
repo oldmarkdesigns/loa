@@ -75,8 +75,13 @@ async function upsertAuthenticatedUser(ctx, payload = {}) {
   }
 
   const currentRoles = Array.isArray(user.roles) && user.roles.length > 0 ? user.roles : [user.role || "renter"];
-  const nextRoles = currentRoles.length > 0 ? Array.from(new Set([...currentRoles, ...roles])) : roles;
-  const nextRole = nextRoles.includes(user.role) ? user.role : nextRoles[0];
+  // Never demote a user's active role due to a stale/incomplete roles array.
+  const normalizedCurrentRoles = normalizeRoles(
+    Array.from(new Set([...(Array.isArray(user.roles) ? user.roles : []), user.role].filter(Boolean))),
+    user.role || "renter"
+  );
+  const nextRoles = Array.from(new Set([...normalizedCurrentRoles, ...roles]));
+  const nextRole = nextRoles.includes(user.role) ? user.role : (nextRoles[0] || "renter");
   const updatedAt = nowIso();
 
   await ctx.db.patch(user._id, {
@@ -115,7 +120,7 @@ export const getTestSession = queryGeneric({
 
 export const createTestUser = mutationGeneric({
   args: {
-    role: v.string()
+    role: v.optional(v.string())
   },
   handler: async (ctx, args) => {
     const role = args.role === "company_admin" || args.role === "broker" ? args.role : "renter";
@@ -220,6 +225,58 @@ export const updateTestUser = mutationGeneric({
         ...(viewer.profile || {}),
         ...(args?.profile || {})
       },
+      updatedAt: nowIso()
+    });
+
+    return { user: sanitizeUser(await ctx.db.get(viewer._id)) };
+  }
+});
+
+export const addRoleToMe = mutationGeneric({
+  args: {
+    role: v.string()
+  },
+  handler: async (ctx, args) => {
+    const viewer = await getViewerOrThrow(ctx);
+    const requestedRole = args.role === "publisher" ? "broker" : args.role;
+    const normalizedRole = requestedRole === "broker" || requestedRole === "company_admin" || requestedRole === "renter"
+      ? requestedRole
+      : viewer.role || "renter";
+    const currentRoles = Array.isArray(viewer.roles) && viewer.roles.length > 0 ? viewer.roles : [viewer.role || "renter"];
+    const roles = Array.from(new Set([...currentRoles, normalizedRole].map((role) => role === "publisher" ? "broker" : role)));
+
+    await ctx.db.patch(viewer._id, {
+      role: normalizedRole,
+      roles,
+      updatedAt: nowIso()
+    });
+
+    return { user: sanitizeUser(await ctx.db.get(viewer._id)) };
+  }
+});
+
+export const addRoleToTestUser = mutationGeneric({
+  args: {
+    token: v.string(),
+    role: v.string()
+  },
+  handler: async (ctx, args) => {
+    const users = await ctx.db.query("users").collect();
+    const viewer = users.find((entry) => entry.testSessionToken === args.token);
+    if (!viewer) {
+      throw new Error("Testsessionen hittades inte.");
+    }
+
+    const requestedRole = args.role === "publisher" ? "broker" : args.role;
+    const normalizedRole = requestedRole === "broker" || requestedRole === "company_admin" || requestedRole === "renter"
+      ? requestedRole
+      : viewer.role || "renter";
+    const currentRoles = Array.isArray(viewer.roles) && viewer.roles.length > 0 ? viewer.roles : [viewer.role || "renter"];
+    const roles = Array.from(new Set([...currentRoles, normalizedRole].map((role) => role === "publisher" ? "broker" : role)));
+
+    await ctx.db.patch(viewer._id, {
+      role: normalizedRole,
+      roles,
       updatedAt: nowIso()
     });
 

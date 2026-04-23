@@ -12,16 +12,21 @@ const publisherWorkspaceItems = [
 ];
 
 function AppShell({ pathname, user, onSwitchRole, onLogout, onRequireAuth, isGuest = false, children }) {
-  const activeRole = user?.role === "publisher" || user?.role === "company_admin" ? user.role : "renter";
-  const rawRoles = isGuest ? ["renter"] : (Array.isArray(user?.roles) ? user.roles : [activeRole]);
-  const roleSet = new Set(rawRoles.filter((item) => item === "renter" || item === "publisher" || item === "company_admin"));
-  const hasPublisherAccess = roleSet.has("publisher") || roleSet.has("company_admin");
+  const activeRole = user?.role === "publisher" ? "broker" : user?.role === "broker" || user?.role === "company_admin" ? user.role : "renter";
+  const rawRoles = isGuest
+    ? ["renter"]
+    : Array.from(new Set([
+        ...(Array.isArray(user?.roles) ? user.roles : []),
+        activeRole
+      ].filter(Boolean).map((item) => item === "publisher" ? "broker" : item)));
+  const roleSet = new Set(rawRoles.filter((item) => item === "renter" || item === "broker" || item === "company_admin"));
+  const hasPublisherAccess = roleSet.has("broker") || roleSet.has("company_admin");
   const isPublisherWorkspacePath = (
     routeMatches(pathname, "/app/publish")
     || routeMatches(pathname, "/app/my-listings")
     || routeMatches(pathname, "/app/leads")
   );
-  const showPublisherWorkspaceNav = !isGuest && hasPublisherAccess && ((activeRole === "publisher" || activeRole === "company_admin") || isPublisherWorkspacePath);
+  const showPublisherWorkspaceNav = !isGuest && hasPublisherAccess && ((activeRole === "broker" || activeRole === "company_admin") || isPublisherWorkspacePath);
   const deferPublisherWorkspaceNavToProfile = routeMatches(pathname, "/app/profile");
   const currentSearch = typeof window !== "undefined" ? window.location.search : "";
   const hasProfileSource = isPublisherWorkspacePath && new URLSearchParams(currentSearch).get("from") === "profile";
@@ -260,6 +265,7 @@ function AppShell({ pathname, user, onSwitchRole, onLogout, onRequireAuth, isGue
             menuOpen={menuOpen}
             setMenuOpen={setMenuOpen}
             profileMenuPanelRef={profileMenuPanelRef}
+            user={user}
             onSwitchRole={onSwitchRole}
             onLogout={onLogout}
           />

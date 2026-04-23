@@ -80,11 +80,17 @@ export async function getViewerOrThrow(ctx) {
 }
 
 export function viewerHasRole(viewer, role) {
-  const roles = Array.isArray(viewer?.roles) && viewer.roles.length > 0
+  const normalizedTarget = role === "publisher" ? "broker" : role;
+  const roles = (Array.isArray(viewer?.roles) && viewer.roles.length > 0
     ? viewer.roles
-    : [viewer?.role].filter(Boolean);
+    : [viewer?.role].filter(Boolean)
+  ).map((item) => item === "publisher" ? "broker" : item);
 
-  return roles.includes(role);
+  if (normalizedTarget === "broker") {
+    return roles.includes("broker") || roles.includes("company_admin");
+  }
+
+  return roles.includes(normalizedTarget);
 }
 
 export function assertViewerHasRole(viewer, role) {

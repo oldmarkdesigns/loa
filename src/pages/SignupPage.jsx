@@ -1,61 +1,130 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@workos-inc/authkit-react";
-import AuthFlowNav from "../components/layout/AuthFlowNav";
-import { trackSignupStarted } from "../lib/analytics";
-import { hasConvexConfig, hasWorkosConfig } from "../lib/convex";
 import { defaultAppPathForRole, navigateTo } from "../lib/router";
-
-const countryCodeOptions = [
-  { label: "Sverige (+46)", value: "+46" },
-  { label: "Norge (+47)", value: "+47" },
-  { label: "Danmark (+45)", value: "+45" },
-  { label: "Finland (+358)", value: "+358" },
-  { label: "Tyskland (+49)", value: "+49" },
-  { label: "Storbritannien (+44)", value: "+44" },
-  { label: "USA (+1)", value: "+1" }
-];
+import { CameraIcon } from "../components/icons/UiIcons";
+import AuthFlowNav from "../components/layout/AuthFlowNav";
+import { hasConvexConfig, hasWorkosConfig } from "../lib/convex";
 
 function SignupPage({ onCompleteSignup, onTestSignup, currentUser }) {
   const { isLoading, user, signUp } = useAuth();
-  const params = new URLSearchParams(window.location.search);
-  const rawRole = params.get("role");
-  const roleFromUrl = rawRole === "broker" || rawRole === "company_admin" ? rawRole : "renter";
-  const returnTo = params.get("returnTo") || "/onboarding";
-  const isConfigured = hasConvexConfig && hasWorkosConfig;
   const signupUser = user || (currentUser?.authProvider === "test" ? currentUser : null);
+  const isConfigured = hasConvexConfig && hasWorkosConfig;
+  const countryCodeOptions = [
+    { label: "Sverige (+46)", value: "+46" },
+    { label: "Norge (+47)", value: "+47" },
+    { label: "Danmark (+45)", value: "+45" },
+    { label: "Finland (+358)", value: "+358" },
+    { label: "Tyskland (+49)", value: "+49" },
+    { label: "Storbritannien (+44)", value: "+44" },
+    { label: "USA (+1)", value: "+1" }
+  ];
 
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
+    email: "",
     phone: "",
-    role: roleFromUrl,
-    roles: [roleFromUrl]
+    roles: ["renter"],
+    role: "renter",
+    roleSelection: "renter"
   });
   const [phoneCountryCode, setPhoneCountryCode] = useState("+46");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
+  const [detailsStep, setDetailsStep] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("step") === "details" ? 2 : 1;
+  });
+  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState("");
+  const avatarInputRef = useRef(null);
+  const cardWrapRef = useRef(null);
+  const [cardWidth, setCardWidth] = useState(null);
+  const [search, setSearch] = useState(window.location.search || "");
+
+  const roleFromUrl = (() => {
+    const params = new URLSearchParams(search);
+    const requestedRole = params.get("role");
+    return requestedRole === "broker" || requestedRole === "company_admin" ? requestedRole : "renter";
+  })();
+
+  const signupMode = (() => {
+    const params = new URLSearchParams(search);
+    return params.get("mode") === "test" ? "test" : "workos";
+  })();
+
+  const returnTo = (() => {
+    const params = new URLSearchParams(search);
+    return params.get("returnTo") || "/onboarding";
+  })();
 
   useEffect(() => {
-    setForm((current) => ({
-      ...current,
-      role: roleFromUrl,
-      roles: [roleFromUrl]
-    }));
+    return () => {
+      if (avatarPreviewUrl) {
+        URL.revokeObjectURL(avatarPreviewUrl);
+      }
+    };
+  }, [avatarPreviewUrl]);
+
+  useEffect(() => {
+    function syncSearch() {
+      setSearch(window.location.search || "");
+    }
+
+    syncSearch();
+    window.addEventListener("popstate", syncSearch);
+    window.addEventListener("app:navigate", syncSearch);
+    return () => {
+      window.removeEventListener("popstate", syncSearch);
+      window.removeEventListener("app:navigate", syncSearch);
+    };
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(search);
+    setDetailsStep(params.get("step") === "details" ? 2 : 1);
+  }, [search]);
+
+  useEffect(() => {
+    setForm((previous) => ({ ...previous, role: roleFromUrl, roles: [roleFromUrl], roleSelection: roleFromUrl }));
   }, [roleFromUrl]);
 
   useEffect(() => {
-    if (!signupUser) {
-      return;
-    }
-
+    if (!signupUser) return;
     setForm((current) => ({
       ...current,
       firstName: current.firstName || signupUser.firstName || signupUser.profile?.firstName || "",
-      lastName: current.lastName || signupUser.lastName || signupUser.profile?.lastName || ""
+      lastName: current.lastName || signupUser.lastName || signupUser.profile?.lastName || "",
+      email: signupUser.email || current.email
     }));
   }, [signupUser]);
 
+  useEffect(() => {
+    const wrap = cardWrapRef.current;
+    if (!wrap) return undefined;
+
+    const resolveCardWidth = () => setCardWidth(Math.round(wrap.getBoundingClientRect().width));
+    resolveCardWidth();
+    const observer = new ResizeObserver(resolveCardWidth);
+    observer.observe(wrap);
+    return () => observer.disconnect();
+  }, []);
+
+  function setRoleSelection(selection) {
+    setForm((previous) => ({ ...previous, role: selection, roles: [selection], roleSelection: selection }));
+  }
+
   async function startSignup() {
+    if (signupUser) {
+      setDetailsStep(2);
+      navigateTo(`/signup?step=details&returnTo=${encodeURIComponent(returnTo)}`, { replace: true });
+      return;
+    }
+
+    if (signupMode === "test") {
+      await handleTestSignup();
+      return;
+    }
+
     if (!isConfigured) {
       setError("Backend-auth saknar miljövariabler.");
       return;
@@ -63,22 +132,44 @@ function SignupPage({ onCompleteSignup, onTestSignup, currentUser }) {
 
     setPending(true);
     setError("");
-    trackSignupStarted({ role: form.role });
-
     try {
       await signUp({
         state: {
-          returnTo: `/signup?step=details&role=${form.role}&returnTo=${encodeURIComponent(returnTo)}`
+          returnTo: `/signup?step=details&returnTo=${encodeURIComponent(returnTo)}`
         }
       });
     } catch (submitError) {
-      setPending(false);
       setError(submitError.message || "Kunde inte starta registreringen.");
+      setPending(false);
+    }
+  }
+
+  async function handleTestSignup() {
+    if (!onTestSignup) return;
+    setPending(true);
+    setError("");
+    try {
+      await onTestSignup();
+      setDetailsStep(2);
+      navigateTo("/signup?step=details", { replace: true });
+    } catch (submitError) {
+      setError(submitError.message || "Kunde inte skapa testkonto.");
+    } finally {
+      setPending(false);
     }
   }
 
   async function submit(event) {
     event.preventDefault();
+
+    if (detailsStep < 3) {
+      if (detailsStep === 2) {
+        setDetailsStep(3);
+        return;
+      }
+      setError("Skapa konto först.");
+      return;
+    }
 
     if (!signupUser) {
       setError("Skapa konto med WorkOS först.");
@@ -90,161 +181,100 @@ function SignupPage({ onCompleteSignup, onTestSignup, currentUser }) {
 
     try {
       const fullName = `${form.firstName} ${form.lastName}`.trim();
-      const phone = String(form.phone || "").trim();
+      const normalizedPhone = String(form.phone || "").trim();
       const nextUser = await onCompleteSignup({
         name: fullName || [signupUser.firstName, signupUser.lastName].filter(Boolean).join(" ").trim() || signupUser.email,
-        phone: phone ? `${phoneCountryCode} ${phone}` : "",
+        phone: normalizedPhone ? `${phoneCountryCode} ${normalizedPhone}` : "",
         profile: {
           firstName: form.firstName,
-          lastName: form.lastName
+          lastName: form.lastName,
+          ...(avatarPreviewUrl ? { avatarUrl: avatarPreviewUrl } : {})
         },
         role: form.role,
-        roles: [form.role]
+        roles: form.roles
       });
-
-      navigateTo(nextUser.onboardingCompleted ? defaultAppPathForRole(nextUser.role) : returnTo);
+      navigateTo(nextUser.onboardingCompleted ? defaultAppPathForRole(nextUser.role) : "/onboarding");
     } catch (submitError) {
-      setError(submitError.message || "Kunde inte slutföra kontot.");
+      setError(submitError.message || "Kunde inte skapa konto.");
     } finally {
       setPending(false);
     }
   }
 
-  async function handleSkip() {
-    if (!signupUser || pending) {
-      return;
-    }
+  const avatarInitial = String(form.firstName || form.email || "A").trim().charAt(0).toUpperCase();
 
-    setPending(true);
-    setError("");
-
-    try {
-      const nextUser = await onCompleteSignup({
-        name: [signupUser.firstName, signupUser.lastName].filter(Boolean).join(" ").trim() || signupUser.email,
-        phone: "",
-        role: form.role,
-        roles: [form.role]
-      });
-
-      navigateTo(nextUser.onboardingCompleted ? defaultAppPathForRole(nextUser.role) : returnTo);
-    } catch (submitError) {
-      setError(submitError.message || "Kunde inte hoppa över steget.");
-    } finally {
-      setPending(false);
-    }
-  }
-
-  async function handleTestSignup(role) {
-    if (!onTestSignup) return;
-    setPending(true);
-    setError("");
-    try {
-      await onTestSignup(role);
-      navigateTo(`/signup?step=details&role=${role}`, { replace: true });
-    } catch (submitError) {
-      setError(submitError.message || "Kunde inte skapa testkonto.");
-    } finally {
-      setPending(false);
-    }
-  }
-
-  const isDetailsStep = Boolean(signupUser);
-
-  if (!isDetailsStep) {
+  if (detailsStep === 1) {
     return (
       <main className="grid min-h-screen place-items-center bg-white px-4 pb-8 pt-20">
         <AuthFlowNav />
-        <div className="w-full max-w-[460px] rounded-[30px] border border-black/10 bg-white px-6 py-7 sm:px-7 sm:py-8">
-          <h1 className="text-[1.95rem] font-semibold leading-tight text-[#0f1930]">Skapa konto</h1>
-          <p className="mt-1 text-sm text-ink-600">
-            WorkOS hanterar själva registreringen. Välj kontoform först, sedan skickas du vidare.
-          </p>
+        <div className="mx-auto w-full">
+          <div ref={cardWrapRef} className="mx-auto w-full max-w-[430px] rounded-[30px] border border-black/10 bg-white px-6 py-7 sm:px-7 sm:py-8">
+            <h1 className="text-[1.95rem] font-semibold leading-tight text-[#0f1930]">Skapa konto</h1>
+            <p className="mt-1 text-sm text-ink-600">WorkOS hanterar registreringen. Du väljer roll i nästa steg.</p>
 
-          <div className="mt-5">
-            <p className="mb-2 text-sm font-semibold text-ink-700">Jag vill</p>
-            <div className="grid grid-cols-1 gap-2.5" role="radiogroup" aria-label="Välj kontotyp">
-              {[
-                { value: "renter", label: "Hyresgäst" },
-                { value: "broker", label: "Mäklare" },
-                { value: "company_admin", label: "Bolagsadmin" }
-              ].map((option) => {
-                const selected = form.role === option.value;
-                return (
-                  <button
-                    key={option.value}
-                    type="button"
-                    className={`rounded-2xl border px-4 py-3 text-left text-sm transition ${
-                      selected
-                        ? "border-brand-400 bg-brand-50 text-brand-700"
-                        : "border-black/10 bg-white text-ink-700 hover:border-black/20"
-                    }`}
-                    onClick={() =>
-                      setForm((current) => ({
-                        ...current,
-                        role: option.value,
-                        roles: [option.value]
-                      }))
-                    }
-                  >
-                    {option.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {!isConfigured ? (
-            <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-              Backend-auth saknar miljövariabler. Lägg till <code>VITE_CONVEX_URL</code>, <code>VITE_WORKOS_CLIENT_ID</code>
-              {" "}
-              och <code>VITE_WORKOS_REDIRECT_URI</code>.
-            </div>
-          ) : (
-            <div className="mt-5 flex flex-col gap-3">
+            {!isConfigured ? (
+              <div className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                WorkOS saknar miljövariabler. Lägg till <code>VITE_CONVEX_URL</code>, <code>VITE_WORKOS_CLIENT_ID</code> och <code>VITE_WORKOS_REDIRECT_URI</code>.
+              </div>
+            ) : (
+              <div className="mt-5 flex flex-col gap-3">
               <button
                 type="button"
-                className="inline-flex items-center justify-center rounded-full border border-black/20 bg-white px-6 py-3 text-sm font-semibold text-ink-800 hover:bg-[#f8fafc]"
+                className="inline-flex items-center justify-center rounded-full border border-[#0f1930] bg-[#0f1930] px-6 py-3 text-sm font-semibold text-white hover:bg-[#16213b]"
                 disabled={pending || isLoading}
                 onClick={startSignup}
               >
-                {pending ? "Startar..." : "Skapa konto i WorkOS"}
+                {pending ? "Startar..." : signupMode === "test" ? "Skapa konto (test)" : "Skapa konto"}
               </button>
-              <button
-                type="button"
-                className="inline-flex items-center justify-center rounded-full border border-black/10 bg-[#f8fafc] px-6 py-3 text-sm font-semibold text-ink-700 hover:bg-white"
-                onClick={() =>
-                  navigateTo(
-                    `/login?returnTo=${encodeURIComponent(`/signup?step=details&role=${form.role}&returnTo=${encodeURIComponent(returnTo)}`)}`
-                  )
-                }
-              >
-                Jag har redan konto
-              </button>
-            </div>
-          )}
-
-          <div className="mt-5 border-t border-black/10 pt-5">
-            <p className="mb-2 text-sm font-semibold text-ink-700">Testa utan WorkOS</p>
-            <div className="grid grid-cols-1 gap-2.5">
-              {[
-                { value: "renter", label: "Testkonto: Hyresgäst" },
-                { value: "broker", label: "Testkonto: Mäklare" },
-                { value: "company_admin", label: "Testkonto: Bolagsadmin" }
-              ].map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  className="inline-flex items-center justify-center rounded-full border border-black/10 bg-[#f8fafc] px-6 py-3 text-sm font-semibold text-ink-700 hover:bg-white"
-                  disabled={pending}
-                  onClick={() => handleTestSignup(option.value)}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
+                <p className="text-center text-sm text-ink-600">
+                  Har du redan ett konto?{" "}
+                  <button
+                    type="button"
+                    className="font-semibold text-[#0f1930] underline decoration-black/20 underline-offset-4"
+                    onClick={() => navigateTo(`/login?returnTo=${encodeURIComponent(`/signup?step=details&returnTo=${encodeURIComponent(returnTo)}`)}`)}
+                  >
+                    Logga in
+                  </button>
+                </p>
+              </div>
+            )}
           </div>
 
-          {error ? <p className="mt-4 text-sm text-red-600">{error}</p> : null}
+          <div className="mx-auto mt-4 text-center" style={cardWidth ? { width: `${cardWidth}px`, maxWidth: "100%" } : undefined}>
+            <div className="inline-flex w-full items-center justify-between rounded-2xl border border-black/10 bg-[#f8fafc] px-4 py-3 text-left">
+              <div>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-semibold text-ink-800">Testläge</p>
+                </div>
+                <p className="mt-0.5 text-xs text-ink-600">
+                  {signupMode === "test" ? "Primärknappen skapar testkonto." : "Primärknappen skickar vidare till WorkOS."}
+                </p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={signupMode === "test"}
+                aria-label="Växla mellan testläge och WorkOS"
+                className={`relative inline-flex h-6 w-10 min-h-0 items-center rounded-full p-0.5 transition-colors ${
+                  signupMode === "test" ? "justify-end bg-[#0f1930]" : "justify-start bg-[#a8adb3]"
+                }`}
+                disabled={pending}
+                onClick={() => {
+                  const params = new URLSearchParams(window.location.search);
+                  params.set("mode", signupMode === "test" ? "workos" : "test");
+                  params.set("role", form.role);
+                  const nextQuery = params.toString();
+                  navigateTo(`/signup${nextQuery ? `?${nextQuery}` : ""}`, { replace: true });
+                }}
+              >
+                <span aria-hidden="true" className="h-5 w-5 rounded-full bg-white shadow-[0_1px_2px_rgba(15,25,48,0.35)]" />
+              </button>
+            </div>
+
+            <p className="mt-4 text-center text-[11px] leading-relaxed text-ink-500">
+              Genom att fortsätta godkänner du Lokalflödes användarvillkor och integritetspolicy.
+            </p>
+          </div>
         </div>
       </main>
     );
@@ -253,100 +283,125 @@ function SignupPage({ onCompleteSignup, onTestSignup, currentUser }) {
   return (
     <main className="grid min-h-screen place-items-center bg-white px-4 pb-8 pt-20">
       <AuthFlowNav />
-      <div className="w-full max-w-[460px] rounded-[30px] border border-black/10 bg-white px-6 py-7 sm:px-7 sm:py-8">
-        <h1 className="text-[1.95rem] font-semibold leading-tight text-[#0f1930]">Välkommen</h1>
-        <p className="mt-1 text-sm text-ink-600">Komplettera några uppgifter innan onboarding startar.</p>
+      <div className="w-full max-w-[460px]">
+        <div className="rounded-[30px] border border-black/10 bg-white px-6 py-7 sm:px-7 sm:py-8">
+          <h1 className="text-[1.95rem] font-semibold leading-tight text-[#0f1930]">
+            {detailsStep === 2 ? "Välkommen!" : "Berätta om dig själv"}
+          </h1>
+          <p className="mt-1 text-sm text-ink-600">
+            {detailsStep === 2 ? "Välj vilken roll som passar dig bäst." : "Fyll i dina personuppgifter."}
+          </p>
 
-        <form className="mt-5 space-y-3" onSubmit={submit}>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <label className="space-y-1.5">
-              <span className="text-sm font-medium text-ink-700">Förnamn</span>
-              <input
-                className="field"
-                value={form.firstName}
-                onChange={(event) => setForm((current) => ({ ...current, firstName: event.target.value }))}
-              />
-            </label>
-            <label className="space-y-1.5">
-              <span className="text-sm font-medium text-ink-700">Efternamn</span>
-              <input
-                className="field"
-                value={form.lastName}
-                onChange={(event) => setForm((current) => ({ ...current, lastName: event.target.value }))}
-              />
-            </label>
-          </div>
+          <form className="mt-5 space-y-3" onSubmit={submit}>
+            {detailsStep === 2 ? (
+              <div className="mt-1">
+                <p className="mb-2 text-sm font-semibold text-ink-700">Jag vill</p>
+                <div className="grid grid-cols-1 gap-2.5" role="radiogroup" aria-label="Välj kontotyp">
+                  {[
+                    { value: "renter", label: "Hyresgäst" },
+                    { value: "broker", label: "Mäklare" },
+                    { value: "company_admin", label: "Bolagsadmin" }
+                  ].map((option) => {
+                    const selected = form.roleSelection === option.value;
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        role="radio"
+                        aria-checked={selected}
+                        onClick={() => setRoleSelection(option.value)}
+                        className={`role-option-button flex w-full items-center justify-between border px-4 py-3 text-left transition ${
+                          selected ? "border-[#0f1930] bg-white text-[#0f1930] shadow-[0_0_0_1px_rgba(15,25,48,0.2)]" : "border-black/15 bg-white text-ink-700"
+                        }`}
+                      >
+                        <span className="text-sm font-medium leading-tight">{option.label}</span>
+                        <span className={`inline-flex h-5 w-5 items-center justify-center rounded-full border ${selected ? "border-[#0f1930]" : "border-black/20"}`}>
+                          <span className={`h-2 w-2 rounded-full ${selected ? "bg-[#0f1930]" : "bg-transparent"}`} />
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="mt-1 flex flex-col items-center">
+                  <div className="relative mb-8">
+                    {avatarPreviewUrl ? (
+                      <img src={avatarPreviewUrl} alt="Förhandsvisning profilbild" className="h-28 w-28 rounded-full border border-black/10 object-cover" />
+                    ) : (
+                      <div className="inline-flex h-28 w-28 items-center justify-center rounded-full bg-black/5 text-4xl font-semibold text-ink-500">
+                        {avatarInitial || "A"}
+                      </div>
+                    )}
+                    <button
+                      type="button"
+                      className="absolute left-1/2 top-full inline-flex min-h-0 -translate-x-1/2 -translate-y-1/2 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-black/15 bg-[#0f1930] px-4 py-2 text-xs font-semibold text-white"
+                      onClick={() => avatarInputRef.current?.click()}
+                    >
+                      <CameraIcon className="h-4 w-4" />
+                      Lägg till foto (frivilligt)
+                    </button>
+                  </div>
+                  <input
+                    ref={avatarInputRef}
+                    className="hidden"
+                    type="file"
+                    accept="image/*"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      if (!file) return;
+                      setAvatarPreviewUrl((previous) => {
+                        if (previous) URL.revokeObjectURL(previous);
+                        return URL.createObjectURL(file);
+                      });
+                    }}
+                  />
+                </div>
 
-          <label className="space-y-1.5">
-            <span className="text-sm font-medium text-ink-700">E-post</span>
-            <input className="field bg-[#f8fafc]" value={signupUser?.email || ""} disabled />
-          </label>
+                <label className="block">
+                  <span className="mb-1 block text-xs font-semibold text-ink-700">Förnamn</span>
+                  <input className="field" value={form.firstName} onChange={(e) => setForm((p) => ({ ...p, firstName: e.target.value }))} required />
+                </label>
+                <label className="block">
+                  <span className="mb-1 block text-xs font-semibold text-ink-700">Efternamn</span>
+                  <input className="field" value={form.lastName} onChange={(e) => setForm((p) => ({ ...p, lastName: e.target.value }))} required />
+                </label>
+                <label className="block">
+                  <span className="mb-1 block text-xs font-semibold text-ink-700">Telefon (valfritt)</span>
+                  <div className="grid grid-cols-[152px_1fr] gap-2">
+                    <select className="field select-chevron" value={phoneCountryCode} onChange={(e) => setPhoneCountryCode(e.target.value)}>
+                      {countryCodeOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                    <input className="field" value={form.phone} onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))} placeholder="70 123 45 67" />
+                  </div>
+                </label>
+              </>
+            )}
 
-          <div className="grid grid-cols-[140px_minmax(0,1fr)] gap-3">
-            <label className="space-y-1.5">
-              <span className="text-sm font-medium text-ink-700">Landskod</span>
-              <select className="field" value={phoneCountryCode} onChange={(event) => setPhoneCountryCode(event.target.value)}>
-                {countryCodeOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="space-y-1.5">
-              <span className="text-sm font-medium text-ink-700">Telefon</span>
-              <input
-                className="field"
-                value={form.phone}
-                onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))}
-              />
-            </label>
-          </div>
+            {error ? <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">{error}</p> : null}
 
-          <div className="mt-1">
-            <p className="mb-2 text-sm font-semibold text-ink-700">Primär roll</p>
-            <div className="grid grid-cols-1 gap-2.5" role="radiogroup" aria-label="Välj kontotyp">
-              {[
-                { value: "renter", label: "Hyresgäst" },
-                { value: "broker", label: "Mäklare" },
-                { value: "company_admin", label: "Bolagsadmin" }
-              ].map((option) => {
-                const selected = form.role === option.value;
-                return (
-                  <button
-                    key={option.value}
-                    type="button"
-                    className={`rounded-2xl border px-4 py-3 text-left text-sm transition ${
-                      selected
-                        ? "border-brand-400 bg-brand-50 text-brand-700"
-                        : "border-black/10 bg-white text-ink-700 hover:border-black/20"
-                    }`}
-                    onClick={() =>
-                      setForm((current) => ({
-                        ...current,
-                        role: option.value,
-                        roles: [option.value]
-                      }))
-                    }
-                  >
-                    {option.label}
+            <div className={`flex flex-col gap-3 ${detailsStep === 3 ? "pt-2" : "mt-6"}`}>
+              <button type="submit" className="rounded-full border border-[#0f1930] bg-[#0f1930] px-5 py-3 text-sm font-semibold text-white" disabled={pending}>
+                {pending ? "Sparar..." : detailsStep === 2 ? "Fortsätt" : "Fortsätt"}
+              </button>
+
+              {detailsStep === 3 ? (
+                <>
+                  <p className="text-center text-xs text-ink-600">Har du redan konto?</p>
+                  <button type="button" className="mx-auto inline-flex items-center justify-center rounded-full border border-black/15 bg-white px-5 py-3 text-sm font-semibold text-ink-800 hover:bg-[#f8fafc]" onClick={() => navigateTo("/login")}>
+                    Logga in
                   </button>
-                );
-              })}
+                </>
+              ) : null}
+
             </div>
-          </div>
-
-          {error ? <p className="text-sm text-red-600">{error}</p> : null}
-
-          <div className="flex flex-col gap-3 pt-2 sm:flex-row">
-            <button type="button" className="btn-secondary px-5 py-3 text-sm" disabled={pending} onClick={handleSkip}>
-              Hoppa över
-            </button>
-            <button type="submit" className="btn-primary px-5 py-3 text-sm" disabled={pending}>
-              {pending ? "Sparar..." : "Fortsätt"}
-            </button>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
     </main>
   );

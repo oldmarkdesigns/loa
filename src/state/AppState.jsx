@@ -410,9 +410,17 @@ export function AppProvider({ children }) {
 
   async function completeOnboarding(payload) {
     const testToken = typeof window !== "undefined" ? window.localStorage.getItem(TEST_SESSION_STORAGE_KEY) : null;
-    const { user: nextUser } = user?.authProvider === "test" && testToken
+    let { user: nextUser } = user?.authProvider === "test" && testToken
       ? await profileApi.completeTestOnboarding(testToken, payload)
       : await profileApi.completeOnboarding(payload);
+
+    if (payload?.primaryRole === "broker") {
+      const response = user?.authProvider === "test" && testToken
+        ? await profileApi.addRoleToTestUser(testToken, "broker")
+        : await profileApi.addRoleToMe("broker");
+      nextUser = response.user;
+    }
+
     hydrateLocalUserState(nextUser);
     const renterProgram = payload?.primaryRole === "renter" ? payload?.profile?.renterProgram : null;
     const onboardingFilters = renterProgram ? mapRenterProgramToFilters(renterProgram) : null;
@@ -486,8 +494,8 @@ export function AppProvider({ children }) {
     return nextUser;
   }
 
-  async function createTestSignup(role) {
-    const { user: nextUser, token } = await authApi.createTestUser(role);
+  async function createTestSignup() {
+    const { user: nextUser, token } = await authApi.createTestUser();
     if (typeof window !== "undefined") {
       window.localStorage.setItem(TEST_SESSION_STORAGE_KEY, token);
     }

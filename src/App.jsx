@@ -26,11 +26,8 @@ function AppContent() {
   const app = useAppState();
   const [bookingListing, setBookingListing] = useState(null);
 
-  function openAuthOverlay(mode = "login", preferredRole = "renter") {
-    const target =
-      mode === "signup"
-        ? `/signup${preferredRole !== "renter" ? `?role=${preferredRole}` : ""}`
-        : "/login";
+  function openAuthOverlay(mode = "login") {
+    const target = mode === "signup" ? "/signup" : "/login";
     navigateTo(target);
   }
 
@@ -39,6 +36,8 @@ function AppContent() {
       return;
     }
 
+    const search = typeof window !== "undefined" ? window.location.search : "";
+    const searchParams = new URLSearchParams(search);
     const isAuthenticated = Boolean(app.user);
     const isOnboardingPath = pathname === "/onboarding" || pathname.startsWith("/onboarding/");
     const isAppPath = pathname === "/app" || pathname.startsWith("/app/");
@@ -46,6 +45,11 @@ function AppContent() {
     const isPublicListingPath = pathname.startsWith("/app/listings/");
     const isCallbackPath = pathname === "/callback";
     const isAuthPath = pathname === "/login" || pathname === "/signup" || pathname === "/forgot-password" || isCallbackPath;
+    const normalizedRoles = Array.isArray(app.user?.roles)
+      ? app.user.roles.map((item) => item === "publisher" ? "broker" : item)
+      : [app.user?.role === "publisher" ? "broker" : (app.user?.role || "renter")];
+    const isAddBrokerIntent = isOnboardingPath && searchParams.get("intent") === "add-role" && searchParams.get("role") === "broker";
+    const canAddBrokerRole = isAuthenticated && !normalizedRoles.includes("broker") && !normalizedRoles.includes("company_admin");
 
     if (!isAuthenticated && pathname === "/app") {
       navigateTo("/login?returnTo=/app", { replace: true });
@@ -58,7 +62,7 @@ function AppContent() {
     }
 
     if (!isAuthenticated && isOnboardingPath) {
-      navigateTo(`/signup?role=${app.user?.role || "renter"}`, { replace: true });
+      navigateTo("/signup", { replace: true });
       return;
     }
 
@@ -72,7 +76,7 @@ function AppContent() {
       return;
     }
 
-    if (isAuthenticated && app.user.onboardingCompleted && (isAuthPath || isOnboardingPath)) {
+    if (isAuthenticated && app.user.onboardingCompleted && (isAuthPath || (isOnboardingPath && !(isAddBrokerIntent && canAddBrokerRole)))) {
       navigateTo(defaultAppPathForRole(app.user.role), { replace: true });
       return;
     }

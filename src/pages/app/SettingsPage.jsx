@@ -50,7 +50,9 @@ function SettingsPage({ app }) {
     phone: ""
   });
 
-  const activeRoleLabel = useMemo(() => (user?.role === "publisher" ? "Hyresvärd" : "Hyresgäst"), [user?.role]);
+  const activeRoleLabel = useMemo(() => (
+    user?.role === "publisher" ? "Hyresvärd" : user?.role === "company_admin" ? "Bolagsadmin" : "Hyresgäst"
+  ), [user?.role]);
   const isIdVerified = Boolean(user?.profile?.idVerified);
   const [firstName, ...restName] = String(user?.name || "").trim().split(" ");
   const lastName = restName.join(" ");
@@ -212,7 +214,7 @@ function SettingsPage({ app }) {
                     <div className="space-y-3">
                       <p className="text-sm text-ink-700">Aktiv roll: <span className="font-semibold">{activeRoleLabel}</span></p>
                       <div className="flex flex-wrap gap-2">
-                        {user?.role === "publisher" ? (
+                        {user?.role === "publisher" || user?.role === "company_admin" ? (
                           <button
                             type="button"
                             className="btn-secondary px-4 py-2 text-xs"

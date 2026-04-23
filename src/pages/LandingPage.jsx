@@ -701,9 +701,9 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
     if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
     return `${words[0][0] || ""}${words[1][0] || ""}`.toUpperCase();
   }, [user?.name]);
-  const activeRole = user?.role === "publisher" ? "publisher" : "renter";
+  const activeRole = user?.role === "publisher" || user?.role === "company_admin" ? user.role : "renter";
   const rawRoles = Array.isArray(user?.roles) ? user.roles : [activeRole];
-  const roleSet = new Set(rawRoles.filter((item) => item === "renter" || item === "publisher"));
+  const roleSet = new Set(rawRoles.filter((item) => item === "renter" || item === "publisher" || item === "company_admin"));
   const favoriteIds = useMemo(
     () => new Set((favorites || []).map((entry) => String(entry.listingId))),
     [favorites]

@@ -13,7 +13,7 @@ function ForgotPasswordPage() {
         <div className="rounded-[30px] border border-black/10 bg-white px-6 py-7 sm:px-7 sm:py-8">
           <h1 className="text-[1.95rem] font-semibold leading-tight text-[#0f1930]">Glömt lösenord</h1>
           <p className="mt-1 text-sm text-ink-600">
-            Lösenordsåterställning hanteras i WorkOS. Använd samma e-postadress som vid inloggning.
+            Ange din e-postadress så skickar vi en återställningslänk.
           </p>
 
           <form
@@ -35,10 +35,10 @@ function ForgotPasswordPage() {
             </label>
 
             <button type="submit" className="inline-flex w-full items-center justify-center rounded-full bg-[#0f1930] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#16233f]">
-              Visa återställningsinstruktion
+              Skicka återställningslänk
             </button>
 
-            {sent ? <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700">Gå vidare till WorkOS-inloggningen och välj lösenordsåterställning där om kontot finns.</p> : null}
+            {sent ? <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700">Om kontot finns har vi skickat en återställningslänk.</p> : null}
           </form>
 
           <div className="mt-4 text-center">

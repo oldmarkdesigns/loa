@@ -4041,12 +4041,12 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
       {showAdvancedSearchOverlay ? (
         <div
           className={`fixed inset-0 z-[72] flex items-center justify-center p-4 backdrop-blur-[2px] transition-all duration-200 ${
-            isAdvancedSearchOverlayActive ? "bg-black/35 opacity-100" : "bg-black/0 opacity-0"
+            isAdvancedSearchOverlayActive ? "bg-white/0 opacity-100" : "bg-white/0 opacity-0"
           }`}
           onClick={closeAdvancedSearchOverlay}
         >
           <div
-            className={`relative w-full max-w-4xl rounded-[32px] border border-black/10 bg-white shadow-[0_24px_64px_rgba(15,25,48,0.18)] transition-all duration-200 ${
+            className={`relative w-full max-w-4xl rounded-[32px] border border-black/10 bg-white shadow-[0_16px_40px_rgba(15,25,48,0.12)] transition-all duration-200 ${
               isAdvancedSearchOverlayActive
                 ? "translate-y-0 scale-100 opacity-100"
                 : "translate-y-2 scale-[0.985] opacity-0"
