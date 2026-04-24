@@ -5,6 +5,7 @@ import {
   ArrowLeftIcon,
   BuildingIcon,
   CalendarIcon,
+  CarIcon,
   ClockIcon,
   CoinsIcon,
   EyeIcon,
@@ -746,7 +747,7 @@ function ProfilePage({ app }) {
                           aria-label="Redigera profilbild"
                           onClick={() => setShowTeamOverlay(true)}
                         >
-                          <PencilIcon className="h-4 w-4" />
+                          <CameraIcon className="h-4 w-4" />
                         </button>
                       </div>
                       <div>
@@ -1496,7 +1497,7 @@ function ProfilePage({ app }) {
                       onClick={() => profileAvatarInputRef.current?.click()}
                       aria-label="Byt foto"
                     >
-                      <PencilIcon className="h-4 w-4" />
+                      <CameraIcon className="h-4 w-4" />
                     </button>
                     <input
                       ref={profileAvatarInputRef}

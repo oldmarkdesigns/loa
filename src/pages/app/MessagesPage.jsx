@@ -147,7 +147,6 @@ const brokerConversations = [
     counterpartName: "Elin Andersson",
     counterpartInitials: "EA",
     company: "Nordic Product Studio AB",
-    priority: "Hög",
     stage: "Ny",
     matchScore: 94,
     pipelineLabel: "Ny",
@@ -173,7 +172,6 @@ const brokerConversations = [
     counterpartName: "Samuel Oldmark",
     counterpartInitials: "SO",
     company: "Oldmark Designs AB",
-    priority: "Medel",
     stage: "Kvalificerad",
     matchScore: 92,
     pipelineLabel: "Kvalificerad",
@@ -189,7 +187,6 @@ const brokerConversations = [
     counterpartName: "Marcus Nilsson",
     counterpartInitials: "MN",
     company: "Nilsson & Co",
-    priority: "Medel",
     stage: "Visning klar",
     matchScore: 88,
     pipelineLabel: "Visning klar",
@@ -205,7 +202,6 @@ const brokerConversations = [
     counterpartName: "Linnea Åberg",
     counterpartInitials: "LÅ",
     company: "Åberg Consulting",
-    priority: "Låg",
     stage: "Ej aktuell",
     matchScore: 45,
     pipelineLabel: "Ej aktuell",
@@ -221,7 +217,6 @@ const brokerConversations = [
     counterpartName: "David Persson",
     counterpartInitials: "DP",
     company: "Persson Tech",
-    priority: "Medel",
     stage: "Uppföljning",
     matchScore: 71,
     pipelineLabel: "Uppföljning",
@@ -237,7 +232,6 @@ const brokerConversations = [
     counterpartName: "Elin Forsberg",
     counterpartInitials: "EF",
     company: "Forsberg Arkitekter",
-    priority: "Hög",
     stage: "Kontrakt",
     matchScore: 95,
     pipelineLabel: "Kontrakt",
@@ -281,7 +275,6 @@ function MessagesPage({ app }) {
       if (isBrokerView) {
         if (filter === "unread") return conversation.needsReply;
         if (filter === "needs_reply") return conversation.needsReply;
-        if (filter === "priority") return conversation.priority === "Hög";
         return true;
       }
       if (filter === "unread") return conversation.unreadCount > 0;
@@ -298,9 +291,7 @@ function MessagesPage({ app }) {
   const filterTabs = isBrokerView
     ? [
       { key: "all", label: "Alla", count: brokerConversations.length },
-      { key: "unread", label: "Olästa", count: brokerConversations.filter((item) => item.needsReply).length },
-      { key: "needs_reply", label: "Svar krävs", count: brokerConversations.filter((item) => item.needsReply).length },
-      { key: "priority", label: "Hög", count: brokerConversations.filter((item) => item.priority === "Hög").length }
+      { key: "unread", label: "Olästa", count: brokerConversations.filter((item) => item.needsReply).length }
     ]
     : [
       { key: "all", label: "Alla", count: renterConversations.length },
@@ -462,9 +453,6 @@ function MessagesPage({ app }) {
                             <CalendarIcon className="h-3.5 w-3.5" />
                             Visning att boka
                           </button>
-                          <span className="inline-flex rounded-full border border-black/10 bg-white px-2.5 py-1 text-xs font-semibold text-ink-700">
-                            {activeConversation.priority}
-                          </span>
                         </>
                       ) : (
                         <button type="button" className="inline-flex min-h-0 items-center gap-1.5 rounded-full border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-ink-800">

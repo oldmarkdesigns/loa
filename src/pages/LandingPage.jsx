@@ -867,7 +867,7 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
 
   return (
     <main className="min-h-screen bg-white text-black">
-      <div ref={headerRef}>
+      <div ref={headerRef} className="sticky top-0 z-50">
         <MarketingHeader
           pathname="/"
           user={user}

@@ -39,6 +39,7 @@ function AppShell({ pathname, user, onSwitchRole, onLogout, onRequireAuth, isGue
     return nextQuery ? `${basePath}?${nextQuery}` : basePath;
   }
   const shouldShowStaticNavBorder = routeMatches(pathname, "/app/rent")
+    || routeMatches(pathname, "/app/messages")
     || (routeMatches(pathname, "/app/settings") && activeRole !== "company_admin");
   const isAdminStatisticsPage = routeMatches(pathname, "/app/admin/statistik");
   const [menuOpen, setMenuOpen] = useState(false);
