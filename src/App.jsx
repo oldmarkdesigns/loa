@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "@workos-inc/authkit-react";
 import ViewingRequestModal from "./components/app/ViewingRequestModal";
 import AppShell from "./components/layout/AppShell";
 import ToastStack from "./components/layout/ToastStack";
@@ -26,11 +27,21 @@ function AppContent() {
   const pathname = usePathname();
   const routeAnimationKey = pathname.startsWith("/app/") ? "/app" : pathname;
   const app = useAppState();
+  const { signIn } = useAuth();
   const [bookingListing, setBookingListing] = useState(null);
 
   function openAuthOverlay(mode = "login") {
-    const target = mode === "signup" ? "/signup" : "/login";
-    navigateTo(target);
+    if (mode === "signup") {
+      navigateTo("/signup");
+      return;
+    }
+
+    const isProtectedAppPath = pathname.startsWith("/app") && pathname !== "/app/rent" && !pathname.startsWith("/app/listings/");
+    const returnTo = isProtectedAppPath ? pathname : "/app/rent";
+
+    signIn({ state: { returnTo } }).catch(() => {
+      navigateTo(`/login?returnTo=${encodeURIComponent(returnTo)}`);
+    });
   }
 
   useEffect(() => {

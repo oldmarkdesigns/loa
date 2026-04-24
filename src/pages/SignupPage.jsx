@@ -6,7 +6,7 @@ import AuthFlowNav from "../components/layout/AuthFlowNav";
 import { hasConvexConfig, hasWorkosConfig } from "../lib/convex";
 
 function SignupPage({ onCompleteSignup, onTestSignup, currentUser }) {
-  const { isLoading, user, signUp } = useAuth();
+  const { isLoading, user, signIn, signUp } = useAuth();
   const signupUser = user || (currentUser?.authProvider === "test" ? currentUser : null);
   const isConfigured = hasConvexConfig && hasWorkosConfig;
   const countryCodeOptions = [
@@ -144,6 +144,13 @@ function SignupPage({ onCompleteSignup, onTestSignup, currentUser }) {
     }
   }
 
+  function startLoginFromSignup() {
+    const signupReturnTo = `/signup?step=details&returnTo=${encodeURIComponent(returnTo)}`;
+    signIn({ state: { returnTo: signupReturnTo } }).catch(() => {
+      navigateTo(`/login?returnTo=${encodeURIComponent(signupReturnTo)}`);
+    });
+  }
+
   async function handleTestSignup() {
     if (!onTestSignup) return;
     setPending(true);
@@ -231,7 +238,7 @@ function SignupPage({ onCompleteSignup, onTestSignup, currentUser }) {
                   <button
                     type="button"
                     className="font-semibold text-[#0f1930] underline decoration-black/20 underline-offset-4"
-                    onClick={() => navigateTo(`/login?returnTo=${encodeURIComponent(`/signup?step=details&returnTo=${encodeURIComponent(returnTo)}`)}`)}
+                    onClick={startLoginFromSignup}
                   >
                     Logga in
                   </button>

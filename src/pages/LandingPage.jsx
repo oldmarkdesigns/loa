@@ -871,6 +871,7 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
         <MarketingHeader
           pathname="/"
           user={user}
+          isGuest={!user}
           isNavScrolled={isNavScrolled}
           onBrandClick={handleHomeBrandClick}
           onSectionLinkClick={handleSectionLinkClick}

@@ -21,6 +21,7 @@ function MarketingHeader({
   onHelp,
   onMessagesClick
 }) {
+  const shouldShowGuestActions = isGuest || !user?.id;
   const { activeRole, hasCompanyAdminRole } = deriveNavbarRoleState(user, { isGuest });
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -112,7 +113,7 @@ function MarketingHeader({
             />
           </nav>
 
-          {!isGuest ? (
+          {!shouldShowGuestActions ? (
             <div className="flex items-center justify-self-end gap-4">
               {hasCompanyAdminRole ? (
                 <button
@@ -244,7 +245,7 @@ function MarketingHeader({
                   {item.label}
                 </button>
               ))}
-              {!isGuest ? (
+              {!shouldShowGuestActions ? (
                 <>
                   <div className="my-1 h-px bg-black/10" />
                   <button
