@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowRightIcon, PencilIcon } from "../../components/icons/UiIcons";
+import { Icon } from "../../components/icons/Icon";
 import PremiumPromoCard from "../../components/shared/PremiumPromoCard";
+import { navigateTo } from "../../lib/router";
 
 const settingsSections = [
   { key: "personal", title: "Personligt", subtitle: "Din personliga information och hur vi kontaktar dig." },
@@ -27,7 +28,7 @@ function SettingsRow({ title, subtitle, open, onToggle, children, isLast = false
           <p className="mt-2.5 text-sm text-ink-600">{subtitle}</p>
         </div>
         <span className={`inline-flex h-10 w-10 items-center justify-center rounded-full border border-black/15 text-ink-700 transition ${open ? "rotate-90" : ""}`}>
-          <ArrowRightIcon className="h-4 w-4" />
+          <Icon name="arrowRight" className="h-4 w-4" />
         </span>
       </button>
 
@@ -53,6 +54,12 @@ function SettingsPage({ app }) {
   const activeRoleLabel = useMemo(() => (
     user?.role === "publisher" ? "Hyresvärd" : user?.role === "company_admin" ? "Bolagsadmin" : "Hyresgäst"
   ), [user?.role]);
+  const roleSet = useMemo(() => new Set(
+    [...(Array.isArray(user?.roles) ? user.roles : []), user?.role]
+      .filter(Boolean)
+      .map((role) => role === "publisher" ? "broker" : role)
+  ), [user?.role, user?.roles]);
+  const hasCompanyAdminRole = roleSet.has("company_admin");
   const isIdVerified = Boolean(user?.profile?.idVerified);
   const [firstName, ...restName] = String(user?.name || "").trim().split(" ");
   const lastName = restName.join(" ");
@@ -128,7 +135,7 @@ function SettingsPage({ app }) {
                             )}
                           </div>
                           <button type="button" className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-black/15 text-ink-700 hover:bg-[#f8fafc]" onClick={() => setPersonalEditKey((prev) => (prev === "name" ? "" : "name"))}>
-                            <PencilIcon className="h-4 w-4" />
+                            <Icon name="pencil" className="h-4 w-4" />
                           </button>
                         </div>
                         {personalEditKey === "name" ? (
@@ -160,7 +167,7 @@ function SettingsPage({ app }) {
                             )}
                           </div>
                           <button type="button" className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-black/15 text-ink-700 hover:bg-[#f8fafc]" onClick={() => setPersonalEditKey((prev) => (prev === "email" ? "" : "email"))}>
-                            <PencilIcon className="h-4 w-4" />
+                            <Icon name="pencil" className="h-4 w-4" />
                           </button>
                         </div>
                         {personalEditKey === "email" ? (
@@ -189,7 +196,7 @@ function SettingsPage({ app }) {
                             )}
                           </div>
                           <button type="button" className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-black/15 text-ink-700 hover:bg-[#f8fafc]" onClick={() => setPersonalEditKey((prev) => (prev === "phone" ? "" : "phone"))}>
-                            <PencilIcon className="h-4 w-4" />
+                            <Icon name="pencil" className="h-4 w-4" />
                           </button>
                         </div>
                         {personalEditKey === "phone" ? (
@@ -238,13 +245,18 @@ function SettingsPage({ app }) {
                             onClick={async () => {
                               setPendingRole(true);
                               try {
-                                await switchRole?.("publisher");
+                                if (hasCompanyAdminRole) {
+                                  await switchRole?.("company_admin");
+                                  navigateTo("/app/admin");
+                                } else {
+                                  await switchRole?.("publisher");
+                                }
                               } finally {
                                 setPendingRole(false);
                               }
                             }}
                           >
-                            Växla till Hyresvärd
+                            {hasCompanyAdminRole ? "Växla till Företag" : "Växla till Hyresvärd"}
                           </button>
                         )}
                       </div>

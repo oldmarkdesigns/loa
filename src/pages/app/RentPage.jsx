@@ -4,29 +4,16 @@ import ViewingRequestModal from "../../components/app/ViewingRequestModal";
 import FurnishingToggle from "../../components/app/FurnishingToggle";
 import AiGuidedAssistant from "../../components/app/AiGuidedAssistant";
 import Breadcrumbs from "../../components/layout/Breadcrumbs";
+import { buildAmenityAliasMap, propertyAmenityOptions } from "../../lib/propertyAmenityIcons";
 import {
-  BalconyIcon,
-  BikeIcon,
-  BuildingIcon,
-  CarIcon,
-  DumbbellIcon,
   EyeIcon,
   FilterIcon,
   ListIcon,
-  LockerIcon,
-  LoungeIcon,
   MapIcon,
-  PenthouseIcon,
   ResetIcon,
-  RooftopIcon,
   SearchIcon,
-  ShieldIcon,
-  SnowflakeIcon,
   SparklesIcon,
   StarIcon,
-  UserIcon,
-  UtensilsIcon,
-  WifiIcon
 } from "../../components/icons/UiIcons";
 import { listingApi } from "../../api";
 import { districtOptions, listingTypes } from "../../data/mockData";
@@ -53,28 +40,7 @@ const districtGeo = {
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 const GOOGLE_MAPS_SCRIPT_ID = "google-maps-sdk-script";
-const editorAmenityOptions = [
-  { value: "Cykelförråd", label: "Cykelförråd", icon: BikeIcon },
-  { value: "Garage", label: "Garage", icon: CarIcon },
-  { value: "Kök", label: "Kök", icon: UtensilsIcon },
-  { value: "Mötesrum", label: "Mötesrum", icon: BuildingIcon },
-  { value: "Fiber", label: "Fiber", icon: WifiIcon },
-  { value: "Reception", label: "Reception", icon: UserIcon },
-  { value: "Balkong", label: "Balkong", icon: BalconyIcon },
-  { value: "Takterrass", label: "Takterrass", icon: RooftopIcon },
-  { value: "Takvåning", label: "Takvåning", icon: PenthouseIcon },
-  { value: "Gym", label: "Gym", icon: DumbbellIcon },
-  { value: "Omklädningsrum", label: "Omklädningsrum", icon: LockerIcon },
-  { value: "Air condition", label: "Air condition", icon: SnowflakeIcon },
-  { value: "Lounge", label: "Lounge", icon: LoungeIcon },
-  { value: "Förråd", label: "Förråd", icon: LockerIcon },
-  { value: "Lastzon", label: "Lastzon", icon: CarIcon },
-  { value: "Telefonbås", label: "Telefonbås", icon: BuildingIcon },
-  { value: "Väntrum", label: "Väntrum", icon: UserIcon },
-  { value: "Pentry", label: "Pentry", icon: UtensilsIcon },
-  { value: "Skyltfönster", label: "Skyltfönster", icon: BuildingIcon },
-  { value: "Säkerhetsdörr", label: "Säkerhetsdörr", icon: ShieldIcon }
-];
+const editorAmenityOptions = propertyAmenityOptions;
 
 const furnishedOptions = [
   { value: "all", label: "Alla" },
@@ -88,25 +54,8 @@ const parkingTypeOptions = ["Alla", "Ingen parkering", "Garage", "Gatuparkering"
 const layoutTypeOptions = ["Alla", "Öppet landskap", "Cellkontor", "Hybrid", "Showroom"];
 const advertiserOptions = ["Alla", "AMF Fastigheter", "Vasakronan", "Castellum", "Fabege", "Skandia Fastigheter"];
 const amenityAliasesByValue = {
-  "cykelförråd": ["cykelförråd", "cykelrum"],
+  ...buildAmenityAliasMap(),
   garage: ["garage", "parkering"],
-  kök: ["kök", "kitchen"],
-  mötesrum: ["mötesrum", "konferensrum"],
-  fiber: ["fiber", "wifi"],
-  reception: ["reception"],
-  balkong: ["balkong", "balcony"],
-  takterrass: ["takterrass", "roof terrace", "terrace"],
-  takvåning: ["takvåning", "penthouse"],
-  gym: ["gym", "träning", "fitness"],
-  omklädningsrum: ["omklädningsrum", "locker room", "omklädning"],
-  "air condition": ["air condition", "ac", "a/c", "luftkonditionering"],
-  lounge: ["lounge", "social yta", "sociala ytor"],
-  förråd: ["förråd", "förrad", "storage"],
-  lastzon: ["lastzon", "loading zone", "lastkaj"],
-  telefonbås: ["telefonbås", "telefonrum", "phone booth"],
-  väntrum: ["väntrum", "waiting room"],
-  pentry: ["pentry", "pantry"],
-  skyltfönster: ["skyltfönster", "storefront"],
   säkerhetsdörr: ["säkerhetsdörr", "säkerhet", "secure", "security", "säker entré", "säker entre"]
 };
 
@@ -662,7 +611,7 @@ function AuthPromptModal({ mode, onClose, onRequireAuth }) {
     : "Logga in eller skapa konto för att boka visning och skicka förfrågan till hyresvärd.";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink-900/45 p-4 sm:items-center" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-transparent p-4 sm:items-center" onClick={onClose}>
       <div className="surface w-full max-w-md p-5" onClick={(event) => event.stopPropagation()}>
         <p className="text-xs font-semibold uppercase tracking-wide text-brand-700">Konto krävs</p>
         <h3 className="mt-1 text-xl font-semibold text-ink-900">Fortsätt med konto</h3>
@@ -1501,6 +1450,10 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
 
   const favoriteIds = useMemo(() => new Set(favorites.map((entry) => entry.listingId)), [favorites]);
   const renterProgram = useMemo(() => app.user?.profile?.renterProgram || null, [app.user?.profile?.renterProgram]);
+  const hasCompanyAdminRole = useMemo(() => {
+    const roles = Array.isArray(user?.roles) ? user.roles : [user?.role].filter(Boolean);
+    return roles.map((role) => role === "publisher" ? "broker" : role).includes("company_admin");
+  }, [user?.role, user?.roles]);
   const implicitMaxBudget = app.allListingsFilters?.maxBudget ?? app.defaultFilters?.maxBudget ?? "";
   const hasTeamSizeForMatchChip = useMemo(() => {
     const parsed = Number(String(filters.teamSize || "").trim());
@@ -3309,7 +3262,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
     </div>
   );
 
-  const primaryHeaderAction = !hideLocalProgramQuickCard ? (
+  const primaryHeaderAction = !hideLocalProgramQuickCard && !hasCompanyAdminRole ? (
     <button
       type="button"
       className={`inline-flex h-[38px] items-center justify-center gap-1.5 rounded-full border border-[#0f1930]/15 bg-gradient-to-r from-[#f8fafc] to-white pl-1.5 pr-3 text-xs font-semibold text-ink-900 transition hover:border-[#0f1930] hover:text-[#0f1930] ${
@@ -4298,7 +4251,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
       <AuthPromptModal mode={authPromptMode} onClose={() => setAuthPromptMode("")} onRequireAuth={onRequireAuth} />
 
       {showEditorAiInfo ? (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/45 p-4 backdrop-blur-[2px]" onClick={() => setShowEditorAiInfo(false)}>
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-transparent p-4" onClick={() => setShowEditorAiInfo(false)}>
           <div className="relative w-full max-w-lg rounded-2xl border border-black/10 bg-white p-5 shadow-[0_24px_64px_rgba(15,25,48,0.28)]" onClick={(event) => event.stopPropagation()}>
             <button
               type="button"

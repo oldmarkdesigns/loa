@@ -16,11 +16,20 @@ function normalizeRoles(roles, fallbackRole = "renter") {
     if (role === "publisher") return "broker";
     return role;
   };
+  const withImpliedRoles = (inputRoles) => {
+    const next = new Set(inputRoles);
+    if (next.has("company_admin")) {
+      next.add("broker");
+      next.add("renter");
+    }
+    return Array.from(next);
+  };
   const requestedRoles = Array.isArray(roles)
     ? roles.map(normalizeRole).filter((role) => role === "renter" || role === "broker" || role === "company_admin")
     : [];
 
-  return requestedRoles.length > 0 ? Array.from(new Set(requestedRoles)) : [normalizeRole(fallbackRole)];
+  const normalized = requestedRoles.length > 0 ? Array.from(new Set(requestedRoles)) : [normalizeRole(fallbackRole)];
+  return withImpliedRoles(normalized);
 }
 
 async function upsertAuthenticatedUser(ctx, payload = {}) {
@@ -124,6 +133,7 @@ export const createTestUser = mutationGeneric({
   },
   handler: async (ctx, args) => {
     const role = args.role === "company_admin" || args.role === "broker" ? args.role : "renter";
+    const roles = normalizeRoles([role], role);
     const createdAt = nowIso();
     const token = `test-session-${crypto.randomUUID()}`;
     const insertedId = await ctx.db.insert("users", {
@@ -135,7 +145,7 @@ export const createTestUser = mutationGeneric({
       name: "Test Användare",
       phone: "",
       role,
-      roles: [role],
+      roles,
       publisherPlan: defaultPublisherPlan(),
       onboardingCompleted: false,
       profile: {},
@@ -243,7 +253,7 @@ export const addRoleToMe = mutationGeneric({
       ? requestedRole
       : viewer.role || "renter";
     const currentRoles = Array.isArray(viewer.roles) && viewer.roles.length > 0 ? viewer.roles : [viewer.role || "renter"];
-    const roles = Array.from(new Set([...currentRoles, normalizedRole].map((role) => role === "publisher" ? "broker" : role)));
+    const roles = normalizeRoles([...currentRoles, normalizedRole], normalizedRole);
 
     await ctx.db.patch(viewer._id, {
       role: normalizedRole,
@@ -272,7 +282,7 @@ export const addRoleToTestUser = mutationGeneric({
       ? requestedRole
       : viewer.role || "renter";
     const currentRoles = Array.isArray(viewer.roles) && viewer.roles.length > 0 ? viewer.roles : [viewer.role || "renter"];
-    const roles = Array.from(new Set([...currentRoles, normalizedRole].map((role) => role === "publisher" ? "broker" : role)));
+    const roles = normalizeRoles([...currentRoles, normalizedRole], normalizedRole);
 
     await ctx.db.patch(viewer._id, {
       role: normalizedRole,
@@ -294,7 +304,7 @@ export const completeOnboarding = mutationGeneric({
     const viewer = await getViewerOrThrow(ctx);
     const requestedRole = args?.primaryRole === "publisher" ? "broker" : args?.primaryRole;
     const primaryRole = requestedRole === "broker" || requestedRole === "company_admin" ? requestedRole : "renter";
-    const roles = Array.from(new Set([...(Array.isArray(viewer.roles) ? viewer.roles : [viewer.role || "renter"]), primaryRole]));
+    const roles = normalizeRoles([...(Array.isArray(viewer.roles) ? viewer.roles : [viewer.role || "renter"]), primaryRole], primaryRole);
     const account = args?.account || {};
 
     await ctx.db.patch(viewer._id, {
@@ -330,7 +340,7 @@ export const completeTestOnboarding = mutationGeneric({
 
     const requestedRole = args?.primaryRole === "publisher" ? "broker" : args?.primaryRole;
     const primaryRole = requestedRole === "broker" || requestedRole === "company_admin" ? requestedRole : "renter";
-    const roles = Array.from(new Set([...(Array.isArray(viewer.roles) ? viewer.roles : [viewer.role || "renter"]), primaryRole]));
+    const roles = normalizeRoles([...(Array.isArray(viewer.roles) ? viewer.roles : [viewer.role || "renter"]), primaryRole], primaryRole);
     const account = args?.account || {};
 
     await ctx.db.patch(viewer._id, {

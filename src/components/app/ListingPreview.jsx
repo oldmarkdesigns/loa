@@ -1,18 +1,5 @@
 import { parseAmenities } from "../../lib/formatters";
-import {
-  BalconyIcon,
-  BikeIcon,
-  BuildingIcon,
-  CarIcon,
-  DumbbellIcon,
-  LockerIcon,
-  LoungeIcon,
-  PenthouseIcon,
-  ShieldIcon,
-  SnowflakeIcon,
-  UtensilsIcon,
-  UserIcon
-} from "../icons/UiIcons";
+import { amenityIconFor } from "../../lib/propertyAmenityIcons";
 
 function mergeAmenities(draft) {
   const textAmenities = parseAmenities(draft.additionalAmenities);
@@ -23,31 +10,6 @@ function mergeAmenities(draft) {
       : [];
 
   return Array.from(new Set([...(draft.amenities || []), ...textAmenities, ...furnishedAmenity]));
-}
-
-const amenityDefinitions = [
-  { icon: BikeIcon, aliases: ["cykelförråd", "cykelrum", "bike"] },
-  { icon: CarIcon, aliases: ["garage", "lastzon", "lastkaj", "loading zone", "parkering"] },
-  { icon: UtensilsIcon, aliases: ["kök", "kitchen", "pentry"] },
-  { icon: BuildingIcon, aliases: ["mötesrum", "konferensrum", "styrelserum"] },
-  { icon: UserIcon, aliases: ["reception", "väntrum"] },
-  { icon: BalconyIcon, aliases: ["balkong"] },
-  { icon: BuildingIcon, aliases: ["takterrass"] },
-  { icon: PenthouseIcon, aliases: ["takvåning"] },
-  { icon: DumbbellIcon, aliases: ["gym"] },
-  { icon: LockerIcon, aliases: ["omklädningsrum"] },
-  { icon: SnowflakeIcon, aliases: ["air condition", "ac"] },
-  { icon: LoungeIcon, aliases: ["lounge"] },
-  { icon: LockerIcon, aliases: ["förråd", "förrad", "storage", "lager"] },
-  { icon: BuildingIcon, aliases: ["telefonbås", "telefonrum"] },
-  { icon: BuildingIcon, aliases: ["skyltfönster", "storefront"] },
-  { icon: ShieldIcon, aliases: ["säkerhetsdörr", "säkerhet", "security", "secure"] }
-];
-
-function amenityIconFor(amenity) {
-  const normalized = String(amenity || "").toLowerCase();
-  const match = amenityDefinitions.find((item) => item.aliases.some((alias) => normalized.includes(alias)));
-  return match?.icon || BuildingIcon;
 }
 
 function ListingPreview({ draft }) {

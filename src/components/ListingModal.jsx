@@ -12,7 +12,7 @@ function ListingModal({ listing, onClose, onToggleShortlist, shortlisted, onBook
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink-900/50 p-4 backdrop-blur-[2px] sm:items-center" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-transparent p-4 sm:items-center" onClick={onClose}>
       <div
         className="surface max-h-[92vh] w-full max-w-4xl overflow-hidden border-black/10 p-0"
         onClick={(event) => event.stopPropagation()}

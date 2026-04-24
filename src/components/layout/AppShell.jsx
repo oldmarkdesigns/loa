@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { navigateTo, routeMatches } from "../../lib/router";
-import { ArrowLeftIcon, ArrowUpIcon, BuildingIcon, MouseScrollIcon, UserIcon } from "../icons/UiIcons";
+import { deriveNavbarRoleState } from "../../lib/navbarRoles";
+import { ArrowLeftIcon, ArrowUpIcon, BellIcon, MouseScrollIcon, SwitchHorizontalIcon } from "../icons/UiIcons";
 import AppFooter from "./AppFooter";
-import MarketingNavLinks from "./MarketingNavLinks";
+import MarketingHeader from "./MarketingHeader";
 import ProfileMenuDropdown from "./ProfileMenuDropdown";
 
 const publisherWorkspaceItems = [
@@ -10,24 +11,22 @@ const publisherWorkspaceItems = [
   { label: "Dina objekt", path: "/app/my-listings" },
   { label: "Intresse och visningar", path: "/app/leads" }
 ];
+const adminCompanies = [
+  { id: "nordic-estate", name: "Nordic Estate", initials: "NE" },
+  { id: "stockholm-kontor", name: "Stockholm Kontor AB", initials: "SK" },
+  { id: "vasa-property", name: "Vasa Property Group", initials: "VP" }
+];
 
 function AppShell({ pathname, user, onSwitchRole, onLogout, onRequireAuth, isGuest = false, children }) {
-  const activeRole = user?.role === "publisher" ? "broker" : user?.role === "broker" || user?.role === "company_admin" ? user.role : "renter";
-  const rawRoles = isGuest
-    ? ["renter"]
-    : Array.from(new Set([
-        ...(Array.isArray(user?.roles) ? user.roles : []),
-        activeRole
-      ].filter(Boolean).map((item) => item === "publisher" ? "broker" : item)));
-  const roleSet = new Set(rawRoles.filter((item) => item === "renter" || item === "broker" || item === "company_admin"));
-  const hasPublisherAccess = roleSet.has("broker") || roleSet.has("company_admin");
+  const isAdminContext = routeMatches(pathname, "/app/admin");
+  const { activeRole, hasCompanyAdminRole, hasBrokerAccess: hasPublisherAccess } = deriveNavbarRoleState(user, { isGuest });
   const isPublisherWorkspacePath = (
     routeMatches(pathname, "/app/publish")
     || routeMatches(pathname, "/app/my-listings")
     || routeMatches(pathname, "/app/leads")
   );
-  const showPublisherWorkspaceNav = !isGuest && hasPublisherAccess && ((activeRole === "broker" || activeRole === "company_admin") || isPublisherWorkspacePath);
   const deferPublisherWorkspaceNavToProfile = routeMatches(pathname, "/app/profile");
+  const showPublisherWorkspaceNav = !isGuest && hasPublisherAccess && !isAdminContext && (isPublisherWorkspacePath || deferPublisherWorkspaceNavToProfile);
   const currentSearch = typeof window !== "undefined" ? window.location.search : "";
   const hasProfileSource = isPublisherWorkspacePath && new URLSearchParams(currentSearch).get("from") === "profile";
 
@@ -39,34 +38,57 @@ function AppShell({ pathname, user, onSwitchRole, onLogout, onRequireAuth, isGue
     const nextQuery = params.toString();
     return nextQuery ? `${basePath}?${nextQuery}` : basePath;
   }
-  const shouldShowStaticNavBorder = routeMatches(pathname, "/app/rent");
+  const shouldShowStaticNavBorder = routeMatches(pathname, "/app/rent")
+    || (routeMatches(pathname, "/app/settings") && activeRole !== "company_admin");
+  const isAdminStatisticsPage = routeMatches(pathname, "/app/admin/statistik");
   const [menuOpen, setMenuOpen] = useState(false);
   const [isNavScrolled, setIsNavScrolled] = useState(false);
   const [showScrollToTopButton, setShowScrollToTopButton] = useState(false);
   const [showLeaveSearchConfirm, setShowLeaveSearchConfirm] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const menuRef = useRef(null);
+  const [notificationOpen, setNotificationOpen] = useState(false);
+  const [adminCompanyOpen, setAdminCompanyOpen] = useState(false);
+  const [activeAdminCompanyId, setActiveAdminCompanyId] = useState(adminCompanies[0].id);
   const profileMenuPanelRef = useRef(null);
+  const notificationButtonRef = useRef(null);
+  const notificationPanelRef = useRef(null);
+  const adminCompanyButtonRef = useRef(null);
+  const adminCompanyPanelRef = useRef(null);
   const contentRef = useRef(null);
 
-  const initials = useMemo(() => {
-    const source = (user?.name || (isGuest ? "Gäst" : "AA")).trim();
-    const words = source.split(" ").filter(Boolean);
-    if (words.length === 1) {
-      return words[0].slice(0, 2).toUpperCase();
-    }
-    return `${words[0][0] || ""}${words[1][0] || ""}`.toUpperCase();
-  }, [isGuest, user?.name]);
+  const companyName = useMemo(
+    () => String(user?.profile?.legalEntity || user?.profile?.companyName || "Företagsnamn"),
+    [user?.profile?.companyName, user?.profile?.legalEntity]
+  );
+  const notificationItems = useMemo(
+    () => [
+      { id: "n1", title: "Ny förfrågan på Kontorslokal Södermalm", time: "12 min sedan" },
+      { id: "n2", title: "Showroom Vasastan publicerad", time: "58 min sedan" },
+      { id: "n3", title: "Anna Lind svarade på 6 förfrågningar", time: "3h sedan" }
+    ],
+    []
+  );
+  const activeAdminCompany = useMemo(
+    () => adminCompanies.find((item) => item.id === activeAdminCompanyId) || adminCompanies[0],
+    [activeAdminCompanyId]
+  );
 
   useEffect(() => {
     function onPointerDown(event) {
       if (
-        menuRef.current
-        && !menuRef.current.contains(event.target)
-        && profileMenuPanelRef.current
-        && !profileMenuPanelRef.current.contains(event.target)
+        notificationButtonRef.current
+        && !notificationButtonRef.current.contains(event.target)
+        && notificationPanelRef.current
+        && !notificationPanelRef.current.contains(event.target)
       ) {
-        setMenuOpen(false);
+        setNotificationOpen(false);
+      }
+      if (
+        adminCompanyButtonRef.current
+        && !adminCompanyButtonRef.current.contains(event.target)
+        && adminCompanyPanelRef.current
+        && !adminCompanyPanelRef.current.contains(event.target)
+      ) {
+        setAdminCompanyOpen(false);
       }
     }
 
@@ -76,7 +98,8 @@ function AppShell({ pathname, user, onSwitchRole, onLogout, onRequireAuth, isGue
 
   useEffect(() => {
     setMenuOpen(false);
-    setMobileMenuOpen(false);
+    setNotificationOpen(false);
+    setAdminCompanyOpen(false);
   }, [pathname]);
 
   useEffect(() => {
@@ -132,182 +155,149 @@ function AppShell({ pathname, user, onSwitchRole, onLogout, onRequireAuth, isGue
 
   return (
     <main className="flex h-screen flex-col overflow-hidden bg-white text-black">
-      <header
-        className={`navbar-enter sticky top-0 z-40 shrink-0 border-b px-4 py-3 will-change-[background-color,border-color,backdrop-filter] transition-[background-color,border-color,backdrop-filter] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] sm:px-6 ${
-          isNavScrolled || shouldShowStaticNavBorder ? "border-black/10 bg-white/95 backdrop-blur-md" : "border-black/0 bg-white/0 backdrop-blur-0"
-        }`}
-      >
-        <div className="grid w-full grid-cols-[auto_1fr_auto] items-center gap-4">
-          <div className="flex min-w-0 items-center gap-4">
-            <button type="button" className="justify-self-start text-left" onClick={() => navigateTo("/")}>
-              <span className="inline-flex items-center gap-2 rounded-xl border border-black/10 bg-white px-2.5 py-1.5">
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-dashed border-black/30 bg-white text-[9px] font-semibold uppercase tracking-wide text-ink-500">
-                  LOGGA
-                </span>
-                <span className="text-sm font-semibold text-ink-800">Företagsnamn</span>
-              </span>
-            </button>
-          </div>
-
-          <nav className="hidden items-center justify-self-start gap-7 lg:flex">
-            <MarketingNavLinks
-              hrefPrefix="/"
-              onPrimaryNavClick={handlePrimaryNavClick}
-              showPublish={false}
-            />
-          </nav>
-
-          {!isGuest ? (
-          <div className="flex items-center justify-self-end gap-4">
-            <button
-              type="button"
-              className="inline-flex h-11 items-center gap-1.5 rounded-xl border border-[#0f1930] px-3 text-xs font-semibold text-[#0f1930] transition hover:bg-[#0f1930] hover:text-white"
-              onClick={() => navigateTo("/app/publish")}
-            >
-              <span aria-hidden="true" className="text-sm leading-none">+</span>
-              <span>Publicera annons</span>
-            </button>
-            <div ref={menuRef} className="relative inline-flex h-11 items-center self-center">
-              <button
-                type="button"
-                className="inline-flex h-full w-11 items-center justify-center overflow-hidden rounded-full border border-black/20 bg-white text-sm font-semibold text-ink-700"
-                onClick={() => setMenuOpen((value) => !value)}
-                aria-expanded={menuOpen}
-                aria-haspopup="menu"
-              >
-                {user?.profile?.avatarUrl ? (
-                  <img
-                    src={user.profile.avatarUrl}
-                    alt={user?.name || "Profil"}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  initials
-                )}
-              </button>
-
-            </div>
-            <button
-              type="button"
-              aria-label="Öppna meny"
-              className="inline-flex h-11 items-center justify-center text-[#0f1930] lg:hidden"
-              onClick={() => {
-                setMenuOpen(false);
-                setMobileMenuOpen((value) => !value);
-              }}
-            >
-              <span className="inline-flex flex-col items-end gap-1.5">
-                <span className="block h-0.5 w-5 rounded-full bg-current" />
-                <span className="block h-0.5 w-4 rounded-full bg-current" />
-                <span className="block h-0.5 w-3 rounded-full bg-current" />
-              </span>
-            </button>
-          </div>
-          ) : (
-            <div className="flex items-center justify-self-end gap-4">
-              <button
-                type="button"
-                className="inline-flex items-center justify-center rounded-full border border-[#0f1930] bg-[#0f1930] px-4 py-2 text-xs font-semibold text-white hover:bg-[#16233f]"
-                onClick={() => onRequireAuth?.("signup", "renter")}
-              >
-                Skapa konto
-              </button>
-              <button
-                type="button"
-                className="inline-flex items-center bg-transparent px-1 py-2 text-xs font-semibold text-ink-700"
-                onClick={() => onRequireAuth?.("login")}
-              >
-                Logga in
-              </button>
-              <button
-                type="button"
-                aria-label="Öppna meny"
-                className="inline-flex h-11 items-center justify-center text-[#0f1930] lg:hidden"
-                onClick={() => setMobileMenuOpen((value) => !value)}
-              >
-                <span className="inline-flex flex-col items-end gap-1.5">
-                  <span className="block h-0.5 w-5 rounded-full bg-current" />
-                  <span className="block h-0.5 w-4 rounded-full bg-current" />
-                  <span className="block h-0.5 w-3 rounded-full bg-current" />
-                </span>
-              </button>
-            </div>
-          )}
-        </div>
-
-      </header>
-
-      {menuOpen ? (
-        isGuest ? (
-          <>
-            <div ref={profileMenuPanelRef} className="fixed right-4 top-[72px] z-[60] w-[min(320px,calc(100vw-2rem))] rounded-2xl border border-black/10 bg-white p-3 shadow-[0_10px_28px_rgba(15,25,48,0.10)]">
-              <div className="space-y-2 text-sm">
+      {isAdminContext ? (
+        <header
+          className={`navbar-enter sticky top-0 z-40 shrink-0 border-b px-4 py-3 will-change-[background-color,border-color,backdrop-filter] transition-[background-color,border-color,backdrop-filter] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] sm:px-6 ${
+            isNavScrolled || shouldShowStaticNavBorder ? "border-black/10 bg-white/95 backdrop-blur-md" : "border-black/10 bg-white/0 backdrop-blur-0"
+          }`}
+        >
+          <div className="grid w-full grid-cols-[1fr_auto] items-center gap-4">
+            <div className="flex min-w-0 items-center gap-3">
+              <div ref={adminCompanyButtonRef} className="relative inline-block max-w-full">
                 <button
                   type="button"
-                  className="menu-hover-row inline-flex w-full items-center rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5"
-                  onClick={() => onRequireAuth?.("login")}
+                  className="inline-flex h-11 w-auto max-w-full items-center gap-2 rounded-full border border-black/10 bg-white pl-1.5 pr-3 text-left transition hover:border-[#0f1930]/25"
+                  onClick={() => setAdminCompanyOpen((value) => !value)}
                 >
-                  Logga in
+                  <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0f1930] text-sm font-semibold text-white">
+                    {activeAdminCompany.initials}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-base font-semibold text-ink-900">{activeAdminCompany.name}</span>
+                  </span>
+                  <span
+                    aria-hidden="true"
+                    className={`ui-chevron h-3.5 w-3.5 shrink-0 opacity-70 transition-transform ${adminCompanyOpen ? "rotate-180" : ""}`}
+                  />
+                </button>
+
+                {adminCompanyOpen ? (
+                  <div ref={adminCompanyPanelRef} className="absolute left-0 top-[calc(100%+0.4rem)] z-[62] w-[280px] rounded-2xl border border-black/10 bg-white p-2 shadow-[0_10px_28px_rgba(15,25,48,0.12)]">
+                    <div className="space-y-1">
+                      {adminCompanies.map((company) => {
+                        const selected = company.id === activeAdminCompanyId;
+                        return (
+                          <button
+                            key={company.id}
+                            type="button"
+                            className={`menu-hover-row w-full px-2.5 py-2 text-left text-sm transition ${
+                              selected ? "bg-[#eef2f8] font-semibold text-[#0f1930]" : "text-ink-700 hover:bg-black/5"
+                            }`}
+                            onClick={() => {
+                              setActiveAdminCompanyId(company.id);
+                              setAdminCompanyOpen(false);
+                            }}
+                          >
+                            {company.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+            <div className="flex items-center justify-self-end gap-4">
+                <button
+                  type="button"
+                  className="btn-primary inline-flex h-11 items-center gap-1.5 px-4 text-xs"
+                  onClick={() => navigateTo("/app/admin/annonser")}
+                >
+                  <span aria-hidden="true" className="text-sm leading-none">+</span>
+                  <span>Publicera annons</span>
                 </button>
                 <button
                   type="button"
-                  className="menu-hover-row inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5"
-                  onClick={() => onRequireAuth?.("signup", "renter")}
+                  className="btn-secondary inline-flex h-11 items-center gap-1.5 px-4 text-xs"
+                  onClick={() => {
+                    navigateTo("/app/rent");
+                    void onSwitchRole?.("broker");
+                  }}
                 >
-                  <BuildingIcon className="h-4 w-4" />
-                  Skapa konto
+                  <SwitchHorizontalIcon className="h-4 w-4" />
+                  Växla till sökläge
+                </button>
+              <div ref={notificationButtonRef} className="relative inline-flex h-11 items-center self-center">
+                <button
+                  type="button"
+                  aria-label="Notiser"
+                  className="relative inline-flex h-full w-11 items-center justify-center rounded-full border border-black/20 bg-white text-ink-700"
+                  onClick={() => setNotificationOpen((value) => !value)}
+                >
+                  <BellIcon className="h-4 w-4" />
+                  <span className="absolute -right-0.5 -top-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-[#0f1930] px-1 text-[10px] font-semibold text-white">
+                    {notificationItems.length}
+                  </span>
                 </button>
               </div>
             </div>
-          </>
-        ) : (
-          <ProfileMenuDropdown
-            menuOpen={menuOpen}
-            setMenuOpen={setMenuOpen}
-            profileMenuPanelRef={profileMenuPanelRef}
-            user={user}
-            onSwitchRole={onSwitchRole}
-            onLogout={onLogout}
-          />
-        )
+          </div>
+        </header>
+      ) : (
+        <MarketingHeader
+          pathname={pathname}
+          user={user}
+          isGuest={isGuest}
+          isNavScrolled={isNavScrolled}
+          showStaticBorder={shouldShowStaticNavBorder}
+          companyName={companyName}
+          onBrandClick={() => navigateTo("/")}
+          onPrimaryNavClick={handlePrimaryNavClick}
+          onSwitchRole={onSwitchRole}
+          onLogout={onLogout}
+          onRequireAuth={onRequireAuth}
+        />
+      )}
+
+      {menuOpen && isAdminContext ? (
+        <ProfileMenuDropdown
+          menuOpen={menuOpen}
+          setMenuOpen={setMenuOpen}
+          profileMenuPanelRef={profileMenuPanelRef}
+          user={user}
+          onSwitchRole={onSwitchRole}
+          onLogout={onLogout}
+        />
       ) : null}
 
-      {mobileMenuOpen ? (
-        <div className="fixed inset-0 z-[60] bg-transparent lg:hidden" onClick={() => setMobileMenuOpen(false)}>
-          <div className="absolute right-4 top-[72px] w-[min(320px,calc(100vw-2rem))] rounded-2xl border border-black/10 bg-white p-3" onClick={(event) => event.stopPropagation()}>
-            <div className="space-y-1">
-              <button type="button" className="menu-hover-row inline-flex w-full items-center rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5" onClick={() => { setMobileMenuOpen(false); navigateTo("/app/rent?view=available"); }}>
-                Lediga lokaler
-              </button>
-              {!isGuest ? (
-                <>
-                  <button
-                    type="button"
-                    className="menu-hover-row inline-flex w-full items-center rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5"
-                    onClick={() => { setMobileMenuOpen(false); navigateTo("/app/publish"); }}
-                  >
-                    Publicera annons
-                  </button>
-                  <div className="my-1 h-px bg-black/10" />
-                </>
-              ) : null}
-              <button type="button" className="menu-hover-row inline-flex w-full items-center rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5" onClick={() => { setMobileMenuOpen(false); navigateTo("/#funktioner"); }}>
-                Funktioner
-              </button>
-              <button type="button" className="menu-hover-row inline-flex w-full items-center rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5" onClick={() => { setMobileMenuOpen(false); navigateTo("/#sa-fungerar-det"); }}>
-                Så fungerar det
-              </button>
-              <button type="button" className="menu-hover-row inline-flex w-full items-center rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5" onClick={() => { setMobileMenuOpen(false); navigateTo("/#priser"); }}>
-                Priser
-              </button>
-              <button type="button" className="menu-hover-row inline-flex w-full items-center rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5" onClick={() => { setMobileMenuOpen(false); navigateTo("/#faq"); }}>
-                FAQ
-              </button>
-              <button type="button" className="menu-hover-row inline-flex w-full items-center rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5" onClick={() => { setMobileMenuOpen(false); navigateTo("/#kontakt"); }}>
-                Kontakt
-              </button>
-            </div>
+      {notificationOpen && !isGuest ? (
+        <div ref={notificationPanelRef} className="fixed right-4 top-[72px] z-[60] w-[min(360px,calc(100vw-2rem))] rounded-2xl border border-black/10 bg-white p-3 shadow-[0_10px_28px_rgba(15,25,48,0.10)]">
+          <div className="mb-2 flex items-center justify-between">
+            <p className="text-sm font-semibold text-ink-900">Notiser</p>
+            <span className="rounded-full border border-black/10 bg-[#f7f7f7] px-2 py-0.5 text-xs font-semibold text-ink-700">
+              {notificationItems.length}
+            </span>
           </div>
+          <div className="space-y-2">
+            {notificationItems.map((item) => (
+              <div key={item.id} className="rounded-xl border border-black/10 bg-white px-3 py-2">
+                <p className="text-sm font-semibold text-ink-800">{item.title}</p>
+                <p className="mt-1 text-xs text-ink-500">{item.time}</p>
+              </div>
+            ))}
+          </div>
+          {isAdminContext ? (
+            <button
+              type="button"
+              className="btn-secondary mt-3 w-full min-h-0 justify-center py-2 text-xs"
+              onClick={() => {
+                setNotificationOpen(false);
+                navigateTo("/app/admin/notifikationer");
+              }}
+            >
+              Visa alla notifikationer
+            </button>
+          ) : null}
         </div>
       ) : null}
 
@@ -358,11 +348,11 @@ function AppShell({ pathname, user, onSwitchRole, onLogout, onRequireAuth, isGue
         type="button"
         aria-label="Scrolla till toppen"
         onClick={handleScrollToTop}
-        className={`fixed bottom-6 right-6 z-30 inline-flex min-h-0 flex-col items-center justify-center gap-0.5 rounded-full border border-black/20 bg-white/25 p-3 text-[#0f1930] shadow-[0_8px_24px_rgba(15,25,48,0.18)] backdrop-blur-md transition-all duration-250 ${
+        className={`fixed bottom-6 z-30 inline-flex min-h-0 flex-col items-center justify-center gap-0.5 rounded-full border border-black/20 bg-white/25 p-3 text-[#0f1930] shadow-[0_8px_24px_rgba(15,25,48,0.18)] backdrop-blur-md transition-all duration-250 ${
           showScrollToTopButton
             ? "pointer-events-auto translate-y-0 opacity-100"
             : "pointer-events-none translate-y-3 opacity-0"
-        } hover:bg-white/35`}
+        } ${isAdminStatisticsPage ? "right-6 xl:right-[max(1.5rem,calc((100vw-296px-1600px)/2+1.5rem))]" : "right-6"} hover:bg-white/35`}
       >
         <ArrowUpIcon className="h-4 w-4" />
         <MouseScrollIcon className="h-4 w-4" />
@@ -370,7 +360,7 @@ function AppShell({ pathname, user, onSwitchRole, onLogout, onRequireAuth, isGue
 
       {showLeaveSearchConfirm ? (
         <div
-          className="fixed inset-0 z-[80] flex items-center justify-center bg-black/40 p-4"
+          className="fixed inset-0 z-[80] flex items-center justify-center bg-transparent p-4"
           onClick={() => setShowLeaveSearchConfirm(false)}
         >
           <article

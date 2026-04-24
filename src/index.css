@@ -347,6 +347,16 @@ button,
   border-radius: 0 !important;
 }
 
+.message-list-row {
+  border-radius: 0 !important;
+  min-height: 0 !important;
+}
+
+.message-suggestion-card {
+  border-radius: 1rem !important;
+  min-height: 0 !important;
+}
+
 .nav-underline-anim {
   position: relative;
   display: inline-flex;
@@ -368,7 +378,8 @@ button,
 }
 
 .nav-underline-anim:hover::after,
-.nav-underline-anim:focus-visible::after {
+.nav-underline-anim:focus-visible::after,
+.nav-underline-anim-active::after {
   transform: scaleX(1);
 }
 

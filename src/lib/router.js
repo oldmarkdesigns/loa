@@ -34,5 +34,15 @@ export function routeMatches(pathname, basePath) {
 }
 
 export function defaultAppPathForRole(role) {
-  return role === "broker" || role === "company_admin" || role === "publisher" ? "/app/my-listings" : "/app/rent";
+  if (role === "company_admin") return "/app/admin";
+  return role === "broker" || role === "publisher" ? "/app/my-listings" : "/app/rent";
+}
+
+export function defaultAppPathForUser(user) {
+  if (!user) return "/app/rent";
+  const normalizedRoles = Array.isArray(user.roles)
+    ? user.roles.map((role) => role === "publisher" ? "broker" : role)
+    : [user.role === "publisher" ? "broker" : (user.role || "renter")];
+  if (normalizedRoles.includes("company_admin")) return "/app/admin";
+  return defaultAppPathForRole(user.role);
 }

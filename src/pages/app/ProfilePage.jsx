@@ -1,33 +1,23 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import ListingVisualCard from "../../components/app/ListingVisualCard";
+import { propertyAmenityOptions } from "../../lib/propertyAmenityIcons";
 import {
   ArrowLeftIcon,
-  BalconyIcon,
-  BikeIcon,
   BuildingIcon,
   CalendarIcon,
-  CarIcon,
   ClockIcon,
   CoinsIcon,
-  DumbbellIcon,
   EyeIcon,
-  LockerIcon,
   LightbulbIcon,
-  LoungeIcon,
   MapIcon,
-  PenthouseIcon,
   PencilIcon,
   PinIcon,
-  RooftopIcon,
   RulerIcon,
   ShieldIcon,
-  SnowflakeIcon,
   SwitchHorizontalIcon,
   TrashIcon,
   CameraIcon,
   UserIcon,
-  UtensilsIcon,
-  WifiIcon
 } from "../../components/icons/UiIcons";
 import PremiumPromoCard from "../../components/shared/PremiumPromoCard";
 import { navigateTo } from "../../lib/router";
@@ -40,28 +30,7 @@ const transitOptions = ["Alla", "0-300 meter", "0-600 meter", "0-1000 meter", "0
 const parkingOptions = ["Alla", "Ingen preferens", "Bilparkering", "Laddplats", "Garage"];
 const layoutOptions = ["Alla", "Öppet landskap", "Mixat", "Cellkontor", "Flexibelt"];
 const accessOptions = ["Alla", "Kontorstid", "Utökad access", "24/7"];
-const amenityOptions = [
-  { value: "Cykelförråd", label: "Cykelförråd", icon: BikeIcon },
-  { value: "Garage", label: "Garage", icon: CarIcon },
-  { value: "Kök", label: "Kök", icon: UtensilsIcon },
-  { value: "Mötesrum", label: "Mötesrum", icon: BuildingIcon },
-  { value: "Fiber", label: "Fiber", icon: WifiIcon },
-  { value: "Reception", label: "Reception", icon: UserIcon },
-  { value: "Balkong", label: "Balkong", icon: BalconyIcon },
-  { value: "Takterrass", label: "Takterrass", icon: RooftopIcon },
-  { value: "Takvåning", label: "Takvåning", icon: PenthouseIcon },
-  { value: "Gym", label: "Gym", icon: DumbbellIcon },
-  { value: "Omklädningsrum", label: "Omklädningsrum", icon: LockerIcon },
-  { value: "Air condition", label: "Air condition", icon: SnowflakeIcon },
-  { value: "Lounge", label: "Lounge", icon: LoungeIcon },
-  { value: "Förråd", label: "Förråd", icon: LockerIcon },
-  { value: "Lastzon", label: "Lastzon", icon: CarIcon },
-  { value: "Telefonbås", label: "Telefonbås", icon: BuildingIcon },
-  { value: "Väntrum", label: "Väntrum", icon: UserIcon },
-  { value: "Pentry", label: "Pentry", icon: UtensilsIcon },
-  { value: "Skyltfönster", label: "Skyltfönster", icon: BuildingIcon },
-  { value: "Säkerhetsdörr", label: "Säkerhetsdörr", icon: ShieldIcon }
-];
+const amenityOptions = propertyAmenityOptions;
 
 function formatTimestamp(value) {
   const parsed = new Date(value);
@@ -405,8 +374,11 @@ function ProfilePage({ app }) {
     return new Set(merged.map((role) => role === "publisher" ? "broker" : role));
   }, [user?.role, user?.roles]);
   const hasRenter = roleSet.has("renter");
+  const hasCompanyAdmin = roleSet.has("company_admin");
+  const hasBrokerRole = roleSet.has("broker");
   const hasPublisher = roleSet.has("broker") || roleSet.has("company_admin");
-  const canSwitchRoles = hasRenter && hasPublisher;
+  const canSwitchToCompany = hasRenter && hasCompanyAdmin;
+  const canSwitchToBroker = hasRenter && hasBrokerRole && !hasCompanyAdmin;
   const activeRole = user?.role === "publisher" ? "broker" : user?.role;
   const hasOnlyRenterAccess = hasRenter && !hasPublisher;
   const currentRoleLabel = useMemo(() => (
@@ -826,7 +798,26 @@ function ProfilePage({ app }) {
                           Verifiera dig som mäklare
                         </button>
                       ) : null}
-                      {canSwitchRoles && activeRole === "renter" ? (
+                      {canSwitchToCompany && activeRole === "renter" ? (
+                        <button
+                          type="button"
+                          className="inline-flex items-center gap-1.5 rounded-full border border-black/20 bg-white px-3 py-2 text-xs font-semibold text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
+                          disabled={pendingRole}
+                          onClick={async () => {
+                            setPendingRole(true);
+                            try {
+                              await switchRole("company_admin");
+                              navigateTo("/app/admin");
+                            } finally {
+                              setPendingRole(false);
+                            }
+                          }}
+                        >
+                          <SwitchHorizontalIcon className="h-4 w-4" />
+                          Växla till Företag
+                        </button>
+                      ) : null}
+                      {canSwitchToBroker && activeRole === "renter" ? (
                         <button
                           type="button"
                           className="inline-flex items-center gap-1.5 rounded-full border border-black/20 bg-white px-3 py-2 text-xs font-semibold text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"

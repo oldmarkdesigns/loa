@@ -10,6 +10,7 @@ import { trackContactClicked, trackListingViewed } from "../../lib/analytics";
 import imagesPictogram from "../../../Assets/Pictograms/images.png";
 import locationPictogram from "../../../Assets/Pictograms/location.png";
 import trainPictogram from "../../../Assets/Pictograms/train.png";
+import { amenityIconFor, propertyAmenityDefinitions } from "../../lib/propertyAmenityIcons";
 import {
   ArrowLeftIcon,
   BalconyIcon,
@@ -105,29 +106,6 @@ const districtInsights = {
     profile: "Solna är ett attraktivt val för team som söker bra tillgänglighet och effektiv kostnadsbild."
   }
 };
-
-const amenityDefinitions = [
-  { label: "Cykelförråd", icon: BikeIcon, aliases: ["cykelförråd", "cykelrum", "cykel"] },
-  { label: "Garage", icon: CarIcon, aliases: ["garage"] },
-  { label: "Kök", icon: UtensilsIcon, aliases: ["kök", "kitchen"] },
-  { label: "Mötesrum", icon: BuildingIcon, aliases: ["mötesrum", "konferensrum", "styrelserum"] },
-  { label: "Fiber", icon: WifiIcon, aliases: ["fiber", "wifi", "internet"] },
-  { label: "Reception", icon: UserIcon, aliases: ["reception", "väntrum", "waiting room"] },
-  { label: "Balkong", icon: BalconyIcon, aliases: ["balkong", "balcony"] },
-  { label: "Takterrass", icon: RooftopIcon, aliases: ["takterrass", "terrass", "roof terrace", "terrace"] },
-  { label: "Takvåning", icon: PenthouseIcon, aliases: ["takvåning", "penthouse"] },
-  { label: "Gym", icon: DumbbellIcon, aliases: ["gym", "fitness", "träning"] },
-  { label: "Omklädningsrum", icon: LockerIcon, aliases: ["omklädningsrum", "omklädning", "locker room"] },
-  { label: "Air condition", icon: SnowflakeIcon, aliases: ["air condition", "ac", "a/c", "luftkonditionering"] },
-  { label: "Lounge", icon: LoungeIcon, aliases: ["lounge", "sociala ytor", "social yta"] },
-  { label: "Förråd", icon: LockerIcon, aliases: ["förråd", "förrad", "storage", "lager"] },
-  { label: "Lastzon", icon: CarIcon, aliases: ["lastzon", "lastkaj", "loading zone"] },
-  { label: "Telefonbås", icon: BuildingIcon, aliases: ["telefonbås", "telefonrum", "phone booth"] },
-  { label: "Väntrum", icon: UserIcon, aliases: ["väntrum"] },
-  { label: "Pentry", icon: UtensilsIcon, aliases: ["pentry", "pantry"] },
-  { label: "Skyltfönster", icon: BuildingIcon, aliases: ["skyltfönster", "storefront"] },
-  { label: "Säkerhetsdörr", icon: ShieldIcon, aliases: ["säkerhetsdörr", "säkerhet", "security", "secure"] }
-];
 
 function normalizeMatchValue(value) {
   return String(value || "")
@@ -578,7 +556,7 @@ function inferAmenitiesFromText(text) {
 function normalizeAmenityLabel(value) {
   const normalized = String(value || "").trim().toLowerCase();
   if (!normalized) return null;
-  const definition = amenityDefinitions.find((item) => item.label.toLowerCase() === normalized
+  const definition = propertyAmenityDefinitions.find((item) => item.label.toLowerCase() === normalized
     || item.aliases.some((alias) => normalized.includes(alias)));
   return definition ? definition.label : String(value || "").trim();
 }
@@ -629,14 +607,6 @@ function buildLongDescription(listing, insight, amenities) {
   return [intro, layout, area, transport];
 }
 
-function amenityIconFor(amenity) {
-  const normalized = String(amenity || "").trim().toLowerCase();
-  const definition = amenityDefinitions.find((item) => item.label.toLowerCase() === normalized
-    || item.aliases.some((alias) => normalized.includes(alias)));
-  if (definition) return definition.icon;
-  return BuildingIcon;
-}
-
 function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, initialView = "detail" }) {
   const pageRef = useRef(null);
   const [galleryTab, setGalleryTab] = useState("images");
@@ -646,7 +616,9 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
   const [aboutOverlayVisible, setAboutOverlayVisible] = useState(false);
   const [aboutOverlayOpen, setAboutOverlayOpen] = useState(false);
   const [isClosingAboutOverlay, setIsClosingAboutOverlay] = useState(false);
+  const [inquiryOverlayVisible, setInquiryOverlayVisible] = useState(false);
   const [inquiryOverlayOpen, setInquiryOverlayOpen] = useState(false);
+  const [isClosingInquiryOverlay, setIsClosingInquiryOverlay] = useState(false);
   const [inquiryType, setInquiryType] = useState("contact");
   const [inquiryMessage, setInquiryMessage] = useState("");
   const [inquiryDate, setInquiryDate] = useState("");
@@ -701,6 +673,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
     return `${base.slice(0, 237).trim()}...`;
   }, [shortDescription, longDescription]);
   const aboutOverlayTimerRef = useRef(null);
+  const inquiryOverlayTimerRef = useRef(null);
 
   const googleMapsHref = useMemo(
     () => `https://www.google.com/maps?q=${encodeURIComponent(`${insight.center.lat},${insight.center.lng}`)}`,
@@ -735,7 +708,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
     () => Boolean((app.favorites || []).some((entry) => String(entry.listingId) === String(resolvedFavoriteListingId))),
     [app.favorites, resolvedFavoriteListingId]
   );
-  const ownerCompanyName = String(listing?.advertiserName || "Fastighetsägare").trim() || "Fastighetsägare";
+  const ownerCompanyName = String(listing?.advertiserName || "Mäklarfirma AB").trim() || "Mäklarfirma AB";
   const brokerName = String(listing?.brokerName || "Ansvarig mäklare").trim() || "Ansvarig mäklare";
   const brokerInitials = brokerName
     .split(" ")
@@ -766,6 +739,9 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
       if (aboutOverlayTimerRef.current) {
         clearTimeout(aboutOverlayTimerRef.current);
       }
+      if (inquiryOverlayTimerRef.current) {
+        clearTimeout(inquiryOverlayTimerRef.current);
+      }
     };
   }, []);
 
@@ -785,6 +761,23 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
       }
     };
   }, [aboutOverlayVisible, aboutOverlayOpen, isClosingAboutOverlay]);
+
+  useEffect(() => {
+    if (!inquiryOverlayVisible || inquiryOverlayOpen || isClosingInquiryOverlay) return;
+    if (inquiryOverlayTimerRef.current) {
+      clearTimeout(inquiryOverlayTimerRef.current);
+    }
+    inquiryOverlayTimerRef.current = setTimeout(() => {
+      setInquiryOverlayOpen(true);
+      inquiryOverlayTimerRef.current = null;
+    }, 16);
+    return () => {
+      if (inquiryOverlayTimerRef.current) {
+        clearTimeout(inquiryOverlayTimerRef.current);
+        inquiryOverlayTimerRef.current = null;
+      }
+    };
+  }, [inquiryOverlayVisible, inquiryOverlayOpen, isClosingInquiryOverlay]);
 
   useEffect(() => {
     if (!listing?.id || isGalleryView) return;
@@ -851,15 +844,39 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
   }
 
   function openInquiryOverlay(type) {
+    if (inquiryOverlayTimerRef.current) {
+      clearTimeout(inquiryOverlayTimerRef.current);
+      inquiryOverlayTimerRef.current = null;
+    }
     setInquiryType(type === "viewing" ? "viewing" : "contact");
     setInquiryMessage("");
     setInquiryDate("");
     setInquirySent(false);
-    setInquiryOverlayOpen(true);
+    setInquiryOverlayVisible(true);
+    setInquiryOverlayOpen(false);
+    setIsClosingInquiryOverlay(false);
+  }
+
+  function finalizeCloseInquiryOverlay() {
+    setInquiryOverlayVisible(false);
+    setInquiryOverlayOpen(false);
+    setIsClosingInquiryOverlay(false);
+    if (inquiryOverlayTimerRef.current) {
+      clearTimeout(inquiryOverlayTimerRef.current);
+      inquiryOverlayTimerRef.current = null;
+    }
   }
 
   function closeInquiryOverlay() {
+    if (!inquiryOverlayVisible || !inquiryOverlayOpen) return;
+    setIsClosingInquiryOverlay(true);
     setInquiryOverlayOpen(false);
+    if (inquiryOverlayTimerRef.current) {
+      clearTimeout(inquiryOverlayTimerRef.current);
+    }
+    inquiryOverlayTimerRef.current = setTimeout(() => {
+      finalizeCloseInquiryOverlay();
+    }, 240);
   }
 
   function handleSendInquiry() {
@@ -1272,9 +1289,21 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
           </div>
         </div>
 
-        {inquiryOverlayOpen ? (
-          <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/45 p-4">
-            <div className="w-full max-w-xl rounded-2xl border border-black/10 bg-white p-5 shadow-[0_20px_60px_rgba(0,0,0,0.25)]">
+        {inquiryOverlayVisible ? (
+          <div
+            className={`fixed inset-0 z-[96] flex items-center justify-center bg-white/0 p-4 backdrop-blur-[2px] transition-all duration-200 sm:p-5 ${
+              inquiryOverlayOpen ? "opacity-100" : "opacity-0"
+            }`}
+            onClick={closeInquiryOverlay}
+          >
+            <div
+              className={`w-full max-w-xl rounded-3xl border border-black/10 bg-white p-5 shadow-[0_16px_40px_rgba(15,25,48,0.12)] transition-all duration-200 sm:p-6 ${
+                inquiryOverlayOpen
+                  ? "translate-y-0 scale-100 opacity-100"
+                  : "translate-y-2 scale-[0.985] opacity-0"
+              }`}
+              onClick={(event) => event.stopPropagation()}
+            >
               {!inquirySent ? (
                 <>
                   <h3 className="text-lg font-semibold">Skicka till uthyrare</h3>
@@ -1439,8 +1468,15 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
             <div className="fixed inset-0 z-[90] overflow-y-auto bg-white pb-24">
               <div className="min-h-screen">
                 <div className="sticky top-0 z-10 border-b border-black/10 bg-white/95 backdrop-blur-md">
-                  <div className="mx-auto grid w-full max-w-[1600px] grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 py-4 sm:px-6">
-                    <div />
+                  <div className="mx-auto grid w-full max-w-[1600px] grid-cols-1 items-center gap-4 px-4 py-4 sm:grid-cols-[1fr_auto_1fr] sm:px-6">
+                    <button
+                      type="button"
+                      className="inline-flex w-auto items-center gap-1.5 justify-self-start rounded-full border border-black/20 bg-white px-3 py-2 text-xs font-semibold text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
+                      onClick={closeGalleryOverlay}
+                    >
+                      <ArrowLeftIcon className="h-3.5 w-3.5" />
+                      Tillbaka till annons
+                    </button>
 
                     <div className="inline-flex items-center justify-center gap-6 justify-self-center">
                       <button
@@ -1467,14 +1503,26 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                       </button>
                     </div>
 
-                    <button
-                      type="button"
-                      className="close-circle-button inline-flex items-center justify-center justify-self-end rounded-full border border-black/10 bg-white text-xl leading-none text-ink-700 transition hover:border-[#0f1930]/25 hover:text-[#0f1930]"
-                      onClick={closeGalleryOverlay}
-                      aria-label="Stäng galleri"
-                    >
-                      ×
-                    </button>
+                    <div className="flex flex-wrap items-center justify-start gap-2 sm:justify-end">
+                      <button type="button" className={actionButtonClass} onClick={handleExportPdf}>
+                        <PdfIcon className="h-3.5 w-3.5" />
+                        PDF
+                      </button>
+                      <button
+                        type="button"
+                        className={saveActionButtonClass}
+                        onClick={handleToggleSave}
+                        title={isSaved ? "Sparad" : "Spara"}
+                        aria-label={isSaved ? "Sparad" : "Spara"}
+                      >
+                        <StarIcon className={`h-3.5 w-3.5 ${isSaved ? "fill-current text-[#0f1930]" : ""}`} />
+                        {isSaved ? "Sparad" : "Spara"}
+                      </button>
+                      <button type="button" className={actionButtonClass} onClick={handleShare}>
+                        <ShareIcon className="h-3.5 w-3.5" />
+                        Dela
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -1513,14 +1561,56 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                 </div>
 
                 <div className="fixed inset-x-0 bottom-0 z-10 border-t border-black/10 bg-white/95 backdrop-blur-md">
-                  <div className="mx-auto flex w-full max-w-[1600px] justify-center px-4 py-4 sm:px-6">
-                    <button
-                      type="button"
-                      className="rounded-full border border-[#0f1930] bg-[#0f1930] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#16233f]"
-                      onClick={closeGalleryOverlay}
-                    >
-                      Stäng
-                    </button>
+                  <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-4 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <div className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white px-3 py-2">
+                        <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#84c4be] text-xs font-semibold text-white">
+                          {brokerInitials}
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block truncate text-sm font-semibold text-ink-900">{brokerName}</span>
+                          <span className="block truncate text-xs text-ink-600">{ownerCompanyName || "Mäklarfirma AB"}</span>
+                        </span>
+                      </div>
+                      <div className="inline-flex min-h-[42px] items-center overflow-hidden rounded-full border border-black/10 bg-white text-[0.875rem] font-semibold leading-5 text-ink-700">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5">
+                          <RulerIcon className="h-3.5 w-3.5 shrink-0 text-ink-700" />
+                          {listing.sizeSqm || "-"} kvm
+                        </span>
+                        <span className="h-5 w-px bg-black/10" />
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5">
+                          <UserIcon className="h-3.5 w-3.5 shrink-0 text-ink-700" />
+                          {listing.capacity || "-"} platser
+                        </span>
+                        <span className="h-5 w-px bg-black/10" />
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5">
+                          <BuildingIcon className="h-3.5 w-3.5 shrink-0 text-ink-700" />
+                          {formatSek(listing.priceMonthly)}/månad
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap items-center justify-start gap-2 sm:justify-end">
+                      <button
+                        type="button"
+                        className="rounded-full border border-[#0f1930] bg-[#0f1930] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#16233f]"
+                        onClick={() => {
+                          trackContactClicked({
+                            listing_id: String(listing.id),
+                            source
+                          });
+                          openInquiryOverlay("contact");
+                        }}
+                      >
+                        Kontakta uthyrare
+                      </button>
+                      <button
+                        type="button"
+                        className="rounded-full border border-black/10 bg-white px-4 py-2.5 text-sm font-semibold text-ink-700 transition hover:bg-white"
+                        onClick={() => openInquiryOverlay("viewing")}
+                      >
+                        Boka visning
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

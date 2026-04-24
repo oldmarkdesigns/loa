@@ -4,26 +4,14 @@ import Breadcrumbs from "../../components/layout/Breadcrumbs";
 import FieldLabel from "../../components/app/FieldLabel";
 import ListingPreview from "../../components/app/ListingPreview";
 import { formatSek, parseAmenities } from "../../lib/formatters";
+import { amenityIconFor, propertyAmenityOptions } from "../../lib/propertyAmenityIcons";
 import { navigateTo } from "../../lib/router";
 import { districtOptions, listingTypes } from "../../data/mockData";
 import {
-  BalconyIcon,
-  BikeIcon,
   BuildingIcon,
-  CarIcon,
-  DumbbellIcon,
   LightbulbIcon,
-  LockerIcon,
-  LoungeIcon,
-  PenthouseIcon,
-  RooftopIcon,
   SaveIcon,
-  ShieldIcon,
-  SnowflakeIcon,
   UploadIcon,
-  UserIcon,
-  UtensilsIcon,
-  WifiIcon
 } from "../../components/icons/UiIcons";
 
 const publishSteps = [
@@ -35,46 +23,7 @@ const publishSteps = [
 
 const termOptions = ["3 månader", "6 månader", "12 månader", "24 månader", "36 månader", "Flexibelt avtal"];
 const availabilityOptions = ["Ledig nu", "Inom 2 veckor", "Inom 1 månad", "Inom 2 månader", "Efter överenskommelse"];
-const amenityOptions = [
-  { value: "Mötesrum", label: "Mötesrum", icon: BuildingIcon },
-  { value: "Kök", label: "Kök", icon: UtensilsIcon },
-  { value: "Fiber", label: "Fiber", icon: WifiIcon },
-  { value: "Reception", label: "Reception", icon: UserIcon },
-  { value: "Cykelförråd", label: "Cykelförråd", icon: BikeIcon },
-  { value: "Garage", label: "Garage", icon: CarIcon },
-  { value: "Balkong", label: "Balkong", icon: BalconyIcon },
-  { value: "Takterrass", label: "Takterrass", icon: RooftopIcon },
-  { value: "Takvåning", label: "Takvåning", icon: PenthouseIcon },
-  { value: "Gym", label: "Gym", icon: DumbbellIcon },
-  { value: "Omklädningsrum", label: "Omklädningsrum", icon: LockerIcon },
-  { value: "Air condition", label: "Air condition", icon: SnowflakeIcon },
-  { value: "Lounge", label: "Lounge", icon: LoungeIcon },
-  { value: "Förråd", label: "Förråd", icon: LockerIcon },
-  { value: "Lastzon", label: "Lastzon", icon: CarIcon },
-  { value: "Telefonbås", label: "Telefonbås", icon: BuildingIcon },
-  { value: "Väntrum", label: "Väntrum", icon: UserIcon },
-  { value: "Pentry", label: "Pentry", icon: UtensilsIcon },
-  { value: "Skyltfönster", label: "Skyltfönster", icon: BuildingIcon },
-  { value: "Säkerhetsdörr", label: "Säkerhetsdörr", icon: ShieldIcon }
-];
-const amenityDefinitions = [
-  { icon: BikeIcon, aliases: ["cykelförråd", "cykelrum", "bike"] },
-  { icon: CarIcon, aliases: ["garage", "lastzon", "lastkaj", "loading zone", "parkering"] },
-  { icon: UtensilsIcon, aliases: ["kök", "kitchen", "pentry"] },
-  { icon: BuildingIcon, aliases: ["mötesrum", "konferensrum", "styrelserum"] },
-  { icon: UserIcon, aliases: ["reception", "väntrum"] },
-  { icon: BalconyIcon, aliases: ["balkong"] },
-  { icon: BuildingIcon, aliases: ["takterrass"] },
-  { icon: PenthouseIcon, aliases: ["takvåning"] },
-  { icon: DumbbellIcon, aliases: ["gym"] },
-  { icon: LockerIcon, aliases: ["omklädningsrum"] },
-  { icon: SnowflakeIcon, aliases: ["air condition", "ac"] },
-  { icon: LoungeIcon, aliases: ["lounge"] },
-  { icon: LockerIcon, aliases: ["förråd", "förrad", "storage", "lager"] },
-  { icon: BuildingIcon, aliases: ["telefonbås", "telefonrum"] },
-  { icon: BuildingIcon, aliases: ["skyltfönster", "storefront"] },
-  { icon: ShieldIcon, aliases: ["säkerhetsdörr", "säkerhet", "security", "secure"] }
-];
+const amenityOptions = propertyAmenityOptions;
 const propertyCardAmenityChipClass = "inline-flex min-h-[42px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-black/10 bg-white px-3 py-1.5 text-[0.875rem] font-semibold leading-5 text-ink-700";
 const furnishedOptions = [
   { value: "all", label: "Alla" },
@@ -213,12 +162,6 @@ function mergeAmenities(draft) {
       ? ["Omöblerad"]
       : [];
   return Array.from(new Set([...(draft.amenities || []), ...textAmenities, ...furnishedAmenity]));
-}
-
-function amenityIconFor(amenity) {
-  const normalized = String(amenity || "").toLowerCase();
-  const match = amenityDefinitions.find((item) => item.aliases.some((alias) => normalized.includes(alias)));
-  return match?.icon || BuildingIcon;
 }
 
 function computeQualityScore(draft) {

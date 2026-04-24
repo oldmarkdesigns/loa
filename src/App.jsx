@@ -11,13 +11,15 @@ import SignupPage from "./pages/SignupPage";
 import LeadsPage from "./pages/app/LeadsPage";
 import ListingDetailPage from "./pages/app/ListingDetailPage";
 import ManageListingPage from "./pages/app/ManageListingPage";
+import MessagesPage from "./pages/app/MessagesPage";
+import AdminPanelPage from "./pages/app/AdminPanelPage";
 import ProfilePage from "./pages/app/ProfilePage";
 import PublishPage from "./pages/app/PublishPage";
 import PublisherOverviewPage from "./pages/app/PublisherOverviewPage";
 import RentPage from "./pages/app/RentPage";
 import SettingsPage from "./pages/app/SettingsPage";
 import ViewingsPage from "./pages/app/ViewingsPage";
-import { defaultAppPathForRole, navigateTo, usePathname } from "./lib/router";
+import { defaultAppPathForRole, defaultAppPathForUser, navigateTo, usePathname } from "./lib/router";
 import { AppProvider, useAppState } from "./state/AppState";
 
 function AppContent() {
@@ -38,9 +40,16 @@ function AppContent() {
 
     const search = typeof window !== "undefined" ? window.location.search : "";
     const searchParams = new URLSearchParams(search);
+    const isAdminAliasPath = pathname === "/admin" || pathname.startsWith("/admin/");
+    if (isAdminAliasPath) {
+      navigateTo(pathname.replace(/^\/admin/, "/app/admin"), { replace: true });
+      return;
+    }
+
     const isAuthenticated = Boolean(app.user);
     const isOnboardingPath = pathname === "/onboarding" || pathname.startsWith("/onboarding/");
     const isAppPath = pathname === "/app" || pathname.startsWith("/app/");
+    const isAdminPath = pathname === "/app/admin" || pathname.startsWith("/app/admin/");
     const isPublicRentPath = pathname === "/app/rent";
     const isPublicListingPath = pathname.startsWith("/app/listings/");
     const isCallbackPath = pathname === "/callback";
@@ -48,8 +57,10 @@ function AppContent() {
     const normalizedRoles = Array.isArray(app.user?.roles)
       ? app.user.roles.map((item) => item === "publisher" ? "broker" : item)
       : [app.user?.role === "publisher" ? "broker" : (app.user?.role || "renter")];
+    const hasCompanyAdminRole = normalizedRoles.includes("company_admin");
     const isAddBrokerIntent = isOnboardingPath && searchParams.get("intent") === "add-role" && searchParams.get("role") === "broker";
     const canAddBrokerRole = isAuthenticated && !normalizedRoles.includes("broker") && !normalizedRoles.includes("company_admin");
+    const authJustCompleted = typeof window !== "undefined" && window.sessionStorage.getItem("office_auth_just_completed") === "1";
 
     if (!isAuthenticated && pathname === "/app") {
       navigateTo("/login?returnTo=/app", { replace: true });
@@ -76,30 +87,61 @@ function AppContent() {
       return;
     }
 
+    if (
+      isAuthenticated
+      && app.user.onboardingCompleted
+      && hasCompanyAdminRole
+      && authJustCompleted
+      && !isAdminPath
+    ) {
+      window.sessionStorage.removeItem("office_auth_just_completed");
+      navigateTo("/app/admin", { replace: true });
+      return;
+    }
+
     if (isAuthenticated && app.user.onboardingCompleted && (isAuthPath || (isOnboardingPath && !(isAddBrokerIntent && canAddBrokerRole)))) {
-      navigateTo(defaultAppPathForRole(app.user.role), { replace: true });
+      if (typeof window !== "undefined") {
+        window.sessionStorage.removeItem("office_auth_just_completed");
+      }
+      navigateTo(defaultAppPathForUser(app.user), { replace: true });
       return;
     }
 
     if (isAuthenticated && pathname === "/app") {
-      navigateTo(defaultAppPathForRole(app.user.role), { replace: true });
+      if (typeof window !== "undefined") {
+        window.sessionStorage.removeItem("office_auth_just_completed");
+      }
+      navigateTo(defaultAppPathForUser(app.user), { replace: true });
       return;
     }
 
     if (isAuthenticated && app.user.onboardingCompleted) {
       const normalizedRole = app.user.role === "publisher" ? "broker" : app.user.role;
-      const role = normalizedRole === "broker" || normalizedRole === "company_admin" ? normalizedRole : "renter";
-      const rawRoles = Array.isArray(app.user.roles) ? app.user.roles.map((item) => item === "publisher" ? "broker" : item) : [role];
+      const fallbackRole = normalizedRole === "broker" || normalizedRole === "company_admin" ? normalizedRole : "renter";
+      const rawRoles = Array.isArray(app.user.roles) ? app.user.roles.map((item) => item === "publisher" ? "broker" : item) : [fallbackRole];
       const roleSet = new Set(rawRoles.filter((item) => item === "renter" || item === "broker" || item === "company_admin"));
+      const role = roleSet.has("company_admin")
+        ? "company_admin"
+        : fallbackRole;
       const hasPublisherRole = roleSet.has("broker") || roleSet.has("company_admin");
-      const renterAllowed = ["/app/rent", "/app/viewings", "/app/profile", "/app/settings", "/app/listings"];
-      const publisherAllowed = ["/app/my-listings", "/app/publish", "/app/leads", "/app/profile", "/app/settings", "/app/rent", "/app/listings"];
+      const renterAllowed = ["/app/rent", "/app/viewings", "/app/messages", "/app/profile", "/app/settings", "/app/listings"];
+      const brokerAllowed = ["/app/my-listings", "/app/publish", "/app/leads", "/app/messages", "/app/profile", "/app/settings", "/app/rent", "/app/listings"];
+      const companyAdminAllowed = [...brokerAllowed, "/app/admin"];
       const extraForPublisherMembers = hasPublisherRole ? ["/app/my-listings", "/app/publish", "/app/leads"] : [];
-      const allowedBases = role === "publisher" ? publisherAllowed : [...renterAllowed, ...extraForPublisherMembers];
+      const allowedBases = role === "company_admin"
+        ? companyAdminAllowed
+        : role === "broker"
+          ? brokerAllowed
+          : [...renterAllowed, ...extraForPublisherMembers];
       const pathnameAllowed = allowedBases.some((base) => pathname === base || pathname.startsWith(`${base}/`));
 
       if (role === "renter" && pathname.startsWith("/app/") && !pathnameAllowed) {
         navigateTo("/app/rent", { replace: true });
+        return;
+      }
+
+      if (isAdminPath && role !== "company_admin") {
+        navigateTo(defaultAppPathForRole(role), { replace: true });
         return;
       }
 
@@ -113,7 +155,12 @@ function AppContent() {
         return;
       }
 
-      if ((role === "broker" || role === "company_admin") && pathname.startsWith("/app/") && !pathnameAllowed) {
+      if (role === "company_admin" && pathname.startsWith("/app/") && !pathnameAllowed) {
+        navigateTo("/app/admin", { replace: true });
+        return;
+      }
+
+      if (role === "broker" && pathname.startsWith("/app/") && !pathnameAllowed) {
         navigateTo("/app/my-listings", { replace: true });
       }
     }
@@ -162,7 +209,9 @@ function AppContent() {
 
   let content = null;
 
-  if (pathname === "/") {
+  if (pathname === "/admin" || pathname.startsWith("/admin/")) {
+    content = null;
+  } else if (pathname === "/") {
     content = (
       <LandingPage
         user={app.user}
@@ -189,6 +238,7 @@ function AppContent() {
     const listingId = listingDetailMatch ? decodeURIComponent(listingDetailMatch[1]) : null;
     const isListingGalleryPath = Boolean(pathname.match(/^\/app\/listings\/[^/]+\/gallery$/));
     const managedListingId = manageListingMatch ? decodeURIComponent(manageListingMatch[1]) : null;
+    const isAdminPath = pathname === "/app/admin" || pathname.startsWith("/app/admin/");
 
     if (!app.user) {
       if (pathname === "/app/rent") {
@@ -220,7 +270,9 @@ function AppContent() {
     let appRouteContent = null;
     const activeRole = app.user?.role === "publisher" ? "broker" : (app.user?.role || "renter");
 
-    if (pathname === "/app/rent") {
+    if (isAdminPath) {
+      appRouteContent = <AdminPanelPage app={app} pathname={pathname} />;
+    } else if (pathname === "/app/rent") {
       appRouteContent = <RentPage app={app} onRequireAuth={openAuthOverlay} />;
     } else if (listingId) {
       appRouteContent = <ListingDetailPage app={app} listingId={listingId} initialView={isListingGalleryPath ? "gallery" : "detail"} />;
@@ -230,6 +282,8 @@ function AppContent() {
       appRouteContent = <PublisherOverviewPage app={app} />;
     } else if (pathname === "/app/viewings") {
       appRouteContent = activeRole === "broker" || activeRole === "company_admin" ? <LeadsPage app={app} /> : <ViewingsPage app={app} />;
+    } else if (pathname === "/app/messages") {
+      appRouteContent = <MessagesPage app={app} />;
     } else if (pathname === "/app/leads") {
       appRouteContent = <LeadsPage app={app} />;
     } else if (pathname === "/app/profile") {
@@ -239,7 +293,11 @@ function AppContent() {
     } else if (pathname === "/app/publish") {
       appRouteContent = <PublishPage app={app} />;
     } else {
-      appRouteContent = activeRole === "broker" || activeRole === "company_admin" ? <PublisherOverviewPage app={app} /> : <RentPage app={app} />;
+      appRouteContent = activeRole === "company_admin"
+        ? <AdminPanelPage app={app} pathname="/app/admin" />
+        : activeRole === "broker"
+          ? <PublisherOverviewPage app={app} />
+          : <RentPage app={app} />;
     }
 
       content = (

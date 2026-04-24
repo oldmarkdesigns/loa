@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@workos-inc/authkit-react";
-import { defaultAppPathForRole, navigateTo } from "../lib/router";
-import { CameraIcon } from "../components/icons/UiIcons";
+import { defaultAppPathForUser, navigateTo } from "../lib/router";
+import { Icon } from "../components/icons/Icon";
 import AuthFlowNav from "../components/layout/AuthFlowNav";
 import { hasConvexConfig, hasWorkosConfig } from "../lib/convex";
 
@@ -193,7 +193,7 @@ function SignupPage({ onCompleteSignup, onTestSignup, currentUser }) {
         role: form.role,
         roles: form.roles
       });
-      navigateTo(nextUser.onboardingCompleted ? defaultAppPathForRole(nextUser.role) : "/onboarding");
+      navigateTo(nextUser.onboardingCompleted ? defaultAppPathForUser(nextUser) : "/onboarding");
     } catch (submitError) {
       setError(submitError.message || "Kunde inte skapa konto.");
     } finally {
@@ -339,7 +339,7 @@ function SignupPage({ onCompleteSignup, onTestSignup, currentUser }) {
                       className="absolute left-1/2 top-full inline-flex min-h-0 -translate-x-1/2 -translate-y-1/2 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-black/15 bg-[#0f1930] px-4 py-2 text-xs font-semibold text-white"
                       onClick={() => avatarInputRef.current?.click()}
                     >
-                      <CameraIcon className="h-4 w-4" />
+                      <Icon name="camera" className="h-4 w-4" />
                       Lägg till foto (frivilligt)
                     </button>
                   </div>

@@ -15,7 +15,7 @@ function ViewingRequestModal({ listing, onClose, onSubmit }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink-900/45 p-4 sm:items-center" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-transparent p-4 sm:items-center" onClick={onClose}>
       <div className="surface w-full max-w-xl p-5" onClick={(event) => event.stopPropagation()}>
         <div className="flex items-start justify-between gap-3">
           <div>

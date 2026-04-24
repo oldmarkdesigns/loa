@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { FilterIcon, ResetIcon, SparklesIcon, StarIcon } from "../icons/UiIcons";
+import { Icon } from "../icons/Icon";
 import FurnishingToggle from "./FurnishingToggle";
 
 const questionOrder = ["core", "type", "size", "budget", "moveAndContract", "compliance", "amenities"];
@@ -928,7 +928,7 @@ function AiGuidedAssistant({
                     }))
                   }
                 >
-                  <SparklesIcon className="h-3.5 w-3.5 text-[#4f46e5]" />
+                  <Icon name="sparkles" className="h-3.5 w-3.5 text-[#4f46e5]" />
                   Fortsätt med rekommenderad yta
                 </button>
                 <div className="flex items-center justify-end gap-2">
@@ -963,14 +963,14 @@ function AiGuidedAssistant({
       {!bare ? (
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-700">
-            <SparklesIcon className="h-3.5 w-3.5 text-[#0f1930]" />
+            <Icon name="sparkles" className="h-3.5 w-3.5 text-[#0f1930]" />
             {showHeader ? "AI-sök assistent" : "AI-guide"}
           </div>
           <div className="flex items-center gap-3">
             {showModeSwitch ? (
               <div className="inline-flex h-10 items-center gap-2 rounded-2xl border border-black/10 bg-white px-3 text-xs font-semibold text-ink-700">
                 <span className="inline-flex items-center gap-1">
-                  <SparklesIcon className="h-3.5 w-3.5 text-[#4f46e5]" />
+                  <Icon name="sparkles" className="h-3.5 w-3.5 text-[#4f46e5]" />
                   <span>AI-guide</span>
                 </span>
                 <button
@@ -993,7 +993,7 @@ function AiGuidedAssistant({
                   className="inline-flex items-center gap-1.5 text-xs font-semibold text-ink-700 hover:text-ink-900"
                   onClick={onResetSearch}
                 >
-                  <ResetIcon className="h-3.5 w-3.5" />
+                  <Icon name="reset" className="h-3.5 w-3.5" />
                   Nollställ sökning
                 </button>
               ) : null
@@ -1017,7 +1017,7 @@ function AiGuidedAssistant({
             <div className="mt-1 flex flex-wrap gap-2 search-summary-dissolve-in">
               {suggestionChipLabel ? (
                 <div className="inline-flex items-center gap-1 rounded-full border border-[#4f46e5]/35 bg-[#eef0ff] px-2.5 py-0.5 text-xs font-semibold text-[#312e81]">
-                  <SparklesIcon className="h-3.5 w-3.5 text-[#4f46e5]" />
+                  <Icon name="sparkles" className="h-3.5 w-3.5 text-[#4f46e5]" />
                   {suggestionChipLabel}
                 </div>
               ) : null}
@@ -1117,7 +1117,7 @@ function AiGuidedAssistant({
             className="inline-flex items-center gap-2 rounded-2xl border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-white"
             onClick={onSaveSearch}
           >
-            <StarIcon className="h-4 w-4" />
+            <Icon name="star" className="h-4 w-4" />
             Spara AI-sökning
           </button>
         ) : null}

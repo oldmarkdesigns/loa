@@ -1,4 +1,4 @@
-import { PinIcon } from "../icons/UiIcons";
+import { Icon } from "../icons/Icon";
 
 function buildAddress(listing) {
   const parts = [listing.address, listing.district].filter(Boolean);
@@ -12,7 +12,7 @@ function MapListingPreviewCard({ listing, onOpen, className = "" }) {
     <div className={`overflow-hidden rounded-[24px] border border-black/10 bg-white shadow-[0_16px_34px_rgba(15,25,48,0.16)] ${className}`.trim()}>
       <img src={listing.image} alt={listing.title} className="h-28 w-full object-cover" />
       <div className="flex items-center gap-2 px-3 py-3">
-        <PinIcon className="h-4 w-4 shrink-0 text-ink-500" />
+        <Icon name="pin" className="h-4 w-4 shrink-0 text-ink-500" />
         <p className="text-sm font-medium leading-tight text-[#0f1930]">{buildAddress(listing)}</p>
       </div>
     </div>

@@ -15,7 +15,7 @@ function BookingSheet({ listing, onClose, onSubmit }) {
   );
 
   return (
-    <div className="fixed inset-0 z-50 bg-ink-900/45 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 bg-transparent p-4" onClick={onClose}>
       <div
         className="surface mx-auto mt-10 w-full max-w-xl p-5 sm:p-6"
         onClick={(event) => event.stopPropagation()}

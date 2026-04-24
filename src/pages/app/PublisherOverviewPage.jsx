@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { listingApi } from "../../api";
 import { formatDate, formatSek } from "../../lib/formatters";
 import { navigateTo } from "../../lib/router";
-import { BuildingIcon, CalendarIcon } from "../../components/icons/UiIcons";
+import { Icon } from "../../components/icons/Icon";
 import Breadcrumbs from "../../components/layout/Breadcrumbs";
 
 function seededMetric(listing, salt, min, span) {
@@ -224,7 +224,7 @@ function PublisherOverviewPage({ app }) {
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <button type="button" className="btn-secondary px-4" onClick={() => navigateTo("/app/leads")}>
-                <CalendarIcon className="mr-1.5 h-4 w-4" />
+                <Icon name="calendar" className="mr-1.5 h-4 w-4" />
                 Intressen
               </button>
               <button type="button" className="btn-primary px-4" onClick={() => navigateTo("/app/publish")}>

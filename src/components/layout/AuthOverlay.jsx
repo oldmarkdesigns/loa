@@ -78,7 +78,7 @@ function AuthOverlay({ open, mode = "login", preferredRole = "renter", onClose, 
   }
 
   return (
-    <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/45 p-4 backdrop-blur-[2px] sm:items-center" onClick={onClose}>
+    <div className="fixed inset-0 z-[80] flex items-end justify-center bg-transparent p-4 sm:items-center" onClick={onClose}>
       <div className="w-full max-w-lg rounded-3xl border border-black/10 bg-white p-5 shadow-[0_20px_60px_rgba(0,0,0,0.22)]" onClick={(event) => event.stopPropagation()}>
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>

@@ -2,30 +2,20 @@ import { useEffect, useMemo, useState } from "react";
 import { navigateTo } from "../lib/router";
 import AuthFlowNav from "../components/layout/AuthFlowNav";
 import infoPictogram from "../../Assets/Pictograms/info.png";
+import { propertyAmenityOptions } from "../lib/propertyAmenityIcons";
 import {
   ArrowUpIcon,
-  BalconyIcon,
-  BikeIcon,
   BuildingIcon,
   CalendarIcon,
-  CarIcon,
   ClockIcon,
   CoinsIcon,
-  DumbbellIcon,
   LightbulbIcon,
-  LockerIcon,
-  LoungeIcon,
   MapIcon,
-  PenthouseIcon,
   PinIcon,
   RulerIcon,
-  RooftopIcon,
   ShieldIcon,
-  SnowflakeIcon,
   SparklesIcon,
   UserIcon,
-  UtensilsIcon,
-  WifiIcon
 } from "../components/icons/UiIcons";
 
 const RENTER_STEPS = ["program-core", "review"];
@@ -288,28 +278,7 @@ const transitOptions = ["Alla", "0-300 meter", "0-600 meter", "0-1000 meter", "0
 const parkingOptions = ["Alla", "Ingen preferens", "Bilparkering", "Laddplats", "Garage"];
 const layoutOptions = ["Alla", "Öppet landskap", "Mixat", "Cellkontor", "Flexibelt"];
 const accessOptions = ["Alla", "Kontorstid", "Utökad access", "24/7"];
-const amenityOptions = [
-  { value: "Cykelförråd", label: "Cykelförråd", icon: BikeIcon },
-  { value: "Garage", label: "Garage", icon: CarIcon },
-  { value: "Kök", label: "Kök", icon: UtensilsIcon },
-  { value: "Mötesrum", label: "Mötesrum", icon: BuildingIcon },
-  { value: "Fiber", label: "Fiber", icon: WifiIcon },
-  { value: "Reception", label: "Reception", icon: UserIcon },
-  { value: "Balkong", label: "Balkong", icon: BalconyIcon },
-  { value: "Takterrass", label: "Takterrass", icon: RooftopIcon },
-  { value: "Takvåning", label: "Takvåning", icon: PenthouseIcon },
-  { value: "Gym", label: "Gym", icon: DumbbellIcon },
-  { value: "Omklädningsrum", label: "Omklädningsrum", icon: LockerIcon },
-  { value: "Air condition", label: "Air condition", icon: SnowflakeIcon },
-  { value: "Lounge", label: "Lounge", icon: LoungeIcon },
-  { value: "Förråd", label: "Förråd", icon: LockerIcon },
-  { value: "Lastzon", label: "Lastzon", icon: CarIcon },
-  { value: "Telefonbås", label: "Telefonbås", icon: BuildingIcon },
-  { value: "Väntrum", label: "Väntrum", icon: UserIcon },
-  { value: "Pentry", label: "Pentry", icon: UtensilsIcon },
-  { value: "Skyltfönster", label: "Skyltfönster", icon: BuildingIcon },
-  { value: "Säkerhetsdörr", label: "Säkerhetsdörr", icon: ShieldIcon }
-];
+const amenityOptions = propertyAmenityOptions;
 const sqmPerPersonByType = {
   Kontor: 12,
   Coworking: 8,

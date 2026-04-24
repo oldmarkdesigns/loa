@@ -17,6 +17,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       redirectUri={workosRedirectUri}
       devMode={import.meta.env.DEV}
       onRedirectCallback={({ state }) => {
+        if (typeof window !== "undefined") {
+          window.sessionStorage.setItem("office_auth_just_completed", "1");
+        }
         const returnTo = typeof state?.returnTo === "string" && state.returnTo.startsWith("/")
           ? state.returnTo
           : "/callback";

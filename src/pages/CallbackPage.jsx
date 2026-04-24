@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import AuthFlowNav from "../components/layout/AuthFlowNav";
-import { defaultAppPathForRole, navigateTo } from "../lib/router";
+import { defaultAppPathForUser, navigateTo } from "../lib/router";
 import { useAppState } from "../state/AppState";
 
 function CallbackPage() {
@@ -12,7 +12,7 @@ function CallbackPage() {
     }
 
     if (app.user) {
-      navigateTo(app.user.onboardingCompleted ? defaultAppPathForRole(app.user.role) : "/onboarding", { replace: true });
+      navigateTo(app.user.onboardingCompleted ? defaultAppPathForUser(app.user) : "/onboarding", { replace: true });
       return;
     }
 

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { navigateTo } from "../lib/router";
-import MarketingNavLinks from "../components/layout/MarketingNavLinks";
-import ProfileMenuDropdown from "../components/layout/ProfileMenuDropdown";
+import { propertyAmenityOptions } from "../lib/propertyAmenityIcons";
+import MarketingHeader from "../components/layout/MarketingHeader";
 import ListingVisualCard from "../components/app/ListingVisualCard";
 import MapListingPreviewCard from "../components/app/MapListingPreviewCard";
 import { popularListingFallbackKey } from "../lib/popularListingFallback";
@@ -583,28 +583,7 @@ const guideCards = [
   }
 ];
 
-const heroAmenityOptions = [
-  { value: "Cykelförråd", label: "Cykelförråd", icon: BikeIcon },
-  { value: "Garage", label: "Garage", icon: CarIcon },
-  { value: "Kök", label: "Kök", icon: UtensilsIcon },
-  { value: "Mötesrum", label: "Mötesrum", icon: BuildingIcon },
-  { value: "Fiber", label: "Fiber", icon: WifiIcon },
-  { value: "Reception", label: "Reception", icon: UserIcon },
-  { value: "Balkong", label: "Balkong", icon: BalconyIcon },
-  { value: "Takterrass", label: "Takterrass", icon: RooftopIcon },
-  { value: "Takvåning", label: "Takvåning", icon: PenthouseIcon },
-  { value: "Gym", label: "Gym", icon: DumbbellIcon },
-  { value: "Omklädningsrum", label: "Omklädningsrum", icon: LockerIcon },
-  { value: "Air condition", label: "Air condition", icon: SnowflakeIcon },
-  { value: "Lounge", label: "Lounge", icon: LoungeIcon },
-  { value: "Förråd", label: "Förråd", icon: LockerIcon },
-  { value: "Lastzon", label: "Lastzon", icon: CarIcon },
-  { value: "Telefonbås", label: "Telefonbås", icon: BuildingIcon },
-  { value: "Väntrum", label: "Väntrum", icon: UserIcon },
-  { value: "Pentry", label: "Pentry", icon: UtensilsIcon },
-  { value: "Skyltfönster", label: "Skyltfönster", icon: BuildingIcon },
-  { value: "Säkerhetsdörr", label: "Säkerhetsdörr", icon: ShieldIcon }
-];
+const heroAmenityOptions = propertyAmenityOptions;
 
 const furnishedOptions = [
   { value: "all", label: "Alla" },
@@ -681,10 +660,6 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
   const faqCardRef = useRef(null);
   const [showScrollToTopButton, setShowScrollToTopButton] = useState(false);
   const [isNavScrolled, setIsNavScrolled] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const menuRef = useRef(null);
-  const profileMenuPanelRef = useRef(null);
   const [heroFilters, setHeroFilters] = useState({
     district: "Alla",
     teamSize: ""
@@ -694,16 +669,6 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
     onOpenAuthOverlay?.(mode, preferredRole);
   };
 
-  const userInitials = useMemo(() => {
-    const source = String(user?.name || "").trim();
-    if (!source) return "AA";
-    const words = source.split(" ").filter(Boolean);
-    if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
-    return `${words[0][0] || ""}${words[1][0] || ""}`.toUpperCase();
-  }, [user?.name]);
-  const activeRole = user?.role === "publisher" || user?.role === "company_admin" ? user.role : "renter";
-  const rawRoles = Array.isArray(user?.roles) ? user.roles : [activeRole];
-  const roleSet = new Set(rawRoles.filter((item) => item === "renter" || item === "publisher" || item === "company_admin"));
   const favoriteIds = useMemo(
     () => new Set((favorites || []).map((entry) => String(entry.listingId))),
     [favorites]
@@ -711,32 +676,6 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
   const totalAvailableListings = Array.isArray(listings) && listings.length > 0 ? listings.length : baseListingDataset.length;
   const trustScore = 4.8;
   const trustReviews = 127;
-  useEffect(() => {
-    function onPointerDown(event) {
-      if (
-        menuRef.current
-        && !menuRef.current.contains(event.target)
-        && profileMenuPanelRef.current
-        && !profileMenuPanelRef.current.contains(event.target)
-      ) {
-        setMenuOpen(false);
-      }
-    }
-
-    window.addEventListener("pointerdown", onPointerDown);
-    return () => window.removeEventListener("pointerdown", onPointerDown);
-  }, []);
-
-  useEffect(() => {
-    if (!mobileMenuOpen) return undefined;
-    function onEscape(event) {
-      if (event.key === "Escape") {
-        setMobileMenuOpen(false);
-      }
-    }
-    window.addEventListener("keydown", onEscape);
-    return () => window.removeEventListener("keydown", onEscape);
-  }, [mobileMenuOpen]);
 
   useEffect(() => {
     if (typeof window === "undefined") return undefined;
@@ -928,165 +867,20 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
 
   return (
     <main className="min-h-screen bg-white text-black">
-      <header
-        ref={headerRef}
-        className={`navbar-enter sticky top-0 z-40 shrink-0 border-b will-change-[background-color,border-color,backdrop-filter] transition-[background-color,border-color,backdrop-filter] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-          isNavScrolled ? "border-black/10 bg-white/95 backdrop-blur-md" : "border-black/0 bg-white/0 backdrop-blur-0"
-        }`}
-      >
-        <div className="grid w-full grid-cols-[auto_1fr_auto] items-center gap-4 px-4 py-3 sm:px-6">
-          <div className="flex min-w-0 items-center gap-4">
-            <button type="button" className="justify-self-start text-left" onClick={handleHomeBrandClick}>
-              <span className="inline-flex items-center gap-2 rounded-xl border border-black/10 bg-white px-2.5 py-1.5">
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-dashed border-black/30 bg-white text-[9px] font-semibold uppercase tracking-wide text-ink-500">
-                  LOGGA
-                </span>
-                <span className="text-sm font-semibold text-ink-800">Företagsnamn</span>
-              </span>
-            </button>
-          </div>
-
-          <nav className="hidden items-center justify-self-start gap-7 lg:flex">
-            <MarketingNavLinks
-              onSectionLinkClick={handleSectionLinkClick}
-              showPublish={false}
-            />
-          </nav>
-
-          <div className="flex items-center justify-self-end gap-4">
-            {user ? (
-              <>
-                <button
-                  type="button"
-                  className="inline-flex h-11 items-center gap-1.5 rounded-xl border border-[#0f1930] px-3 text-xs font-semibold text-[#0f1930] transition hover:bg-[#0f1930] hover:text-white"
-                  onClick={() => navigateTo("/app/publish")}
-                >
-                  <span aria-hidden="true" className="text-sm leading-none">+</span>
-                  <span>Publicera annons</span>
-                </button>
-                <div ref={menuRef} className="relative inline-flex h-11 items-center self-center">
-                <button
-                  type="button"
-                  className="inline-flex h-full w-11 items-center justify-center overflow-hidden rounded-full border border-black/20 bg-white text-sm font-semibold text-ink-700"
-                  onClick={() => setMenuOpen((value) => !value)}
-                  aria-label="Öppna profilmeny"
-                  aria-expanded={menuOpen}
-                  aria-haspopup="menu"
-                  title="Profil"
-                >
-                  {user?.profile?.avatarUrl ? (
-                    <img
-                      src={user.profile.avatarUrl}
-                      alt={user?.name || "Profil"}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    userInitials
-                  )}
-                </button>
-              </div>
-              <button
-                type="button"
-                aria-label="Öppna meny"
-                className="inline-flex h-11 items-center justify-center text-[#0f1930] lg:hidden"
-                onClick={() => {
-                  setMenuOpen(false);
-                  setMobileMenuOpen((value) => !value);
-                }}
-              >
-                <span className="inline-flex flex-col items-end gap-1.5">
-                  <span className="block h-0.5 w-5 rounded-full bg-current" />
-                  <span className="block h-0.5 w-4 rounded-full bg-current" />
-                  <span className="block h-0.5 w-3 rounded-full bg-current" />
-                </span>
-              </button>
-              </>
-            ) : (
-              <>
-                <button
-                  type="button"
-                  className="inline-flex items-center justify-center rounded-full border border-[#0f1930] bg-[#0f1930] px-4 py-2 text-xs font-semibold text-white hover:bg-[#16233f]"
-                  onClick={() => openAuth("signup", "renter")}
-                >
-                  Skapa konto
-                </button>
-                <button
-                  type="button"
-                  className="inline-flex items-center bg-transparent px-1 py-2 text-xs font-semibold text-ink-700"
-                  onClick={() => openAuth("login", "renter")}
-                >
-                  Logga in
-                </button>
-                <button
-                  type="button"
-                  aria-label="Öppna meny"
-                  className="inline-flex h-11 items-center justify-center text-[#0f1930] lg:hidden"
-                  onClick={() => setMobileMenuOpen((value) => !value)}
-                >
-                  <span className="inline-flex flex-col items-end gap-1.5">
-                    <span className="block h-0.5 w-5 rounded-full bg-current" />
-                    <span className="block h-0.5 w-4 rounded-full bg-current" />
-                    <span className="block h-0.5 w-3 rounded-full bg-current" />
-                  </span>
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      </header>
-
-      {menuOpen ? (
-        <ProfileMenuDropdown
-          menuOpen={menuOpen}
-          setMenuOpen={setMenuOpen}
-          profileMenuPanelRef={profileMenuPanelRef}
+      <div ref={headerRef}>
+        <MarketingHeader
+          pathname="/"
+          user={user}
+          isNavScrolled={isNavScrolled}
+          onBrandClick={handleHomeBrandClick}
+          onSectionLinkClick={handleSectionLinkClick}
           onSwitchRole={onSwitchRole}
           onLogout={onLogout}
+          onRequireAuth={openAuth}
           onHelp={() => scrollToHashSection("#faq", true)}
+          onMessagesClick={() => navigateTo("/app/messages")}
         />
-      ) : null}
-
-      {mobileMenuOpen ? (
-        <div className="fixed inset-0 z-[60] bg-transparent lg:hidden" onClick={() => setMobileMenuOpen(false)}>
-          <div className="absolute right-4 top-[72px] w-[min(320px,calc(100vw-2rem))] rounded-2xl border border-black/10 bg-white p-3" onClick={(event) => event.stopPropagation()}>
-            <div className="space-y-1">
-              <button type="button" className="menu-hover-row inline-flex w-full items-center rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5" onClick={() => { setMobileMenuOpen(false); navigateTo("/app/rent?view=available"); }}>
-                Lediga lokaler
-              </button>
-              {user ? (
-                <>
-                  <button
-                    type="button"
-                    className="menu-hover-row inline-flex w-full items-center rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5"
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                      navigateTo("/app/publish");
-                    }}
-                  >
-                    Publicera annons
-                  </button>
-                  <div className="my-1 h-px bg-black/10" />
-                </>
-              ) : null}
-              <button type="button" className="menu-hover-row inline-flex w-full items-center rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5" onClick={() => { setMobileMenuOpen(false); scrollToHashSection("#funktioner", true); }}>
-                Funktioner
-              </button>
-              <button type="button" className="menu-hover-row inline-flex w-full items-center rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5" onClick={() => { setMobileMenuOpen(false); scrollToHashSection("#sa-fungerar-det", true); }}>
-                Så fungerar det
-              </button>
-              <button type="button" className="menu-hover-row inline-flex w-full items-center rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5" onClick={() => { setMobileMenuOpen(false); scrollToHashSection("#priser", true); }}>
-                Priser
-              </button>
-              <button type="button" className="menu-hover-row inline-flex w-full items-center rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5" onClick={() => { setMobileMenuOpen(false); scrollToHashSection("#faq", true); }}>
-                FAQ
-              </button>
-              <button type="button" className="menu-hover-row inline-flex w-full items-center rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5" onClick={() => { setMobileMenuOpen(false); scrollToHashSection("#kontakt", true); }}>
-                Kontakt
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      </div>
 
       <section ref={heroSectionRef} className="relative overflow-visible px-4 pt-0 pb-4 sm:px-6 sm:pb-6 xl:pb-0">
         <div className="pointer-events-none absolute inset-x-4 top-0 bottom-0 z-0 overflow-hidden rounded-[34px] sm:inset-x-6">
@@ -1161,22 +955,12 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
                     const fill = Math.max(0, Math.min(1, trustScore - index));
                     return (
                       <span key={`trust-star-${index}`} className="relative inline-flex h-4 w-4">
-                        <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 text-[#0f1930]/20">
-                          <path
-                            fill="currentColor"
-                            d="M12 2.7l2.92 5.92 6.54.95-4.73 4.61 1.12 6.51L12 17.6l-5.85 3.08 1.12-6.51-4.73-4.61 6.54-.95L12 2.7z"
-                          />
-                        </svg>
+                        <StarIcon className="h-4 w-4 fill-current text-[#0f1930]/20" />
                         <span
                           className="absolute inset-y-0 left-0 overflow-hidden"
                           style={{ width: `${fill * 100}%` }}
                         >
-                          <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 text-[#0f1930]">
-                            <path
-                              fill="currentColor"
-                              d="M12 2.7l2.92 5.92 6.54.95-4.73 4.61 1.12 6.51L12 17.6l-5.85 3.08 1.12-6.51-4.73-4.61 6.54-.95L12 2.7z"
-                            />
-                          </svg>
+                          <StarIcon className="h-4 w-4 fill-current text-[#0f1930]" />
                         </span>
                       </span>
                     );

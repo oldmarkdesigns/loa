@@ -3,7 +3,7 @@ import { formatDate, parseAmenities } from "../../lib/formatters";
 import { navigateTo } from "../../lib/router";
 import { districtOptions, listingTypes } from "../../data/mockData";
 import PresetTextField from "../../components/app/PresetTextField";
-import { BuildingIcon, CalendarIcon } from "../../components/icons/UiIcons";
+import { Icon } from "../../components/icons/Icon";
 
 const termPresets = ["3 månader", "6 månader", "12 månader", "24 månader", "36 månader", "Flexibelt avtal"];
 const availabilityPresets = ["Ledig nu", "Inom 2 veckor", "Inom 1 månad", "Inom 2 månader", "Efter överenskommelse"];
@@ -566,7 +566,7 @@ function MyListingsPage({ app }) {
                 className="tab-underline-button inline-flex items-center gap-1.5 border-b-2 border-[#0f1930] pb-1 text-sm font-semibold text-[#0f1930]"
                 onClick={() => navigateTo("/app/my-listings")}
               >
-                <BuildingIcon className="h-3.5 w-3.5" />
+                <Icon name="building" className="h-3.5 w-3.5" />
                 Dina objekt
               </button>
               <button
@@ -574,7 +574,7 @@ function MyListingsPage({ app }) {
                 className="tab-underline-button inline-flex items-center gap-1.5 border-b-2 border-transparent pb-1 text-sm font-semibold text-ink-600 hover:text-black"
                 onClick={() => navigateTo("/app/leads")}
               >
-                <CalendarIcon className="h-3.5 w-3.5" />
+                <Icon name="calendar" className="h-3.5 w-3.5" />
                 Intresse och visningar
               </button>
             </div>
