@@ -110,8 +110,8 @@ Current Convex functions:
   * `createTestUser`
   * `upsertFromAuth`
   * `updateMe`
+  * `switchActiveRole`
   * `updateTestUser`
-  * `addRoleToMe`
   * `addRoleToTestUser`
   * `completeOnboarding`
   * `completeTestOnboarding`
@@ -150,7 +150,19 @@ Current Convex functions:
 
   * `ensureSeeded`
 
-The current backend works for a prototype, but several functions trust broad client payloads and role claims too much.
+Implemented Phase 1 auth safety changes:
+
+* New WorkOS users are created as `renter`.
+* `upsertFromAuth` ignores client-supplied role fields.
+* `updateMe` no longer accepts or patches `role`/`roles`.
+* `switchActiveRole` only switches to an already granted role.
+* Public `addRoleToMe` has been removed in favour of an internal role grant helper.
+* Broker/company-admin onboarding records a pending role request instead of granting access.
+* Test-session functions require `ENABLE_TEST_AUTH=true`.
+* `sanitizeUser` strips `testSessionToken`.
+* `setup.ensureSeeded` requires `ENABLE_SEED_DATA=true`, and normal client boot no longer calls it.
+
+Remaining backend hardening is mostly around broad validators, listing status transitions, bounded listing reads, media storage, and organisation/member semantics.
 
 ### Auth boundaries
 
@@ -195,9 +207,9 @@ The frontend route guard is useful, but it must not be treated as a permission s
 
 The main gaps are:
 
-* Authenticated users can currently grant themselves elevated roles server-side.
-* Public test-user and test-session paths exist.
-* Public seeding is called from the client on app boot.
+* Client-side role escalation has been blocked server-side.
+* Test-user and test-session paths still exist for development, but are gated behind `ENABLE_TEST_AUTH=true`.
+* Public seeding still exists as a mutation, but is gated behind `ENABLE_SEED_DATA=true` and is no longer called from normal client boot.
 * Several Convex functions accept `v.any()` payloads.
 * Listing status and moderation are not strongly controlled server-side.
 * Listing queries use unbounded `.collect()` in several places.
@@ -302,12 +314,12 @@ Reasonable current choices:
 
 | Problem                                                 | Where                                                                                                                           |                                                                                                                                      Why it matters | Fix now or later                                           | Lowest-risk fix                                                                                                                                                                                                                                   |
 | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------: | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Users can elevate their own roles                       | `convex/users.js`, especially `updateMe`, `addRoleToMe`, `completeOnboarding`; frontend calls in `src/state/AppState.jsx`       |     Any authenticated user can become `broker` or `company_admin` by sending role/roles payloads. Frontend route guards do not protect Convex data. | Now                                                        | Stop accepting arbitrary `role`/`roles` in generic profile updates. Split `updateProfile` from `switchActiveRole`. Only allow switching to roles already granted. Add server-controlled role grant functions for admin/invite/verification flows. |
-| Public test auth/session functions                      | `convex/users.js`, `src/state/AppState.jsx`, `src/pages/SignupPage.jsx`                                                         | Test sessions and localStorage auth bypasses are useful for development but unsafe in production. `sanitizeUser` does not strip `testSessionToken`. | Now                                                        | Gate test functions behind an environment flag or remove them from production builds. Strip `testSessionToken` in `sanitizeUser`. Add an index if retained for development.                                                                       |
-| Public seeding mutation called by clients               | `convex/setup.js`, `src/state/AppState.jsx` boot path                                                                           |                                                         Any client can trigger seed logic. Production data setup should not be a public app action. | Now                                                        | Make seeding internal/admin-only or environment-gated. Remove `setupApi.ensureSeeded()` from normal client bootstrap before production. Use a manual deployment seed step.                                                                        |
+| Users can elevate their own roles                       | `convex/users.js`, especially previous `updateMe`, `addRoleToMe`, `completeOnboarding`; frontend calls in `src/state/AppState.jsx` | Any authenticated user could become `broker` or `company_admin` by sending role/roles payloads. Frontend route guards do not protect Convex data. | Done in Phase 1 auth safety                               | `updateMe` accepts safe profile fields only. `switchActiveRole` only switches to granted roles. Public `addRoleToMe` was removed. `completeOnboarding` records pending elevated-role requests without granting them. Internal role grant remains for future admin/invite flows. |
+| Public test auth/session functions                      | `convex/users.js`, `src/state/AppState.jsx`, `src/pages/SignupPage.jsx`                                                         | Test sessions and localStorage auth bypasses are useful for development but unsafe in production.                                                   | Done for production gating; later remove if not needed     | Test functions require `ENABLE_TEST_AUTH=true`. `sanitizeUser` strips `testSessionToken`. Test-token lookup now uses `by_test_session_token`.                                                                                                    |
+| Public seeding mutation called by clients               | `convex/setup.js`, previous `src/state/AppState.jsx` boot path                                                                  | Any client could trigger seed logic. Production data setup should not be a normal app action.                                                        | Done for production gating; refine deployment process later | `setup.ensureSeeded` requires `ENABLE_SEED_DATA=true`. Normal client bootstrap no longer calls seeding. Deployment docs still need a manual seed/import process.                                                                                  |
 | Listing status can be influenced through broad payloads | `convex/listings.js`, `buildListingPayload`                                                                                     |                                       `payload.status` is accepted during create/update. Owners can bypass intended publish/moderation transitions. | Now                                                        | Remove `status` from general listing payload updates. Add explicit mutations for `requestPublish`, `publish`, `pause`, `archive`, and moderation decisions. Validate allowed transitions.                                                         |
 | Broad `v.any()` validators                              | `convex/schema.js`, `convex/users.js`, `convex/listings.js`, `convex/leads.js`, `convex/ai.js`                                  |                                   Data shape is not enforced. Bad or malicious payloads can corrupt documents or create incompatible client states. | Now                                                        | Replace `v.any()` on sensitive mutations with explicit object validators. Start with users, listings, leads, viewings. Leave loose import metadata only where justified.                                                                          |
-| Unbounded backend reads                                 | `convex/lib.js` `listVisibleListings`, `convex/ai.js`, `convex/listings.js` duplicate checks, test-session lookup in `users.js` |                                                            `.collect()` over whole tables will not scale and can become slow or fail as data grows. | Now for listings/auth, later for secondary prototype areas | Add indexed/paginated queries. Use `by_status`, `by_owner_id`, search indexes where appropriate, and bounded duplicate checks.                                                                                                                    |
+| Unbounded backend reads                                 | `convex/lib.js` `listVisibleListings`, `convex/ai.js`, `convex/listings.js` duplicate checks                                    |                                                            `.collect()` over whole tables will not scale and can become slow or fail as data grows. | Now for listings, later for secondary prototype areas      | Test-session lookup is now indexed. Add indexed/paginated listing queries next. Use `by_status`, `by_owner_id`, search indexes where appropriate, and bounded duplicate checks.                                                                  |
 | Images stored inside listing documents                  | `src/pages/app/PublishPage.jsx`, `convex/schema.js` `listings.images`                                                           |                                    Base64/data URLs can bloat Convex documents and hit size limits. Media should not live inside listing documents. | Before real listing uploads                                | Use Convex storage or external asset URLs. Store media metadata in `listingMedia` or as small references only. Migrate current demo images gradually.                                                                                             |
 | Fake password reset flow                                | `src/pages/ForgotPasswordPage.jsx`                                                                                              |                                           The UI claims to send reset links but only sets local state. This is misleading and can block real users. | Before production                                          | Replace with WorkOS-supported password reset flow or remove the page and route users through WorkOS AuthKit’s own account recovery.                                                                                                               |
 
@@ -564,6 +576,7 @@ Backend:
 * Convex maps `identity.tokenIdentifier` to an internal user.
 * Convex checks role and ownership before every sensitive operation.
 * Convex ignores any client-supplied user ID for permission decisions.
+* Current implementation also ignores client-supplied role grants during auth sync/profile updates; elevated access is request-only until an internal admin/invite flow grants it.
 
 ### Data fetching conventions
 
@@ -684,6 +697,13 @@ Remove production dependency on:
 
 * `testSessionToken`
 * self-controlled `role` grants.
+
+Current implementation note:
+
+* `role` is still the active-role field in the existing schema.
+* `roles` remains granted role membership.
+* `publisher` is still accepted as a legacy alias and normalised to `broker`.
+* Test sessions remain in schema for development only and are gated by `ENABLE_TEST_AUTH=true`.
 
 Indexes:
 
@@ -1353,13 +1373,13 @@ Do without changing design:
 * [ ] Callback route tested.
 * [ ] Sign-out route tested.
 * [ ] Password reset uses WorkOS or is removed.
-* [ ] Test auth disabled in production.
+* [x] Test auth disabled in production unless `ENABLE_TEST_AUTH=true`.
 
 ### Convex deployment
 
-* [ ] Public seeding removed from normal client boot.
-* [ ] Seed/import functions internal or environment-gated.
-* [ ] Required indexes added.
+* [x] Public seeding removed from normal client boot.
+* [x] Seed/import functions environment-gated with `ENABLE_SEED_DATA=true`.
+* [ ] Required indexes added. `by_test_session_token` is done; listing/search indexes remain.
 * [ ] Queries paginated where data can grow.
 * [ ] No sensitive mutation uses `v.any()`.
 * [ ] Generated Convex types committed/updated as expected.
@@ -1457,12 +1477,17 @@ Concrete tasks:
 
 * Add a short architecture note documenting current routes, roles, Convex tables, and auth flow.
 * Add lint/build/typecheck scripts where possible without changing runtime behaviour.
-* Add a central role helper and use it in route/nav code.
+* [done] Add a central Convex role helper for server-side permission checks.
+* Add/finish a central frontend role helper and use it consistently in route/nav code.
 * Identify and mark legacy unused files.
-* Remove production exposure of test-session paths or gate them behind development env.
-* Strip sensitive fields from `sanitizeUser`.
-* Stop calling public seed mutation on normal client boot in production.
+* [done] Remove production exposure of test-session paths by gating them behind `ENABLE_TEST_AUTH=true`.
+* [done] Strip sensitive fields, including `testSessionToken`, from `sanitizeUser`.
+* [done] Stop calling public seed mutation on normal client boot.
+* [done] Gate seed mutation behind `ENABLE_SEED_DATA=true`.
+* [done] Split safe profile updates from active role switching.
+* [done] Remove public self-grant role mutation.
 * Add production env checks.
+* Add real Convex/auth integration tests when a test harness exists; current coverage is a static auth-safety check.
 
 Files likely affected:
 
@@ -1477,11 +1502,15 @@ Files likely affected:
 * `convex/users.js`
 * `convex/setup.js`
 * `convex/lib.js`
+* `scripts/auth-safety-check.mjs`
 
 Risk level: medium, because auth and bootstrap are involved.
 
 How to verify nothing broke:
 
+* `npm run test:auth-safety` passes.
+* `npm run build` passes.
+* `npx convex codegen --dry-run --typecheck disable` passes.
 * Public landing page loads.
 * Public `/app/rent` loads.
 * Public listing detail loads.
@@ -1556,11 +1585,13 @@ Goal: enforce correctness and security server-side.
 Concrete tasks:
 
 * Replace `v.any()` on listing, user, lead, viewing mutations with explicit validators.
-* Split `updateMe` into:
+* [done for user role safety] Split `updateMe` into:
 
-  * `updateProfile`
+  * safe profile-only `updateMe`
   * `switchActiveRole`
   * server/admin-only role grant.
+
+* Add a real admin/invite/verification flow that calls the internal role grant path.
 * Add explicit listing status transition mutations.
 * Prevent duplicate viewing/enquiry per listing/renter.
 * Prevent renters enquiring on their own listing.
@@ -1594,6 +1625,7 @@ How to verify nothing broke:
 * Renter cannot create duplicate enquiry.
 * Broker can create/update own listing.
 * Broker cannot grant self company admin.
+* Renter cannot grant self broker or company admin.
 * Company admin access works only for granted users.
 * Public user cannot call protected mutations successfully.
 
@@ -1714,12 +1746,11 @@ Before any code change, use this sequence:
 
 Implementation priorities should be:
 
-1. Server-side auth and role safety.
-2. Production/test environment separation.
-3. Convex validation and status rules.
+1. [done] Server-side auth and role safety.
+2. Production/test environment separation docs and env checks.
+3. Convex validation and listing status rules.
 4. Bounded queries and storage-safe media handling.
 5. Frontend separation of concerns.
 6. Accessibility, error states, and deployment polish.
 
 The main thing not to do is a big-bang rewrite. The current app has real product value in its UI, flows, and domain structure. Professionalising it means putting guardrails underneath that product, then extracting maintainable boundaries around the parts that already work.
-

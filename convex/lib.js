@@ -26,10 +26,40 @@ export function sanitizeUser(user) {
     _creationTime,
     tokenIdentifier,
     subject,
+    testSessionToken,
     ...safeUser
   } = user;
 
   return safeUser;
+}
+
+export function normalizeRole(role, fallbackRole = "renter") {
+  if (role === "publisher") return "broker";
+  if (role === "company_admin" || role === "broker" || role === "renter") return role;
+  return fallbackRole;
+}
+
+export function normalizeRoles(roles, fallbackRole = "renter") {
+  const requestedRoles = Array.isArray(roles)
+    ? roles.map((role) => normalizeRole(role, null)).filter(Boolean)
+    : [];
+  const normalized = requestedRoles.length > 0
+    ? Array.from(new Set(requestedRoles))
+    : [normalizeRole(fallbackRole)];
+
+  const withImpliedRoles = new Set(normalized);
+  if (withImpliedRoles.has("company_admin")) {
+    withImpliedRoles.add("broker");
+    withImpliedRoles.add("renter");
+  }
+  return Array.from(withImpliedRoles);
+}
+
+export function userGrantedRoles(user) {
+  return normalizeRoles(
+    Array.from(new Set([...(Array.isArray(user?.roles) ? user.roles : []), user?.role].filter(Boolean))),
+    user?.role || "renter"
+  );
 }
 
 export function stripSystemFields(document) {
@@ -80,11 +110,8 @@ export async function getViewerOrThrow(ctx) {
 }
 
 export function viewerHasRole(viewer, role) {
-  const normalizedTarget = role === "publisher" ? "broker" : role;
-  const roles = (Array.isArray(viewer?.roles) && viewer.roles.length > 0
-    ? viewer.roles
-    : [viewer?.role].filter(Boolean)
-  ).map((item) => item === "publisher" ? "broker" : item);
+  const normalizedTarget = normalizeRole(role);
+  const roles = userGrantedRoles(viewer);
 
   if (normalizedTarget === "broker") {
     return roles.includes("broker") || roles.includes("company_admin");

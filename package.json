@@ -7,6 +7,7 @@
     "dev": "vite",
     "convex:dev": "convex dev",
     "build": "vite build",
+    "test:auth-safety": "node scripts/auth-safety-check.mjs",
     "preview": "vite preview",
     "scrape:amf": "node scripts/scrape-amf-listings.mjs",
     "scrape:amf:headed": "node scripts/scrape-amf-listings.mjs --headed"

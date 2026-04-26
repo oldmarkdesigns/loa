@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@workos-inc/authkit-react";
 import { useConvexAuth } from "convex/react";
-import { aiApi, authApi, favoriteApi, leadsApi, listingApi, profileApi, setupApi, viewingsApi } from "../api";
+import { aiApi, authApi, favoriteApi, leadsApi, listingApi, profileApi, viewingsApi } from "../api";
 import {
   analyticsEventNames,
   trackEvent,
@@ -203,6 +203,15 @@ function normalizeUserRole(role) {
   return role === "company_admin" || role === "broker" ? role : "renter";
 }
 
+function safeProfileUpdatePayload(payload = {}) {
+  const { name, phone, profile } = payload;
+  return {
+    ...(name !== undefined ? { name } : {}),
+    ...(phone !== undefined ? { phone } : {}),
+    ...(profile && typeof profile === "object" && !Array.isArray(profile) ? { profile } : {})
+  };
+}
+
 export function AppProvider({ children }) {
   const { user: authUser, isLoading: isAuthLoading, signOut } = useAuth();
   const { isAuthenticated: isConvexAuthenticated, isLoading: isConvexAuthLoading } = useConvexAuth();
@@ -311,8 +320,6 @@ export function AppProvider({ children }) {
     setIsSessionSyncing(true);
 
     try {
-      await setupApi.ensureSeeded();
-
       const storedTestToken = typeof window !== "undefined" ? window.localStorage.getItem(TEST_SESSION_STORAGE_KEY) : null;
 
       if (!isConvexAuthenticated || !authUser) {
@@ -371,19 +378,10 @@ export function AppProvider({ children }) {
       throw new Error("Skapa konto med WorkOS först.");
     }
 
-    const normalizedRole = normalizeUserRole(payload.role);
     const testToken = typeof window !== "undefined" ? window.localStorage.getItem(TEST_SESSION_STORAGE_KEY) : null;
     const { user: nextUser } = user?.authProvider === "test" && testToken
-      ? await profileApi.updateTestMe(testToken, {
-          ...payload,
-          role: normalizedRole,
-          roles: [normalizedRole]
-        })
-      : await profileApi.updateMe({
-          ...payload,
-          role: normalizedRole,
-          roles: [normalizedRole]
-        });
+      ? await profileApi.updateTestMe(testToken, safeProfileUpdatePayload(payload))
+      : await profileApi.updateMe(safeProfileUpdatePayload(payload));
     hydrateLocalUserState(nextUser);
     await refreshCoreData(nextUser);
     trackSignupCompleted({
@@ -413,13 +411,6 @@ export function AppProvider({ children }) {
     let { user: nextUser } = user?.authProvider === "test" && testToken
       ? await profileApi.completeTestOnboarding(testToken, payload)
       : await profileApi.completeOnboarding(payload);
-
-    if (payload?.primaryRole === "broker") {
-      const response = user?.authProvider === "test" && testToken
-        ? await profileApi.addRoleToTestUser(testToken, "broker")
-        : await profileApi.addRoleToMe("broker");
-      nextUser = response.user;
-    }
 
     hydrateLocalUserState(nextUser);
     const renterProgram = payload?.primaryRole === "renter" ? payload?.profile?.renterProgram : null;
@@ -462,11 +453,11 @@ export function AppProvider({ children }) {
     try {
       const normalizedRole = normalizeUserRole(role);
       const currentRoles = (Array.isArray(user.roles) ? user.roles : [user.role || "renter"]).map(normalizeUserRole);
-      const roles = currentRoles.includes(normalizedRole) ? currentRoles : [...currentRoles, normalizedRole];
-      const { user: nextUser } = await profileApi.updateMe({
-        role: normalizedRole,
-        roles
-      });
+      if (!currentRoles.includes(normalizedRole)) {
+        throw new Error("Rollen är inte beviljad för ditt konto.");
+      }
+
+      const { user: nextUser } = await profileApi.switchActiveRole(normalizedRole);
 
       hydrateLocalUserState(nextUser);
 
@@ -488,8 +479,8 @@ export function AppProvider({ children }) {
     if (!user) return null;
     const testToken = typeof window !== "undefined" ? window.localStorage.getItem(TEST_SESSION_STORAGE_KEY) : null;
     const { user: nextUser } = user?.authProvider === "test" && testToken
-      ? await profileApi.updateTestMe(testToken, payload)
-      : await profileApi.updateMe(payload);
+      ? await profileApi.updateTestMe(testToken, safeProfileUpdatePayload(payload))
+      : await profileApi.updateMe(safeProfileUpdatePayload(payload));
     hydrateLocalUserState(nextUser);
     return nextUser;
   }

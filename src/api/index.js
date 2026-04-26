@@ -23,8 +23,8 @@ export const setupApi = {
 export const profileApi = {
   getMe: () => apiClient.query(convexApiRefs.users.me, {}, "Kunde inte läsa användarprofilen."),
   updateMe: (payload) => apiClient.mutation(convexApiRefs.users.updateMe, payload, "Kunde inte uppdatera profilen."),
+  switchActiveRole: (role) => apiClient.mutation(convexApiRefs.users.switchActiveRole, { role }, "Kunde inte byta roll."),
   updateTestMe: (token, payload) => apiClient.mutation(convexApiRefs.users.updateTestUser, { token, ...payload }, "Kunde inte uppdatera testprofilen."),
-  addRoleToMe: (role) => apiClient.mutation(convexApiRefs.users.addRoleToMe, { role }, "Kunde inte lägga till rollen."),
   addRoleToTestUser: (token, role) => apiClient.mutation(convexApiRefs.users.addRoleToTestUser, { token, role }, "Kunde inte lägga till testrollen."),
   completeOnboarding: (payload) =>
     apiClient.mutation(convexApiRefs.users.completeOnboarding, payload, "Kunde inte slutföra onboarding."),

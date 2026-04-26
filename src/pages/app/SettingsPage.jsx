@@ -52,7 +52,7 @@ function SettingsPage({ app }) {
   });
 
   const activeRoleLabel = useMemo(() => (
-    user?.role === "publisher" ? "Hyresvärd" : user?.role === "company_admin" ? "Bolagsadmin" : "Hyresgäst"
+    user?.role === "publisher" || user?.role === "broker" ? "Hyresvärd" : user?.role === "company_admin" ? "Bolagsadmin" : "Hyresgäst"
   ), [user?.role]);
   const roleSet = useMemo(() => new Set(
     [...(Array.isArray(user?.roles) ? user.roles : []), user?.role]
@@ -60,6 +60,7 @@ function SettingsPage({ app }) {
       .map((role) => role === "publisher" ? "broker" : role)
   ), [user?.role, user?.roles]);
   const hasCompanyAdminRole = roleSet.has("company_admin");
+  const hasBrokerRole = roleSet.has("broker");
   const isIdVerified = Boolean(user?.profile?.idVerified);
   const [firstName, ...restName] = String(user?.name || "").trim().split(" ");
   const lastName = restName.join(" ");
@@ -221,7 +222,7 @@ function SettingsPage({ app }) {
                     <div className="space-y-3">
                       <p className="text-sm text-ink-700">Aktiv roll: <span className="font-semibold">{activeRoleLabel}</span></p>
                       <div className="flex flex-wrap gap-2">
-                        {user?.role === "publisher" || user?.role === "company_admin" ? (
+                        {user?.role === "publisher" || user?.role === "broker" || user?.role === "company_admin" ? (
                           <button
                             type="button"
                             className="btn-secondary px-4 py-2 text-xs"
@@ -237,7 +238,7 @@ function SettingsPage({ app }) {
                           >
                             Växla till Hyresgäst
                           </button>
-                        ) : (
+                        ) : hasCompanyAdminRole || hasBrokerRole ? (
                           <button
                             type="button"
                             className="btn-primary px-4 py-2 text-xs"
@@ -249,7 +250,7 @@ function SettingsPage({ app }) {
                                   await switchRole?.("company_admin");
                                   navigateTo("/app/admin");
                                 } else {
-                                  await switchRole?.("publisher");
+                                  await switchRole?.("broker");
                                 }
                               } finally {
                                 setPendingRole(false);
@@ -258,7 +259,7 @@ function SettingsPage({ app }) {
                           >
                             {hasCompanyAdminRole ? "Växla till Företag" : "Växla till Hyresvärd"}
                           </button>
-                        )}
+                        ) : null}
                       </div>
                     </div>
                   ) : null}

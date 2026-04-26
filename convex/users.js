@@ -1,4 +1,4 @@
-import { mutationGeneric, queryGeneric } from "convex/server";
+import { internalMutationGeneric, mutationGeneric, queryGeneric } from "convex/server";
 import { v } from "convex/values";
 import {
   defaultPublisherPlan,
@@ -6,30 +6,64 @@ import {
   findUserByTokenIdentifier,
   getViewer,
   getViewerOrThrow,
+  normalizeRole,
+  normalizeRoles,
   nowIso,
   sanitizeUser,
-  slugId
+  slugId,
+  userGrantedRoles
 } from "./lib.js";
 
-function normalizeRoles(roles, fallbackRole = "renter") {
-  const normalizeRole = (role) => {
-    if (role === "publisher") return "broker";
-    return role;
-  };
-  const withImpliedRoles = (inputRoles) => {
-    const next = new Set(inputRoles);
-    if (next.has("company_admin")) {
-      next.add("broker");
-      next.add("renter");
-    }
-    return Array.from(next);
-  };
-  const requestedRoles = Array.isArray(roles)
-    ? roles.map(normalizeRole).filter((role) => role === "renter" || role === "broker" || role === "company_admin")
-    : [];
+const appRoleValidator = v.union(v.literal("renter"), v.literal("broker"), v.literal("company_admin"), v.literal("publisher"));
+const profileValidator = v.record(v.string(), v.any());
+const onboardingAccountValidator = v.object({
+  name: v.optional(v.string()),
+  phone: v.optional(v.string())
+});
 
-  const normalized = requestedRoles.length > 0 ? Array.from(new Set(requestedRoles)) : [normalizeRole(fallbackRole)];
-  return withImpliedRoles(normalized);
+function assertTestAuthEnabled() {
+  if (process.env.ENABLE_TEST_AUTH !== "true") {
+    throw new Error("Testauth är inte aktiverat.");
+  }
+}
+
+async function findTestUserByToken(ctx, token) {
+  assertTestAuthEnabled();
+  return await ctx.db
+    .query("users")
+    .withIndex("by_test_session_token", (query) => query.eq("testSessionToken", token))
+    .unique();
+}
+
+function roleRequestProfile(viewer, requestedRole, profile = {}) {
+  const role = normalizeRole(requestedRole);
+  const grantedRoles = userGrantedRoles(viewer);
+  const nextProfile = {
+    ...(viewer.profile || {}),
+    ...profile
+  };
+
+  if ((role === "broker" || role === "company_admin") && !grantedRoles.includes(role)) {
+    nextProfile.requestedRole = role;
+    nextProfile.roleRequestStatus = "pending";
+    nextProfile.roleRequestedAt = nowIso();
+  }
+
+  return nextProfile;
+}
+
+function activeRoleAfterRequest(viewer, requestedRole) {
+  const role = normalizeRole(requestedRole);
+  const roles = userGrantedRoles(viewer);
+  const currentRole = normalizeRole(viewer.role);
+
+  if (roles.includes(role)) {
+    return role;
+  }
+  if (roles.includes(currentRole)) {
+    return currentRole;
+  }
+  return "renter";
 }
 
 async function upsertAuthenticatedUser(ctx, payload = {}) {
@@ -39,10 +73,6 @@ async function upsertAuthenticatedUser(ctx, payload = {}) {
   }
 
   const email = String(payload.email || identity.email || "").trim().toLowerCase();
-  const requestedRole = payload.role === "publisher" ? "broker" : payload.role;
-  const fallbackRole = requestedRole === "broker" || requestedRole === "company_admin" ? requestedRole : "renter";
-  const roles = normalizeRoles(payload.roles, fallbackRole);
-  const role = roles.includes(requestedRole) ? requestedRole : roles[0];
   const name =
     String(payload.name || identity.name || "").trim() ||
     [payload.firstName, payload.lastName].filter(Boolean).join(" ").trim() ||
@@ -70,8 +100,8 @@ async function upsertAuthenticatedUser(ctx, payload = {}) {
       email,
       name,
       phone: "",
-      role,
-      roles,
+      role: "renter",
+      roles: ["renter"],
       publisherPlan: defaultPublisherPlan(),
       onboardingCompleted: false,
       profile: baseProfile,
@@ -83,14 +113,9 @@ async function upsertAuthenticatedUser(ctx, payload = {}) {
     return sanitizeUser(await ctx.db.get(insertedId));
   }
 
-  const currentRoles = Array.isArray(user.roles) && user.roles.length > 0 ? user.roles : [user.role || "renter"];
-  // Never demote a user's active role due to a stale/incomplete roles array.
-  const normalizedCurrentRoles = normalizeRoles(
-    Array.from(new Set([...(Array.isArray(user.roles) ? user.roles : []), user.role].filter(Boolean))),
-    user.role || "renter"
-  );
-  const nextRoles = Array.from(new Set([...normalizedCurrentRoles, ...roles]));
-  const nextRole = nextRoles.includes(user.role) ? user.role : (nextRoles[0] || "renter");
+  const roles = userGrantedRoles(user);
+  const currentRole = normalizeRole(user.role);
+  const role = roles.includes(currentRole) ? currentRole : (roles[0] || "renter");
   const updatedAt = nowIso();
 
   await ctx.db.patch(user._id, {
@@ -98,8 +123,8 @@ async function upsertAuthenticatedUser(ctx, payload = {}) {
     subject: identity.subject || user.subject || "",
     email: email || user.email,
     name,
-    role: nextRole,
-    roles: nextRoles,
+    role,
+    roles,
     publisherPlan: user.publisherPlan || defaultPublisherPlan(),
     profile: baseProfile,
     authProvider: "workos",
@@ -121,17 +146,17 @@ export const getTestSession = queryGeneric({
     token: v.string()
   },
   handler: async (ctx, args) => {
-    const users = await ctx.db.query("users").collect();
-    const user = users.find((entry) => entry.testSessionToken === args.token) || null;
+    const user = await findTestUserByToken(ctx, args.token);
     return { user: sanitizeUser(user) };
   }
 });
 
 export const createTestUser = mutationGeneric({
   args: {
-    role: v.optional(v.string())
+    role: v.optional(appRoleValidator)
   },
   handler: async (ctx, args) => {
+    assertTestAuthEnabled();
     const role = args.role === "company_admin" || args.role === "broker" ? args.role : "renter";
     const roles = normalizeRoles([role], role);
     const createdAt = nowIso();
@@ -164,9 +189,7 @@ export const upsertFromAuth = mutationGeneric({
     name: v.optional(v.string()),
     firstName: v.optional(v.string()),
     lastName: v.optional(v.string()),
-    imageUrl: v.optional(v.string()),
-    role: v.optional(v.string()),
-    roles: v.optional(v.array(v.string()))
+    imageUrl: v.optional(v.string())
   },
   handler: async (ctx, args) => {
     return { user: await upsertAuthenticatedUser(ctx, args || {}) };
@@ -177,22 +200,14 @@ export const updateMe = mutationGeneric({
   args: {
     name: v.optional(v.string()),
     phone: v.optional(v.string()),
-    role: v.optional(v.string()),
-    roles: v.optional(v.array(v.string())),
-    profile: v.optional(v.any())
+    profile: v.optional(profileValidator)
   },
   handler: async (ctx, args) => {
     const viewer = await getViewerOrThrow(ctx);
-    const roles = normalizeRoles(args?.roles, viewer.role || "renter");
-    const requestedRole = args?.role === "publisher" ? "broker" : args?.role;
-    const role = requestedRole === "broker" || requestedRole === "company_admin" || requestedRole === "renter" ? requestedRole : viewer.role;
-    const mergedRoles = roles.includes(role) ? roles : Array.from(new Set([...roles, role]));
 
     await ctx.db.patch(viewer._id, {
       name: args?.name ?? viewer.name,
       phone: args?.phone ?? viewer.phone,
-      role,
-      roles: mergedRoles.length > 0 ? mergedRoles : viewer.roles,
       publisherPlan: viewer.publisherPlan || defaultPublisherPlan(),
       profile: {
         ...(viewer.profile || {}),
@@ -205,32 +220,45 @@ export const updateMe = mutationGeneric({
   }
 });
 
+export const switchActiveRole = mutationGeneric({
+  args: {
+    role: appRoleValidator
+  },
+  handler: async (ctx, args) => {
+    const viewer = await getViewerOrThrow(ctx);
+    const role = normalizeRole(args.role);
+    const roles = userGrantedRoles(viewer);
+
+    if (!roles.includes(role)) {
+      throw new Error("Rollen är inte beviljad för ditt konto.");
+    }
+
+    await ctx.db.patch(viewer._id, {
+      role,
+      roles,
+      updatedAt: nowIso()
+    });
+
+    return { user: sanitizeUser(await ctx.db.get(viewer._id)) };
+  }
+});
+
 export const updateTestUser = mutationGeneric({
   args: {
     token: v.string(),
     name: v.optional(v.string()),
     phone: v.optional(v.string()),
-    role: v.optional(v.string()),
-    roles: v.optional(v.array(v.string())),
-    profile: v.optional(v.any())
+    profile: v.optional(profileValidator)
   },
   handler: async (ctx, args) => {
-    const users = await ctx.db.query("users").collect();
-    const viewer = users.find((entry) => entry.testSessionToken === args.token);
+    const viewer = await findTestUserByToken(ctx, args.token);
     if (!viewer) {
       throw new Error("Testsessionen hittades inte.");
     }
 
-    const roles = normalizeRoles(args?.roles, args?.role || viewer.role || "renter");
-    const requestedRole = args?.role === "publisher" ? "broker" : args?.role;
-    const role = requestedRole === "broker" || requestedRole === "company_admin" || requestedRole === "renter" ? requestedRole : viewer.role;
-    const mergedRoles = roles.includes(role) ? roles : Array.from(new Set([...roles, role]));
-
     await ctx.db.patch(viewer._id, {
       name: args?.name ?? viewer.name,
       phone: args?.phone ?? viewer.phone,
-      role,
-      roles: mergedRoles,
       profile: {
         ...(viewer.profile || {}),
         ...(args?.profile || {})
@@ -242,21 +270,24 @@ export const updateTestUser = mutationGeneric({
   }
 });
 
-export const addRoleToMe = mutationGeneric({
+export const grantRole = internalMutationGeneric({
   args: {
-    role: v.string()
+    userId: v.string(),
+    role: appRoleValidator
   },
   handler: async (ctx, args) => {
-    const viewer = await getViewerOrThrow(ctx);
-    const requestedRole = args.role === "publisher" ? "broker" : args.role;
-    const normalizedRole = requestedRole === "broker" || requestedRole === "company_admin" || requestedRole === "renter"
-      ? requestedRole
-      : viewer.role || "renter";
-    const currentRoles = Array.isArray(viewer.roles) && viewer.roles.length > 0 ? viewer.roles : [viewer.role || "renter"];
-    const roles = normalizeRoles([...currentRoles, normalizedRole], normalizedRole);
+    const viewer = await ctx.db
+      .query("users")
+      .withIndex("by_public_id", (query) => query.eq("id", args.userId))
+      .unique();
+    if (!viewer) {
+      throw new Error("Användaren hittades inte.");
+    }
 
+    const role = normalizeRole(args.role);
+    const roles = normalizeRoles([...userGrantedRoles(viewer), role], viewer.role || "renter");
     await ctx.db.patch(viewer._id, {
-      role: normalizedRole,
+      role,
       roles,
       updatedAt: nowIso()
     });
@@ -268,24 +299,18 @@ export const addRoleToMe = mutationGeneric({
 export const addRoleToTestUser = mutationGeneric({
   args: {
     token: v.string(),
-    role: v.string()
+    role: appRoleValidator
   },
   handler: async (ctx, args) => {
-    const users = await ctx.db.query("users").collect();
-    const viewer = users.find((entry) => entry.testSessionToken === args.token);
+    const viewer = await findTestUserByToken(ctx, args.token);
     if (!viewer) {
       throw new Error("Testsessionen hittades inte.");
     }
 
-    const requestedRole = args.role === "publisher" ? "broker" : args.role;
-    const normalizedRole = requestedRole === "broker" || requestedRole === "company_admin" || requestedRole === "renter"
-      ? requestedRole
-      : viewer.role || "renter";
-    const currentRoles = Array.isArray(viewer.roles) && viewer.roles.length > 0 ? viewer.roles : [viewer.role || "renter"];
-    const roles = normalizeRoles([...currentRoles, normalizedRole], normalizedRole);
-
+    const role = normalizeRole(args.role);
+    const roles = normalizeRoles([...userGrantedRoles(viewer), role], viewer.role || "renter");
     await ctx.db.patch(viewer._id, {
-      role: normalizedRole,
+      role,
       roles,
       updatedAt: nowIso()
     });
@@ -296,27 +321,23 @@ export const addRoleToTestUser = mutationGeneric({
 
 export const completeOnboarding = mutationGeneric({
   args: {
-    primaryRole: v.optional(v.string()),
-    account: v.optional(v.any()),
-    profile: v.optional(v.any())
+    primaryRole: v.optional(appRoleValidator),
+    account: v.optional(onboardingAccountValidator),
+    profile: v.optional(profileValidator)
   },
   handler: async (ctx, args) => {
     const viewer = await getViewerOrThrow(ctx);
-    const requestedRole = args?.primaryRole === "publisher" ? "broker" : args?.primaryRole;
-    const primaryRole = requestedRole === "broker" || requestedRole === "company_admin" ? requestedRole : "renter";
-    const roles = normalizeRoles([...(Array.isArray(viewer.roles) ? viewer.roles : [viewer.role || "renter"]), primaryRole], primaryRole);
+    const requestedRole = normalizeRole(args?.primaryRole);
+    const roles = userGrantedRoles(viewer);
     const account = args?.account || {};
 
     await ctx.db.patch(viewer._id, {
       name: account.name || viewer.name,
       phone: account.phone || viewer.phone,
-      role: primaryRole,
+      role: activeRoleAfterRequest(viewer, requestedRole),
       roles,
       onboardingCompleted: true,
-      profile: {
-        ...(viewer.profile || {}),
-        ...(args?.profile || {})
-      },
+      profile: roleRequestProfile(viewer, requestedRole, args?.profile || {}),
       updatedAt: nowIso()
     });
 
@@ -327,32 +348,27 @@ export const completeOnboarding = mutationGeneric({
 export const completeTestOnboarding = mutationGeneric({
   args: {
     token: v.string(),
-    primaryRole: v.optional(v.string()),
-    account: v.optional(v.any()),
-    profile: v.optional(v.any())
+    primaryRole: v.optional(appRoleValidator),
+    account: v.optional(onboardingAccountValidator),
+    profile: v.optional(profileValidator)
   },
   handler: async (ctx, args) => {
-    const users = await ctx.db.query("users").collect();
-    const viewer = users.find((entry) => entry.testSessionToken === args.token);
+    const viewer = await findTestUserByToken(ctx, args.token);
     if (!viewer) {
       throw new Error("Testsessionen hittades inte.");
     }
 
-    const requestedRole = args?.primaryRole === "publisher" ? "broker" : args?.primaryRole;
-    const primaryRole = requestedRole === "broker" || requestedRole === "company_admin" ? requestedRole : "renter";
-    const roles = normalizeRoles([...(Array.isArray(viewer.roles) ? viewer.roles : [viewer.role || "renter"]), primaryRole], primaryRole);
+    const requestedRole = normalizeRole(args?.primaryRole);
+    const roles = userGrantedRoles(viewer);
     const account = args?.account || {};
 
     await ctx.db.patch(viewer._id, {
       name: account.name || viewer.name,
       phone: account.phone || viewer.phone,
-      role: primaryRole,
+      role: activeRoleAfterRequest(viewer, requestedRole),
       roles,
       onboardingCompleted: true,
-      profile: {
-        ...(viewer.profile || {}),
-        ...(args?.profile || {})
-      },
+      profile: roleRequestProfile(viewer, requestedRole, args?.profile || {}),
       updatedAt: nowIso()
     });
 

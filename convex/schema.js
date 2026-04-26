@@ -25,7 +25,8 @@ export default defineSchema({
   })
     .index("by_public_id", ["id"])
     .index("by_token_identifier", ["tokenIdentifier"])
-    .index("by_email", ["email"]),
+    .index("by_email", ["email"])
+    .index("by_test_session_token", ["testSessionToken"]),
   listings: defineTable({
     id: v.string(),
     title: v.string(),

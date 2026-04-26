@@ -28,8 +28,8 @@ export const convexApiRefs = {
     createTestUser: mutationRef("users:createTestUser"),
     upsertFromAuth: mutationRef("users:upsertFromAuth"),
     updateMe: mutationRef("users:updateMe"),
+    switchActiveRole: mutationRef("users:switchActiveRole"),
     updateTestUser: mutationRef("users:updateTestUser"),
-    addRoleToMe: mutationRef("users:addRoleToMe"),
     addRoleToTestUser: mutationRef("users:addRoleToTestUser"),
     completeOnboarding: mutationRef("users:completeOnboarding"),
     completeTestOnboarding: mutationRef("users:completeTestOnboarding")

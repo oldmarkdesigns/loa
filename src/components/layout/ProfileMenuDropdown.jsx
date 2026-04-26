@@ -27,7 +27,7 @@ function ProfileMenuDropdown({
     <>
       <div ref={profileMenuPanelRef} className="fixed right-4 top-[72px] z-[60] w-[min(320px,calc(100vw-2rem))] rounded-2xl border border-black/10 bg-white p-3 shadow-[0_10px_28px_rgba(15,25,48,0.10)]">
         <div className="space-y-2 text-sm">
-          {isRenterMode ? (
+          {isRenterMode && !hasBrokerAccess ? (
             <button
               type="button"
               className="menu-hover-row inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5"
@@ -39,7 +39,7 @@ function ProfileMenuDropdown({
               <Icon name="building" className="h-4 w-4" />
               <span>Verifiera dig som mäklare</span>
             </button>
-          ) : (
+          ) : !isRenterMode ? (
             <>
               <button
                 type="button"
@@ -64,7 +64,7 @@ function ProfileMenuDropdown({
                 <span>Mina hyresavtal</span>
               </button>
             </>
-          )}
+          ) : null}
           <div className="my-3 h-px bg-black/10" />
           <button
             type="button"
