@@ -39,10 +39,10 @@ function LoginPage() {
   }, [isConfigured, isLoading, returnTo, signIn, user]);
 
   return (
-    <main className="grid min-h-screen place-items-center bg-white px-4 pb-8 pt-20">
+    <main className="grid min-h-screen place-items-center bg-[#fffffe] px-4 pb-8 pt-20">
       <AuthFlowNav />
       <div className="w-full">
-        <div ref={cardWrapRef} className="mx-auto w-full max-w-[430px] rounded-[30px] border border-black/10 bg-white px-6 py-7 sm:px-7 sm:py-8">
+        <div ref={cardWrapRef} className="mx-auto w-full max-w-[430px] rounded-[30px] border border-black/10 bg-[#fffffe] px-6 py-7 sm:px-7 sm:py-8">
           <h1 className="text-[1.95rem] font-semibold leading-tight text-[#0f1930]">Logga in</h1>
           <p className="mt-1 text-sm text-ink-600">
             WorkOS hanterar inloggning, lösenord och återställning. Du skickas vidare automatiskt.
@@ -54,21 +54,21 @@ function LoginPage() {
             </div>
           ) : (
             <>
-              <div className="mt-5 rounded-xl border border-black/10 bg-white p-4 text-sm text-ink-700">
+              <div className="mt-5 rounded-xl border border-black/10 bg-[#fffffe] p-4 text-sm text-ink-700">
                 {user ? "Slutför inloggning..." : "Vidarebefordrar till WorkOS..."}
               </div>
 
               <div className="mt-4 flex flex-col gap-3">
                 <button
                   type="button"
-                  className="inline-flex items-center justify-center rounded-full border border-black/20 bg-white px-6 py-3 text-sm font-semibold text-ink-800 hover:bg-[#f8fafc]"
+                  className="inline-flex items-center justify-center rounded-full border border-black/20 bg-[#fffffe] px-6 py-3 text-sm font-semibold text-ink-800 hover:bg-[#f8fafc]"
                   onClick={() => signIn({ state: { returnTo } })}
                 >
                   Fortsätt till WorkOS
                 </button>
                 <button
                   type="button"
-                  className="inline-flex items-center justify-center rounded-full border border-black/10 bg-[#f8fafc] px-6 py-3 text-sm font-semibold text-ink-700 hover:bg-white"
+                  className="inline-flex items-center justify-center rounded-full border border-black/10 bg-[#f8fafc] px-6 py-3 text-sm font-semibold text-ink-700 hover:bg-[#fffffe]"
                   onClick={() => navigateTo(`/signup?returnTo=${encodeURIComponent(returnTo)}`)}
                 >
                   Skapa konto

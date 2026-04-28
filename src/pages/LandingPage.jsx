@@ -4,6 +4,7 @@ import { propertyAmenityOptions } from "../lib/propertyAmenityIcons";
 import MarketingHeader from "../components/layout/MarketingHeader";
 import ListingVisualCard from "../components/app/ListingVisualCard";
 import MapListingPreviewCard from "../components/app/MapListingPreviewCard";
+import ViewingRequestModal from "../components/app/ViewingRequestModal";
 import { popularListingFallbackKey } from "../lib/popularListingFallback";
 import { PLATFORM_GOOGLE_MAP_STYLE } from "../lib/googleMapStyles";
 import {
@@ -35,8 +36,6 @@ import {
 } from "../components/icons/UiIcons";
 import { districtOptions, listingTypes, listings as baseListingDataset } from "../data/mockData";
 import heroImage from "../../Assets/Hero Images/stockholm-landing.jpg";
-import featureImageA from "../../Assets/Object Images/Inspiration.jpeg";
-import featureImageB from "../../Assets/Object Images/_ (1).jpeg";
 import processImage from "../../Assets/Object Images/_ (2).jpeg";
 import faqImage from "../../Assets/Object Images/_ (3).jpeg";
 
@@ -471,8 +470,8 @@ function HeroMapWidget({
         <div
           className={
             compact
-              ? "flex h-full min-h-0 flex-col overflow-hidden rounded-[30px] border border-black/10 bg-white p-0"
-              : "flex h-full min-h-0 flex-col overflow-hidden rounded-[28px] border border-black/10 bg-white p-4"
+              ? "flex h-full min-h-0 flex-col overflow-hidden rounded-[30px] border border-black/10 bg-[#fffffe] p-0"
+              : "flex h-full min-h-0 flex-col overflow-hidden rounded-[28px] border border-black/10 bg-[#fffffe] p-4"
           }
         >
           <div className={mapShellClassName}>
@@ -480,22 +479,22 @@ function HeroMapWidget({
             <div ref={mapContainerRef} className="h-full w-full" />
 
             {mapStatus === "loading" ? (
-              <div className="absolute inset-0 grid place-items-center bg-white/55 text-xs font-semibold text-ink-700">Laddar karta...</div>
+              <div className="absolute inset-0 grid place-items-center bg-[#fffffe]/55 text-xs font-semibold text-ink-700">Laddar karta...</div>
             ) : null}
 
             {mapStatus === "missing_key" ? (
-              <div className="absolute inset-0 grid place-items-center bg-white/70 p-4 text-center text-xs font-semibold text-rose-700">
+              <div className="absolute inset-0 grid place-items-center bg-[#fffffe]/70 p-4 text-center text-xs font-semibold text-rose-700">
                 Google Maps API-nyckel saknas. Lägg till `VITE_GOOGLE_MAPS_API_KEY` i `.env` och starta om `npm run dev`.
               </div>
             ) : null}
 
             {mapStatus === "error" ? (
-              <div className="absolute inset-0 grid place-items-center bg-white/75 p-4 text-center text-xs font-semibold text-rose-700">
+              <div className="absolute inset-0 grid place-items-center bg-[#fffffe]/75 p-4 text-center text-xs font-semibold text-rose-700">
                 <div className="space-y-2">
                   <p>{errorMessage || "Google Maps kunde inte laddas."}</p>
                   <button
                     type="button"
-                    className="mx-auto rounded-lg border border-rose-300 bg-white px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-50"
+                    className="mx-auto rounded-lg border border-rose-300 bg-[#fffffe] px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-50"
                     onClick={() => setRetryToken((value) => value + 1)}
                   >
                     Försök igen
@@ -533,7 +532,7 @@ function HeroMapWidget({
                   <button
                     type="button"
                     aria-label="Stäng objekt"
-                    className="close-circle-button inline-flex items-center justify-center rounded-full border border-black/10 bg-white text-lg font-semibold leading-none text-ink-700 hover:bg-[#eef3fa]"
+                    className="close-circle-button inline-flex items-center justify-center rounded-full border border-black/10 bg-[#fffffe] text-lg font-semibold leading-none text-ink-700 hover:bg-[#eef3fa]"
                     onClick={() => setSelectedListing(null)}
                   >
                     ×
@@ -541,7 +540,7 @@ function HeroMapWidget({
                   <button
                     type="button"
                     aria-label="Föregående objekt"
-                    className="inline-flex h-9 w-9 min-h-9 min-w-9 aspect-square items-center justify-center rounded-full border border-black/10 bg-white p-0 text-base font-semibold leading-none text-ink-700 hover:bg-[#eef3fa]"
+                    className="inline-flex h-9 w-9 min-h-9 min-w-9 aspect-square items-center justify-center rounded-full border border-black/10 bg-[#fffffe] p-0 text-base font-semibold leading-none text-ink-700 hover:bg-[#eef3fa]"
                     onClick={() => handleCycleSelectedListing(-1)}
                   >
                     ‹
@@ -549,7 +548,7 @@ function HeroMapWidget({
                   <button
                     type="button"
                     aria-label="Nästa objekt"
-                    className="inline-flex h-9 w-9 min-h-9 min-w-9 aspect-square items-center justify-center rounded-full border border-black/10 bg-white p-0 text-base font-semibold leading-none text-ink-700 hover:bg-[#eef3fa]"
+                    className="inline-flex h-9 w-9 min-h-9 min-w-9 aspect-square items-center justify-center rounded-full border border-black/10 bg-[#fffffe] p-0 text-base font-semibold leading-none text-ink-700 hover:bg-[#eef3fa]"
                     onClick={() => handleCycleSelectedListing(1)}
                   >
                     ›
@@ -564,24 +563,6 @@ function HeroMapWidget({
     </div>
   );
 }
-
-const guideCards = [
-  {
-    title: "Jämför olika lokaler",
-    body: "Var förberedd när ni utvärderar alternativ och besöker objekt. Här är våra bästa tips inför valet av ny lokal.",
-    image: "/object-images/object-9.jpeg"
-  },
-  {
-    title: "Vilket läge behöver verksamheten?",
-    body: "Vilka lägen är mest relevanta för din verksamhet? Vi listar fem viktiga faktorer innan ni skriver avtal.",
-    image: "/object-images/object-10.jpeg"
-  },
-  {
-    title: "Hyreskontraktet",
-    body: "Nu är det dags att skriva kontrakt. Vad bör ni tänka på och när är det läge att ta extern hjälp?",
-    image: "/object-images/object-6.jpeg"
-  }
-];
 
 const heroAmenityOptions = propertyAmenityOptions;
 
@@ -613,7 +594,7 @@ function HeroPillToggle({ checked, onToggle, ariaLabel }) {
       }`}
       onClick={onToggle}
     >
-      <span aria-hidden="true" className="h-5 w-5 rounded-full bg-white shadow-[0_1px_2px_rgba(15,25,48,0.35)]" />
+      <span aria-hidden="true" className="h-5 w-5 rounded-full bg-[#fffffe] shadow-[0_1px_2px_rgba(15,25,48,0.35)]" />
     </button>
   );
 }
@@ -659,6 +640,7 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
   const faqQuestionsRef = useRef(null);
   const faqCardRef = useRef(null);
   const [showScrollToTopButton, setShowScrollToTopButton] = useState(false);
+  const [bookingListing, setBookingListing] = useState(null);
   const [isNavScrolled, setIsNavScrolled] = useState(false);
   const [heroFilters, setHeroFilters] = useState({
     district: "Alla",
@@ -668,6 +650,10 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
   const openAuth = (mode, preferredRole = "renter") => {
     onOpenAuthOverlay?.(mode, preferredRole);
   };
+
+  function handlePopularBookViewing(listing) {
+    setBookingListing(listing);
+  }
 
   const favoriteIds = useMemo(
     () => new Set((favorites || []).map((entry) => String(entry.listingId))),
@@ -866,7 +852,7 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
   }
 
   return (
-    <main className="min-h-screen bg-white text-black">
+    <main className="min-h-screen bg-[#fffffe] text-black">
       <div ref={headerRef} className="sticky top-0 z-50">
         <MarketingHeader
           pathname="/"
@@ -896,19 +882,19 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
         <div className="relative z-20 w-full px-2 pt-4 sm:px-3 sm:pt-4 xl:px-0 xl:pt-0">
           <div className="relative min-h-[620px] xl:h-[620px]">
             <div className="flex h-full flex-col items-center justify-center text-center xl:min-h-[560px] xl:w-[58%] xl:max-w-none">
-              <p className="inline-flex w-fit items-center gap-1.5 rounded-full border border-white/45 bg-white/22 px-3 py-1.5 text-xs font-semibold text-ink-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_8px_24px_rgba(15,25,48,0.12)] backdrop-blur-md">
+              <p className="inline-flex w-fit items-center gap-1.5 rounded-full border border-white/45 bg-[#fffffe]/22 px-3 py-1.5 text-xs font-semibold text-ink-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_8px_24px_rgba(15,25,48,0.12)] backdrop-blur-md">
                 <BuildingIcon className="h-3.5 w-3.5" />
                 {totalAvailableListings} lediga lokaler
               </p>
               <h2 className="mt-4 whitespace-nowrap text-[2.05rem] font-semibold leading-tight text-ink-900 sm:text-[2.45rem]">
-                Sök lokaler i hela Stockholm
+                Hitta ert nästa kontor i Stockholm
               </h2>
               <p className="mt-3 max-w-[48ch] text-sm text-ink-700 sm:text-base">
-                Vi hjälper dig att hitta din nästa lokal i storstaden med verifierade objekt, smart matchning och snabb överblick.
+                Vi matchar ert behov med rätt lokaler från verifierade fastighetsägare i Stockholm
               </p>
 
               <form className="mt-7 w-full max-w-[25rem] sm:max-w-[26rem] md:max-w-[28rem]" onSubmit={submitHeroSearch}>
-                <div className="grid w-full grid-cols-[140px_1fr_44px] items-stretch rounded-full border border-black/10 bg-white p-1 sm:grid-cols-[152px_1fr_44px]">
+                <div className="grid w-full grid-cols-[140px_1fr_44px] items-stretch rounded-full border border-black/10 bg-[#fffffe] p-1 sm:grid-cols-[152px_1fr_44px]">
                   <label className="flex min-w-0 items-center border-r border-black/10 px-3">
                     <input
                       type="number"
@@ -1004,7 +990,7 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
             <article key={group.city}>
               <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
                 <h3 className="text-xl font-semibold text-[#0f1930]">{group.city}</h3>
-                <p className="rounded-full border border-black/10 bg-white px-3 py-1 text-xs font-semibold text-ink-600">
+                <p className="rounded-full border border-black/10 bg-[#fffffe] px-3 py-1 text-xs font-semibold text-ink-600">
                   {group.count} lediga lokaler
                 </p>
               </div>
@@ -1041,6 +1027,7 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
                       listing={cardListing}
                       shortlisted={favoriteIds.has(String(favoriteListingId))}
                       onOpenListing={openPopularListingDetail}
+                      onBookViewing={handlePopularBookViewing}
                       onToggleShortlist={() => handleTogglePopularShortlist(favoriteListingId)}
                     />
                   );
@@ -1051,88 +1038,7 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
         </div>
       </section>
 
-      <section id="funktioner" className="mx-auto w-full max-w-[86rem] scroll-mt-28 px-4 py-16 sm:px-6">
-        <div className="mb-10">
-          <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Funktioner</p>
-          <h2 className="mt-2 text-3xl font-semibold">Allt som behövs för en fungerande lokalmarknadsplats</h2>
-        </div>
-
-        <div className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
-          <article className="overflow-hidden rounded-3xl border border-black/10 bg-white">
-            <div className="relative h-72">
-              <img src={featureImageA} alt="Hyresgästfunktioner" className="h-full w-full object-cover transition duration-500 hover:scale-[1.03]" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/25 to-transparent" />
-              <div className="absolute bottom-4 left-4">
-                <p className="inline-flex items-center gap-1 rounded-full border border-white/30 bg-white/20 px-3 py-1 text-xs font-semibold text-white">
-                  <SearchIcon className="h-3.5 w-3.5" />
-                  Hyresgäst
-                </p>
-              </div>
-            </div>
-            <div className="space-y-4 p-6">
-              <h3 className="text-3xl font-semibold">Sök, jämför och boka snabbare</h3>
-              <p className="text-sm text-ink-600">
-                Bygg en sökprofil med filter, AI och sparade objekt. Se relevanta objekt direkt i karta + kortvy och boka visning med få klick.
-              </p>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-2xl border border-black/10 p-2.5">
-                  <p className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-500">
-                    <span>AI-sök</span>
-                    <SparklesIcon className="h-3.5 w-3.5" />
-                  </p>
-                  <p className="mt-1 text-sm text-ink-700">Förslag på objekt och smart filterjustering.</p>
-                </div>
-                <div className="rounded-2xl border border-black/10 p-2.5">
-                  <p className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-500">
-                    <span>Sparade objekt</span>
-                    <StarIcon className="h-3.5 w-3.5" />
-                  </p>
-                  <p className="mt-1 text-sm text-ink-700">Spara objekt till dina sparade objekt.</p>
-                </div>
-              </div>
-            </div>
-          </article>
-
-          <div className="grid gap-6">
-            <article className="overflow-hidden rounded-3xl border border-black/10 bg-white">
-              <div className="relative h-44">
-                <img src={featureImageB} alt="Hyresvärdsfunktioner" className="h-full w-full object-cover transition duration-500 hover:scale-[1.03]" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/20 to-transparent" />
-              </div>
-              <div className="space-y-3 p-5">
-                <p className="inline-flex items-center gap-1 rounded-full border border-black/10 bg-white px-3 py-1 text-xs font-semibold text-ink-700">
-                  <BuildingIcon className="h-3.5 w-3.5" />
-                  Hyresvärd
-                </p>
-                <h3 className="text-2xl font-semibold">Publicera med minimal friktion</h3>
-                <p className="text-sm text-ink-600">
-                  Stegvis publicering, tydlig intressevy och snabb uppföljning i samma arbetsyta.
-                </p>
-              </div>
-            </article>
-
-            <article className="rounded-3xl border border-black/10 bg-[#0f1930] p-6 text-white">
-              <p className="text-xs font-semibold uppercase tracking-wide text-white/75">Vad gör skillnad</p>
-              <ul className="mt-4 space-y-3 text-sm">
-                <li className="inline-flex items-start gap-2">
-                  <CalendarIcon className="mt-0.5 h-4 w-4 text-white/80" />
-                  Visningsförfrågan och intressestatus synkade i realtid
-                </li>
-                <li className="inline-flex items-start gap-2">
-                  <CoinsIcon className="mt-0.5 h-4 w-4 text-white/80" />
-                  Gratis för volym, synlighetslyft för extra exponering
-                </li>
-                <li className="inline-flex items-start gap-2">
-                  <UserIcon className="mt-0.5 h-4 w-4 text-white/80" />
-                  Rollväxling mellan hyresgäst och hyresvärd
-                </li>
-              </ul>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <section id="sa-fungerar-det" className="relative overflow-hidden border-y border-black/10 bg-white">
+      <section id="sa-fungerar-det" className="relative overflow-hidden border-y border-black/10 bg-[#fffffe]">
         <div className="mx-auto w-full max-w-[86rem] px-4 py-16 sm:px-6">
           <div className="mb-10">
             <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Så fungerar det</p>
@@ -1144,7 +1050,7 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
               {processSteps.map((step, index) => {
                 const Icon = step.icon;
                 return (
-                  <article key={step.title} className="rounded-2xl border border-black/10 bg-white p-5">
+                  <article key={step.title} className="rounded-2xl border border-black/10 bg-[#fffffe] p-5">
                     <div className="flex items-start gap-4">
                       <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#0f1930] text-white">
                         <Icon className="h-5 w-5" />
@@ -1162,7 +1068,7 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
               <div className="flex flex-wrap gap-2 pt-1">
                 <button
                   type="button"
-                  className="rounded-xl border border-black/20 bg-white px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-white"
+                  className="rounded-xl border border-black/20 bg-[#fffffe] px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-[#fffffe]"
                   onClick={() => navigateTo("/app/rent?view=available")}
                 >
                   Jag vill hyra lokal
@@ -1177,7 +1083,7 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
               </div>
             </div>
 
-            <article ref={processCardRef} className="self-start flex h-full flex-col overflow-hidden rounded-3xl border border-black/10 bg-white">
+            <article ref={processCardRef} className="self-start flex h-full flex-col overflow-hidden rounded-3xl border border-black/10 bg-[#fffffe]">
               <img src={processImage} alt="Processöversikt" className="min-h-0 w-full flex-1 object-cover" />
               <div className="space-y-2 p-5">
                 <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Resultat</p>
@@ -1221,7 +1127,7 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
           </article>
 
           <div className="grid gap-6">
-            <article className="rounded-3xl border border-black/10 bg-white p-6">
+            <article className="rounded-3xl border border-black/10 bg-[#fffffe] p-6">
               <p className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-500">
                 <CoinsIcon className="h-3.5 w-3.5" />
                 Synlighetslyft
@@ -1229,7 +1135,7 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
               <p className="mt-2 text-2xl font-semibold">Topplacering</p>
               <p className="mt-1 text-sm text-ink-600">Lyft utvalda annonser i listning och sökresultat för mer exponering.</p>
             </article>
-            <article className="rounded-3xl border border-black/10 bg-white p-6">
+            <article className="rounded-3xl border border-black/10 bg-[#fffffe] p-6">
               <p className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-500">
                 <CoinsIcon className="h-3.5 w-3.5" />
                 Synlighetslyft
@@ -1241,71 +1147,7 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
         </div>
       </section>
 
-      <section className="relative my-4 overflow-hidden">
-        <img src={heroImage} alt="Stockholm stadsvy" className="h-[430px] w-full object-cover sm:h-[500px]" />
-        <div className="absolute inset-0 bg-gradient-to-b from-white/90 via-white/72 to-white/28" />
-        <div className="absolute inset-0">
-          <div className="mx-auto flex h-full w-full max-w-[86rem] items-start justify-center px-4 pt-14 text-center sm:px-6">
-            <div className="max-w-3xl">
-              <h2 className="text-4xl font-semibold leading-tight text-[#12375a] sm:text-6xl">
-                Över 55 000 unika besökare i veckan. Vill du annonsera här?
-              </h2>
-              <p className="mx-auto mt-5 max-w-2xl text-sm text-[#12375a] sm:text-xl">
-                Hos oss är det enkelt att till ett bra pris annonsera lokaler, fastigheter, företag eller mark.
-                Vi erbjuder olika annonspaket beroende på dina behov.
-              </p>
-              <button
-                type="button"
-                className="mt-7 rounded-full border border-[#0f1930] bg-[#0f1930] px-8 py-3 text-sm font-semibold uppercase tracking-wide text-white hover:bg-[#16233f]"
-                onClick={() => navigateTo("/app/publish")}
-              >
-                Läs mer
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto w-full max-w-[86rem] px-4 py-16 sm:px-6">
-        <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Kunskapsbank</p>
-            <h2 className="mt-2 text-3xl font-semibold">Guider och tips</h2>
-          </div>
-          <button type="button" className="inline-flex min-h-[40px] items-center gap-1.5 text-xs font-semibold text-ink-700 hover:text-black">
-            Se fler guider
-            <ArrowRightIcon className="h-4 w-4" />
-          </button>
-        </div>
-
-        <article className="grid overflow-hidden rounded-3xl border border-black/10 bg-white lg:grid-cols-[1fr_1fr]">
-          <img src="/object-images/object-5.jpeg" alt="Guide: välja rätt lokal" className="h-64 w-full object-cover lg:h-full" />
-          <div className="flex items-center p-6 sm:p-8">
-            <div className="max-w-xl">
-              <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Utvald guide</p>
-              <h3 className="mt-2 text-3xl font-semibold text-[#0f1930]">Välja rätt lokal</h3>
-              <p className="mt-3 text-sm text-ink-700 sm:text-base">
-                För dig som letar lokal till ditt företag finns mycket att tänka på. Vilka regler gäller?
-                Vilka krav ska ställas på nya lokaler? Här får du stöd inför nästa steg i verksamhetens utveckling.
-              </p>
-            </div>
-          </div>
-        </article>
-
-        <div className="mt-4 grid gap-4 lg:grid-cols-3">
-          {guideCards.map((guide) => (
-            <article key={guide.title} className="overflow-hidden rounded-3xl border border-black/10 bg-white">
-              <img src={guide.image} alt={guide.title} className="h-48 w-full object-cover" />
-              <div className="p-5">
-                <h3 className="text-xl font-semibold leading-tight text-[#0f1930]">{guide.title}</h3>
-                <p className="mt-2 text-sm text-ink-700">{guide.body}</p>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section id="faq" className="border-t border-black/10 bg-white">
+      <section id="faq" className="border-t border-black/10 bg-[#fffffe]">
         <div className="mx-auto w-full max-w-[86rem] px-4 py-16 sm:px-6">
           <div className="mb-10">
             <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">FAQ</p>
@@ -1313,7 +1155,7 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
           </div>
 
           <div className="grid items-stretch gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-            <article ref={faqCardRef} className="self-start flex h-full flex-col overflow-hidden rounded-3xl border border-black/10 bg-white">
+            <article ref={faqCardRef} className="self-start flex h-full flex-col overflow-hidden rounded-3xl border border-black/10 bg-[#fffffe]">
               <img src={faqImage} alt="FAQ och support" className="min-h-0 w-full flex-1 object-cover" />
               <div className="p-5">
                 <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Kundservice</p>
@@ -1324,7 +1166,7 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
 
             <div ref={faqQuestionsRef} className="self-start space-y-5">
               {faqItems.map((item) => (
-                <article key={item.q} className="rounded-2xl border border-black/10 bg-white p-5">
+                <article key={item.q} className="rounded-2xl border border-black/10 bg-[#fffffe] p-5">
                   <p className="text-xl font-semibold">{item.q}</p>
                   <p className="mt-2 text-sm text-ink-600">{item.a}</p>
                 </article>
@@ -1334,26 +1176,35 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
         </div>
       </section>
 
+      <ViewingRequestModal
+        listing={bookingListing}
+        onClose={() => setBookingListing(null)}
+        onSubmit={() => {
+          setBookingListing(null);
+          openAuth("login", "renter");
+        }}
+      />
+
       <button
         type="button"
         aria-label="Scrolla till toppen"
-        className={`fixed bottom-6 right-6 z-30 inline-flex min-h-0 flex-col items-center justify-center gap-0.5 rounded-full border border-black/20 bg-white/25 p-3 text-[#0f1930] shadow-[0_8px_24px_rgba(15,25,48,0.18)] backdrop-blur-md transition-all duration-250 ${
+        className={`fixed bottom-6 right-6 z-30 inline-flex min-h-0 flex-col items-center justify-center gap-0.5 rounded-full border border-black/20 bg-[#fffffe]/25 p-3 text-[#0f1930] shadow-[0_8px_24px_rgba(15,25,48,0.18)] backdrop-blur-md transition-all duration-250 ${
           showScrollToTopButton
             ? "translate-y-0 scale-100 opacity-100 pointer-events-auto"
             : "translate-y-2 scale-95 opacity-0 pointer-events-none"
-        } hover:bg-white/35`}
+        } hover:bg-[#fffffe]/35`}
         onClick={handleScrollToTop}
       >
         <ArrowUpIcon className="h-4 w-4" />
         <MouseScrollIcon className="h-4 w-4" />
       </button>
 
-      <footer id="kontakt" className="scroll-mt-24 border-t border-black/10 bg-white">
+      <footer id="kontakt" className="scroll-mt-24 border-t border-black/10 bg-[#fffffe]">
         <div className="mx-auto w-full max-w-[86rem] px-4 py-10 sm:px-6">
           <div className="grid gap-8 lg:grid-cols-[1.15fr_0.95fr_0.95fr_0.95fr]">
             <div className="space-y-4">
-              <div className="inline-flex items-center gap-3 rounded-2xl border border-black/10 bg-white px-4 py-3">
-                <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-dashed border-black/30 bg-white text-[10px] font-semibold uppercase tracking-wide text-ink-500">
+              <div className="inline-flex items-center gap-3 rounded-2xl border border-black/10 bg-[#fffffe] px-4 py-3">
+                <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-dashed border-black/30 bg-[#fffffe] text-[10px] font-semibold uppercase tracking-wide text-ink-500">
                   LOGGA
                 </span>
                 <div>
@@ -1365,7 +1216,7 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
                 Lokalflöde Stockholm samlar hyresgäst och hyresvärd i ett gemensamt flöde för snabbare matchning, visningar och affärer.
               </p>
               <div className="flex flex-wrap gap-2">
-                <button type="button" className="rounded-xl border border-black/20 bg-white px-3 py-2 text-xs font-semibold text-ink-700" onClick={() => navigateTo("/app/rent?view=available")}>
+                <button type="button" className="rounded-xl border border-black/20 bg-[#fffffe] px-3 py-2 text-xs font-semibold text-ink-700" onClick={() => navigateTo("/app/rent?view=available")}>
                   Jag vill hyra lokal
                 </button>
                 <button type="button" className="rounded-xl border border-[#0f1930] bg-[#0f1930] px-3 py-2 text-xs font-semibold text-white hover:bg-[#16233f]" onClick={() => navigateTo("/app/publish")}>
@@ -1377,7 +1228,6 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
             <div>
               <p className="text-sm font-semibold">Utforska</p>
               <div className="mt-3 grid gap-2">
-                <a className="text-sm text-ink-600 hover:text-black" href="#funktioner" onClick={(event) => handleSectionLinkClick(event, "#funktioner")}>Funktioner</a>
                 <a className="text-sm text-ink-600 hover:text-black" href="#sa-fungerar-det" onClick={(event) => handleSectionLinkClick(event, "#sa-fungerar-det")}>Så fungerar det</a>
                 <a className="text-sm text-ink-600 hover:text-black" href="#priser" onClick={(event) => handleSectionLinkClick(event, "#priser")}>Priser</a>
                 <a className="text-sm text-ink-600 hover:text-black" href="#faq" onClick={(event) => handleSectionLinkClick(event, "#faq")}>FAQ</a>

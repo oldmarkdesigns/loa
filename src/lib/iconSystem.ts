@@ -90,6 +90,7 @@ export const ICONS = {
 
   // --- Status, feedback, AI ---
   star: "star",               // StarIcon — favorite / shortlist
+  crown: "crown",             // CrownIcon — featured / highlighted
   checkBadge: "badge-check",         // CheckBadgeIcon — verified
   sparkles: "sparkles",           // SparklesIcon — AI / smart feature
   history: "history",            // HistoryIcon — recent activity

@@ -212,10 +212,10 @@ function SignupPage({ onCompleteSignup, onTestSignup, currentUser }) {
 
   if (detailsStep === 1) {
     return (
-      <main className="grid min-h-screen place-items-center bg-white px-4 pb-8 pt-20">
+      <main className="grid min-h-screen place-items-center bg-[#fffffe] px-4 pb-8 pt-20">
         <AuthFlowNav />
         <div className="mx-auto w-full">
-          <div ref={cardWrapRef} className="mx-auto w-full max-w-[430px] rounded-[30px] border border-black/10 bg-white px-6 py-7 sm:px-7 sm:py-8">
+          <div ref={cardWrapRef} className="mx-auto w-full max-w-[430px] rounded-[30px] border border-black/10 bg-[#fffffe] px-6 py-7 sm:px-7 sm:py-8">
             <h1 className="text-[1.95rem] font-semibold leading-tight text-[#0f1930]">Skapa konto</h1>
             <p className="mt-1 text-sm text-ink-600">WorkOS hanterar registreringen. Du väljer roll i nästa steg.</p>
 
@@ -274,7 +274,7 @@ function SignupPage({ onCompleteSignup, onTestSignup, currentUser }) {
                   navigateTo(`/signup${nextQuery ? `?${nextQuery}` : ""}`, { replace: true });
                 }}
               >
-                <span aria-hidden="true" className="h-5 w-5 rounded-full bg-white shadow-[0_1px_2px_rgba(15,25,48,0.35)]" />
+                <span aria-hidden="true" className="h-5 w-5 rounded-full bg-[#fffffe] shadow-[0_1px_2px_rgba(15,25,48,0.35)]" />
               </button>
             </div>
 
@@ -288,10 +288,10 @@ function SignupPage({ onCompleteSignup, onTestSignup, currentUser }) {
   }
 
   return (
-    <main className="grid min-h-screen place-items-center bg-white px-4 pb-8 pt-20">
+    <main className="grid min-h-screen place-items-center bg-[#fffffe] px-4 pb-8 pt-20">
       <AuthFlowNav />
       <div className="w-full max-w-[460px]">
-        <div className="rounded-[30px] border border-black/10 bg-white px-6 py-7 sm:px-7 sm:py-8">
+        <div className="rounded-[30px] border border-black/10 bg-[#fffffe] px-6 py-7 sm:px-7 sm:py-8">
           <h1 className="text-[1.95rem] font-semibold leading-tight text-[#0f1930]">
             {detailsStep === 2 ? "Välkommen!" : "Berätta om dig själv"}
           </h1>
@@ -318,7 +318,7 @@ function SignupPage({ onCompleteSignup, onTestSignup, currentUser }) {
                         aria-checked={selected}
                         onClick={() => setRoleSelection(option.value)}
                         className={`role-option-button flex w-full items-center justify-between border px-4 py-3 text-left transition ${
-                          selected ? "border-[#0f1930] bg-white text-[#0f1930] shadow-[0_0_0_1px_rgba(15,25,48,0.2)]" : "border-black/15 bg-white text-ink-700"
+                          selected ? "border-[#0f1930] bg-[#fffffe] text-[#0f1930] shadow-[0_0_0_1px_rgba(15,25,48,0.2)]" : "border-black/15 bg-[#fffffe] text-ink-700"
                         }`}
                       >
                         <span className="text-sm font-medium leading-tight">{option.label}</span>
@@ -400,7 +400,7 @@ function SignupPage({ onCompleteSignup, onTestSignup, currentUser }) {
               {detailsStep === 3 ? (
                 <>
                   <p className="text-center text-xs text-ink-600">Har du redan konto?</p>
-                  <button type="button" className="mx-auto inline-flex items-center justify-center rounded-full border border-black/15 bg-white px-5 py-3 text-sm font-semibold text-ink-800 hover:bg-[#f8fafc]" onClick={() => navigateTo("/login")}>
+                  <button type="button" className="mx-auto inline-flex items-center justify-center rounded-full border border-black/15 bg-[#fffffe] px-5 py-3 text-sm font-semibold text-ink-800 hover:bg-[#f8fafc]" onClick={() => navigateTo("/login")}>
                     Logga in
                   </button>
                 </>

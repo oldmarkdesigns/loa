@@ -252,8 +252,8 @@ function suggestionToneClass(tone) {
 function pipelineToneClass(tone) {
   if (tone === "green") return "border-[#cad9ec] bg-[#eef3f8] text-[#0f1930]";
   if (tone === "amber") return "border-black/10 bg-[#fbfbfa] text-ink-700";
-  if (tone === "gray") return "border-black/10 bg-white text-ink-600";
-  return "border-black/10 bg-white text-ink-700";
+  if (tone === "gray") return "border-black/10 bg-[#fffffe] text-ink-600";
+  return "border-black/10 bg-[#fffffe] text-ink-700";
 }
 
 function MessagesPage({ app }) {
@@ -309,7 +309,7 @@ function MessagesPage({ app }) {
   }
 
   return (
-    <section className="h-full overflow-y-auto bg-white lg:overflow-hidden">
+    <section className="h-full overflow-y-auto bg-[#fffffe] lg:overflow-hidden">
       <div className="mx-auto min-h-full w-full max-w-[1600px] p-4 sm:p-6 lg:h-full">
         <div className="surface grid min-h-full overflow-hidden lg:h-full lg:min-h-0 lg:grid-cols-[312px,minmax(0,1fr)] xl:grid-cols-[312px,minmax(0,1fr),320px]">
           <aside className="flex min-h-0 flex-col border-b border-black/10 bg-[#fbfbfa] lg:border-b-0 lg:border-r">
@@ -323,7 +323,7 @@ function MessagesPage({ app }) {
               <label className="relative mt-4 block">
                 <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
                 <input
-                  className="field !rounded-2xl !bg-white pl-9"
+                  className="field !rounded-2xl !bg-[#fffffe] pl-9"
                   placeholder={isBrokerView ? "Sök namn, bolag eller annons" : "Sök mäklare eller annons"}
                   value={searchQuery}
                   onChange={(event) => setSearchQuery(event.target.value)}
@@ -340,12 +340,12 @@ function MessagesPage({ app }) {
                       className={`inline-flex min-h-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold transition ${
                         active
                           ? "bg-[#0f1930] text-white"
-                          : "border border-black/10 bg-white text-ink-700 hover:border-[#0f1930]"
+                          : "border border-black/10 bg-[#fffffe] text-ink-700 hover:border-[#0f1930]"
                       }`}
                     >
                       {tab.label}
                       <span className={`inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] ${
-                        active ? "bg-white/15 text-white" : "bg-[#eef3f8] text-[#476a99]"
+                        active ? "bg-[#fffffe]/15 text-white" : "bg-[#eef3f8] text-[#476a99]"
                       }`}>
                         {tab.count}
                       </span>
@@ -364,7 +364,7 @@ function MessagesPage({ app }) {
                     type="button"
                     onClick={() => setActiveConversationId(conversation.id)}
                     className={`message-list-row grid w-full grid-cols-[auto,1fr,auto] gap-3 border-b border-black/5 px-4 py-4 text-left transition ${
-                      active ? "bg-white shadow-[inset_3px_0_0_#0f1930]" : "hover:bg-white/80"
+                      active ? "bg-[#fffffe] shadow-[inset_3px_0_0_#0f1930]" : "hover:bg-[#fffffe]/80"
                     }`}
                   >
                     <div className="flex flex-col items-center gap-2 pt-1">
@@ -413,10 +413,10 @@ function MessagesPage({ app }) {
             </div>
           </aside>
 
-          <div className="flex min-h-[620px] flex-col border-b border-black/10 bg-white lg:min-h-0 lg:border-b-0 xl:border-r">
+          <div className="flex min-h-[620px] flex-col border-b border-black/10 bg-[#fffffe] lg:min-h-0 lg:border-b-0 xl:border-r">
             {activeConversation ? (
               <>
-                <header className="border-b border-black/10 bg-white px-4 py-4 sm:px-5">
+                <header className="border-b border-black/10 bg-[#fffffe] px-4 py-4 sm:px-5">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-3">
                       <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#0f1930] text-sm font-semibold text-white">
@@ -449,31 +449,31 @@ function MessagesPage({ app }) {
                     <div className="flex items-center gap-2">
                       {isBrokerView ? (
                         <>
-                          <button type="button" className="inline-flex min-h-0 items-center gap-1.5 rounded-full border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-ink-800">
+                          <button type="button" className="inline-flex min-h-0 items-center gap-1.5 rounded-full border border-black/10 bg-[#fffffe] px-3 py-2 text-xs font-semibold text-ink-800">
                             <CalendarIcon className="h-3.5 w-3.5" />
                             Visning att boka
                           </button>
                         </>
                       ) : (
-                        <button type="button" className="inline-flex min-h-0 items-center gap-1.5 rounded-full border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-ink-800">
+                        <button type="button" className="inline-flex min-h-0 items-center gap-1.5 rounded-full border border-black/10 bg-[#fffffe] px-3 py-2 text-xs font-semibold text-ink-800">
                           <CalendarIcon className="h-3.5 w-3.5" />
                           Svara på tider
                         </button>
                       )}
-                      <button type="button" className="inline-flex h-10 w-10 min-h-0 items-center justify-center rounded-full border border-black/10 bg-white text-ink-700">
+                      <button type="button" className="inline-flex h-10 w-10 min-h-0 items-center justify-center rounded-full border border-black/10 bg-[#fffffe] text-ink-700">
                         <MoreHorizontalIcon className="h-4 w-4" />
                       </button>
                     </div>
                   </div>
                 </header>
 
-                <div className="min-h-0 flex-1 overflow-y-auto bg-white px-4 py-5 sm:px-5">
+                <div className="min-h-0 flex-1 overflow-y-auto bg-[#fffffe] px-4 py-5 sm:px-5">
                   <div className="mx-auto max-w-3xl space-y-4">
                     {activeConversation.messages.length > 0 ? activeConversation.messages.map((message) => {
                       if (message.type === "system") {
                         return (
                           <div key={message.id} className="space-y-2 text-center">
-                            <div className="inline-flex rounded-full border border-black/10 bg-white px-5 py-2 text-sm text-ink-600">
+                            <div className="inline-flex rounded-full border border-black/10 bg-[#fffffe] px-5 py-2 text-sm text-ink-600">
                               {message.text}
                             </div>
                             <p className="text-[11px] text-ink-400">{message.timestamp}</p>
@@ -504,7 +504,7 @@ function MessagesPage({ app }) {
                   </div>
                 </div>
 
-                <footer className="border-t border-black/10 bg-white px-4 py-4 sm:px-5">
+                <footer className="border-t border-black/10 bg-[#fffffe] px-4 py-4 sm:px-5">
                   <div className="mx-auto flex max-w-3xl items-center gap-3 rounded-[28px] border border-black/10 bg-[#fbfbfa] p-2">
                     <button type="button" className="inline-flex h-9 w-9 min-h-0 items-center justify-center rounded-full text-ink-500">
                       <PaperclipIcon className="h-4 w-4" />
@@ -531,7 +531,7 @@ function MessagesPage({ app }) {
 
           <aside className="hidden min-h-0 bg-[#fbfbfa] xl:block">
             <div className="h-full overflow-y-auto p-4">
-              <article className="overflow-hidden rounded-3xl border border-black/10 bg-white">
+              <article className="overflow-hidden rounded-3xl border border-black/10 bg-[#fffffe]">
                 <img src={MESSAGE_LISTING.image} alt={MESSAGE_LISTING.title} className="h-36 w-full object-cover" loading="lazy" />
                 <div className="p-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ink-500">Matchad annons</p>
@@ -544,7 +544,7 @@ function MessagesPage({ app }) {
                 </div>
               </article>
 
-              <article className="mt-3 rounded-3xl border border-black/10 bg-white p-4">
+              <article className="mt-3 rounded-3xl border border-black/10 bg-[#fffffe] p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ink-500">
@@ -603,7 +603,7 @@ function MessagesPage({ app }) {
                 )}
               </article>
 
-              <article className="mt-3 rounded-3xl border border-black/10 bg-white p-4">
+              <article className="mt-3 rounded-3xl border border-black/10 bg-[#fffffe] p-4">
                 <div className="flex items-center gap-2">
                   <SparklesIcon className="h-4 w-4 text-[#0f1930]" />
                   <h3 className="text-base font-semibold text-[#0f1930]">Föreslagna svar</h3>
@@ -615,7 +615,7 @@ function MessagesPage({ app }) {
                       key={suggestion.id}
                       type="button"
                       onClick={() => useSuggestion(suggestion.text)}
-                      className="message-suggestion-card w-full border border-black/10 bg-[#fbfbfa] p-3 text-left transition hover:bg-white"
+                      className="message-suggestion-card w-full border border-black/10 bg-[#fbfbfa] p-3 text-left transition hover:bg-[#fffffe]"
                     >
                       <div className="flex items-center justify-between gap-2">
                         <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide ${suggestionToneClass(suggestion.tone)}`}>
@@ -631,15 +631,15 @@ function MessagesPage({ app }) {
 
               {isBrokerView ? (
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <button type="button" className="inline-flex min-h-0 items-center gap-1.5 rounded-full border border-black/10 bg-white px-3 py-2 text-sm text-ink-700">
+                  <button type="button" className="inline-flex min-h-0 items-center gap-1.5 rounded-full border border-black/10 bg-[#fffffe] px-3 py-2 text-sm text-ink-700">
                     <TagIcon className="h-3.5 w-3.5" />
                     Märk
                   </button>
-                  <button type="button" className="inline-flex min-h-0 items-center gap-1.5 rounded-full border border-black/10 bg-white px-3 py-2 text-sm text-ink-700">
+                  <button type="button" className="inline-flex min-h-0 items-center gap-1.5 rounded-full border border-black/10 bg-[#fffffe] px-3 py-2 text-sm text-ink-700">
                     <UserPlusIcon className="h-3.5 w-3.5" />
                     Tilldela
                   </button>
-                  <button type="button" className="inline-flex min-h-0 items-center gap-1.5 rounded-full border border-black/10 bg-white px-3 py-2 text-sm text-ink-700">
+                  <button type="button" className="inline-flex min-h-0 items-center gap-1.5 rounded-full border border-black/10 bg-[#fffffe] px-3 py-2 text-sm text-ink-700">
                     <ArchiveIcon className="h-3.5 w-3.5" />
                     Arkivera
                   </button>

@@ -38,7 +38,7 @@ function ManageListingPage({ app, listingId }) {
           <button type="button" className="btn-secondary px-3 py-2 text-xs" onClick={() => navigateTo("/app/my-listings")}>
             Tillbaka till översikt
           </button>
-          <div className="mt-4 rounded-2xl border border-black/10 bg-white p-6">
+          <div className="mt-4 rounded-2xl border border-black/10 bg-[#fffffe] p-6">
             <h1 className="text-2xl font-semibold">Objektet kunde inte öppnas</h1>
             <p className="mt-2 text-sm text-ink-600">Du har inte åtkomst till objektet eller så har det tagits bort.</p>
           </div>
@@ -83,7 +83,7 @@ function ManageListingPage({ app, listingId }) {
 
         <h1 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">Hantera objekt</h1>
 
-        <div className="mt-5 rounded-3xl border border-[#c8d1de] bg-white p-4 sm:p-5">
+        <div className="mt-5 rounded-3xl border border-[#c8d1de] bg-[#fffffe] p-4 sm:p-5">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
           <p className="text-lg text-ink-600 sm:text-xl">{draft.address}, Stockholm</p>
           <div className="flex flex-wrap gap-2">

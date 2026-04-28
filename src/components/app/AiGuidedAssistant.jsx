@@ -17,7 +17,7 @@ const furnishedOptions = [
   { value: "yes", label: "Möblerad" },
   { value: "no", label: "Omöblerad" }
 ];
-const summaryChipBaseClass = "inline-flex items-center gap-1.5 rounded-2xl border border-black/10 bg-white px-3 py-2 text-xs font-semibold leading-none text-ink-700";
+const summaryChipBaseClass = "inline-flex items-center gap-1.5 rounded-2xl border border-black/10 bg-[#fffffe] px-3 py-2 text-xs font-semibold leading-none text-ink-700";
 
 const sqmPerPersonByType = {
   Kontor: 12,
@@ -516,7 +516,7 @@ function AiGuidedAssistant({
         {activeQuestion !== questionOrder[0] ? (
           <button
             type="button"
-            className="inline-flex h-[40px] items-center gap-1.5 rounded-2xl border border-black/10 bg-white px-4 text-xs font-semibold text-ink-700 hover:bg-white"
+            className="inline-flex h-[40px] items-center gap-1.5 rounded-2xl border border-black/10 bg-[#fffffe] px-4 text-xs font-semibold text-ink-700 hover:bg-[#fffffe]"
             onClick={previousQuestion}
           >
             Föregående
@@ -525,7 +525,7 @@ function AiGuidedAssistant({
         <div className="relative inline-flex items-center group">
           {isCoreNextDisabled ? (
             <div
-              className={`pointer-events-none absolute right-full top-1/2 z-20 mr-2 -translate-y-1/2 whitespace-nowrap rounded-lg border border-black/10 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-ink-700 shadow-sm transition ${
+              className={`pointer-events-none absolute right-full top-1/2 z-20 mr-2 -translate-y-1/2 whitespace-nowrap rounded-lg border border-black/10 bg-[#fffffe] px-2.5 py-1.5 text-[11px] font-semibold text-ink-700 shadow-sm transition ${
                 showCoreNextHint ? "opacity-100" : "opacity-0 group-hover:opacity-100"
               }`}
             >
@@ -540,7 +540,7 @@ function AiGuidedAssistant({
                 ? "cursor-not-allowed border border-black/10 bg-[#eceff3] text-ink-500"
                 : canAdvanceCurrentStep
                 ? "border border-[#0f1930] bg-[#0f1930] text-white hover:bg-[#16233f]"
-                : "border border-black/10 bg-white text-ink-700 hover:bg-white"
+                : "border border-black/10 bg-[#fffffe] text-ink-700 hover:bg-[#fffffe]"
             }`}
             onMouseEnter={() => {
               if (isCoreNextDisabled) setShowCoreNextHint(true);
@@ -603,7 +603,7 @@ function AiGuidedAssistant({
                   key={option.value}
                   type="button"
                   className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition ${
-                    active ? "border-[#0f1930] bg-[#0f1930] text-white" : "border-black/10 bg-white text-ink-700 hover:bg-white"
+                    active ? "border-[#0f1930] bg-[#0f1930] text-white" : "border-black/10 bg-[#fffffe] text-ink-700 hover:bg-[#fffffe]"
                   }`}
                   onClick={() =>
                     setAnswers((prev) => ({
@@ -710,7 +710,7 @@ function AiGuidedAssistant({
       return (
         <div className="w-full max-w-[64rem]">
           <div className="grid gap-2 lg:grid-cols-3">
-            <label className="inline-flex min-h-[48px] items-center gap-2 rounded-2xl border border-black/10 bg-white px-3 py-2 text-sm font-medium text-ink-700">
+            <label className="inline-flex min-h-[48px] items-center gap-2 rounded-2xl border border-black/10 bg-[#fffffe] px-3 py-2 text-sm font-medium text-ink-700">
               <input
                 type="checkbox"
                 checked={Boolean(answers.includeOperatingCosts)}
@@ -719,7 +719,7 @@ function AiGuidedAssistant({
               />
               Driftkostnad ingår
             </label>
-            <label className="inline-flex min-h-[48px] items-center gap-2 rounded-2xl border border-black/10 bg-white px-3 py-2 text-sm font-medium text-ink-700">
+            <label className="inline-flex min-h-[48px] items-center gap-2 rounded-2xl border border-black/10 bg-[#fffffe] px-3 py-2 text-sm font-medium text-ink-700">
               <input
                 type="checkbox"
                 checked={Boolean(answers.accessibilityAdapted)}
@@ -728,7 +728,7 @@ function AiGuidedAssistant({
               />
               Tillgänglighetsanpassad
             </label>
-            <label className="inline-flex min-h-[48px] items-center gap-2 rounded-2xl border border-black/10 bg-white px-3 py-2 text-sm font-medium text-ink-700">
+            <label className="inline-flex min-h-[48px] items-center gap-2 rounded-2xl border border-black/10 bg-[#fffffe] px-3 py-2 text-sm font-medium text-ink-700">
               <input
                 type="checkbox"
                 checked={Boolean(answers.ecoCertified)}
@@ -919,7 +919,7 @@ function AiGuidedAssistant({
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <button
                   type="button"
-                  className="inline-flex h-[40px] items-center gap-1.5 rounded-2xl border border-black/10 bg-white px-4 text-xs font-semibold text-ink-700 hover:bg-white"
+                  className="inline-flex h-[40px] items-center gap-1.5 rounded-2xl border border-black/10 bg-[#fffffe] px-4 text-xs font-semibold text-ink-700 hover:bg-[#fffffe]"
                   onClick={() =>
                     setAnswers((prev) => ({
                       ...prev,
@@ -959,7 +959,7 @@ function AiGuidedAssistant({
   }
 
   return (
-    <article className={bare ? "" : "rounded-2xl border border-black/10 bg-white p-4"}>
+    <article className={bare ? "" : "rounded-2xl border border-black/10 bg-[#fffffe] p-4"}>
       {!bare ? (
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-700">
@@ -968,7 +968,7 @@ function AiGuidedAssistant({
           </div>
           <div className="flex items-center gap-3">
             {showModeSwitch ? (
-              <div className="inline-flex h-10 items-center gap-2 rounded-2xl border border-black/10 bg-white px-3 text-xs font-semibold text-ink-700">
+              <div className="inline-flex h-10 items-center gap-2 rounded-2xl border border-black/10 bg-[#fffffe] px-3 text-xs font-semibold text-ink-700">
                 <span className="inline-flex items-center gap-1">
                   <Icon name="sparkles" className="h-3.5 w-3.5 text-[#4f46e5]" />
                   <span>AI-guide</span>
@@ -983,7 +983,7 @@ function AiGuidedAssistant({
                   }`}
                   onClick={onToggleFilterMode}
                 >
-                  <span aria-hidden="true" className="h-5 w-5 rounded-full bg-white shadow-[0_1px_2px_rgba(15,25,48,0.35)]" />
+                  <span aria-hidden="true" className="h-5 w-5 rounded-full bg-[#fffffe] shadow-[0_1px_2px_rgba(15,25,48,0.35)]" />
                 </button>
               </div>
             ) : (
@@ -1052,7 +1052,7 @@ function AiGuidedAssistant({
 
         {activeQuestion ? (
           <div className="flex items-start gap-3">
-            <div className={`w-full rounded-2xl border border-black/10 bg-white px-3 py-3 ${
+            <div className={`w-full rounded-2xl border border-black/10 bg-[#fffffe] px-3 py-3 ${
               isStepTransitioning ? "search-summary-dissolve-out" : "search-summary-dissolve-in"
             }`}>
               {activeQuestion !== "core" ? (
@@ -1078,7 +1078,7 @@ function AiGuidedAssistant({
             </div>
           </div>
         ) : (
-          <div className={`w-full rounded-2xl border border-black/10 bg-white px-3 py-3 ${
+          <div className={`w-full rounded-2xl border border-black/10 bg-[#fffffe] px-3 py-3 ${
             isStepTransitioning ? "search-summary-dissolve-out" : "search-summary-dissolve-in"
           }`}>
             <h3 className="text-base font-semibold text-ink-900">Sökningen är klar</h3>
@@ -1101,7 +1101,7 @@ function AiGuidedAssistant({
               </button>
               <button
                 type="button"
-                className="inline-flex items-center gap-1.5 rounded-2xl border border-black/10 bg-white px-4 py-2.5 text-sm font-semibold text-ink-700 hover:bg-white"
+                className="inline-flex items-center gap-1.5 rounded-2xl border border-black/10 bg-[#fffffe] px-4 py-2.5 text-sm font-semibold text-ink-700 hover:bg-[#fffffe]"
                 onClick={() => setActiveStep(questionOrder[0])}
               >
                 Justera sökning
@@ -1114,7 +1114,7 @@ function AiGuidedAssistant({
         {onSaveSearch ? (
           <button
             type="button"
-            className="inline-flex items-center gap-2 rounded-2xl border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-white"
+            className="inline-flex items-center gap-2 rounded-2xl border border-black/10 bg-[#fffffe] px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-[#fffffe]"
             onClick={onSaveSearch}
           >
             <Icon name="star" className="h-4 w-4" />
@@ -1124,7 +1124,7 @@ function AiGuidedAssistant({
         {onOpenEditSearch ? (
           <button
             type="button"
-            className="inline-flex items-center gap-2 rounded-2xl border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-white"
+            className="inline-flex items-center gap-2 rounded-2xl border border-black/10 bg-[#fffffe] px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-[#fffffe]"
             onClick={onOpenEditSearch}
           >
             Redigera sökning

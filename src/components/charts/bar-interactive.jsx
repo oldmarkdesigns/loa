@@ -42,7 +42,7 @@ function BarInteractive({
           <h3 className="text-lg font-semibold text-ink-900">{title}</h3>
           <p className="mt-1 text-sm text-ink-600">{subtitle}</p>
         </div>
-        <div className="inline-flex items-center gap-1 rounded-full border border-black/10 bg-white p-1">
+        <div className="inline-flex items-center gap-1 rounded-full border border-black/10 bg-[#fffffe] p-1">
           {rangeOptions.map((option) => {
             const active = option === range;
             return (

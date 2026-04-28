@@ -79,14 +79,14 @@ function AuthOverlay({ open, mode = "login", preferredRole = "renter", onClose, 
 
   return (
     <div className="fixed inset-0 z-[80] flex items-end justify-center bg-transparent p-4 sm:items-center" onClick={onClose}>
-      <div className="w-full max-w-lg rounded-3xl border border-black/10 bg-white p-5 shadow-[0_20px_60px_rgba(0,0,0,0.22)]" onClick={(event) => event.stopPropagation()}>
+      <div className="w-full max-w-lg rounded-3xl border border-black/10 bg-[#fffffe] p-5 shadow-[0_20px_60px_rgba(0,0,0,0.22)]" onClick={(event) => event.stopPropagation()}>
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Konto</p>
             <h2 className="text-2xl font-semibold">Fortsätt med inloggning</h2>
             <p className="text-sm text-ink-600">Logga in eller skapa konto för att spara, boka visning och publicera.</p>
           </div>
-          <button type="button" className="rounded-xl border border-black/10 bg-white px-3 py-1.5 text-xs font-semibold text-ink-700" onClick={onClose}>
+          <button type="button" className="rounded-xl border border-black/10 bg-[#fffffe] px-3 py-1.5 text-xs font-semibold text-ink-700" onClick={onClose}>
             Stäng
           </button>
         </div>
@@ -97,7 +97,7 @@ function AuthOverlay({ open, mode = "login", preferredRole = "renter", onClose, 
           <span className="h-px flex-1 bg-black/10" />
         </div>
 
-        <div className="mb-3 inline-flex rounded-2xl border border-black/10 bg-white p-1 text-xs">
+        <div className="mb-3 inline-flex rounded-2xl border border-black/10 bg-[#fffffe] p-1 text-xs">
           <button type="button" onClick={() => setActiveForm("login")} className={`rounded-xl px-3 py-2 font-semibold ${activeForm === "login" ? "bg-[#0f1930] text-white" : "text-ink-600"}`}>
             Logga in
           </button>
@@ -114,7 +114,7 @@ function AuthOverlay({ open, mode = "login", preferredRole = "renter", onClose, 
             <button type="submit" className="btn-primary w-full" disabled={pending}>
               {pending ? "Loggar in..." : "Logga in"}
             </button>
-            <div className="rounded-2xl border border-black/10 bg-white p-3 text-xs text-ink-600">
+            <div className="rounded-2xl border border-black/10 bg-[#fffffe] p-3 text-xs text-ink-600">
               Demo-konton:
               <br />
               Hyresgäst: hyresgast@demo.se / demo123
@@ -139,8 +139,8 @@ function AuthOverlay({ open, mode = "login", preferredRole = "renter", onClose, 
                 onClick={() => setRoleSelection("renter")}
                 className={`inline-flex items-center gap-2 rounded-2xl border px-3 py-2 text-sm font-semibold ${
                   signupForm.roles.length === 1 && signupForm.roles[0] === "renter"
-                    ? "border-[#0f1930] bg-white text-[#0f1930]"
-                    : "border-black/20 bg-white text-ink-700"
+                    ? "border-[#0f1930] bg-[#fffffe] text-[#0f1930]"
+                    : "border-black/20 bg-[#fffffe] text-ink-700"
                 }`}
               >
                 <span className={`inline-flex h-4 w-4 items-center justify-center rounded-full border ${signupForm.roles.length === 1 && signupForm.roles[0] === "renter" ? "border-[#0f1930]" : "border-ink-400"}`}>
@@ -155,8 +155,8 @@ function AuthOverlay({ open, mode = "login", preferredRole = "renter", onClose, 
                 onClick={() => setRoleSelection("publisher")}
                 className={`inline-flex items-center gap-2 rounded-2xl border px-3 py-2 text-sm font-semibold ${
                   signupForm.roles.length === 1 && signupForm.roles[0] === "publisher"
-                    ? "border-[#0f1930] bg-white text-[#0f1930]"
-                    : "border-black/20 bg-white text-ink-700"
+                    ? "border-[#0f1930] bg-[#fffffe] text-[#0f1930]"
+                    : "border-black/20 bg-[#fffffe] text-ink-700"
                 }`}
               >
                 <span className={`inline-flex h-4 w-4 items-center justify-center rounded-full border ${signupForm.roles.length === 1 && signupForm.roles[0] === "publisher" ? "border-[#0f1930]" : "border-ink-400"}`}>
@@ -171,8 +171,8 @@ function AuthOverlay({ open, mode = "login", preferredRole = "renter", onClose, 
                 onClick={() => setRoleSelection("both")}
                 className={`inline-flex items-center gap-2 rounded-2xl border px-3 py-2 text-sm font-semibold ${
                   signupForm.roles.length === 2
-                    ? "border-[#0f1930] bg-white text-[#0f1930]"
-                    : "border-black/20 bg-white text-ink-700"
+                    ? "border-[#0f1930] bg-[#fffffe] text-[#0f1930]"
+                    : "border-black/20 bg-[#fffffe] text-ink-700"
                 }`}
               >
                 <span className={`inline-flex h-4 w-4 items-center justify-center rounded-full border ${signupForm.roles.length === 2 ? "border-[#0f1930]" : "border-ink-400"}`}>

@@ -1,13 +1,11 @@
-import { useLayoutEffect, useRef, useState } from "react";
-import { amenityIconFor } from "../../lib/propertyAmenityIcons";
 import {
-  BuildingIcon,
   CalendarIcon,
-  PinIcon,
+  RulerIcon,
+  UsersGroupIcon,
   SparklesIcon,
   StarIcon,
-  UserIcon,
 } from "../icons/UiIcons";
+import { Icon } from "../icons/Icon";
 
 function formatCapacity(value) {
   if (value === null || value === undefined || value === "") return "Kapacitet saknas";
@@ -20,12 +18,21 @@ function buildAddress(listing) {
   return parts.join(", ") || "Address unavailable";
 }
 
+function formatPricePerSqm(listing) {
+  const priceMonthly = Number(listing?.priceMonthly);
+  const sizeSqm = Number(listing?.sizeSqm);
+  if (!Number.isFinite(priceMonthly) || !Number.isFinite(sizeSqm) || sizeSqm <= 0) return null;
+  return Math.round(priceMonthly / sizeSqm).toLocaleString("sv-SE");
+}
+
 function ListingVisualCard({
   listing,
   shortlisted,
   onOpenListing,
+  onBookViewing,
   onToggleShortlist,
   compact = false,
+  horizontal = false,
   showMatchChip = false,
   onHoverStart,
   onHoverEnd,
@@ -33,90 +40,11 @@ function ListingVisualCard({
   missingAmenities = [],
   comparedAmenitiesOnly = false
 }) {
-  const amenities = Array.isArray(listing.amenities) ? listing.amenities : [];
-  const highlightedNeedles = Array.isArray(highlightAmenities)
-    ? highlightAmenities.map((item) => String(item || "").toLowerCase()).filter(Boolean)
-    : [];
-  const sourceAmenities = comparedAmenitiesOnly && highlightedNeedles.length > 0
-    ? amenities.filter((amenity) => highlightedNeedles.some((needle) => String(amenity || "").toLowerCase().includes(needle)))
-    : amenities;
-  const orderedAmenities = highlightedNeedles.length > 0
-    ? [...sourceAmenities].sort((a, b) => {
-        const aMatch = highlightedNeedles.some((needle) => String(a || "").toLowerCase().includes(needle));
-        const bMatch = highlightedNeedles.some((needle) => String(b || "").toLowerCase().includes(needle));
-        if (aMatch === bMatch) return 0;
-        return aMatch ? -1 : 1;
-      })
-    : sourceAmenities;
-  const amenityRowRef = useRef(null);
-  const amenityMeasureMoreRef = useRef(null);
-  const amenityMeasureRefs = useRef([]);
-  const [visibleAmenityCount, setVisibleAmenityCount] = useState(orderedAmenities.length);
-  const visibleAmenities = orderedAmenities.slice(0, visibleAmenityCount);
-  const extraAmenities = Math.max(orderedAmenities.length - visibleAmenities.length, 0);
-  const visibleMissingAmenities = Array.isArray(missingAmenities)
-    ? missingAmenities.map((item) => String(item || "").trim()).filter(Boolean).slice(0, 4)
-    : [];
-  const hasAmenityChips = visibleAmenities.length > 0 || visibleMissingAmenities.length > 0;
-  const baseAmenityChipClass = "inline-flex min-h-[42px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1.5 text-[0.875rem] font-semibold leading-5";
-
-  useLayoutEffect(() => {
-    if (compact) return undefined;
-
-    const row = amenityRowRef.current;
-    const moreMeasure = amenityMeasureMoreRef.current;
-    if (!row || !moreMeasure) return undefined;
-
-    const GAP_PX = 8;
-
-    const recomputeVisibleAmenities = () => {
-      const availableWidth = row.clientWidth;
-      if (!availableWidth || orderedAmenities.length === 0) {
-        setVisibleAmenityCount(orderedAmenities.length);
-        return;
-      }
-
-      const widths = orderedAmenities.map((_, index) => amenityMeasureRefs.current[index]?.offsetWidth || 0);
-
-      const measureMoreChipWidth = (remainingCount) => {
-        if (remainingCount <= 0) return 0;
-        moreMeasure.textContent = `+${remainingCount} more`;
-        return moreMeasure.offsetWidth;
-      };
-
-      let nextVisibleCount = 0;
-      for (let count = orderedAmenities.length; count >= 0; count -= 1) {
-        const visibleWidth = widths.slice(0, count).reduce((sum, width) => sum + width, 0);
-        const visibleGaps = count > 1 ? (count - 1) * GAP_PX : 0;
-        const remaining = orderedAmenities.length - count;
-        const moreWidth = measureMoreChipWidth(remaining);
-        const moreGap = remaining > 0 && count > 0 ? GAP_PX : 0;
-        const totalWidth = visibleWidth + visibleGaps + moreGap + moreWidth;
-
-        if (totalWidth <= availableWidth) {
-          nextVisibleCount = count;
-          break;
-        }
-      }
-
-      setVisibleAmenityCount(nextVisibleCount);
-    };
-
-    recomputeVisibleAmenities();
-
-    const resizeObserver = new ResizeObserver(() => {
-      recomputeVisibleAmenities();
-    });
-    resizeObserver.observe(row);
-
-    return () => {
-      resizeObserver.disconnect();
-    };
-  }, [orderedAmenities, compact]);
+  const pricePerSqm = formatPricePerSqm(listing);
 
   if (compact) {
     return (
-      <article className="overflow-hidden rounded-3xl border border-black/10 bg-white">
+      <article className="overflow-hidden rounded-3xl border border-black/10 bg-[#fffffe]">
         <div
           role="button"
           tabIndex={0}
@@ -134,7 +62,7 @@ function ListingVisualCard({
             <button
               type="button"
               aria-label={shortlisted ? "Ta bort sparad" : "Spara"}
-              className="absolute right-3 top-3 inline-flex h-9 w-9 min-h-9 min-w-9 aspect-square shrink-0 items-center justify-center rounded-full border border-black/10 bg-white p-0 text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
+              className="absolute right-3 top-3 inline-flex h-9 w-9 min-h-9 min-w-9 aspect-square shrink-0 items-center justify-center rounded-full border border-black/10 bg-[#fffffe] p-0 text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
               onClick={(event) => {
                 event.stopPropagation();
                 onToggleShortlist(listing.id);
@@ -157,8 +85,117 @@ function ListingVisualCard({
     );
   }
 
+  if (horizontal) {
+    return (
+      <article className="group property-card-hover h-full overflow-hidden rounded-3xl border border-[#d9d9d9] bg-[#fffffe]">
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => onOpenListing(listing)}
+          onMouseEnter={() => onHoverStart?.(listing)}
+          onMouseLeave={() => onHoverEnd?.()}
+          onFocus={() => onHoverStart?.(listing)}
+          onBlur={() => onHoverEnd?.()}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              onOpenListing(listing);
+            }
+          }}
+          className="card-click-surface relative grid cursor-pointer overflow-hidden text-left md:grid-cols-[320px_minmax(0,1fr)] md:items-stretch"
+          aria-label={`Open details for ${listing.title}`}
+        >
+          <div className="relative min-h-0 self-stretch overflow-hidden border-r border-black/10">
+            <div className="absolute inset-0 grid grid-rows-[minmax(0,2fr)_minmax(0,1fr)]">
+              <div className="relative min-h-0">
+              <img src={listing.image} alt={listing.title} className="h-full w-full rounded-none object-cover" />
+              <span className="absolute left-4 top-4 inline-flex min-h-[38px] items-center rounded-full bg-[#fffffe] px-4 text-sm font-medium text-ink-900">
+                {listing.type || "Kontor"}
+              </span>
+              <button
+                type="button"
+                aria-label={shortlisted ? "Ta bort sparad" : "Spara"}
+                className="absolute right-4 top-4 inline-flex h-10 w-10 min-h-10 min-w-10 items-center justify-center rounded-full border border-black/10 bg-[#fffffe] p-0 text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onToggleShortlist(listing.id);
+                }}
+              >
+                <StarIcon className={`h-4 w-4 ${shortlisted ? "fill-current text-[#0f1930]" : ""}`} />
+              </button>
+              </div>
+              <div className="grid min-h-0 grid-cols-2 gap-0 border-t border-black/10 bg-[#f4f4f4]">
+                <img src={listing.image} alt="" className="h-full w-full rounded-none object-cover" />
+                <img src={listing.image} alt="" className="h-full w-full rounded-none object-cover" />
+              </div>
+            </div>
+          </div>
+
+          <div className="relative flex flex-1 flex-col gap-3 p-5">
+            <p className="absolute right-5 top-5 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-[#0f1930]">
+              <Icon name="crown" className="h-3.5 w-3.5" />
+              <span>UTVALD</span>
+            </p>
+            <div className="space-y-1">
+              <h3 className="text-lg font-semibold leading-tight text-[#0f1930]">{listing.title}</h3>
+              <p className="text-sm text-ink-600">{buildAddress(listing)}</p>
+              <p className="text-sm text-ink-600">
+                Flexibelt kontor i centralt läge, utformat för hybridarbete och med direkt närhet till kommunikationer.
+              </p>
+            </div>
+
+            <div className="mt-1 flex items-center gap-4 text-sm text-[#0f1930]">
+              <p className="flex items-center gap-2 font-medium">
+                <RulerIcon className="h-5 w-5 text-[#0f1930]" />
+                <span>{listing.sizeSqm} kvm</span>
+              </p>
+              <span className="h-5 w-px bg-black/20" />
+              <p className="flex items-center gap-2 font-medium">
+                <UsersGroupIcon className="h-5 w-5 text-[#0f1930]" />
+                <span>{formatCapacity(listing.capacity)}</span>
+              </p>
+            </div>
+
+            <div className="mt-1 flex items-end gap-1.5">
+              <p className="text-2xl font-semibold leading-none text-[#0f1930]">
+                från {pricePerSqm ? `${pricePerSqm} kr` : "Pris saknas"}
+              </p>
+              {pricePerSqm ? <p className="text-sm leading-none text-[#737373]">/ kvm</p> : null}
+            </div>
+
+            <p className="mt-1 flex items-center gap-2 text-sm text-ink-600">
+              <span className="inline-flex h-1.5 w-1.5 rounded-full bg-[#00c950]" />
+              <span>{listing.availability || "Tillgänglighet saknas"}</span>
+            </p>
+
+            <p className="text-xs text-ink-600">
+              Fastighetsägare: <span className="font-medium text-ink-700">{listing.advertiserName || "Hyresvärd"}</span>
+            </p>
+
+            <div className="mt-2 flex items-center justify-between gap-3">
+              <button
+                type="button"
+                className="inline-flex min-h-[38px] items-center gap-1.5 rounded-full border border-[#0f1930]/15 px-6 text-sm font-medium text-ink-900 transition hover:border-[#0f1930] hover:text-[#0f1930]"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onBookViewing?.(listing);
+                }}
+              >
+                <CalendarIcon className="h-4 w-4" />
+                Boka visning
+              </button>
+              <div className="inline-flex items-center rounded-xl border border-black/10 bg-[#f8f8f8] px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-ink-600">
+                Hyresvärd
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+    );
+  }
+
   return (
-    <article className="h-full overflow-hidden rounded-[30px] border border-black/10 bg-white">
+    <article className="group property-card-hover h-full overflow-hidden rounded-3xl border border-[#d9d9d9] bg-[#fffffe]">
       <div
         role="button"
         tabIndex={0}
@@ -173,15 +210,18 @@ function ListingVisualCard({
             onOpenListing(listing);
           }
         }}
-        className="relative flex h-full cursor-pointer flex-col text-left"
+        className="card-click-surface relative flex h-full cursor-pointer flex-col text-left"
         aria-label={`Open details for ${listing.title}`}
       >
         <div className="relative">
           <img src={listing.image} alt={listing.title} className="h-44 w-full object-cover" />
+          <span className="absolute left-4 top-4 inline-flex min-h-[38px] items-center rounded-full bg-[#fffffe] px-4 text-sm font-medium text-ink-900">
+            {listing.type || "Kontor"}
+          </span>
         </div>
         <div className="absolute right-4 top-4 flex items-center gap-2">
           {showMatchChip ? (
-            <div className="inline-flex h-10 items-center gap-1.5 rounded-full border border-black/5 bg-white px-3.5 text-sm font-semibold text-[#0f1930]">
+            <div className="inline-flex h-10 items-center gap-1.5 rounded-full border border-black/5 bg-[#fffffe] px-3.5 text-sm font-semibold text-[#0f1930]">
               <SparklesIcon className="h-4 w-4 text-[#4f46e5]" />
               <span>{listing.score || 0}% match</span>
             </div>
@@ -189,7 +229,7 @@ function ListingVisualCard({
           <button
             type="button"
             aria-label={shortlisted ? "Ta bort sparad" : "Spara"}
-            className="inline-flex h-10 w-10 min-h-10 min-w-10 items-center justify-center rounded-full border border-black/10 bg-white p-0 text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
+            className="inline-flex h-10 w-10 min-h-10 min-w-10 items-center justify-center rounded-full border border-black/10 bg-[#fffffe] p-0 text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
             onClick={(event) => {
               event.stopPropagation();
               onToggleShortlist(listing.id);
@@ -199,108 +239,52 @@ function ListingVisualCard({
           </button>
         </div>
 
-        <div className="flex flex-1 flex-col p-5">
-          <div className="space-y-2">
+        <div className="flex flex-1 flex-col gap-3 p-5">
+          <div className="space-y-1">
             <h3 className="text-lg font-semibold leading-tight text-[#0f1930]">{listing.title}</h3>
-            <p className="flex items-center gap-1.5 text-sm text-ink-600">
-              <PinIcon className="h-4 w-4 text-ink-500" />
-              <span>{buildAddress(listing)}</span>
-            </p>
+            <p className="text-sm text-ink-600">{buildAddress(listing)}</p>
           </div>
 
-          <div className="mt-4 flex flex-wrap gap-3">
-            <p className="flex items-center gap-1.5 text-sm text-ink-600">
-              <UserIcon className="h-4 w-4 text-ink-500" />
+          <div className="mt-1 flex items-center gap-4 text-sm text-[#0f1930]">
+            <p className="flex items-center gap-2 font-medium">
+              <RulerIcon className="h-5 w-5 text-[#0f1930]" />
+              <span>{listing.sizeSqm} kvm</span>
+            </p>
+            <span className="h-5 w-px bg-black/20" />
+            <p className="flex items-center gap-2 font-medium">
+              <UsersGroupIcon className="h-5 w-5 text-[#0f1930]" />
               <span>{formatCapacity(listing.capacity)}</span>
             </p>
-            <p className="flex items-center gap-1.5 text-sm text-ink-600">
-              <CalendarIcon className="h-4 w-4 text-ink-500" />
-              <span>{listing.availability || "Availability unknown"}</span>
+          </div>
+
+          <div className="mt-1 flex items-end gap-1.5">
+            <p className="text-2xl font-semibold leading-none text-[#0f1930]">
+              från {pricePerSqm ? `${pricePerSqm} kr` : "Pris saknas"}
             </p>
+            {pricePerSqm ? <p className="text-sm leading-none text-[#737373]">/ kvm</p> : null}
           </div>
 
-          <div className={hasAmenityChips ? "mt-4 pb-3" : "mt-4 pb-3"}>
-            {comparedAmenitiesOnly ? (
-              <div className="flex flex-wrap gap-2">
-                {visibleAmenities.map((amenity) => {
-                  const Icon = amenityIconFor(amenity);
-                  return (
-                    <span
-                      key={`matched-${listing.id}-${amenity}`}
-                      className={`${baseAmenityChipClass} border-emerald-300 bg-emerald-50 text-emerald-800`}
-                    >
-                      <Icon className="h-3.5 w-3.5 shrink-0 text-emerald-700" />
-                      {amenity}
-                    </span>
-                  );
-                })}
-                {visibleMissingAmenities.map((amenity) => {
-                  const Icon = amenityIconFor(amenity);
-                  return (
-                    <span
-                      key={`missing-${listing.id}-${amenity}`}
-                      className={`${baseAmenityChipClass} border-amber-300 bg-amber-50 text-amber-800`}
-                    >
-                      <Icon className="h-3.5 w-3.5 shrink-0 text-amber-700" />
-                      {amenity}
-                    </span>
-                  );
-                })}
-              </div>
-            ) : (
-              <>
-                <div ref={amenityRowRef} className="flex flex-nowrap gap-2 overflow-hidden">
-                {visibleAmenities.map((amenity) => {
-                  const Icon = amenityIconFor(amenity);
-                  const normalizedAmenity = String(amenity || "").toLowerCase();
-                  const isHighlighted = highlightedNeedles.some((needle) => normalizedAmenity.includes(needle));
-                  return (
-                    <span
-                      key={amenity}
-                      className={`${baseAmenityChipClass} ${
-                        isHighlighted
-                          ? "border-emerald-300 bg-emerald-50 text-emerald-800"
-                          : "border-black/10 bg-white text-ink-700"
-                      }`}
-                    >
-                      <Icon className={`h-3.5 w-3.5 shrink-0 ${isHighlighted ? "text-emerald-700" : "text-ink-700"}`} />
-                      {amenity}
-                    </span>
-                  );
-                })}
-                {extraAmenities > 0 ? (
-                  <span className={`${baseAmenityChipClass} border-black/10 bg-white text-ink-700`}>+{extraAmenities} more</span>
-                ) : null}
-                </div>
-                <div aria-hidden="true" className="pointer-events-none absolute -left-[9999px] -top-[9999px] opacity-0">
-                  <div className="flex gap-2">
-                    {orderedAmenities.map((amenity, index) => {
-                      const Icon = amenityIconFor(amenity);
-                      return (
-                        <span
-                          key={`measure-${amenity}-${index}`}
-                          ref={(element) => {
-                            amenityMeasureRefs.current[index] = element;
-                          }}
-                          className={`${baseAmenityChipClass} border-black/10 bg-white text-ink-700`}
-                        >
-                          <Icon className="h-3.5 w-3.5 shrink-0 text-ink-700" />
-                          {amenity}
-                        </span>
-                      );
-                    })}
-                    <span
-                      ref={amenityMeasureMoreRef}
-                      className={`${baseAmenityChipClass} border-black/10 bg-white text-ink-700`}
-                    >
-                      +99 more
-                    </span>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
+          <p className="mt-1 flex items-center gap-2 text-sm text-ink-600">
+            <span className="inline-flex h-1.5 w-1.5 rounded-full bg-[#00c950]" />
+            <span>{listing.availability || "Tillgänglighet saknas"}</span>
+          </p>
 
+          <div className="mt-2 flex items-center justify-between gap-3">
+            <button
+              type="button"
+              className="inline-flex min-h-[38px] items-center gap-1.5 rounded-full border border-[#0f1930]/15 px-6 text-sm font-medium text-ink-900 transition hover:border-[#0f1930] hover:text-[#0f1930]"
+              onClick={(event) => {
+                event.stopPropagation();
+                onBookViewing?.(listing);
+              }}
+            >
+              <CalendarIcon className="h-4 w-4" />
+              Boka visning
+            </button>
+            <div className="inline-flex items-center rounded-xl border border-black/10 bg-[#f8f8f8] px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-ink-600">
+              Hyresvärd
+            </div>
+          </div>
         </div>
       </div>
     </article>

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import ListingVisualCard from "../../components/app/ListingVisualCard";
+import ViewingRequestModal from "../../components/app/ViewingRequestModal";
 import Breadcrumbs from "../../components/layout/Breadcrumbs";
 import { formatSek } from "../../lib/formatters";
 import { PLATFORM_GOOGLE_MAP_STYLE } from "../../lib/googleMapStyles";
@@ -18,11 +19,13 @@ import {
   BusIcon,
   BuildingIcon,
   CarIcon,
+  CalendarIcon,
   ClockIcon,
   DumbbellIcon,
   ExternalLinkIcon,
   LockerIcon,
   LoungeIcon,
+  MessageSquareIcon,
   PenthouseIcon,
   PdfIcon,
   PinIcon,
@@ -231,18 +234,18 @@ function ListingAreaGoogleMap({ lat, lng, title }) {
   }, [lat, lng, title]);
 
   return (
-    <div className="relative h-80 w-full overflow-hidden rounded-2xl border border-black/10 bg-white">
+    <div className="relative h-80 w-full overflow-hidden rounded-2xl border border-black/10 bg-[#fffffe]">
       <div ref={containerRef} className="absolute inset-0" />
       {status === "loading" ? (
-        <div className="absolute inset-0 grid place-items-center bg-white/55 text-xs font-semibold text-ink-700">Laddar karta...</div>
+        <div className="absolute inset-0 grid place-items-center bg-[#fffffe]/55 text-xs font-semibold text-ink-700">Laddar karta...</div>
       ) : null}
       {status === "missing_key" ? (
-        <div className="absolute inset-0 grid place-items-center bg-white/70 px-4 text-center text-xs font-semibold text-rose-700">
+        <div className="absolute inset-0 grid place-items-center bg-[#fffffe]/70 px-4 text-center text-xs font-semibold text-rose-700">
           Google Maps API-nyckel saknas.
         </div>
       ) : null}
       {status === "error" ? (
-        <div className="absolute inset-0 grid place-items-center bg-white/70 px-4 text-center text-xs font-semibold text-rose-700">
+        <div className="absolute inset-0 grid place-items-center bg-[#fffffe]/70 px-4 text-center text-xs font-semibold text-rose-700">
           Google Maps kunde inte laddas.
         </div>
       ) : null}
@@ -293,18 +296,18 @@ function ListingStreetView({ lat, lng }) {
   }, [lat, lng]);
 
   return (
-    <div className="relative h-[62vh] min-h-[420px] w-full overflow-hidden rounded-2xl border border-black/10 bg-white">
+    <div className="relative h-[62vh] min-h-[420px] w-full overflow-hidden rounded-2xl border border-black/10 bg-[#fffffe]">
       <div ref={containerRef} className="absolute inset-0" />
       {status === "loading" ? (
-        <div className="absolute inset-0 grid place-items-center bg-white/55 text-xs font-semibold text-ink-700">Laddar gatuvy...</div>
+        <div className="absolute inset-0 grid place-items-center bg-[#fffffe]/55 text-xs font-semibold text-ink-700">Laddar gatuvy...</div>
       ) : null}
       {status === "missing_key" ? (
-        <div className="absolute inset-0 grid place-items-center bg-white/70 px-4 text-center text-xs font-semibold text-rose-700">
+        <div className="absolute inset-0 grid place-items-center bg-[#fffffe]/70 px-4 text-center text-xs font-semibold text-rose-700">
           Google Maps API-nyckel saknas.
         </div>
       ) : null}
       {status === "error" ? (
-        <div className="absolute inset-0 grid place-items-center bg-white/70 px-4 text-center text-xs font-semibold text-rose-700">
+        <div className="absolute inset-0 grid place-items-center bg-[#fffffe]/70 px-4 text-center text-xs font-semibold text-rose-700">
           Gatuvy kunde inte laddas här.
         </div>
       ) : null}
@@ -496,7 +499,7 @@ function ListingTransitCard({ lat, lng, fallbackTransit = [] }) {
   }, [lat, lng, fallbackTransit]);
 
   return (
-    <article className="rounded-2xl border border-black/10 bg-white p-4">
+    <article className="rounded-2xl border border-black/10 bg-[#fffffe] p-4">
       <div className="flex items-center justify-between gap-2">
         <h3 className="inline-flex items-center gap-2 text-xl font-semibold">
           <img src={trainPictogram} alt="" aria-hidden="true" className="h-[33px] w-[33px] object-contain" />
@@ -508,7 +511,7 @@ function ListingTransitCard({ lat, lng, fallbackTransit = [] }) {
           stops.map((stop) => (
             <article key={stop.id} className="rounded-xl border border-black/10 bg-[#f6f6f4] px-3 py-3">
               <div className="flex items-start gap-2.5">
-                <div className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-black/10 bg-white text-ink-800">
+                <div className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-black/10 bg-[#fffffe] text-ink-800">
                   {stop.kind === "train" ? <TrainIcon className="h-5 w-5" /> : <BusIcon className="h-5 w-5" />}
                 </div>
                 <div className="min-w-0 flex-1">
@@ -623,6 +626,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
   const [inquiryMessage, setInquiryMessage] = useState("");
   const [inquiryDate, setInquiryDate] = useState("");
   const [inquirySent, setInquirySent] = useState(false);
+  const [bookingListing, setBookingListing] = useState(null);
   const isGalleryView = initialView === "gallery";
   const source = useMemo(() => {
     if (typeof window === "undefined") return "search";
@@ -793,8 +797,8 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
     else window.scrollTo({ top: 0, behavior: "auto" });
   }, [listingId, isGalleryView]);
 
-  const actionButtonClass = "inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-black/10 bg-white px-3 text-xs font-semibold text-ink-700 hover:bg-white";
-  const saveActionButtonClass = "inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-black/10 bg-white px-3 text-xs font-semibold text-ink-700 transition hover:bg-white";
+  const actionButtonClass = "inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-black/10 bg-[#fffffe] px-3 text-xs font-semibold text-ink-700 hover:bg-[#fffffe]";
+  const saveActionButtonClass = "inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-black/10 bg-[#fffffe] px-3 text-xs font-semibold text-ink-700 transition hover:bg-[#fffffe]";
 
   function handleToggleSave() {
     if (!resolvedFavoriteListingId) return;
@@ -918,7 +922,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
           <button type="button" className={actionButtonClass} onClick={() => navigateTo(backHref)}>
             {backLabel}
           </button>
-          <div className="mt-4 rounded-2xl border border-black/10 bg-white p-6">
+          <div className="mt-4 rounded-2xl border border-black/10 bg-[#fffffe] p-6">
             <h1 className="text-2xl font-semibold">Objektet hittades inte</h1>
             <p className="mt-2 text-sm text-ink-600">Det här objektet kan ha tagits bort eller saknar data.</p>
           </div>
@@ -929,7 +933,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
 
   if (isGalleryView) {
     return (
-      <section ref={pageRef} className="h-full overflow-y-auto bg-white">
+      <section ref={pageRef} className="h-full overflow-y-auto bg-[#fffffe]">
         <div className="mx-auto w-full max-w-7xl p-4 sm:p-6">
           <div className="grid grid-cols-1 items-center gap-3 border-b border-black/10 pb-3 sm:grid-cols-[1fr_auto_1fr]">
             <button
@@ -992,7 +996,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
             {galleryTab === "images" ? (
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {images.map((image, index) => (
-                  <div key={`${image}-${index}`} className="overflow-hidden rounded-2xl border border-black/10 bg-white">
+                  <div key={`${image}-${index}`} className="overflow-hidden rounded-2xl border border-black/10 bg-[#fffffe]">
                     <img src={image} alt={`${listing.title} ${index + 1}`} className="h-48 w-full object-cover sm:h-52" />
                   </div>
                 ))}
@@ -1004,7 +1008,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                   href={googleMapsHref}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-white"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-[#fffffe] px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-[#fffffe]"
                 >
                   Öppna i Google Maps
                   <ExternalLinkIcon className="h-3.5 w-3.5" />
@@ -1041,8 +1045,8 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
           </button>
 
           <div className="grid gap-6">
-            <div className="relative h-72 overflow-hidden rounded-3xl border border-black/10 bg-white sm:h-[420px]">
-              <div className="grid h-full grid-cols-2 gap-0.5 bg-white">
+            <div className="relative h-72 overflow-hidden rounded-3xl border border-black/10 bg-[#fffffe] sm:h-[420px]">
+              <div className="grid h-full grid-cols-2 gap-0.5 bg-[#fffffe]">
                 <button
                   type="button"
                   className="gallery-mosaic-tile relative block h-full w-full overflow-hidden text-left"
@@ -1071,7 +1075,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                   </div>
                   <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/45 via-black/10 to-transparent px-4 pb-4 pt-16">
                     <span
-                      className="pointer-events-auto inline-flex items-center justify-center gap-3 rounded-full border border-black/10 bg-white px-4 py-2.5 text-sm font-semibold text-[#0f1930] transition hover:border-[#0f1930]"
+                      className="pointer-events-auto inline-flex items-center justify-center gap-3 rounded-full border border-black/10 bg-[#fffffe] px-4 py-2.5 text-sm font-semibold text-[#0f1930] transition hover:border-[#0f1930]"
                       onClick={(event) => {
                         event.stopPropagation();
                         openGalleryOverlay(0);
@@ -1097,7 +1101,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                     <button
                       key={`gallery-side-${image}-${index}`}
                       type="button"
-                      className="gallery-mosaic-tile relative block h-full w-full min-h-0 overflow-hidden bg-white p-0 text-left"
+                      className="gallery-mosaic-tile relative block h-full w-full min-h-0 overflow-hidden bg-[#fffffe] p-0 text-left"
                       onClick={() => openGalleryOverlay(index + 1)}
                     >
                       <img src={image} alt={`${listing.title} forhandsbild ${index + 2}`} className="absolute inset-0 h-full w-full object-cover" />
@@ -1108,14 +1112,14 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
             </div>
 
             <div className="grid gap-6 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-              <article className="flex h-full flex-col rounded-3xl border border-black/10 bg-white p-5">
+              <article className="flex h-full flex-col rounded-3xl border border-black/10 bg-[#fffffe] p-5">
                 <h2 className="text-2xl font-semibold leading-tight text-ink-900">{listing.title}</h2>
                 <div className="mt-2 space-y-3">
                   <p className="flex items-center gap-1.5 text-sm text-ink-500">
                     <PinIcon className="h-4 w-4" />
                     {listing.district} • {listing.address}
                   </p>
-                  <div className="inline-flex flex-wrap items-center overflow-hidden rounded-full border border-black/10 bg-white text-base font-semibold text-ink-700">
+                  <div className="inline-flex flex-wrap items-center overflow-hidden rounded-full border border-black/10 bg-[#fffffe] text-base font-semibold text-ink-700">
                     <div className="inline-flex items-center gap-2.5 px-4 py-2.5">
                       <RulerIcon className="h-5 w-5 text-ink-600" />
                       {listing.sizeSqm} kvm
@@ -1138,7 +1142,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                       return (
                         <li
                           key={`about-${amenity}`}
-                          className="inline-flex min-h-[42px] items-center gap-1.5 rounded-full border border-black/10 bg-white px-3 py-1.5 text-[0.875rem] font-semibold leading-5 text-ink-700"
+                          className="inline-flex min-h-[42px] items-center gap-1.5 rounded-full border border-black/10 bg-[#fffffe] px-3 py-1.5 text-[0.875rem] font-semibold leading-5 text-ink-700"
                         >
                           <Icon className="h-3.5 w-3.5 shrink-0 text-ink-700" />
                           {amenity}
@@ -1151,7 +1155,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                   <div className="flex justify-center">
                     <button
                       type="button"
-                      className="rounded-full border border-black/10 bg-white px-4 py-2.5 text-sm font-semibold text-ink-700 transition hover:border-[#0f1930]/25 hover:text-[#0f1930]"
+                      className="rounded-full border border-black/10 bg-[#fffffe] px-4 py-2.5 text-sm font-semibold text-ink-700 transition hover:border-[#0f1930]/25 hover:text-[#0f1930]"
                       onClick={openAboutOverlay}
                     >
                       Läs mer
@@ -1160,7 +1164,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                 </div>
               </article>
 
-              <div className="relative h-80 overflow-hidden rounded-3xl border border-black/10 bg-white sm:h-[440px]">
+              <div className="relative h-80 overflow-hidden rounded-3xl border border-black/10 bg-[#fffffe] sm:h-[440px]">
                 <iframe 
                   src="https://app.archilogic.com/viewer?sceneId=d47471f6-f59c-4efe-8bf9-fe0239f143a9&s=m3s1p0fhslt0xfstumrbrjrhrd" 
                   height="100%" 
@@ -1176,7 +1180,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
             <div className="space-y-6">
               <ListingTransitCard lat={insight.center.lat} lng={insight.center.lng} fallbackTransit={insight.transit} />
 
-              <article className="rounded-3xl border border-black/10 bg-white p-4">
+              <article className="rounded-3xl border border-black/10 bg-[#fffffe] p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="min-w-0 flex-1 pr-2">
                     <h2 className="inline-flex items-center gap-2 text-xl font-semibold">
@@ -1184,13 +1188,13 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                       Området
                     </h2>
                   </div>
-                  <div className="inline-flex items-center gap-1 rounded-full border border-black/10 bg-white p-1.5">
+                  <div className="inline-flex items-center gap-1 rounded-full border border-black/10 bg-[#fffffe] p-1.5">
                     <button
                       type="button"
                       className={`inline-flex min-h-[34px] items-center gap-1 rounded-full px-3.5 text-xs font-semibold transition ${
                         areaViewMode === "map"
                           ? "bg-[#0f1930] text-white"
-                          : "text-ink-700 hover:bg-white"
+                          : "text-ink-700 hover:bg-[#fffffe]"
                       }`}
                       onClick={() => setAreaViewMode("map")}
                       aria-pressed={areaViewMode === "map"}
@@ -1202,7 +1206,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                       className={`inline-flex min-h-[34px] items-center gap-1 rounded-full px-3.5 text-xs font-semibold transition ${
                         areaViewMode === "street"
                           ? "bg-[#0f1930] text-white"
-                          : "text-ink-700 hover:bg-white"
+                          : "text-ink-700 hover:bg-[#fffffe]"
                       }`}
                       onClick={() => setAreaViewMode("street")}
                       aria-pressed={areaViewMode === "street"}
@@ -1222,7 +1226,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                   href={googleMapsHref}
                   target="_blank"
                   rel="noreferrer"
-                  className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-white"
+                  className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-[#fffffe] px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-[#fffffe]"
                 >
                   Öppna i Google Maps
                   <ExternalLinkIcon className="h-3.5 w-3.5" />
@@ -1231,13 +1235,13 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
             </div>
 
             <aside className="space-y-6 lg:sticky lg:top-6 lg:self-start">
-              <article className="rounded-3xl border border-black/10 bg-white p-5">
+              <article className="rounded-3xl border border-black/10 bg-[#fffffe] p-5">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Tillgänglighet</p>
                     <p className="mt-1 text-sm font-semibold text-ink-900">{listing.availability || "Efter överenskommelse"}</p>
                   </div>
-                  <span className="rounded-full border border-black/10 bg-white px-2.5 py-1 text-[11px] font-semibold text-ink-700">
+                  <span className="rounded-full border border-black/10 bg-[#fffffe] px-2.5 py-1 text-[11px] font-semibold text-ink-700">
                     {listing.term || "Flexibelt avtal"}
                   </span>
                 </div>
@@ -1263,7 +1267,15 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                 <div className="mt-5 space-y-2">
                   <button
                     type="button"
-                    className="w-full rounded-full border border-[#0f1930] bg-[#0f1930] px-4 py-3 text-sm font-semibold text-white hover:bg-[#16233f]"
+                    className="inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-[#0f1930] bg-[#0f1930] px-4 py-3 text-sm font-semibold text-white hover:bg-[#16233f]"
+                    onClick={() => openInquiryOverlay("viewing")}
+                  >
+                    <CalendarIcon className="h-4 w-4 text-white" />
+                    Boka visning
+                  </button>
+                  <button
+                    type="button"
+                    className="inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-black/10 bg-[#fffffe] px-4 py-3 text-sm font-semibold text-ink-700 hover:bg-[#fffffe]"
                     onClick={() => {
                       trackContactClicked({
                         listing_id: String(listing.id),
@@ -1272,14 +1284,8 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                       openInquiryOverlay("contact");
                     }}
                   >
+                    <MessageSquareIcon className="h-4 w-4" />
                     Kontakta uthyrare
-                  </button>
-                  <button
-                    type="button"
-                    className="w-full rounded-full border border-black/10 bg-white px-4 py-3 text-sm font-semibold text-ink-700 hover:bg-white"
-                    onClick={() => openInquiryOverlay("viewing")}
-                  >
-                    Boka visning
                   </button>
                 </div>
 
@@ -1291,13 +1297,13 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
 
         {inquiryOverlayVisible ? (
           <div
-            className={`fixed inset-0 z-[96] flex items-center justify-center bg-white/0 p-4 backdrop-blur-[2px] transition-all duration-200 sm:p-5 ${
+            className={`fixed inset-0 z-[96] flex items-center justify-center bg-[#fffffe]/0 p-4 backdrop-blur-[2px] transition-all duration-200 sm:p-5 ${
               inquiryOverlayOpen ? "opacity-100" : "opacity-0"
             }`}
             onClick={closeInquiryOverlay}
           >
             <div
-              className={`w-full max-w-xl rounded-3xl border border-black/10 bg-white p-5 shadow-[0_16px_40px_rgba(15,25,48,0.12)] transition-all duration-200 sm:p-6 ${
+              className={`w-full max-w-xl rounded-3xl border border-black/10 bg-[#fffffe] p-5 shadow-[0_16px_40px_rgba(15,25,48,0.12)] transition-all duration-200 sm:p-6 ${
                 inquiryOverlayOpen
                   ? "translate-y-0 scale-100 opacity-100"
                   : "translate-y-2 scale-[0.985] opacity-0"
@@ -1346,7 +1352,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                   <div className="mt-5 flex flex-wrap items-center justify-end gap-2">
                     <button
                       type="button"
-                      className="rounded-xl border border-black/10 bg-white px-4 py-2 text-sm font-semibold text-ink-700 hover:bg-white"
+                      className="rounded-xl border border-black/10 bg-[#fffffe] px-4 py-2 text-sm font-semibold text-ink-700 hover:bg-[#fffffe]"
                       onClick={closeInquiryOverlay}
                     >
                       Avbryt
@@ -1386,12 +1392,12 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
         {aboutOverlayVisible ? (
           <div
             className={`fixed inset-0 z-[72] flex items-center justify-center p-4 backdrop-blur-[2px] transition-all duration-200 sm:p-5 ${
-              aboutOverlayOpen ? "bg-white/0 opacity-100" : "bg-white/0 opacity-0"
+              aboutOverlayOpen ? "bg-[#fffffe]/0 opacity-100" : "bg-[#fffffe]/0 opacity-0"
             }`}
             onClick={closeAboutOverlay}
           >
             <div
-              className={`flex max-h-[calc(100vh-2rem)] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-black/10 bg-white shadow-[0_16px_40px_rgba(15,25,48,0.12)] transition-all duration-200 sm:max-h-[calc(100vh-2.5rem)] ${
+              className={`flex max-h-[calc(100vh-2rem)] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-black/10 bg-[#fffffe] shadow-[0_16px_40px_rgba(15,25,48,0.12)] transition-all duration-200 sm:max-h-[calc(100vh-2.5rem)] ${
                 aboutOverlayOpen
                   ? "translate-y-0 scale-100 opacity-100"
                   : "translate-y-2 scale-[0.985] opacity-0"
@@ -1408,7 +1414,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                 </div>
                 <button
                   type="button"
-                  className="close-circle-button inline-flex items-center justify-center rounded-full border border-black/10 bg-white text-xl leading-none text-ink-700 hover:border-[#0f1930]/25 hover:text-[#0f1930]"
+                  className="close-circle-button inline-flex items-center justify-center rounded-full border border-black/10 bg-[#fffffe] text-xl leading-none text-ink-700 hover:border-[#0f1930]/25 hover:text-[#0f1930]"
                   onClick={closeAboutOverlay}
                   aria-label="Stäng"
                 >
@@ -1430,7 +1436,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                       return (
                         <li
                           key={`overlay-amenity-${amenity}`}
-                          className="inline-flex min-h-[42px] items-center gap-1.5 rounded-full border border-black/10 bg-white px-3 py-1.5 text-[0.875rem] font-semibold leading-5 text-ink-700"
+                          className="inline-flex min-h-[42px] items-center gap-1.5 rounded-full border border-black/10 bg-[#fffffe] px-3 py-1.5 text-[0.875rem] font-semibold leading-5 text-ink-700"
                         >
                           <Icon className="h-3.5 w-3.5 shrink-0 text-ink-700" />
                           {amenity}
@@ -1452,7 +1458,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                 <div className="mt-6 flex justify-center border-t border-black/10 pt-5">
                   <button
                     type="button"
-                    className="rounded-full border border-black/10 bg-white px-4 py-2.5 text-sm font-semibold text-ink-700 transition hover:border-[#0f1930]/25 hover:text-[#0f1930]"
+                    className="rounded-full border border-black/10 bg-[#fffffe] px-4 py-2.5 text-sm font-semibold text-ink-700 transition hover:border-[#0f1930]/25 hover:text-[#0f1930]"
                     onClick={closeAboutOverlay}
                   >
                     Stäng
@@ -1465,13 +1471,13 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
 
         {galleryOverlayOpen && typeof document !== "undefined"
           ? createPortal(
-            <div className="fixed inset-0 z-[90] overflow-y-auto bg-white pb-24">
+            <div className="fixed inset-0 z-[90] overflow-y-auto bg-[#fffffe] pb-24">
               <div className="min-h-screen">
-                <div className="sticky top-0 z-10 border-b border-black/10 bg-white/95 backdrop-blur-md">
+                <div className="sticky top-0 z-10 border-b border-black/10 bg-[#fffffe]/95 backdrop-blur-md">
                   <div className="mx-auto grid w-full max-w-[1600px] grid-cols-1 items-center gap-4 px-4 py-4 sm:grid-cols-[1fr_auto_1fr] sm:px-6">
                     <button
                       type="button"
-                      className="inline-flex w-auto items-center gap-1.5 justify-self-start rounded-full border border-black/20 bg-white px-3 py-2 text-xs font-semibold text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
+                      className="inline-flex w-auto items-center gap-1.5 justify-self-start rounded-full border border-black/20 bg-[#fffffe] px-3 py-2 text-xs font-semibold text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
                       onClick={closeGalleryOverlay}
                     >
                       <ArrowLeftIcon className="h-3.5 w-3.5" />
@@ -1533,7 +1539,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                         <button
                           key={`gallery-full-${image}-${index}`}
                           type="button"
-                          className="gallery-thumb-button overflow-hidden border border-black/10 bg-white text-left"
+                          className="gallery-thumb-button overflow-hidden border border-black/10 bg-[#fffffe] text-left"
                           onClick={() => setActiveGalleryIndex(index)}
                         >
                           <img
@@ -1545,13 +1551,13 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                       ))}
                     </div>
                   ) : (
-                    <div className="rounded-3xl border border-black/10 bg-white p-3 sm:p-4">
+                    <div className="rounded-3xl border border-black/10 bg-[#fffffe] p-3 sm:p-4">
                       <ListingStreetView lat={insight.center.lat} lng={insight.center.lng} />
                       <a
                         href={googleMapsHref}
                         target="_blank"
                         rel="noreferrer"
-                        className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-white"
+                        className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-[#fffffe] px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-[#fffffe]"
                       >
                         Öppna i Google Maps
                         <ExternalLinkIcon className="h-3.5 w-3.5" />
@@ -1560,10 +1566,10 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                   )}
                 </div>
 
-                <div className="fixed inset-x-0 bottom-0 z-10 border-t border-black/10 bg-white/95 backdrop-blur-md">
+                <div className="fixed inset-x-0 bottom-0 z-10 border-t border-black/10 bg-[#fffffe]/95 backdrop-blur-md">
                   <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-4 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
                     <div className="flex flex-wrap items-center gap-3">
-                      <div className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white px-3 py-2">
+                      <div className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-[#fffffe] px-3 py-2">
                         <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#84c4be] text-xs font-semibold text-white">
                           {brokerInitials}
                         </span>
@@ -1572,7 +1578,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                           <span className="block truncate text-xs text-ink-600">{ownerCompanyName || "Mäklarfirma AB"}</span>
                         </span>
                       </div>
-                      <div className="inline-flex min-h-[42px] items-center overflow-hidden rounded-full border border-black/10 bg-white text-[0.875rem] font-semibold leading-5 text-ink-700">
+                      <div className="inline-flex min-h-[42px] items-center overflow-hidden rounded-full border border-black/10 bg-[#fffffe] text-[0.875rem] font-semibold leading-5 text-ink-700">
                         <span className="inline-flex items-center gap-1.5 px-3 py-1.5">
                           <RulerIcon className="h-3.5 w-3.5 shrink-0 text-ink-700" />
                           {listing.sizeSqm || "-"} kvm
@@ -1592,7 +1598,15 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                     <div className="flex flex-wrap items-center justify-start gap-2 sm:justify-end">
                       <button
                         type="button"
-                        className="rounded-full border border-[#0f1930] bg-[#0f1930] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#16233f]"
+                        className="inline-flex items-center gap-1.5 rounded-full border border-[#0f1930] bg-[#0f1930] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#16233f]"
+                        onClick={() => openInquiryOverlay("viewing")}
+                      >
+                        <CalendarIcon className="h-4 w-4 text-white" />
+                        Boka visning
+                      </button>
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-[#fffffe] px-4 py-2.5 text-sm font-semibold text-ink-700 transition hover:bg-[#fffffe]"
                         onClick={() => {
                           trackContactClicked({
                             listing_id: String(listing.id),
@@ -1601,14 +1615,8 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                           openInquiryOverlay("contact");
                         }}
                       >
+                        <MessageSquareIcon className="h-4 w-4" />
                         Kontakta uthyrare
-                      </button>
-                      <button
-                        type="button"
-                        className="rounded-full border border-black/10 bg-white px-4 py-2.5 text-sm font-semibold text-ink-700 transition hover:bg-white"
-                        onClick={() => openInquiryOverlay("viewing")}
-                      >
-                        Boka visning
                       </button>
                     </div>
                   </div>
@@ -1629,6 +1637,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                   listing={item}
                   shortlisted={Boolean((app.favorites || []).some((entry) => String(entry.listingId) === String(item.id)))}
                   onOpenListing={(selected) => navigateTo(`/app/listings/${encodeURIComponent(selected.id)}?source=${source}`)}
+                  onBookViewing={(selected) => setBookingListing(selected)}
                   onToggleShortlist={(targetId) => app.toggleFavorite?.(targetId)}
                 />
               ))}
@@ -1636,6 +1645,17 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
           </section>
         ) : null}
       </div>
+
+      <ViewingRequestModal
+        listing={bookingListing}
+        onClose={() => setBookingListing(null)}
+        onSubmit={async (payload) => {
+          if (typeof app.requestViewing === "function") {
+            await app.requestViewing(payload);
+          }
+          setBookingListing(null);
+        }}
+      />
       </div>
     </section>
   );

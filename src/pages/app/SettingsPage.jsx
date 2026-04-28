@@ -271,7 +271,7 @@ function SettingsPage({ app }) {
                   {section.key === "verifications" ? (
                     <div className="space-y-4">
                       {isIdVerified ? (
-                        <div className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-semibold text-[#241d1a]">
+                        <div className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-[#fffffe] px-4 py-2 text-sm font-semibold text-[#241d1a]">
                           <span
                             className="inline-flex h-5 w-5 items-center justify-center bg-[#0f1930] text-white"
                             style={{ clipPath: "polygon(50% 1%,58% 4%,66% 2%,73% 8%,81% 8%,88% 15%,96% 19%,99% 28%,97% 36%,99% 44%,94% 51%,95% 59%,89% 66%,86% 75%,78% 79%,71% 86%,62% 87%,55% 94%,47% 92%,39% 97%,32% 91%,23% 91%,18% 83%,9% 81%,6% 72%,1% 65%,3% 56%,0% 48%,6% 41%,4% 33%,10% 26%,11% 17%,20% 13%,25% 5%,34% 5%,42% 1%)" }}

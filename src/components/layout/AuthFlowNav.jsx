@@ -3,12 +3,12 @@ import { navigateTo } from "../../lib/router";
 
 function AuthFlowNav() {
   return (
-    <header className="fixed inset-x-0 top-0 z-40 border-b border-black/10 bg-white/95 backdrop-blur-md">
+    <header className="fixed inset-x-0 top-0 z-40 border-b border-black/10 bg-[#fffffe]/95 backdrop-blur-md">
       <div className="grid w-full grid-cols-[auto_1fr_auto] items-center gap-4 px-4 py-3 sm:px-6">
         <div className="flex min-w-0 items-center gap-4">
           <button type="button" className="justify-self-start text-left" onClick={() => navigateTo("/")}>
-            <span className="inline-flex items-center gap-2 rounded-xl border border-black/10 bg-white px-2.5 py-1.5">
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-dashed border-black/30 bg-white text-[9px] font-semibold uppercase tracking-wide text-ink-500">
+            <span className="inline-flex items-center gap-2 rounded-xl border border-black/10 bg-[#fffffe] px-2.5 py-1.5">
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-dashed border-black/30 bg-[#fffffe] text-[9px] font-semibold uppercase tracking-wide text-ink-500">
                 LOGGA
               </span>
               <span className="text-sm font-semibold text-ink-800">Företagsnamn</span>

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import ListingVisualCard from "../../components/app/ListingVisualCard";
+import ViewingRequestModal from "../../components/app/ViewingRequestModal";
 import { propertyAmenityOptions } from "../../lib/propertyAmenityIcons";
 import {
   ArrowLeftIcon,
@@ -347,6 +348,7 @@ function ProfilePage({ app }) {
   const [isProfileSetupCollapsed, setIsProfileSetupCollapsed] = useState(false);
   const [savingProgram, setSavingProgram] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
+  const [bookingListing, setBookingListing] = useState(null);
   const [profileDraft, setProfileDraft] = useState({
     name: user?.name || "",
     phone: user?.phone || "",
@@ -672,7 +674,7 @@ function ProfilePage({ app }) {
 
   return (
     <section className="relative flex h-full min-h-0 flex-col">
-      <div className="shrink-0 border-b border-black/10 bg-white px-4 py-2 sm:px-6">
+      <div className="shrink-0 border-b border-black/10 bg-[#fffffe] px-4 py-2 sm:px-6">
         <nav className="mx-auto flex w-full max-w-[1240px] flex-wrap items-center justify-start gap-5">
           {[
             { key: "profile", label: "Profil" },
@@ -696,7 +698,7 @@ function ProfilePage({ app }) {
         </nav>
       </div>
       {showPublisherWorkspaceTabs ? (
-        <div className="shrink-0 border-b border-black/10 bg-white px-4 py-2 sm:px-6">
+        <div className="shrink-0 border-b border-black/10 bg-[#fffffe] px-4 py-2 sm:px-6">
           <nav className="mx-auto flex w-full max-w-[1240px] flex-wrap items-center justify-start gap-5">
             {[
               { label: "Publicera annons", path: "/app/publish" },
@@ -743,7 +745,7 @@ function ProfilePage({ app }) {
                         )}
                         <button
                           type="button"
-                          className="absolute right-1 top-1 inline-flex h-9 w-9 min-h-9 min-w-9 items-center justify-center rounded-full border border-black/20 bg-white p-0 text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
+                          className="absolute right-1 top-1 inline-flex h-9 w-9 min-h-9 min-w-9 items-center justify-center rounded-full border border-black/20 bg-[#fffffe] p-0 text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
                           aria-label="Redigera profilbild"
                           onClick={() => setShowTeamOverlay(true)}
                         >
@@ -755,7 +757,7 @@ function ProfilePage({ app }) {
                           <p className="text-2xl font-semibold text-[#0f1930]">{user?.name || "Användare"}</p>
                         </div>
                         <p className="mt-2 text-sm text-ink-600">{user?.email || "-"} · {user?.phone || "-"}</p>
-                        <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-semibold text-[#241d1a]">
+                        <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-black/10 bg-[#fffffe] px-4 py-2 text-sm font-semibold text-[#241d1a]">
                           <span
                             className="inline-flex h-5 w-5 items-center justify-center bg-[#0f1930] text-white"
                             style={{ clipPath: "polygon(50% 1%,58% 4%,66% 2%,73% 8%,81% 8%,88% 15%,96% 19%,99% 28%,97% 36%,99% 44%,94% 51%,95% 59%,89% 66%,86% 75%,78% 79%,71% 86%,62% 87%,55% 94%,47% 92%,39% 97%,32% 91%,23% 91%,18% 83%,9% 81%,6% 72%,1% 65%,3% 56%,0% 48%,6% 41%,4% 33%,10% 26%,11% 17%,20% 13%,25% 5%,34% 5%,42% 1%)" }}
@@ -773,7 +775,7 @@ function ProfilePage({ app }) {
                       {!hasRenter ? (
                         <button
                           type="button"
-                          className="rounded-full border border-black/20 bg-white px-3 py-2 text-xs font-semibold"
+                          className="rounded-full border border-black/20 bg-[#fffffe] px-3 py-2 text-xs font-semibold"
                           disabled={pendingRole}
                           onClick={async () => {
                             setPendingRole(true);
@@ -790,7 +792,7 @@ function ProfilePage({ app }) {
                       {!hasPublisher && !hasRenter ? (
                         <button
                           type="button"
-                          className="rounded-full border border-black/20 bg-white px-3 py-2 text-xs font-semibold"
+                          className="rounded-full border border-black/20 bg-[#fffffe] px-3 py-2 text-xs font-semibold"
                           disabled={pendingRole}
                           onClick={() => {
                             navigateTo("/onboarding/publisher-profile?role=broker&intent=add-role");
@@ -802,7 +804,7 @@ function ProfilePage({ app }) {
                       {canSwitchToCompany && activeRole === "renter" ? (
                         <button
                           type="button"
-                          className="inline-flex items-center gap-1.5 rounded-full border border-black/20 bg-white px-3 py-2 text-xs font-semibold text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
+                          className="inline-flex items-center gap-1.5 rounded-full border border-black/20 bg-[#fffffe] px-3 py-2 text-xs font-semibold text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
                           disabled={pendingRole}
                           onClick={async () => {
                             setPendingRole(true);
@@ -821,7 +823,7 @@ function ProfilePage({ app }) {
                       {canSwitchToBroker && activeRole === "renter" ? (
                         <button
                           type="button"
-                          className="inline-flex items-center gap-1.5 rounded-full border border-black/20 bg-white px-3 py-2 text-xs font-semibold text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
+                          className="inline-flex items-center gap-1.5 rounded-full border border-black/20 bg-[#fffffe] px-3 py-2 text-xs font-semibold text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
                           disabled={pendingRole}
                           onClick={async () => {
                             setPendingRole(true);
@@ -839,7 +841,7 @@ function ProfilePage({ app }) {
                       {hasOnlyRenterAccess ? (
                         <button
                           type="button"
-                          className="inline-flex items-center gap-1.5 rounded-full border border-black/20 bg-white px-3 py-2 text-xs font-semibold text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
+                          className="inline-flex items-center gap-1.5 rounded-full border border-black/20 bg-[#fffffe] px-3 py-2 text-xs font-semibold text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
                           onClick={() => navigateTo("/onboarding/publisher-profile?role=broker&intent=add-role")}
                         >
                           <SwitchHorizontalIcon className="h-4 w-4" />
@@ -848,7 +850,7 @@ function ProfilePage({ app }) {
                       ) : null}
                       <button
                         type="button"
-                        className="inline-flex items-center gap-1.5 rounded-full border border-black/20 bg-white px-4 py-2 text-xs font-semibold text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
+                        className="inline-flex items-center gap-1.5 rounded-full border border-black/20 bg-[#fffffe] px-4 py-2 text-xs font-semibold text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
                         onClick={() => setShowTeamOverlay(true)}
                       >
                       <PencilIcon className="h-4 w-4" />
@@ -864,7 +866,7 @@ function ProfilePage({ app }) {
               <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
                 <div className="space-y-5">
                   {showProfileSetupCard ? (
-                  <article className="rounded-3xl border border-black/10 bg-white p-5 sm:p-6">
+                  <article className="rounded-3xl border border-black/10 bg-[#fffffe] p-5 sm:p-6">
                     <button
                       type="button"
                       className="flex w-full items-center justify-between gap-3 text-left"
@@ -875,7 +877,7 @@ function ProfilePage({ app }) {
                       {isProfileSetupCollapsed ? (
                         <span className="text-2xl leading-none text-ink-700 transition-transform duration-300">›</span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 rounded-full border border-black/20 bg-white px-4 py-2 text-xs font-semibold text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]">
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-black/20 bg-[#fffffe] px-4 py-2 text-xs font-semibold text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]">
                           <EyeIcon className="h-4 w-4" />
                           Dölj
                         </span>
@@ -916,7 +918,7 @@ function ProfilePage({ app }) {
                               <span className={`inline-flex h-6 w-6 items-center justify-center rounded-full border ${
                                 task.done
                                   ? "border-transparent bg-[#0f1930] text-white"
-                                  : "border-black/20 bg-white text-ink-500"
+                                  : "border-black/20 bg-[#fffffe] text-ink-500"
                               }`}>
                                 {task.done ? (
                                   <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4">
@@ -933,7 +935,7 @@ function ProfilePage({ app }) {
                   </article>
                   ) : null}
 
-                  <article className="rounded-3xl border border-black/10 bg-white p-5 sm:p-6">
+                  <article className="rounded-3xl border border-black/10 bg-[#fffffe] p-5 sm:p-6">
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <h2 className="text-2xl font-semibold text-[#0f1930]">Lokalprogram</h2>
@@ -942,7 +944,7 @@ function ProfilePage({ app }) {
                       {hasRenter ? (
                         <button
                           type="button"
-                          className="inline-flex h-10 w-10 min-h-10 min-w-10 items-center justify-center rounded-full border border-black/20 bg-white p-0 text-xs font-semibold text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
+                          className="inline-flex h-10 w-10 min-h-10 min-w-10 items-center justify-center rounded-full border border-black/20 bg-[#fffffe] p-0 text-xs font-semibold text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
                           onClick={() => setShowProgramOverlay(true)}
                           aria-label="Ändra lokalprogram"
                         >
@@ -953,7 +955,7 @@ function ProfilePage({ app }) {
 
                     {hasRenter ? (
                       <div className="mt-6 space-y-6">
-                        <div className="rounded-2xl border border-black/10 bg-white p-4 sm:p-5">
+                        <div className="rounded-2xl border border-black/10 bg-[#fffffe] p-4 sm:p-5">
                           <div className="flex items-center justify-between gap-3">
                             <p className="text-sm font-semibold text-ink-700">{localProgramProgress.percent}% klart</p>
                           </div>
@@ -971,7 +973,7 @@ function ProfilePage({ app }) {
                         <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2">
                           {localProgramSummary.map(({ key, label, value, Icon }) => (
                             <div key={key} className="flex items-start gap-2.5">
-                              <span className="mt-0.5 inline-flex h-9 w-9 items-center justify-center rounded-full border border-black/10 bg-white text-[#0f1930]">
+                              <span className="mt-0.5 inline-flex h-9 w-9 items-center justify-center rounded-full border border-black/10 bg-[#fffffe] text-[#0f1930]">
                                 <Icon className="h-3.5 w-3.5" />
                               </span>
                               <div className="min-w-0">
@@ -992,7 +994,7 @@ function ProfilePage({ app }) {
                                 return (
                                   <span
                                     key={amenity}
-                                    className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border border-black/10 bg-white px-3.5 py-2.5 text-sm font-semibold text-ink-700"
+                                    className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border border-black/10 bg-[#fffffe] px-3.5 py-2.5 text-sm font-semibold text-ink-700"
                                   >
                                     <AmenityIcon className="h-[18px] w-[18px] shrink-0 text-ink-700" />
                                     {amenity}
@@ -1004,7 +1006,7 @@ function ProfilePage({ app }) {
                         ) : null}
                       </div>
                     ) : (
-                      <p className="mt-4 rounded-2xl border border-black/10 bg-white px-3 py-3 text-sm text-ink-600">Ingen lokalprogramsdata ännu.</p>
+                      <p className="mt-4 rounded-2xl border border-black/10 bg-[#fffffe] px-3 py-3 text-sm text-ink-600">Ingen lokalprogramsdata ännu.</p>
                     )}
                   </article>
 
@@ -1017,7 +1019,7 @@ function ProfilePage({ app }) {
                     </div>
 
                     {preferenceMatches.length === 0 ? (
-                      <p className="rounded-2xl border border-black/10 bg-white px-4 py-4 text-sm text-ink-600">
+                      <p className="rounded-2xl border border-black/10 bg-[#fffffe] px-4 py-4 text-sm text-ink-600">
                         Inga matchningar ännu. Fyll i fler preferenser i lokalprogrammet.
                       </p>
                     ) : (
@@ -1028,6 +1030,7 @@ function ProfilePage({ app }) {
                             listing={{ ...item.listing, score: item.matchPercent }}
                             shortlisted={favoriteIds.has(String(item.listing.id))}
                             onOpenListing={(selected) => navigateTo(`/app/listings/${encodeURIComponent(selected.id)}`)}
+                            onBookViewing={(selected) => setBookingListing(selected)}
                             onToggleShortlist={(listingId) => toggleFavorite?.(listingId)}
                             showMatchChip
                             highlightAmenities={desiredAmenities}
@@ -1042,7 +1045,7 @@ function ProfilePage({ app }) {
 
                 <aside className="space-y-6 lg:sticky lg:top-0 lg:self-start">
                   <div className="space-y-6">
-                    <article className="overflow-hidden rounded-3xl border border-black/10 bg-white">
+                    <article className="overflow-hidden rounded-3xl border border-black/10 bg-[#fffffe]">
                       <div className="px-5 py-4">
                         <p className="text-lg font-semibold text-[#0f1930]">Publicera din profil</p>
                         <p className="mt-1 text-sm text-ink-600">Öka chansen att bli kontaktad av relevanta hyresvärder.</p>
@@ -1068,7 +1071,7 @@ function ProfilePage({ app }) {
                   <h2 className="text-xl font-semibold">Sparade objekt</h2>
                   <p className="mt-1 text-sm text-ink-600">Objekt du har sparat för uppföljning.</p>
                 </div>
-                <span className="rounded-full border border-black/10 bg-white px-3 py-1 text-xs font-semibold text-ink-700">
+                <span className="rounded-full border border-black/10 bg-[#fffffe] px-3 py-1 text-xs font-semibold text-ink-700">
                   {favoriteListings.length} sparade
                 </span>
               </div>
@@ -1082,6 +1085,7 @@ function ProfilePage({ app }) {
                       listing={listing}
                       shortlisted={favoriteIds.has(String(listing.id))}
                       onOpenListing={(selected) => navigateTo(`/app/listings/${encodeURIComponent(selected.id)}`)}
+                      onBookViewing={(selected) => setBookingListing(selected)}
                       onToggleShortlist={(listingId) => toggleFavorite?.(listingId)}
                     />
                   ))}
@@ -1092,13 +1096,13 @@ function ProfilePage({ app }) {
 
           {activeTab === "history" ? (
             <div>
-              <article className="rounded-3xl border border-black/10 bg-white p-5">
+              <article className="rounded-3xl border border-black/10 bg-[#fffffe] p-5">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
                     <h2 className="text-xl font-semibold">Sparade filter</h2>
                     <p className="mt-1 text-sm text-ink-600">Välj ett filter för att öppna sökresultat med samma inställningar.</p>
                   </div>
-                  <span className="rounded-full border border-black/10 bg-white px-3 py-1 text-xs font-semibold text-ink-700">
+                  <span className="rounded-full border border-black/10 bg-[#fffffe] px-3 py-1 text-xs font-semibold text-ink-700">
                     {filterPresets.length} sparade
                   </span>
                 </div>
@@ -1113,7 +1117,7 @@ function ProfilePage({ app }) {
                       return (
                         <article
                           key={preset.id}
-                          className="cursor-pointer rounded-2xl border border-black/10 bg-white p-3 transition hover:border-[#0f1930]/35"
+                          className="cursor-pointer rounded-2xl border border-black/10 bg-[#fffffe] p-3 transition hover:border-[#0f1930]/35"
                           onClick={() => navigateTo(targetUrl)}
                           onKeyDown={(event) => {
                             if (event.key === "Enter" || event.key === " ") {
@@ -1132,7 +1136,7 @@ function ProfilePage({ app }) {
                             <div className="flex items-center gap-2">
                               <button
                                 type="button"
-                                className="rounded-xl border border-black/20 bg-white px-3 py-1.5 text-xs font-semibold text-ink-700 hover:bg-white"
+                                className="rounded-xl border border-black/20 bg-[#fffffe] px-3 py-1.5 text-xs font-semibold text-ink-700 hover:bg-[#fffffe]"
                                 onClick={(event) => {
                                   event.stopPropagation();
                                   navigateTo(targetUrl);
@@ -1142,7 +1146,7 @@ function ProfilePage({ app }) {
                               </button>
                               <button
                                 type="button"
-                                className="rounded-xl border border-rose-200 bg-white px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-50"
+                                className="rounded-xl border border-rose-200 bg-[#fffffe] px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-50"
                                 onClick={(event) => {
                                   event.stopPropagation();
                                   deleteSavedFilter?.(preset.id);
@@ -1155,7 +1159,7 @@ function ProfilePage({ app }) {
                           {details.length > 0 ? (
                             <dl className="mt-3 grid gap-2 sm:grid-cols-2">
                               {details.map((item) => (
-                                <div key={`${preset.id}-${item.label}-${item.value}`} className="rounded-xl border border-black/10 bg-white px-2.5 py-2">
+                                <div key={`${preset.id}-${item.label}-${item.value}`} className="rounded-xl border border-black/10 bg-[#fffffe] px-2.5 py-2">
                                   <dt className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">{item.label}</dt>
                                   <dd className="mt-0.5 text-xs font-medium text-ink-800">{item.value}</dd>
                                 </div>
@@ -1165,7 +1169,7 @@ function ProfilePage({ app }) {
                           {chips.length > 0 ? (
                             <div className="mt-2 flex flex-wrap gap-1.5">
                               {chips.map((chip) => (
-                                <span key={`${preset.id}-${chip}`} className="rounded-full border border-black/10 bg-white px-2.5 py-1 text-[11px] font-semibold text-ink-700">
+                                <span key={`${preset.id}-${chip}`} className="rounded-full border border-black/10 bg-[#fffffe] px-2.5 py-1 text-[11px] font-semibold text-ink-700">
                                   {chip}
                                 </span>
                               ))}
@@ -1183,8 +1187,8 @@ function ProfilePage({ app }) {
       </div>
 
       {showProfileOverlay ? (
-        <div className="absolute inset-0 z-[90] overflow-y-auto bg-white p-4 sm:p-6" onClick={() => setShowProfileOverlay(false)}>
-          <div className="mx-auto w-full max-w-[1240px] rounded-3xl border border-black/10 bg-white p-5 sm:p-6" onClick={(event) => event.stopPropagation()}>
+        <div className="absolute inset-0 z-[90] overflow-y-auto bg-[#fffffe] p-4 sm:p-6" onClick={() => setShowProfileOverlay(false)}>
+          <div className="mx-auto w-full max-w-[1240px] rounded-3xl border border-black/10 bg-[#fffffe] p-5 sm:p-6" onClick={(event) => event.stopPropagation()}>
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h3 className="text-2xl font-semibold text-[#0f1930]">Redigera profil</h3>
@@ -1192,7 +1196,7 @@ function ProfilePage({ app }) {
               </div>
               <button
                 type="button"
-                className="close-circle-button inline-flex items-center justify-center rounded-full border border-black/15 bg-white text-xl leading-none text-ink-700"
+                className="close-circle-button inline-flex items-center justify-center rounded-full border border-black/15 bg-[#fffffe] text-xl leading-none text-ink-700"
                 onClick={() => setShowProfileOverlay(false)}
                 aria-label="Stäng"
               >
@@ -1211,7 +1215,7 @@ function ProfilePage({ app }) {
                 )}
                 <button
                   type="button"
-                  className="inline-flex items-center gap-1.5 rounded-full border border-black/15 bg-white px-3.5 py-2 text-xs font-semibold text-ink-800"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-black/15 bg-[#fffffe] px-3.5 py-2 text-xs font-semibold text-ink-800"
                   onClick={() => profileAvatarInputRef.current?.click()}
                 >
                   <CameraIcon className="h-4 w-4" />
@@ -1263,7 +1267,7 @@ function ProfilePage({ app }) {
             <div className="mt-5 flex items-center justify-end gap-2">
               <button
                 type="button"
-                className="rounded-full border border-black/20 bg-white px-5 py-2.5 text-sm font-semibold text-ink-700"
+                className="rounded-full border border-black/20 bg-[#fffffe] px-5 py-2.5 text-sm font-semibold text-ink-700"
                 onClick={() => setShowProfileOverlay(false)}
               >
                 Avbryt
@@ -1282,8 +1286,8 @@ function ProfilePage({ app }) {
       ) : null}
 
       {showProgramOverlay ? (
-        <div className="absolute inset-0 z-[90] overflow-y-auto bg-white p-4 sm:p-6" onClick={() => setShowProgramOverlay(false)}>
-          <div className="mx-auto w-full max-w-[1240px] rounded-3xl border border-black/10 bg-white p-5 sm:p-6" onClick={(event) => event.stopPropagation()}>
+        <div className="absolute inset-0 z-[90] overflow-y-auto bg-[#fffffe] p-4 sm:p-6" onClick={() => setShowProgramOverlay(false)}>
+          <div className="mx-auto w-full max-w-[1240px] rounded-3xl border border-black/10 bg-[#fffffe] p-5 sm:p-6" onClick={(event) => event.stopPropagation()}>
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h3 className="text-2xl font-semibold text-[#0f1930]">Redigera lokalprogram</h3>
@@ -1291,7 +1295,7 @@ function ProfilePage({ app }) {
               </div>
               <button
                 type="button"
-                className="close-circle-button inline-flex items-center justify-center rounded-full border border-black/15 bg-white text-xl leading-none text-ink-700"
+                className="close-circle-button inline-flex items-center justify-center rounded-full border border-black/15 bg-[#fffffe] text-xl leading-none text-ink-700"
                 onClick={() => setShowProgramOverlay(false)}
                 aria-label="Stäng"
               >
@@ -1381,7 +1385,7 @@ function ProfilePage({ app }) {
             </div>
 
             <div className="mt-4 border-b border-black/10 pb-4">
-              <div className="rounded-2xl border border-black/10 bg-white p-3">
+              <div className="rounded-2xl border border-black/10 bg-[#fffffe] p-3">
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-700">Särskilda krav</p>
                 <div className="mt-2 grid grid-cols-1 gap-2">
                   <label className="inline-flex items-center gap-2 text-sm text-ink-700">
@@ -1426,7 +1430,7 @@ function ProfilePage({ app }) {
                       key={option.value}
                       type="button"
                       className={`inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border px-3.5 py-2.5 text-sm font-semibold transition ${
-                        active ? "border-[#0f1930] bg-[#0f1930] text-white" : "border-black/10 bg-white text-ink-700 hover:bg-white"
+                        active ? "border-[#0f1930] bg-[#0f1930] text-white" : "border-black/10 bg-[#fffffe] text-ink-700 hover:bg-[#fffffe]"
                       }`}
                       onClick={() => toggleProgramAmenity(option.value)}
                     >
@@ -1441,7 +1445,7 @@ function ProfilePage({ app }) {
             <div className="mt-5 flex items-center justify-end gap-2">
               <button
                 type="button"
-                className="rounded-full border border-black/20 bg-white px-5 py-2.5 text-sm font-semibold text-ink-700"
+                className="rounded-full border border-black/20 bg-[#fffffe] px-5 py-2.5 text-sm font-semibold text-ink-700"
                 onClick={() => setShowProgramOverlay(false)}
               >
                 Avbryt
@@ -1460,18 +1464,18 @@ function ProfilePage({ app }) {
       ) : null}
 
       {showTeamOverlay ? (
-        <div className="absolute inset-0 z-[90] overflow-y-auto bg-white p-4 sm:p-6">
+        <div className="absolute inset-0 z-[90] overflow-y-auto bg-[#fffffe] p-4 sm:p-6">
           <div className="mx-auto w-full max-w-[1240px]">
             <button
               type="button"
-              className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-black/20 bg-white px-3 py-2 text-xs font-semibold text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
+              className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-black/20 bg-[#fffffe] px-3 py-2 text-xs font-semibold text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
               onClick={() => setShowTeamOverlay(false)}
             >
               <ArrowLeftIcon className="h-3.5 w-3.5" />
               Tillbaka till profil
             </button>
           </div>
-          <div className="mx-auto w-full max-w-[1240px] rounded-3xl border border-black/10 bg-white p-5 sm:p-6">
+          <div className="mx-auto w-full max-w-[1240px] rounded-3xl border border-black/10 bg-[#fffffe] p-5 sm:p-6">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h3 className="text-2xl font-semibold text-[#0f1930]">Hantera profil</h3>
@@ -1493,7 +1497,7 @@ function ProfilePage({ app }) {
                     )}
                     <button
                       type="button"
-                      className="absolute right-2 top-2 inline-flex h-10 w-10 min-h-10 min-w-10 items-center justify-center rounded-full border border-black/20 bg-white p-0 text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
+                      className="absolute right-2 top-2 inline-flex h-10 w-10 min-h-10 min-w-10 items-center justify-center rounded-full border border-black/20 bg-[#fffffe] p-0 text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
                       onClick={() => profileAvatarInputRef.current?.click()}
                       aria-label="Byt foto"
                     >
@@ -1518,7 +1522,7 @@ function ProfilePage({ app }) {
                     {profileDraft.avatarUrl ? (
                       <button
                         type="button"
-                        className="inline-flex items-center gap-1.5 rounded-full border border-black/20 bg-white px-3 py-1.5 text-xs font-semibold text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
+                        className="inline-flex items-center gap-1.5 rounded-full border border-black/20 bg-[#fffffe] px-3 py-1.5 text-xs font-semibold text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
                         onClick={() => setProfileDraft((prev) => ({ ...prev, avatarUrl: "" }))}
                       >
                         <TrashIcon className="h-3.5 w-3.5" />
@@ -1584,7 +1588,7 @@ function ProfilePage({ app }) {
 
             <p className="mt-5 text-sm font-semibold text-[#0f1930]">Teammedlemmar</p>
             <div className="mt-4 overflow-hidden rounded-2xl border border-black/10">
-              <div className="grid grid-cols-[1.2fr_1fr_1fr_1fr_auto] gap-2 border-b border-black/10 bg-white px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-ink-500">
+              <div className="grid grid-cols-[1.2fr_1fr_1fr_1fr_auto] gap-2 border-b border-black/10 bg-[#fffffe] px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-ink-500">
                 <span>E-post</span>
                 <span>Förnamn</span>
                 <span>Efternamn</span>
@@ -1626,7 +1630,7 @@ function ProfilePage({ app }) {
                       {member.id !== "team-owner" ? (
                         <button
                           type="button"
-                          className="rounded-lg border border-black/10 bg-white px-2 py-1 text-[11px] font-semibold text-ink-700 hover:bg-white"
+                          className="rounded-lg border border-black/10 bg-[#fffffe] px-2 py-1 text-[11px] font-semibold text-ink-700 hover:bg-[#fffffe]"
                           onClick={() => removeTeamMember(member.id)}
                         >
                           Ta bort
@@ -1641,7 +1645,7 @@ function ProfilePage({ app }) {
             <div className="mt-5 flex justify-end">
               <button
                 type="button"
-                className="rounded-full border border-black/20 bg-white px-5 py-2.5 text-sm font-semibold text-ink-700"
+                className="rounded-full border border-black/20 bg-[#fffffe] px-5 py-2.5 text-sm font-semibold text-ink-700"
                 onClick={() => setShowTeamOverlay(false)}
               >
                 Avbryt
@@ -1650,6 +1654,17 @@ function ProfilePage({ app }) {
           </div>
         </div>
       ) : null}
+
+      <ViewingRequestModal
+        listing={bookingListing}
+        onClose={() => setBookingListing(null)}
+        onSubmit={async (payload) => {
+          if (typeof app.requestViewing === "function") {
+            await app.requestViewing(payload);
+          }
+          setBookingListing(null);
+        }}
+      />
     </section>
   );
 }

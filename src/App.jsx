@@ -212,7 +212,7 @@ function AppContent() {
 
   if (app.isBootstrapping) {
     return (
-      <main className="min-h-screen bg-white" aria-hidden="true">
+      <main className="min-h-screen bg-[#fffffe]" aria-hidden="true">
         <div className="h-screen w-full" />
       </main>
     );

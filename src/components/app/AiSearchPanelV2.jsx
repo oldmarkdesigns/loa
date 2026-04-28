@@ -105,17 +105,17 @@ function AiSearchPanelV2({
         <div className="rounded-xl border border-brand-200 bg-brand-50 px-2 py-1 text-xs font-semibold text-brand-700">Beta</div>
       </div>
 
-      <div className="mt-4 flex min-h-0 flex-1 flex-col rounded-3xl border border-[#c9d2df] bg-white/70 p-3">
+      <div className="mt-4 flex min-h-0 flex-1 flex-col rounded-3xl border border-[#c9d2df] bg-[#fffffe]/70 p-3">
         <div className="min-h-0 flex-1 space-y-3 overflow-y-auto">
           {messages.map((message) => (
-            <div key={message.id} className={`max-w-[95%] whitespace-pre-wrap rounded-2xl px-3 py-2 text-sm ${message.role === "assistant" ? "border border-[#0d162b] bg-[#0d162b] text-white" : "ml-auto border border-ink-200 bg-white text-ink-900"}`}>
+            <div key={message.id} className={`max-w-[95%] whitespace-pre-wrap rounded-2xl px-3 py-2 text-sm ${message.role === "assistant" ? "border border-[#0d162b] bg-[#0d162b] text-white" : "ml-auto border border-ink-200 bg-[#fffffe] text-ink-900"}`}>
               {message.text}
             </div>
           ))}
         </div>
 
         <form
-          className="mt-3 rounded-2xl border border-[#0f1930]/20 bg-white p-2"
+          className="mt-3 rounded-2xl border border-[#0f1930]/20 bg-[#fffffe] p-2"
           onSubmit={(event) => {
             event.preventDefault();
             submitPrompt(input);
@@ -129,10 +129,10 @@ function AiSearchPanelV2({
               placeholder="Exempel: kontor i Solna för 16 personer, max 60000 kr"
             />
             <div className="flex justify-end gap-2">
-              <button type="button" className="rounded-2xl border border-black/20 bg-white px-4 py-2 text-sm font-semibold" onClick={handleReset} disabled={pending}>
+              <button type="button" className="rounded-2xl border border-black/20 bg-[#fffffe] px-4 py-2 text-sm font-semibold" onClick={handleReset} disabled={pending}>
                 Nollställ
               </button>
-              <button type="button" className="rounded-2xl border border-black/20 bg-white px-4 py-2 text-sm font-semibold" onClick={handleSaveSearch} disabled={pending || (!lastSubmittedPrompt && !input.trim())}>
+              <button type="button" className="rounded-2xl border border-black/20 bg-[#fffffe] px-4 py-2 text-sm font-semibold" onClick={handleSaveSearch} disabled={pending || (!lastSubmittedPrompt && !input.trim())}>
                 Spara AI-sök
               </button>
               <button type="submit" className="btn-primary shrink-0 px-5" disabled={pending}>{pending ? "Söker..." : "Skicka"}</button>

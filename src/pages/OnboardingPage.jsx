@@ -309,7 +309,7 @@ function parseInitialTypes(rawTypes) {
   return [];
 }
 
-const inputWithUnitClass = "flex w-full items-center rounded-2xl border border-ink-200 bg-white px-3.5 text-[15px] text-ink-900 transition focus-within:border-brand-400";
+const inputWithUnitClass = "flex w-full items-center rounded-2xl border border-ink-200 bg-[#fffffe] px-3.5 text-[15px] text-ink-900 transition focus-within:border-brand-400";
 
 function roundToNearestFive(value) {
   return Math.max(0, Math.round(value / 5) * 5);
@@ -746,10 +746,10 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
   const companyAdminStepDots = [0, 1, 2, 3];
 
   return (
-    <main className="grid min-h-screen content-start justify-items-center bg-white px-4 pb-8 pt-28">
+    <main className="grid min-h-screen content-start justify-items-center bg-[#fffffe] px-4 pb-8 pt-28">
       <AuthFlowNav />
       <div className="w-full max-w-[760px]">
-        <section className="rounded-[30px] border border-black/10 bg-white px-6 py-7 sm:px-7 sm:py-8">
+        <section className="rounded-[30px] border border-black/10 bg-[#fffffe] px-6 py-7 sm:px-7 sm:py-8">
           {!(currentStep === "publisher-profile" || currentStep === "company-admin-profile") ? (
             <>
               <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Steg {stepIndex + 1} av {activeSteps.length}</p>
@@ -767,7 +767,7 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
                       <button
                         type="button"
                         aria-label="Stäng information om lokalprogram"
-                        className="absolute right-3 top-3 inline-flex min-h-0 min-w-0 h-8 w-8 items-center justify-center rounded-full border border-black/15 bg-white p-0 text-lg leading-none text-ink-700"
+                        className="absolute right-3 top-3 inline-flex min-h-0 min-w-0 h-8 w-8 items-center justify-center rounded-full border border-black/15 bg-[#fffffe] p-0 text-lg leading-none text-ink-700"
                         onClick={() => setShowProgramInfoCard(false)}
                       >
                         ×
@@ -784,7 +784,7 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
                       <div className="mt-4">
                         <button
                           type="button"
-                          className="inline-flex min-h-0 items-center justify-center rounded-full border border-black/20 bg-white px-4 py-2 text-xs font-semibold text-ink-700"
+                          className="inline-flex min-h-0 items-center justify-center rounded-full border border-black/20 bg-[#fffffe] px-4 py-2 text-xs font-semibold text-ink-700"
                           onClick={goNext}
                         >
                           Hoppa över lokalprogram
@@ -804,7 +804,7 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
                             key={type}
                             type="button"
                             className={`inline-flex items-center justify-center gap-2 !rounded-2xl border px-3 py-3 text-sm font-semibold transition ${
-                              active ? "border-[#0f1930] bg-[#0f1930] text-white" : "border-black/15 bg-white text-ink-700 hover:bg-black/5"
+                              active ? "border-[#0f1930] bg-[#0f1930] text-white" : "border-black/15 bg-[#fffffe] text-ink-700 hover:bg-black/5"
                             }`}
                             onClick={() => toggleProgramType(type)}
                           >
@@ -829,7 +829,7 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
                             key={district}
                             type="button"
                             className={`inline-flex items-center !rounded-2xl border px-3 py-1.5 text-xs font-semibold transition ${
-                              active ? "border-[#0f1930] bg-[#0f1930] text-white" : "border-black/10 bg-white text-ink-700 hover:bg-black/5"
+                              active ? "border-[#0f1930] bg-[#0f1930] text-white" : "border-black/10 bg-[#fffffe] text-ink-700 hover:bg-black/5"
                             }`}
                             onClick={() => toggleProgramDistrict(district)}
                           >
@@ -894,7 +894,7 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
                       style={{ gridTemplateRows: showSizeRecommendationCard ? "1fr" : "0fr" }}
                     >
                       <div className="min-h-0">
-                        <div className="rounded-2xl border border-[#4f46e5]/35 bg-white px-3 py-2.5">
+                        <div className="rounded-2xl border border-[#4f46e5]/35 bg-[#fffffe] px-3 py-2.5">
                           {recommendedSizeRange ? (
                             <div className="flex flex-wrap items-center justify-between gap-2">
                               <p className="text-sm text-ink-700">
@@ -903,7 +903,7 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
                               </p>
                               <button
                                 type="button"
-                                className="inline-flex items-center gap-1.5 !rounded-2xl border border-[#4f46e5]/35 bg-white px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-black/5"
+                                className="inline-flex items-center gap-1.5 !rounded-2xl border border-[#4f46e5]/35 bg-[#fffffe] px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-black/5"
                                 onClick={() => {
                                   setRenterProgram((prev) => ({
                                     ...prev,
@@ -1020,7 +1020,7 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
                       </label>
                     </div>
 
-                    <div className="mt-4 rounded-2xl border border-black/10 bg-white p-3">
+                    <div className="mt-4 rounded-2xl border border-black/10 bg-[#fffffe] p-3">
                       <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-700">Särskilda krav</p>
                       <div className="mt-2 grid grid-cols-1 gap-2">
                         <label className="inline-flex items-center gap-2 text-sm text-ink-700">
@@ -1064,7 +1064,7 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
                             key={option.value}
                             type="button"
                             className={`inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border px-3.5 py-2.5 text-sm font-semibold transition ${
-                              active ? "border-[#0f1930] bg-[#0f1930] text-white" : "border-black/10 bg-white text-ink-700 hover:bg-white"
+                              active ? "border-[#0f1930] bg-[#0f1930] text-white" : "border-black/10 bg-[#fffffe] text-ink-700 hover:bg-[#fffffe]"
                             }`}
                             onClick={() => toggleProgramAmenity(option.value)}
                           >
@@ -1152,7 +1152,7 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
                           </div>
                         ) : null}
                         {showPublisherCompanyMenu && publisherCompanySuggestions.length ? (
-                          <div className="absolute z-10 mt-2 max-h-[320px] w-full overflow-y-auto rounded-2xl border border-black/10 bg-white p-3 shadow-[0_16px_40px_rgba(15,25,48,0.12)]">
+                          <div className="absolute z-10 mt-2 max-h-[320px] w-full overflow-y-auto rounded-2xl border border-black/10 bg-[#fffffe] p-3 shadow-[0_16px_40px_rgba(15,25,48,0.12)]">
                             {publisherCompanySuggestions.map((company) => (
                               <button
                                 key={company}
@@ -1224,14 +1224,14 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
                           return (
                             <div
                               key={key}
-                              className={`rounded-2xl border p-4 transition ${active ? "border-[#0f1930] bg-[#f8fafc]" : "border-black/10 bg-white"}`}
+                              className={`rounded-2xl border p-4 transition ${active ? "border-[#0f1930] bg-[#f8fafc]" : "border-black/10 bg-[#fffffe]"}`}
                             >
                               <button
                                 type="button"
                                 className="flex w-full items-start gap-3 text-left"
                                 onClick={() => setPublisherProfile((prev) => ({ ...prev, verificationMethod: key }))}
                               >
-                                <span className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border ${active ? "border-[#0f1930] bg-white text-[#0f1930]" : "border-black/10 bg-white text-ink-700"}`}>
+                                <span className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border ${active ? "border-[#0f1930] bg-[#fffffe] text-[#0f1930]" : "border-black/10 bg-[#fffffe] text-ink-700"}`}>
                                   <Icon className="h-4 w-4" />
                                 </span>
                                 <span className="min-w-0 flex-1">
@@ -1303,7 +1303,7 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
                 <div className="flex items-center justify-between border-t border-black/10 pt-5">
                   <button
                     type="button"
-                    className="inline-flex min-h-0 min-w-[132px] items-center justify-center rounded-full border border-black/20 bg-white px-4 py-2 text-xs font-semibold text-ink-700 disabled:opacity-50"
+                    className="inline-flex min-h-0 min-w-[132px] items-center justify-center rounded-full border border-black/20 bg-[#fffffe] px-4 py-2 text-xs font-semibold text-ink-700 disabled:opacity-50"
                     onClick={goBack}
                     disabled={pending}
                   >
@@ -1449,7 +1449,7 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
                         <div className="grid gap-1.5">
                           <span className="text-sm font-semibold text-ink-700">Logotyp</span>
                           <label className="flex min-h-[132px] cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-black/15 bg-[#fafafa] px-5 py-6 text-center transition hover:bg-black/5">
-                            <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-black/10 bg-white text-ink-700">
+                            <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-black/10 bg-[#fffffe] text-ink-700">
                               <ArrowUpIcon className="h-4 w-4" />
                             </span>
                             <span className="mt-3 text-base font-semibold text-ink-700">Dra och släpp eller klicka för att ladda upp</span>
@@ -1671,7 +1671,7 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
                                 <button
                                   key={option.key}
                                   type="button"
-                                  className={`flex w-full items-center gap-3 !rounded-2xl border px-4 py-3 text-left transition ${active ? "border-[#0f1930] bg-[#f8fafc]" : "border-black/10 bg-white hover:bg-black/5"}`}
+                                  className={`flex w-full items-center gap-3 !rounded-2xl border px-4 py-3 text-left transition ${active ? "border-[#0f1930] bg-[#f8fafc]" : "border-black/10 bg-[#fffffe] hover:bg-black/5"}`}
                                   onClick={() => setCompanyAdminProfile((prev) => ({ ...prev, approvalFlow: option.key }))}
                                 >
                                   <span className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${active ? "border-[#0f1930]" : "border-black/20"}`}>
@@ -1707,7 +1707,7 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
                                 <button
                                   key={option.key}
                                   type="button"
-                                  className={`flex w-full items-center gap-3 !rounded-2xl border px-4 py-3 text-left transition ${active ? "border-[#0f1930] bg-[#f8fafc]" : "border-black/10 bg-white hover:bg-black/5"}`}
+                                  className={`flex w-full items-center gap-3 !rounded-2xl border px-4 py-3 text-left transition ${active ? "border-[#0f1930] bg-[#f8fafc]" : "border-black/10 bg-[#fffffe] hover:bg-black/5"}`}
                                   onClick={() => setCompanyAdminProfile((prev) => ({ ...prev, listingModeration: option.key }))}
                                 >
                                   <span className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${active ? "border-[#0f1930]" : "border-black/20"}`}>
@@ -1751,7 +1751,7 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
                     <div className="flex items-center justify-between border-t border-black/10 pt-5">
                       <button
                         type="button"
-                        className="inline-flex min-h-0 min-w-[132px] items-center justify-center rounded-full border border-black/20 bg-white px-4 py-2 text-xs font-semibold text-ink-700 disabled:opacity-50"
+                        className="inline-flex min-h-0 min-w-[132px] items-center justify-center rounded-full border border-black/20 bg-[#fffffe] px-4 py-2 text-xs font-semibold text-ink-700 disabled:opacity-50"
                         onClick={goBack}
                         disabled={pending}
                       >
@@ -1790,7 +1790,7 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
                     <p className="mt-1 text-sm text-ink-600">{account.email || "-"}</p>
                     <p className="mt-0.5 text-sm text-ink-600">{account.phone || "Telefon ej angivet"}</p>
                   </div>
-                  <span className="inline-flex items-center rounded-full border border-black/10 bg-white px-3 py-1.5 text-xs font-semibold text-ink-700">
+                  <span className="inline-flex items-center rounded-full border border-black/10 bg-[#fffffe] px-3 py-1.5 text-xs font-semibold text-ink-700">
                     {primaryRole === "broker" ? "Mäklare" : primaryRole === "company_admin" ? "Bolagsadmin" : "Hyresgäst"}
                   </span>
                 </div>
@@ -1807,7 +1807,7 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
                     <div className="mt-5 grid gap-4 sm:grid-cols-2">
                       {reviewProgramStats.map(({ label, value, Icon }) => (
                         <div key={label} className="flex items-start gap-3">
-                          <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-black/10 bg-white text-ink-700">
+                          <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-black/10 bg-[#fffffe] text-ink-700">
                             <Icon className="h-4 w-4" />
                           </span>
                           <div className="min-w-0">
@@ -1826,7 +1826,7 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
                             const amenityMatch = amenityOptions.find((option) => normalizeAmenity(option.value) === normalizeAmenity(amenity));
                             const Icon = amenityMatch?.icon || BuildingIcon;
                             return (
-                              <span key={amenity} className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white px-3 py-1.5 text-sm font-semibold text-ink-700">
+                              <span key={amenity} className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-[#fffffe] px-3 py-1.5 text-sm font-semibold text-ink-700">
                                 <Icon className="h-4 w-4" />
                                 {amenity}
                               </span>
@@ -1850,7 +1850,7 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
                         { label: "FMI", value: publisherProfile.fmiNumber || "Ej angivet" },
                         { label: "Godkända villkor", value: publisherProfile.termsEmployerAuthority && publisherProfile.termsPublishingRules && publisherProfile.termsSuspensionAware ? "Ja" : "Nej" }
                       ].map(({ label, value }) => (
-                        <div key={label} className="rounded-2xl border border-black/10 bg-white px-4 py-3">
+                        <div key={label} className="rounded-2xl border border-black/10 bg-[#fffffe] px-4 py-3">
                           <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">{label}</p>
                           <p className="mt-1 text-[1rem] font-semibold text-ink-800">{value}</p>
                         </div>
@@ -1868,7 +1868,7 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
           <div className={`mt-6 flex items-center justify-between ${currentStep === "publisher-profile" || currentStep === "company-admin-profile" ? "hidden" : ""}`}>
             <button
               type="button"
-              className="inline-flex min-h-0 items-center justify-center rounded-full border border-black/20 bg-white px-4 py-2 text-xs font-semibold text-ink-700 disabled:opacity-50"
+              className="inline-flex min-h-0 items-center justify-center rounded-full border border-black/20 bg-[#fffffe] px-4 py-2 text-xs font-semibold text-ink-700 disabled:opacity-50"
               onClick={goBack}
               disabled={pending}
             >

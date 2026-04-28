@@ -911,7 +911,7 @@ function ExtendedMetricGauge({ value = 0, target, inverse = false, footer }) {
           <p className="mt-1 text-2xl font-semibold leading-none text-[#0f1930]">{normalized}%</p>
         </div>
         {targetValue !== null ? (
-          <div className="rounded-full border border-black/10 bg-white px-2 py-1 text-[10px] font-semibold text-ink-600">
+          <div className="rounded-full border border-black/10 bg-[#fffffe] px-2 py-1 text-[10px] font-semibold text-ink-600">
             mål {targetValue}%
           </div>
         ) : null}
@@ -998,7 +998,7 @@ function ExtendedStatCard({ item }) {
   }
 
   return (
-    <article className="rounded-[28px] border border-black/10 bg-white p-4 shadow-[0_12px_30px_rgba(15,25,48,0.04)]">
+    <article className="rounded-[28px] border border-black/10 bg-[#fffffe] p-4 shadow-[0_12px_30px_rgba(15,25,48,0.04)]">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-[12px] font-semibold text-ink-600">{item.label}</p>
@@ -1207,7 +1207,7 @@ function AdminSidebar({ pathname, onNavigate, onLogout }) {
                   <item.Icon className="h-[18px] w-[18px] shrink-0" />
                   <span className="min-w-0 flex-1 truncate">{item.label}</span>
                   {item.badge ? (
-                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${active ? "bg-white/20 text-white" : "bg-black/10 text-ink-700"}`}>
+                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${active ? "bg-[#fffffe]/20 text-white" : "bg-black/10 text-ink-700"}`}>
                       {item.badge}
                     </span>
                   ) : null}
@@ -1331,7 +1331,7 @@ function AdminListingsPage() {
                           ? status === "Alla"
                             ? "border-[#0f1930] bg-[#0f1930] text-white"
                             : statusClass(status)
-                          : "border-black/10 bg-white text-ink-700 hover:bg-black/5"
+                          : "border-black/10 bg-[#fffffe] text-ink-700 hover:bg-black/5"
                       }`}
                     >
                       <span className="font-medium">{status === "Alla" ? "Alla" : status === "Aktiv" ? "Aktiva" : status}</span>
@@ -1343,10 +1343,10 @@ function AdminListingsPage() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <button type="button" className="inline-flex h-9 w-9 min-h-0 items-center justify-center rounded-full border border-black/10 bg-white text-ink-700">
+              <button type="button" className="inline-flex h-9 w-9 min-h-0 items-center justify-center rounded-full border border-black/10 bg-[#fffffe] text-ink-700">
                 <FilterIcon className="h-4 w-4" />
               </button>
-              <button type="button" className="inline-flex h-9 w-9 min-h-0 items-center justify-center rounded-full border border-black/10 bg-white text-ink-700">
+              <button type="button" className="inline-flex h-9 w-9 min-h-0 items-center justify-center rounded-full border border-black/10 bg-[#fffffe] text-ink-700">
                 <SearchIcon className="h-4 w-4" />
               </button>
             </div>
@@ -1393,7 +1393,7 @@ function AdminListingsPage() {
                     <span className="block truncate">{brokerTeam[index % brokerTeam.length]?.name}</span>
                   </td>
                   <td className="px-4 py-3.5 text-right sm:px-5">
-                    <button type="button" className="inline-flex h-8 w-8 min-h-0 items-center justify-center rounded-full border border-transparent text-ink-600 hover:border-black/10 hover:bg-white">
+                    <button type="button" className="inline-flex h-8 w-8 min-h-0 items-center justify-center rounded-full border border-transparent text-ink-600 hover:border-black/10 hover:bg-[#fffffe]">
                       <MoreHorizontalIcon className="h-4 w-4" />
                     </button>
                   </td>
@@ -1439,7 +1439,7 @@ function AdminNotificationsPage() {
       <section className="surface p-4 sm:p-5">
         <div className="space-y-3">
           {adminNotifications.map((item) => (
-            <article key={item.id} className="rounded-2xl border border-black/10 bg-white p-4">
+            <article key={item.id} className="rounded-2xl border border-black/10 bg-[#fffffe] p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
@@ -1487,7 +1487,7 @@ function AdminBrokersPage() {
                   <span className="block truncate text-xs text-ink-600">{broker.email}</span>
                 </span>
               </div>
-              <button type="button" className="inline-flex h-8 w-8 min-h-0 items-center justify-center rounded-full border border-transparent text-ink-600 hover:border-black/10 hover:bg-white">
+              <button type="button" className="inline-flex h-8 w-8 min-h-0 items-center justify-center rounded-full border border-transparent text-ink-600 hover:border-black/10 hover:bg-[#fffffe]">
                 <MoreHorizontalIcon className="h-4 w-4" />
               </button>
             </div>
@@ -1518,7 +1518,7 @@ function AdminBrokersPage() {
             const hasNext = index < list.length - 1;
             return (
               <li key={item.id} className="relative pl-10">
-                <span className="absolute left-0 top-0 inline-flex h-8 w-8 items-center justify-center rounded-full border border-black/10 bg-white text-ink-700">
+                <span className="absolute left-0 top-0 inline-flex h-8 w-8 items-center justify-center rounded-full border border-black/10 bg-[#fffffe] text-ink-700">
                   <Icon className="h-4 w-4" />
                 </span>
                 {hasNext ? <span className="absolute left-[15px] top-8 h-[calc(100%+0.75rem)] w-px bg-black/10" /> : null}
@@ -1693,7 +1693,7 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                 <label className="relative block">
                   <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
                   <input
-                    className="field !rounded-2xl !bg-white pl-9"
+                    className="field !rounded-2xl !bg-[#fffffe] pl-9"
                     placeholder="Sök namn, bolag eller annons"
                     value={searchQuery}
                     onChange={(event) => setSearchQuery(event.target.value)}
@@ -1711,12 +1711,12 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                       className={`inline-flex min-h-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold transition ${
                         active
                           ? "bg-[#0f1930] text-white"
-                          : "border border-black/10 bg-white text-ink-700 hover:border-[#bfd0e3]"
+                          : "border border-black/10 bg-[#fffffe] text-ink-700 hover:border-[#bfd0e3]"
                       }`}
                     >
                       {tab.label}
                       <span className={`inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] ${
-                        active ? "bg-white/15 text-white" : "bg-[#eef3f8] text-[#476a99]"
+                        active ? "bg-[#fffffe]/15 text-white" : "bg-[#eef3f8] text-[#476a99]"
                       }`}>
                         {tab.count}
                       </span>
@@ -1739,7 +1739,7 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                     type="button"
                     onClick={() => selectInquiry(inquiry.id)}
                     className={`flex w-full items-start gap-3 border-b border-black/5 px-4 py-4 text-left transition ${
-                      isActive ? "bg-white shadow-[inset_3px_0_0_#0f1930]" : "hover:bg-white/80"
+                      isActive ? "bg-[#fffffe] shadow-[inset_3px_0_0_#0f1930]" : "hover:bg-[#fffffe]/80"
                     }`}
                   >
                     <span className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${
@@ -1784,8 +1784,8 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
 
           <div className="min-w-0 border-b border-black/10 lg:border-b-0 xl:border-r">
             {activeInquiry && activeRenter && activeListing ? (
-              <div className="flex h-full min-h-[760px] flex-col bg-white">
-                <div className="border-b border-black/10 bg-white px-4 py-4 sm:px-5">
+              <div className="flex h-full min-h-[760px] flex-col bg-[#fffffe]">
+                <div className="border-b border-black/10 bg-[#fffffe] px-4 py-4 sm:px-5">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-3">
                       <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#0f1930] text-sm font-semibold text-white">
@@ -1813,7 +1813,7 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                 </div>
 
                 <div className="border-b border-black/10 bg-[#fbfcfd] px-4 py-3 sm:px-5 xl:hidden">
-                  <div className="flex flex-wrap items-center gap-3 rounded-3xl border border-[#d7e2ee] bg-white p-3">
+                  <div className="flex flex-wrap items-center gap-3 rounded-3xl border border-[#d7e2ee] bg-[#fffffe] p-3">
                     <img src={activeListing.image} alt={activeListing.title} className="h-16 w-24 rounded-2xl border border-black/10 object-cover" loading="lazy" />
                     <div className="min-w-0 flex-1">
                       <p className="text-[11px] font-semibold uppercase tracking-wide text-[#476a99]">Matchad annons</p>
@@ -1827,7 +1827,7 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                   </div>
                 </div>
 
-                <div className="flex-1 space-y-4 overflow-y-auto bg-[linear-gradient(180deg,#ffffff_0%,#fbfbfa_100%)] px-4 py-5 sm:px-5">
+                <div className="flex-1 space-y-4 overflow-y-auto bg-[linear-gradient(180deg,#fffffe_0%,#fbfbfa_100%)] px-4 py-5 sm:px-5">
                   <div className="mx-auto max-w-3xl rounded-3xl border border-[#d9e4f1] bg-[#f4f7fb] p-4">
                     <div className="flex flex-wrap items-start gap-3">
                       <div className="min-w-0 flex-1">
@@ -1837,7 +1837,7 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                           {activeRenter.name.split(" ")[0]} söker {activeRenter.preferredType.toLowerCase()} i {activeRenter.district} för {activeRenter.teamSize.toLowerCase()} med budget {activeRenter.budget}.
                         </p>
                       </div>
-                      <div className="rounded-2xl border border-[#c9d8e7] bg-white px-3 py-2">
+                      <div className="rounded-2xl border border-[#c9d8e7] bg-[#fffffe] px-3 py-2">
                         <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">Nästa steg</p>
                         <p className="mt-1 text-sm font-semibold text-[#0f1930]">{activeInquiry.stage}</p>
                       </div>
@@ -1861,7 +1861,7 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                                 ? "border border-dashed border-black/10 bg-[#fafafa] text-ink-600"
                                 : isAdmin
                                   ? "rounded-br-md bg-[#0f1930] text-white"
-                                  : "rounded-bl-md border border-black/10 bg-white text-ink-800"
+                                  : "rounded-bl-md border border-black/10 bg-[#fffffe] text-ink-800"
                             }`}>
                               {message.text}
                             </div>
@@ -1873,7 +1873,7 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                   </div>
                 </div>
 
-                <div className="border-t border-black/10 bg-white px-4 py-4 sm:px-5">
+                <div className="border-t border-black/10 bg-[#fffffe] px-4 py-4 sm:px-5">
                   <div className="mx-auto max-w-3xl">
                     <div className="mb-3 flex flex-wrap gap-2">
                       {quickPromptChips.map((prompt) => (
@@ -1914,7 +1914,7 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
           <aside className="hidden bg-[#f8fafc] xl:block">
             {activeInquiry && activeRenter && activeListing ? (
               <div className="h-full space-y-4 overflow-y-auto p-4 sm:p-5">
-                <article className="rounded-[28px] border border-[#d7e2ee] bg-white p-4">
+                <article className="rounded-[28px] border border-[#d7e2ee] bg-[#fffffe] p-4">
                   <img src={activeListing.image} alt={activeListing.title} className="h-40 w-full rounded-[22px] border border-black/10 object-cover" loading="lazy" />
                   <div className="mt-3">
                     <p className="text-[11px] font-semibold uppercase tracking-wide text-[#476a99]">Matchad annons</p>
@@ -1923,7 +1923,7 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                   </div>
                 </article>
 
-                <article className="rounded-[28px] border border-[#d7e2ee] bg-white p-4">
+                <article className="rounded-[28px] border border-[#d7e2ee] bg-[#fffffe] p-4">
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">Hyresgäst</p>
@@ -1952,7 +1952,7 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                   </div>
                 </article>
 
-                <article className="rounded-[28px] border border-[#d7e2ee] bg-white p-4">
+                <article className="rounded-[28px] border border-[#d7e2ee] bg-[#fffffe] p-4">
                   <div className="flex items-center gap-2">
                     <SparklesIcon className="h-4 w-4 text-[#476a99]" />
                     <h3 className="text-sm font-semibold text-[#0f1930]">Föreslagna svar</h3>
@@ -1964,7 +1964,7 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                         key={prompt.id}
                         type="button"
                         onClick={() => applySuggestedPrompt(prompt.text)}
-                        className="w-full rounded-3xl border border-black/10 bg-[#fbfbfa] p-3 text-left transition hover:border-[#bfd0e3] hover:bg-white"
+                        className="w-full rounded-3xl border border-black/10 bg-[#fbfbfa] p-3 text-left transition hover:border-[#bfd0e3] hover:bg-[#fffffe]"
                       >
                         <div className="flex items-center justify-between gap-2">
                           <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
@@ -1980,7 +1980,7 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                   </div>
                 </article>
 
-                <article className="rounded-[28px] border border-[#d7e2ee] bg-white p-4">
+                <article className="rounded-[28px] border border-[#d7e2ee] bg-[#fffffe] p-4">
                   <h3 className="text-sm font-semibold text-[#0f1930]">Matchkriterier</h3>
                   <div className="mt-3 space-y-2">
                     {activeRenter.matchCriteria.map((item) => (
@@ -1999,7 +1999,7 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                   </div>
                 </article>
 
-                <article className="rounded-[28px] border border-[#d7e2ee] bg-white p-4">
+                <article className="rounded-[28px] border border-[#d7e2ee] bg-[#fffffe] p-4">
                   <h3 className="text-sm font-semibold text-[#0f1930]">Snabböversikt</h3>
                   <ul className="mt-3 space-y-2">
                     <li className="flex items-center gap-2 text-sm text-ink-700">
@@ -2324,13 +2324,13 @@ function AdminStatistics() {
 
         {customizeOpen ? (
           <div
-            className={`fixed inset-0 z-[95] flex items-center justify-center bg-white/0 p-4 backdrop-blur-[2px] transition-all duration-200 ${
+            className={`fixed inset-0 z-[95] flex items-center justify-center bg-[#fffffe]/0 p-4 backdrop-blur-[2px] transition-all duration-200 ${
               customizeClosing ? "opacity-0" : "opacity-100"
             }`}
             onClick={closeCustomize}
           >
             <div
-              className={`w-full max-w-2xl rounded-3xl border border-black/10 bg-white p-5 shadow-[0_24px_64px_rgba(15,25,48,0.22)] transition ${customizeClosing ? "translate-y-2 opacity-0" : "translate-y-0 opacity-100"}`}
+              className={`w-full max-w-2xl rounded-3xl border border-black/10 bg-[#fffffe] p-5 shadow-[0_24px_64px_rgba(15,25,48,0.22)] transition ${customizeClosing ? "translate-y-2 opacity-0" : "translate-y-0 opacity-100"}`}
               onClick={(event) => event.stopPropagation()}
             >
               <div className="mb-4 flex items-start justify-between gap-3">
@@ -2338,13 +2338,13 @@ function AdminStatistics() {
                   <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Anpassa statistik</p>
                   <h3 className="mt-1 text-xl font-semibold text-ink-900">Välj vilka nyckeltal som ska visas</h3>
                 </div>
-                <button type="button" className="close-circle-button inline-flex items-center justify-center rounded-full border border-black/15 bg-white text-xl leading-none text-ink-700" onClick={closeCustomize}>
+                <button type="button" className="close-circle-button inline-flex items-center justify-center rounded-full border border-black/15 bg-[#fffffe] text-xl leading-none text-ink-700" onClick={closeCustomize}>
                   ×
                 </button>
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
-                <div className="rounded-2xl border border-black/10 bg-white p-3">
+                <div className="rounded-2xl border border-black/10 bg-[#fffffe] p-3">
                   <p className="text-sm font-semibold text-ink-800">Diagramsektioner</p>
                   <div className="mt-3 space-y-2 text-sm">
                     {[
@@ -2370,7 +2370,7 @@ function AdminStatistics() {
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-black/10 bg-white p-3">
+                <div className="rounded-2xl border border-black/10 bg-[#fffffe] p-3">
                   <p className="text-sm font-semibold text-ink-800">Fördjupade nyckeltal</p>
                   <div className="mt-3 max-h-[280px] space-y-2 overflow-y-auto pr-1 text-sm">
                     {extendedStatCards.map((item) => (
@@ -2538,7 +2538,7 @@ function AdminLeadMatchesPage({ app }) {
                       </button>
                       <button
                         type="button"
-                        className="inline-flex h-8 w-8 min-h-0 items-center justify-center rounded-full border border-transparent text-ink-600 hover:border-black/10 hover:bg-white"
+                        className="inline-flex h-8 w-8 min-h-0 items-center justify-center rounded-full border border-transparent text-ink-600 hover:border-black/10 hover:bg-[#fffffe]"
                         onClick={(event) => event.stopPropagation()}
                       >
                         <MoreHorizontalIcon className="h-4 w-4" />
@@ -2577,7 +2577,7 @@ function AdminLeadMatchesPage({ app }) {
             </div>
             <p className="mt-1 text-sm text-ink-600">Hyresgäster vars sökprofil matchar era lokaler — de har inte kontaktat er än</p>
           </div>
-          <div className="inline-flex items-center gap-1 rounded-full border border-black/10 bg-white p-1">
+          <div className="inline-flex items-center gap-1 rounded-full border border-black/10 bg-[#fffffe] p-1">
             {sortTabs.map((tab) => {
               const active = sortMode === tab.key;
               return (
@@ -2602,7 +2602,7 @@ function AdminLeadMatchesPage({ app }) {
             className={`inline-flex min-h-0 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
               listingFilter === "all"
                 ? "bg-[#0f1930] text-white"
-                : "border border-black/10 bg-white text-ink-700 hover:border-[#bfd0e3]"
+                : "border border-black/10 bg-[#fffffe] text-ink-700 hover:border-[#bfd0e3]"
             }`}
             onClick={() => setListingFilter("all")}
           >
@@ -2617,7 +2617,7 @@ function AdminLeadMatchesPage({ app }) {
                 className={`inline-flex min-h-0 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
                   active
                     ? "bg-[#0f1930] text-white"
-                    : "border border-black/10 bg-white text-ink-700 hover:border-[#bfd0e3]"
+                    : "border border-black/10 bg-[#fffffe] text-ink-700 hover:border-[#bfd0e3]"
                 }`}
                 onClick={() => setListingFilter(listing.id)}
               >
@@ -2632,7 +2632,7 @@ function AdminLeadMatchesPage({ app }) {
             {suggestedMatches.map((renter) => {
               const matchedListing = activeListings.find((listing) => listing.id === renter.matchListingId) || activeListings[0];
               return (
-                <article key={renter.id} className="rounded-2xl border border-black/10 bg-white p-4">
+                <article key={renter.id} className="rounded-2xl border border-black/10 bg-[#fffffe] p-4">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex min-w-0 items-center gap-2.5">
                       <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#0f1930] text-sm font-semibold text-white">
@@ -2645,7 +2645,7 @@ function AdminLeadMatchesPage({ app }) {
                     </div>
                     <button
                       type="button"
-                      className="inline-flex h-8 w-8 min-h-0 items-center justify-center rounded-full border border-transparent text-ink-600 hover:border-black/10 hover:bg-white"
+                      className="inline-flex h-8 w-8 min-h-0 items-center justify-center rounded-full border border-transparent text-ink-600 hover:border-black/10 hover:bg-[#fffffe]"
                       onClick={() => app?.pushToast?.(`${renter.name} flaggad för senare.`, "success")}
                     >
                       <StarIcon className="h-4 w-4" />
@@ -2715,7 +2715,7 @@ function AdminActivityPage() {
           const hasNext = index < activityItems.length - 1;
           return (
             <li key={item.id} className="relative pl-10">
-              <span className="absolute left-0 top-0 inline-flex h-8 w-8 items-center justify-center rounded-full border border-black/10 bg-white text-ink-700">
+              <span className="absolute left-0 top-0 inline-flex h-8 w-8 items-center justify-center rounded-full border border-black/10 bg-[#fffffe] text-ink-700">
                 <Icon className="h-4 w-4" />
               </span>
               {hasNext ? <span className="absolute left-[15px] top-8 h-[calc(100%+0.75rem)] w-px bg-black/10" /> : null}
@@ -2807,10 +2807,10 @@ function AdminOverview({ app }) {
                 <p className="mt-1 text-sm text-ink-600">Övervaka era pågående annonseringar</p>
               </div>
               <div className="flex items-center gap-2">
-                <button type="button" className="inline-flex h-9 w-9 min-h-0 items-center justify-center rounded-full border border-black/10 bg-white text-ink-700">
+                <button type="button" className="inline-flex h-9 w-9 min-h-0 items-center justify-center rounded-full border border-black/10 bg-[#fffffe] text-ink-700">
                   <FilterIcon className="h-4 w-4" />
                 </button>
-                <button type="button" className="inline-flex h-9 w-9 min-h-0 items-center justify-center rounded-full border border-black/10 bg-white text-ink-700">
+                <button type="button" className="inline-flex h-9 w-9 min-h-0 items-center justify-center rounded-full border border-black/10 bg-[#fffffe] text-ink-700">
                   <SearchIcon className="h-4 w-4" />
                 </button>
               </div>
@@ -2855,7 +2855,7 @@ function AdminOverview({ app }) {
                     <td className="px-4 py-3.5 text-right font-semibold text-ink-800">{item.views.toLocaleString("sv-SE")}</td>
                     <td className="px-4 py-3.5 text-right font-semibold text-ink-800">{item.inquiries}</td>
                     <td className="px-4 py-3.5 text-right sm:px-5">
-                      <button type="button" className="inline-flex h-8 w-8 min-h-0 items-center justify-center rounded-full border border-transparent text-ink-600 hover:border-black/10 hover:bg-white">
+                      <button type="button" className="inline-flex h-8 w-8 min-h-0 items-center justify-center rounded-full border border-transparent text-ink-600 hover:border-black/10 hover:bg-[#fffffe]">
                         <MoreHorizontalIcon className="h-4 w-4" />
                       </button>
                     </td>
@@ -2882,7 +2882,7 @@ function AdminOverview({ app }) {
               const hasNext = index < activityItems.length - 1;
               return (
                 <li key={item.id} className="relative pl-9">
-                  <span className="absolute left-0 top-0 inline-flex h-7 w-7 items-center justify-center rounded-full border border-black/10 bg-white text-ink-700">
+                  <span className="absolute left-0 top-0 inline-flex h-7 w-7 items-center justify-center rounded-full border border-black/10 bg-[#fffffe] text-ink-700">
                     <Icon className="h-3.5 w-3.5" />
                   </span>
                   {hasNext ? <span className="absolute left-[13px] top-7 h-[calc(100%+0.65rem)] w-px bg-black/10" /> : null}
@@ -2911,7 +2911,7 @@ function AdminOverview({ app }) {
 
         <div className="grid gap-3 lg:grid-cols-3">
           {matchedRenters.map((renter) => (
-            <article key={renter.id} className="rounded-2xl border border-black/10 bg-white p-4">
+            <article key={renter.id} className="rounded-2xl border border-black/10 bg-[#fffffe] p-4">
               {(() => {
                 const matchedListing = activeListings.find((listing) => listing.id === renter.matchListingId);
                 return matchedListing ? (
@@ -2987,7 +2987,7 @@ function AdminOverview({ app }) {
 
         <div className="grid gap-3 lg:grid-cols-3">
           {brokerTeam.map((broker) => (
-            <article key={broker.id} className="rounded-2xl border border-black/10 bg-white p-4">
+            <article key={broker.id} className="rounded-2xl border border-black/10 bg-[#fffffe] p-4">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex min-w-0 items-center gap-2.5">
                   <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#0f1930] text-sm font-semibold text-white">
@@ -2998,7 +2998,7 @@ function AdminOverview({ app }) {
                     <span className="block truncate text-xs text-ink-600">{broker.email}</span>
                   </span>
                 </div>
-                <button type="button" className="inline-flex h-8 w-8 min-h-0 items-center justify-center rounded-full border border-transparent text-ink-600 hover:border-black/10 hover:bg-white">
+                <button type="button" className="inline-flex h-8 w-8 min-h-0 items-center justify-center rounded-full border border-transparent text-ink-600 hover:border-black/10 hover:bg-[#fffffe]">
                   <MoreHorizontalIcon className="h-4 w-4" />
                 </button>
               </div>
@@ -3130,7 +3130,7 @@ function AdminProfile({ app }) {
         <div className="grid gap-1.5 text-sm lg:col-span-2">
           <span className="text-sm font-semibold text-ink-700">Logotyp</span>
           <label className="flex min-h-[132px] cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-black/15 bg-[#fafafa] px-5 py-6 text-center transition hover:bg-black/5">
-            <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-black/10 bg-white text-ink-700">
+            <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-black/10 bg-[#fffffe] text-ink-700">
               <ArrowUpIcon className="h-4 w-4" />
             </span>
             <span className="mt-3 text-base font-semibold text-ink-700">Dra och släpp eller klicka för att ladda upp</span>
@@ -3180,7 +3180,7 @@ function AdminProfile({ app }) {
                 className={`flex w-full items-center gap-3 !rounded-2xl border px-4 py-3 text-left transition ${
                   draft.approvalFlow === option.key
                     ? "border-[#0f1930] bg-[#f8fafc]"
-                    : "border-black/10 bg-white hover:bg-black/5"
+                    : "border-black/10 bg-[#fffffe] hover:bg-black/5"
                 }`}
                 onClick={() => setDraft((prev) => ({ ...prev, approvalFlow: option.key }))}
               >
@@ -3205,7 +3205,7 @@ function AdminProfile({ app }) {
                 className={`flex w-full items-center gap-3 !rounded-2xl border px-4 py-3 text-left transition ${
                   draft.listingModeration === option.key
                     ? "border-[#0f1930] bg-[#f8fafc]"
-                    : "border-black/10 bg-white hover:bg-black/5"
+                    : "border-black/10 bg-[#fffffe] hover:bg-black/5"
                 }`}
                 onClick={() => setDraft((prev) => ({ ...prev, listingModeration: option.key }))}
               >
@@ -3253,17 +3253,17 @@ function AdminPanelPage({ app, pathname }) {
   const currentSectionLabel = SECTION_TITLES[sectionKey] || "Översikt";
 
   return (
-    <section className="flex h-full min-h-0 bg-white">
-      <aside className="hidden h-full w-[296px] shrink-0 border-r border-black/10 bg-white lg:block">
+    <section className="flex h-full min-h-0 bg-[#fffffe]">
+      <aside className="hidden h-full w-[296px] shrink-0 border-r border-black/10 bg-[#fffffe] lg:block">
         <AdminSidebar pathname={pathname} onNavigate={(nextPath) => navigateTo(nextPath)} onLogout={app?.logout} />
       </aside>
 
       <div data-admin-scroll-container="true" className="min-h-0 flex-1 overflow-y-auto">
-        <div className="sticky top-0 z-10 border-b border-black/10 bg-white px-4 py-2.5 lg:hidden">
+        <div className="sticky top-0 z-10 border-b border-black/10 bg-[#fffffe] px-4 py-2.5 lg:hidden">
           <div className="flex items-center justify-between gap-3">
             <button
               type="button"
-              className="inline-flex min-h-0 items-center gap-1.5 rounded-full border border-black/20 bg-white px-3 py-2 text-xs font-semibold text-ink-700"
+              className="inline-flex min-h-0 items-center gap-1.5 rounded-full border border-black/20 bg-[#fffffe] px-3 py-2 text-xs font-semibold text-ink-700"
               onClick={() => setMobileSidebarOpen(true)}
             >
               <PanelLeftIcon className="h-4 w-4" />
@@ -3289,11 +3289,11 @@ function AdminPanelPage({ app, pathname }) {
 
       {mobileSidebarOpen ? (
         <div className="fixed inset-0 z-[70] bg-transparent lg:hidden" onClick={() => setMobileSidebarOpen(false)}>
-          <div className="h-full w-[min(88vw,320px)] border-r border-black/10 bg-white" onClick={(event) => event.stopPropagation()}>
+          <div className="h-full w-[min(88vw,320px)] border-r border-black/10 bg-[#fffffe]" onClick={(event) => event.stopPropagation()}>
             <div className="flex items-center justify-end border-b border-black/10 p-3">
               <button
                 type="button"
-                className="inline-flex h-9 w-9 min-h-0 items-center justify-center rounded-full border border-black/10 bg-white text-ink-700"
+                className="inline-flex h-9 w-9 min-h-0 items-center justify-center rounded-full border border-black/10 bg-[#fffffe] text-ink-700"
                 onClick={() => setMobileSidebarOpen(false)}
               >
                 <XIcon className="h-4 w-4" />

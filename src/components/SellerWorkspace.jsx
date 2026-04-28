@@ -39,13 +39,13 @@ function formatSek(value) {
 
 function ListingVisualCard({ listing, shortlisted, onOpenListing, onBookViewing, onToggleShortlist }) {
   return (
-    <article className="overflow-hidden rounded-3xl border border-black/10 bg-white">
+    <article className="property-card-hover overflow-hidden rounded-3xl border border-[#d9d9d9] bg-[#fffffe]">
       <button type="button" onClick={() => onOpenListing(listing)} className="relative block w-full text-left">
         <img src={listing.image} alt={listing.title} className="h-52 w-full object-cover" />
         <div className="absolute left-3 top-3 flex items-center gap-2">
           <span className="rounded-xl border border-white/40 bg-black/55 px-2 py-1 text-[11px] font-semibold text-white">{listing.type}</span>
           {listing.verified && (
-            <span className="rounded-xl border border-white/40 bg-white/90 px-2 py-1 text-[11px] font-semibold text-black">Verifierad</span>
+            <span className="rounded-xl border border-white/40 bg-[#fffffe]/90 px-2 py-1 text-[11px] font-semibold text-black">Verifierad</span>
           )}
         </div>
       </button>
@@ -73,14 +73,14 @@ function ListingVisualCard({ listing, shortlisted, onOpenListing, onBookViewing,
           <button
             type="button"
             onClick={() => onToggleShortlist(listing)}
-            className="rounded-2xl border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-black"
+            className="rounded-2xl border border-black/10 bg-[#fffffe] px-3 py-2 text-xs font-semibold text-black"
           >
             {shortlisted ? "Sparad" : "Spara"}
           </button>
           <button
             type="button"
             onClick={() => onOpenListing(listing)}
-            className="rounded-2xl border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-black"
+            className="rounded-2xl border border-black/10 bg-[#fffffe] px-3 py-2 text-xs font-semibold text-black"
           >
             Visa
           </button>
@@ -126,14 +126,14 @@ function SellerWorkspace({
   }
 
   return (
-    <main className="min-h-screen w-full bg-white text-black">
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-black/10 bg-white px-4 py-3 sm:px-6">
+    <main className="min-h-screen w-full bg-[#fffffe] text-black">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-black/10 bg-[#fffffe] px-4 py-3 sm:px-6">
         <div className="flex items-center gap-3">
           <span className="text-sm font-semibold">Lokalflöde Stockholm</span>
           <span className="text-xs text-ink-500">Prototyp</span>
         </div>
 
-        <div className="inline-flex rounded-2xl border border-black/10 bg-white p-1 text-xs">
+        <div className="inline-flex rounded-2xl border border-black/10 bg-[#fffffe] p-1 text-xs">
           <button
             type="button"
             onClick={() => onModeChange("buyer")}
@@ -153,13 +153,13 @@ function SellerWorkspace({
 
       {mode === "buyer" ? (
         <section className="grid h-[calc(100vh-64px)] overflow-hidden lg:grid-cols-[500px_1fr] xl:grid-cols-[540px_1fr]">
-          <aside className="h-full overflow-hidden border-b border-black/10 bg-white p-4 lg:border-b-0 lg:border-r lg:p-5">
+          <aside className="h-full overflow-hidden border-b border-black/10 bg-[#fffffe] p-4 lg:border-b-0 lg:border-r lg:p-5">
             <div className="flex h-full flex-col gap-4">
               <div>
                 <h2 className="mt-1 text-3xl font-semibold">Sök & filtrera</h2>
               </div>
 
-              <div className="inline-flex w-fit rounded-2xl border border-black/10 bg-white p-1 text-xs">
+              <div className="inline-flex w-fit rounded-2xl border border-black/10 bg-[#fffffe] p-1 text-xs">
                 <button
                   type="button"
                   onClick={() => setSearchTool("filter")}
@@ -180,7 +180,7 @@ function SellerWorkspace({
                 <div className="rounded-3xl border border-[#c8d1de] bg-gradient-to-br from-[#edf2f7] via-[#eaf0f7] to-[#f3f6fb] p-5">
                   <div className="mb-3 flex items-center justify-between">
                     <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Sökprofil</p>
-                    <span className="rounded-full border border-white/70 bg-white/75 px-2 py-1 text-[11px] font-semibold text-ink-600">
+                    <span className="rounded-full border border-white/70 bg-[#fffffe]/75 px-2 py-1 text-[11px] font-semibold text-ink-600">
                       Aktiv
                     </span>
                   </div>
@@ -238,7 +238,7 @@ function SellerWorkspace({
                     </label>
 
                     <div className="grid grid-cols-2 gap-2">
-                      <label className="flex items-center gap-2 rounded-2xl border border-black/10 bg-white px-3 py-2.5 text-sm font-medium">
+                      <label className="flex items-center gap-2 rounded-2xl border border-black/10 bg-[#fffffe] px-3 py-2.5 text-sm font-medium">
                         <input
                           type="checkbox"
                           checked={buyerFilters.onlyVerified}
@@ -246,7 +246,7 @@ function SellerWorkspace({
                         />
                         Verifierade
                       </label>
-                      <label className="flex items-center gap-2 rounded-2xl border border-black/10 bg-white px-3 py-2.5 text-sm font-medium">
+                      <label className="flex items-center gap-2 rounded-2xl border border-black/10 bg-[#fffffe] px-3 py-2.5 text-sm font-medium">
                         <input
                           type="checkbox"
                           checked={buyerFilters.readyNow}
@@ -258,7 +258,7 @@ function SellerWorkspace({
 
                     <button
                       type="button"
-                      className="rounded-2xl border border-black/20 bg-white px-4 py-2 text-xs font-semibold"
+                      className="rounded-2xl border border-black/20 bg-[#fffffe] px-4 py-2 text-xs font-semibold"
                       onClick={() => setBuyerFilters(initialBuyerFilters)}
                     >
                       Nollställ filter
@@ -296,14 +296,14 @@ function SellerWorkspace({
               <div>
                 <h1 className="text-3xl font-semibold">Matchande objekt</h1>
               </div>
-              <div className="rounded-2xl border border-black/10 bg-white px-3 py-2 text-xs font-semibold">
+              <div className="rounded-2xl border border-black/10 bg-[#fffffe] px-3 py-2 text-xs font-semibold">
                 {filteredListings.length} träffar
               </div>
             </div>
 
             <div className="min-h-0 flex-1 overflow-y-auto pr-1">
               {filteredListings.length === 0 ? (
-                <div className="rounded-3xl border border-black/10 bg-white p-10 text-center text-sm text-ink-500">
+                <div className="rounded-3xl border border-black/10 bg-[#fffffe] p-10 text-center text-sm text-ink-500">
                   Inga objekt matchar dina filter just nu.
                 </div>
               ) : (
@@ -325,14 +325,14 @@ function SellerWorkspace({
         </section>
       ) : (
         <section className="flex min-h-[calc(100vh-64px)] items-start justify-center p-4 sm:p-8">
-          <div className="w-full max-w-4xl rounded-3xl border border-black/10 bg-white p-5 sm:p-8">
+          <div className="w-full max-w-4xl rounded-3xl border border-black/10 bg-[#fffffe] p-5 sm:p-8">
             <div className="text-center">
               <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Publiceringsflöde</p>
               <h1 className="mt-1 text-4xl font-semibold">Publicera objekt</h1>
               <p className="mt-2 text-sm text-ink-500">Ett centrerat steg-för-steg-flöde för snabb publicering.</p>
             </div>
 
-            <div className="mt-6 inline-flex w-full flex-wrap items-center justify-center gap-2 rounded-2xl border border-black/10 bg-white p-1 text-xs">
+            <div className="mt-6 inline-flex w-full flex-wrap items-center justify-center gap-2 rounded-2xl border border-black/10 bg-[#fffffe] p-1 text-xs">
               {steps.map((label, index) => (
                 <button
                   key={label}
@@ -408,7 +408,7 @@ function SellerWorkspace({
             </div>
 
             <div className="mx-auto mt-6 flex w-full max-w-2xl items-center justify-between">
-              <button type="button" className="rounded-2xl border border-black/20 bg-white px-4 py-2 text-xs font-semibold" onClick={() => setStep((v) => Math.max(v - 1, 0))}>
+              <button type="button" className="rounded-2xl border border-black/20 bg-[#fffffe] px-4 py-2 text-xs font-semibold" onClick={() => setStep((v) => Math.max(v - 1, 0))}>
                 Föregående
               </button>
               {step < steps.length - 1 ? (

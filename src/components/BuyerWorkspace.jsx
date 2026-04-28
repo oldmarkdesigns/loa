@@ -25,7 +25,7 @@ function CompactPropertyCard({ listing, onOpen }) {
     <button
       type="button"
       onClick={() => onOpen(listing)}
-      className="rounded-2xl border border-ink-100 bg-white p-2 text-left transition hover:-translate-y-0.5 hover:shadow-surface"
+      className="property-card-hover rounded-2xl border border-[#d9d9d9] bg-[#fffffe] p-2 text-left"
     >
       <img src={listing.image} alt={listing.title} className="h-20 w-full rounded-xl object-cover" />
       <p className="mt-2 truncate text-xs font-semibold text-ink-900">{listing.title}</p>
@@ -62,9 +62,9 @@ function BuyerWorkspace({
           <img src="/mock/hero-main.svg" alt="Modern lokal" className="h-[520px] w-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-br from-ink-900/35 via-brand-900/35 to-ink-900/70" />
 
-          <div className="absolute inset-x-5 top-5 z-10 flex items-center justify-between rounded-2xl border border-white/20 bg-white/10 px-4 py-3 backdrop-blur-md">
+          <div className="absolute inset-x-5 top-5 z-10 flex items-center justify-between rounded-2xl border border-white/20 bg-[#fffffe]/10 px-4 py-3 backdrop-blur-md">
             <div className="flex items-center gap-2">
-              <div className="rounded-full bg-white/90 p-2 text-brand-700">
+              <div className="rounded-full bg-[#fffffe]/90 p-2 text-brand-700">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
                   <path d="M4 20V8l8-4 8 4v12H4Z" stroke="currentColor" strokeWidth="1.8" />
                   <path d="M9 20v-6h6v6" stroke="currentColor" strokeWidth="1.8" />
@@ -73,33 +73,33 @@ function BuyerWorkspace({
               <p className="text-sm font-semibold">Lokalflöde</p>
             </div>
 
-            <nav className="hidden items-center gap-2 rounded-full bg-white/15 px-2 py-1 text-xs md:flex">
-              <button type="button" className="rounded-full bg-white/30 px-3 py-1 font-semibold">
+            <nav className="hidden items-center gap-2 rounded-full bg-[#fffffe]/15 px-2 py-1 text-xs md:flex">
+              <button type="button" className="rounded-full bg-[#fffffe]/30 px-3 py-1 font-semibold">
                 Hem
               </button>
-              <button type="button" className="rounded-full px-3 py-1 text-white/85 hover:bg-white/15">
+              <button type="button" className="rounded-full px-3 py-1 text-white/85 hover:bg-[#fffffe]/15">
                 Om
               </button>
-              <button type="button" className="rounded-full px-3 py-1 text-white/85 hover:bg-white/15">
+              <button type="button" className="rounded-full px-3 py-1 text-white/85 hover:bg-[#fffffe]/15">
                 Lokaler
               </button>
               <button
                 type="button"
-                className="rounded-full px-3 py-1 text-white/85 hover:bg-white/15"
+                className="rounded-full px-3 py-1 text-white/85 hover:bg-[#fffffe]/15"
                 onClick={() => setSearchMode("ai")}
               >
                 AI-sök
               </button>
             </nav>
 
-            <button type="button" className="rounded-full bg-white px-4 py-2 text-xs font-semibold text-ink-900" onClick={() => onBookViewing(spotlight)}>
+            <button type="button" className="rounded-full bg-[#fffffe] px-4 py-2 text-xs font-semibold text-ink-900" onClick={() => onBookViewing(spotlight)}>
               Kontakta hyresvärd
             </button>
           </div>
 
           <div className="absolute bottom-8 left-5 right-5 z-10 grid gap-6 md:grid-cols-[1fr_250px] md:items-end">
             <div className="max-w-xl">
-              <p className="inline-flex rounded-full border border-white/25 bg-white/10 px-3 py-1 text-xs font-semibold">Byggt för snabb lokalmatchning</p>
+              <p className="inline-flex rounded-full border border-white/25 bg-[#fffffe]/10 px-3 py-1 text-xs font-semibold">Byggt för snabb lokalmatchning</p>
               <h1 className="mt-4 font-display text-4xl font-semibold leading-[1.08] sm:text-5xl">
                 Hitta rätt lokal med ett enklare flöde.
               </h1>
@@ -107,12 +107,12 @@ function BuyerWorkspace({
                 Filtrera direkt eller låt AI-chatten ta fram bästa matchningar för ditt team och din budget.
               </p>
               <div className="mt-5 flex flex-wrap gap-2">
-                <button type="button" className="rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-ink-900" onClick={() => onOpenListing(spotlight)}>
+                <button type="button" className="rounded-full bg-[#fffffe] px-5 py-2.5 text-sm font-semibold text-ink-900" onClick={() => onOpenListing(spotlight)}>
                   Kom igång
                 </button>
                 <button
                   type="button"
-                  className="rounded-full border border-white/35 bg-white/10 px-5 py-2.5 text-sm font-semibold text-white"
+                  className="rounded-full border border-white/35 bg-[#fffffe]/10 px-5 py-2.5 text-sm font-semibold text-white"
                   onClick={() => setSearchMode("ai")}
                 >
                   Sök med AI
@@ -121,15 +121,15 @@ function BuyerWorkspace({
             </div>
 
             <div className="grid gap-3 text-right">
-              <div className="ml-auto w-fit rounded-full bg-white/14 px-4 py-3 text-left backdrop-blur-md">
+              <div className="ml-auto w-fit rounded-full bg-[#fffffe]/14 px-4 py-3 text-left backdrop-blur-md">
                 <p className="text-2xl font-semibold">50+</p>
                 <p className="text-xs text-white/80">Aktiva hyresvärder</p>
               </div>
-              <div className="ml-auto w-fit rounded-full bg-white/14 px-4 py-3 text-left backdrop-blur-md">
+              <div className="ml-auto w-fit rounded-full bg-[#fffffe]/14 px-4 py-3 text-left backdrop-blur-md">
                 <p className="text-2xl font-semibold">2.1h</p>
                 <p className="text-xs text-white/80">Median svarstid</p>
               </div>
-              <div className="ml-auto w-fit rounded-full bg-white/14 px-4 py-3 text-left backdrop-blur-md">
+              <div className="ml-auto w-fit rounded-full bg-[#fffffe]/14 px-4 py-3 text-left backdrop-blur-md">
                 <p className="text-2xl font-semibold">{filteredListings.length}</p>
                 <p className="text-xs text-white/80">Matchande lokaler</p>
               </div>
@@ -138,30 +138,30 @@ function BuyerWorkspace({
         </section>
 
         <section className="surface p-6 sm:p-7">
-          <p className="inline-flex rounded-full border border-ink-200 bg-white px-3 py-1 text-xs font-semibold text-ink-600">Vilka vi är</p>
+          <p className="inline-flex rounded-full border border-ink-200 bg-[#fffffe] px-3 py-1 text-xs font-semibold text-ink-600">Vilka vi är</p>
           <h2 className="mt-3 max-w-4xl font-display text-3xl font-semibold leading-tight text-ink-900">
             En tillitsdriven plattform för snabbare lokalaffärer. Tydlig data, enkel process och mindre manuellt arbete.
           </h2>
 
           <div className="mt-6 grid gap-3 sm:grid-cols-3">
-            <article className="sm:col-span-2 rounded-3xl border border-ink-100 bg-white p-3">
+            <article className="sm:col-span-2 rounded-3xl border border-ink-100 bg-[#fffffe] p-3">
               <img src="/mock/listing-2.svg" alt="Möte" className="h-52 w-full rounded-2xl object-cover" />
               <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                <div className="rounded-2xl bg-white p-3">
+                <div className="rounded-2xl bg-[#fffffe] p-3">
                   <p className="text-xs text-ink-500">Verifierad annonsdata</p>
                   <p className="mt-1 text-sm font-semibold text-ink-900">Automatisk uppföljning av tillgänglighet och pris</p>
                 </div>
-                <div className="rounded-2xl bg-white p-3">
+                <div className="rounded-2xl bg-[#fffffe] p-3">
                   <p className="text-xs text-ink-500">AI-matchning</p>
                   <p className="mt-1 text-sm font-semibold text-ink-900">Snabba förslag med motivering utifrån behov</p>
                 </div>
               </div>
             </article>
 
-            <article className="rounded-3xl border border-ink-100 bg-white p-4">
+            <article className="rounded-3xl border border-ink-100 bg-[#fffffe] p-4">
               <p className="text-3xl font-semibold text-ink-900">1 200+</p>
               <p className="text-sm text-ink-600">Kvalificerade intressen i testdata</p>
-              <div className="mt-6 rounded-2xl bg-white p-3">
+              <div className="mt-6 rounded-2xl bg-[#fffffe] p-3">
                 <p className="text-2xl font-semibold text-ink-900">250+</p>
                 <p className="text-sm text-ink-600">Team som hittat ny lokal via flödet</p>
               </div>
@@ -172,7 +172,7 @@ function BuyerWorkspace({
         <section className="surface p-5 sm:p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h3 className="font-display text-xl font-semibold text-ink-900">Sökverktyg</h3>
-            <div className="rounded-xl border border-ink-200 bg-white p-1">
+            <div className="rounded-xl border border-ink-200 bg-[#fffffe] p-1">
               <button
                 type="button"
                 onClick={() => setSearchMode("standard")}
@@ -254,7 +254,7 @@ function BuyerWorkspace({
                   />
                 </label>
 
-                <label className="flex items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm text-ink-700">
+                <label className="flex items-center gap-2 rounded-xl border border-ink-200 bg-[#fffffe] px-3 py-2 text-sm text-ink-700">
                   <input
                     type="checkbox"
                     checked={filters.onlyVerified}
@@ -268,7 +268,7 @@ function BuyerWorkspace({
                   Verifierade
                 </label>
 
-                <label className="flex items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 py-2 text-sm text-ink-700">
+                <label className="flex items-center gap-2 rounded-xl border border-ink-200 bg-[#fffffe] px-3 py-2 text-sm text-ink-700">
                   <input
                     type="checkbox"
                     checked={filters.readyNow}
@@ -285,7 +285,7 @@ function BuyerWorkspace({
 
               <div className="mt-4 grid gap-3 md:grid-cols-2">
                 {featuredListings.slice(0, 2).map((listing) => (
-                  <article key={listing.id} className="rounded-2xl border border-ink-100 bg-white p-3">
+                  <article key={listing.id} className="rounded-2xl border border-ink-100 bg-[#fffffe] p-3">
                     <div className="flex items-start gap-3">
                       <img src={listing.image} alt={listing.title} className="h-24 w-28 rounded-xl object-cover" />
                       <div className="min-w-0 flex-1">
@@ -338,15 +338,15 @@ function BuyerWorkspace({
         <section className="surface p-4">
           <h4 className="font-display text-xl font-semibold text-ink-900">Hyr, jämför och ansök</h4>
           <div className="mt-3 space-y-2">
-            <article className="rounded-2xl border border-ink-100 bg-white p-3">
+            <article className="rounded-2xl border border-ink-100 bg-[#fffffe] p-3">
               <p className="text-sm font-semibold text-ink-900">1. Hyr lokal</p>
               <p className="text-xs text-ink-600">Sök direkt bland verifierade lokaler.</p>
             </article>
-            <article className="rounded-2xl border border-ink-100 bg-white p-3">
+            <article className="rounded-2xl border border-ink-100 bg-[#fffffe] p-3">
               <p className="text-sm font-semibold text-ink-900">2. Jämför alternativ</p>
               <p className="text-xs text-ink-600">Använd AI-sök eller sparade objekt för snabb jämförelse.</p>
             </article>
-            <article className="rounded-2xl border border-ink-100 bg-white p-3">
+            <article className="rounded-2xl border border-ink-100 bg-[#fffffe] p-3">
               <p className="text-sm font-semibold text-ink-900">3. Skicka förfrågan</p>
               <p className="text-xs text-ink-600">Boka visning och fortsätt till offert med hyresvärden.</p>
             </article>
@@ -359,7 +359,7 @@ function BuyerWorkspace({
           <div className="absolute inset-0 p-4 text-white">
             <p className="text-sm font-semibold">Snabbläge med AI</p>
             <p className="mt-1 max-w-[180px] text-xs text-white/85">Få relevanta lokalförslag med ett par meddelanden.</p>
-            <button type="button" className="mt-3 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-ink-900" onClick={() => setSearchMode("ai")}>
+            <button type="button" className="mt-3 rounded-full bg-[#fffffe] px-3 py-1.5 text-xs font-semibold text-ink-900" onClick={() => setSearchMode("ai")}>
               Starta AI-sök
             </button>
           </div>
@@ -370,12 +370,12 @@ function BuyerWorkspace({
           <p className="mt-1 text-xs text-ink-600">Sparade lokaler för snabb återkomst.</p>
           <div className="mt-3 space-y-2">
             {shortlist.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-ink-200 bg-white px-3 py-4 text-center text-sm text-ink-500">
+              <div className="rounded-xl border border-dashed border-ink-200 bg-[#fffffe] px-3 py-4 text-center text-sm text-ink-500">
                 Inga sparade lokaler ännu.
               </div>
             ) : (
               shortlist.map((item) => (
-                <div key={item.id} className="rounded-xl border border-ink-200 bg-white p-3">
+                <div key={item.id} className="rounded-xl border border-ink-200 bg-[#fffffe] p-3">
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <p className="text-sm font-semibold text-ink-800">{item.title}</p>

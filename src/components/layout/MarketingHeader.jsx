@@ -86,14 +86,14 @@ function MarketingHeader({
     <>
       <header
         className={`navbar-enter sticky top-0 z-40 shrink-0 border-b px-4 py-3 will-change-[background-color,border-color,backdrop-filter] transition-[background-color,border-color,backdrop-filter] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] sm:px-6 ${
-          isNavScrolled || showStaticBorder ? "border-black/10 bg-white/95 backdrop-blur-md" : "border-black/0 bg-white/0 backdrop-blur-0"
+          isNavScrolled || showStaticBorder ? "border-black/10 bg-[#fffffe]/95 backdrop-blur-md" : "border-black/0 bg-[#fffffe]/0 backdrop-blur-0"
         }`}
       >
         <div className="grid w-full grid-cols-[auto_1fr_auto] items-center gap-4">
           <div className="flex min-w-0 items-center gap-4">
             <button type="button" className="justify-self-start text-left" onClick={onBrandClick || (() => navigateTo("/"))}>
-              <span className="inline-flex items-center gap-2 rounded-xl border border-black/10 bg-white px-2.5 py-1.5">
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-dashed border-black/30 bg-white text-[9px] font-semibold uppercase tracking-wide text-ink-500">
+              <span className="inline-flex items-center gap-2 rounded-xl border border-black/10 bg-[#fffffe] px-2.5 py-1.5">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-dashed border-black/30 bg-[#fffffe] text-[9px] font-semibold uppercase tracking-wide text-ink-500">
                   LOGGA
                 </span>
                 <span className="inline-flex items-center gap-1.5">
@@ -141,7 +141,7 @@ function MarketingHeader({
                 <button
                   type="button"
                   aria-label="Meddelanden"
-                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-black/20 bg-white text-ink-700"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-black/20 bg-[#fffffe] text-ink-700"
                   onClick={onMessagesClick || (() => navigateTo("/app/messages"))}
                 >
                   <MessageSquareIcon className="h-4 w-4" />
@@ -151,7 +151,7 @@ function MarketingHeader({
                 <div ref={menuRef} className="relative inline-flex h-11 items-center self-center">
                   <button
                     type="button"
-                    className="inline-flex h-full w-11 items-center justify-center overflow-hidden rounded-full border border-black/20 bg-white text-sm font-semibold text-ink-700"
+                    className="inline-flex h-full w-11 items-center justify-center overflow-hidden rounded-full border border-black/20 bg-[#fffffe] text-sm font-semibold text-ink-700"
                     onClick={() => setMenuOpen((value) => !value)}
                     aria-label="Öppna profilmeny"
                     aria-expanded={menuOpen}
@@ -233,7 +233,7 @@ function MarketingHeader({
 
       {mobileMenuOpen ? (
         <div className="fixed inset-0 z-[60] bg-transparent lg:hidden" onClick={() => setMobileMenuOpen(false)}>
-          <div className="absolute right-4 top-[72px] w-[min(320px,calc(100vw-2rem))] rounded-2xl border border-black/10 bg-white p-3" onClick={(event) => event.stopPropagation()}>
+          <div className="absolute right-4 top-[72px] w-[min(320px,calc(100vw-2rem))] rounded-2xl border border-black/10 bg-[#fffffe] p-3" onClick={(event) => event.stopPropagation()}>
             <div className="space-y-1">
               {[...marketingPrimaryItems, ...marketingSectionItems].map((item) => (
                 <button

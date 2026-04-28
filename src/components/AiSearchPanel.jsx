@@ -79,21 +79,21 @@ function AiSearchPanel({ listings, quickNeeds, filters, onApplyFilters, onOpenLi
             type="button"
             key={need}
             onClick={() => postUserPrompt(need)}
-            className="rounded-full border border-ink-200 bg-white px-3 py-1 text-xs font-semibold text-ink-700 hover:border-brand-300"
+            className="rounded-full border border-ink-200 bg-[#fffffe] px-3 py-1 text-xs font-semibold text-ink-700 hover:border-brand-300"
           >
             {need}
           </button>
         ))}
       </div>
 
-      <div className="mt-4 flex-1 space-y-3 overflow-y-auto rounded-3xl border border-[#c9d2df] bg-white/70 p-3">
+      <div className="mt-4 flex-1 space-y-3 overflow-y-auto rounded-3xl border border-[#c9d2df] bg-[#fffffe]/70 p-3">
         {messages.map((message) => (
           <div
             key={message.id}
             className={`max-w-[95%] whitespace-pre-wrap rounded-2xl px-3 py-2 text-sm ${
               message.role === "assistant"
                 ? "border border-[#0d162b] bg-[#0d162b] text-white"
-                : "ml-auto border border-ink-200 bg-white text-ink-900"
+                : "ml-auto border border-ink-200 bg-[#fffffe] text-ink-900"
             }`}
           >
             {message.text}
@@ -119,7 +119,7 @@ function AiSearchPanel({ listings, quickNeeds, filters, onApplyFilters, onOpenLi
         </button>
       </form>
 
-      <div className="mt-4 rounded-3xl border border-[#c9d2df] bg-white/80 p-3">
+      <div className="mt-4 rounded-3xl border border-[#c9d2df] bg-[#fffffe]/80 p-3">
         <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Toppval just nu</p>
         <div className="mt-2 grid gap-2">
           {previewMatches.map((item) => (
@@ -127,7 +127,7 @@ function AiSearchPanel({ listings, quickNeeds, filters, onApplyFilters, onOpenLi
               key={item.id}
               type="button"
               onClick={() => onOpenListing(item)}
-              className="flex items-center justify-between rounded-xl border border-ink-200 bg-white px-3 py-2 text-left text-sm text-ink-800 hover:border-brand-300"
+              className="flex items-center justify-between rounded-xl border border-ink-200 bg-[#fffffe] px-3 py-2 text-left text-sm text-ink-800 hover:border-brand-300"
             >
               <span>{item.title}</span>
               <span className="text-xs font-semibold text-brand-700">{item.score}</span>

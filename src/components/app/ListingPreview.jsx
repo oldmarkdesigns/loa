@@ -15,10 +15,10 @@ function mergeAmenities(draft) {
 function ListingPreview({ draft }) {
   const mergedAmenities = mergeAmenities(draft);
   const coverImage = draft.images?.[0]?.src || "/object-images/object-1.jpeg";
-  const amenityChipClass = "inline-flex min-h-[42px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-black/10 bg-white px-3 py-1.5 text-[0.875rem] font-semibold leading-5 text-ink-700";
+  const amenityChipClass = "inline-flex min-h-[42px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-black/10 bg-[#fffffe] px-3 py-1.5 text-[0.875rem] font-semibold leading-5 text-ink-700";
 
   return (
-    <article className="overflow-hidden rounded-2xl border border-black/10 bg-white">
+    <article className="overflow-hidden rounded-2xl border border-black/10 bg-[#fffffe]">
       <img
         src={coverImage}
         alt={draft.title || "Objekt"}

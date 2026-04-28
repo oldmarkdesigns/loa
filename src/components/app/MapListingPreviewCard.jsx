@@ -9,7 +9,7 @@ function MapListingPreviewCard({ listing, onOpen, className = "" }) {
   if (!listing) return null;
 
   const content = (
-    <div className={`overflow-hidden rounded-[24px] border border-black/10 bg-white shadow-[0_16px_34px_rgba(15,25,48,0.16)] ${className}`.trim()}>
+    <div className={`overflow-hidden rounded-[24px] border border-black/10 bg-[#fffffe] shadow-[0_16px_34px_rgba(15,25,48,0.16)] ${className}`.trim()}>
       <img src={listing.image} alt={listing.title} className="h-28 w-full object-cover" />
       <div className="flex items-center gap-2 px-3 py-3">
         <Icon name="pin" className="h-4 w-4 shrink-0 text-ink-500" />

@@ -24,7 +24,7 @@ const publishSteps = [
 const termOptions = ["3 månader", "6 månader", "12 månader", "24 månader", "36 månader", "Flexibelt avtal"];
 const availabilityOptions = ["Ledig nu", "Inom 2 veckor", "Inom 1 månad", "Inom 2 månader", "Efter överenskommelse"];
 const amenityOptions = propertyAmenityOptions;
-const propertyCardAmenityChipClass = "inline-flex min-h-[42px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-black/10 bg-white px-3 py-1.5 text-[0.875rem] font-semibold leading-5 text-ink-700";
+const propertyCardAmenityChipClass = "inline-flex min-h-[42px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-black/10 bg-[#fffffe] px-3 py-1.5 text-[0.875rem] font-semibold leading-5 text-ink-700";
 const furnishedOptions = [
   { value: "all", label: "Alla" },
   { value: "yes", label: "Möblerad" },
@@ -266,8 +266,8 @@ function StepPills({ currentIndex, onSelect }) {
               active
                 ? "border-[#0f1930] bg-[#0f1930] text-white"
                 : complete
-                  ? "border-[#c8d1de] bg-white text-ink-800"
-                  : "border-black/10 bg-white text-ink-600 hover:bg-white"
+                  ? "border-[#c8d1de] bg-[#fffffe] text-ink-800"
+                  : "border-black/10 bg-[#fffffe] text-ink-600 hover:bg-[#fffffe]"
             }`}
             onClick={() => onSelect(index)}
           >
@@ -642,15 +642,15 @@ function PublishPage({ app }) {
                     </div>
 
                     <div className="grid gap-2 sm:grid-cols-3">
-                      <label className="inline-flex h-[46px] items-center gap-2 rounded-2xl border border-black/10 bg-white px-3 text-xs font-semibold text-ink-700">
+                      <label className="inline-flex h-[46px] items-center gap-2 rounded-2xl border border-black/10 bg-[#fffffe] px-3 text-xs font-semibold text-ink-700">
                         <input type="checkbox" checked={Boolean(draft.includeOperatingCosts)} onChange={(event) => updateField("includeOperatingCosts", event.target.checked)} />
                         Driftkostn. ingår
                       </label>
-                      <label className="inline-flex h-[46px] items-center gap-2 rounded-2xl border border-black/10 bg-white px-3 text-xs font-semibold text-ink-700">
+                      <label className="inline-flex h-[46px] items-center gap-2 rounded-2xl border border-black/10 bg-[#fffffe] px-3 text-xs font-semibold text-ink-700">
                         <input type="checkbox" checked={Boolean(draft.accessibilityAdapted)} onChange={(event) => updateField("accessibilityAdapted", event.target.checked)} />
                         Tillgänglighetsanp.
                       </label>
-                      <label className="inline-flex h-[46px] items-center gap-2 rounded-2xl border border-black/10 bg-white px-3 text-xs font-semibold text-ink-700">
+                      <label className="inline-flex h-[46px] items-center gap-2 rounded-2xl border border-black/10 bg-[#fffffe] px-3 text-xs font-semibold text-ink-700">
                         <input type="checkbox" checked={Boolean(draft.ecoCertified)} onChange={(event) => updateField("ecoCertified", event.target.checked)} />
                         Miljöcertifierad
                       </label>
@@ -660,7 +660,7 @@ function PublishPage({ app }) {
 
                 {currentStep.id === "media" ? (
                   <div className="space-y-4">
-                    <div className="rounded-2xl border border-black/10 bg-white p-3">
+                    <div className="rounded-2xl border border-black/10 bg-[#fffffe] p-3">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <label className="btn-secondary min-h-0 cursor-pointer gap-1.5 px-3 py-2 text-xs">
                           <UploadIcon className="h-4 w-4" />
@@ -678,7 +678,7 @@ function PublishPage({ app }) {
 
                       <div className="mt-3 grid gap-3 sm:grid-cols-2">
                         {draft.images.map((image, index) => (
-                          <article key={image.id} className="rounded-2xl border border-black/10 bg-white p-2.5">
+                          <article key={image.id} className="rounded-2xl border border-black/10 bg-[#fffffe] p-2.5">
                             <div className="relative">
                               <img src={image.src} alt={image.name || `Bild ${index + 1}`} className="h-32 w-full rounded-xl border border-black/10 object-cover" />
                               {index === 0 ? (
@@ -690,21 +690,21 @@ function PublishPage({ app }) {
                             <div className="mt-2 space-y-1.5">
                               <div className="flex flex-wrap gap-1.5">
                                 {index !== 0 ? (
-                                  <button type="button" className="min-h-0 rounded-xl border border-black/10 bg-white px-2.5 py-1 text-[11px] font-semibold text-ink-700" onClick={() => setCoverImage(index)}>
+                                  <button type="button" className="min-h-0 rounded-xl border border-black/10 bg-[#fffffe] px-2.5 py-1 text-[11px] font-semibold text-ink-700" onClick={() => setCoverImage(index)}>
                                     Sätt som omslag
                                   </button>
                                 ) : null}
 
-                                <label className="min-h-0 cursor-pointer rounded-xl border border-black/10 bg-white px-2.5 py-1 text-[11px] font-semibold text-ink-700">
+                                <label className="min-h-0 cursor-pointer rounded-xl border border-black/10 bg-[#fffffe] px-2.5 py-1 text-[11px] font-semibold text-ink-700">
                                   Ersätt bild
                                   <input type="file" accept="image/*" className="hidden" onChange={(event) => void handleReplaceImage(index, event)} />
                                 </label>
                               </div>
                               <div className="flex flex-wrap gap-1.5">
-                                <button type="button" className="min-h-0 rounded-xl border border-black/10 bg-white px-2.5 py-1 text-[11px] font-semibold text-ink-700" onClick={() => moveImage(index, -1)} disabled={index === 0}>
+                                <button type="button" className="min-h-0 rounded-xl border border-black/10 bg-[#fffffe] px-2.5 py-1 text-[11px] font-semibold text-ink-700" onClick={() => moveImage(index, -1)} disabled={index === 0}>
                                   Flytta vänster
                                 </button>
-                                <button type="button" className="min-h-0 rounded-xl border border-black/10 bg-white px-2.5 py-1 text-[11px] font-semibold text-ink-700" onClick={() => moveImage(index, 1)} disabled={index === draft.images.length - 1}>
+                                <button type="button" className="min-h-0 rounded-xl border border-black/10 bg-[#fffffe] px-2.5 py-1 text-[11px] font-semibold text-ink-700" onClick={() => moveImage(index, 1)} disabled={index === draft.images.length - 1}>
                                   Flytta höger
                                 </button>
                                 <button type="button" className="min-h-0 rounded-xl border border-rose-200 bg-rose-50 px-2.5 py-1 text-[11px] font-semibold text-rose-700" onClick={() => removeImage(index)}>
@@ -750,7 +750,7 @@ function PublishPage({ app }) {
                               className={`rounded-xl border px-3 py-2 text-xs font-semibold transition ${
                                 active
                                   ? "border-[#0f1930] bg-[#0f1930] text-white"
-                                  : "border-black/10 bg-white text-ink-700 hover:bg-white"
+                                  : "border-black/10 bg-[#fffffe] text-ink-700 hover:bg-[#fffffe]"
                               }`}
                               onClick={() => toggleAmenity(amenity.value)}
                             >
@@ -777,33 +777,33 @@ function PublishPage({ app }) {
                 ) : null}
 
                 {currentStep.id === "review" ? (
-                  <div className="space-y-4 rounded-2xl border border-black/10 bg-white p-4">
-                    <div className="rounded-xl border border-black/10 bg-white px-3 py-2 text-sm font-semibold text-ink-700">
+                  <div className="space-y-4 rounded-2xl border border-black/10 bg-[#fffffe] p-4">
+                    <div className="rounded-xl border border-black/10 bg-[#fffffe] px-3 py-2 text-sm font-semibold text-ink-700">
                       Granska annonsen. När du publicerar blir objektet synligt direkt för hyresgäster.
                     </div>
                     <div className="grid gap-3 text-sm sm:grid-cols-2">
-                      <div className="rounded-xl border border-black/10 bg-white px-3 py-2"><span className="text-ink-500">Rubrik:</span> {draft.title || "-"}</div>
-                      <div className="rounded-xl border border-black/10 bg-white px-3 py-2"><span className="text-ink-500">Område:</span> {draft.district || "-"}</div>
-                      <div className="rounded-xl border border-black/10 bg-white px-3 py-2"><span className="text-ink-500">Typ:</span> {draft.type || "-"}</div>
-                      <div className="rounded-xl border border-black/10 bg-white px-3 py-2"><span className="text-ink-500">Yta:</span> {draft.sizeSqm || "-"} kvm</div>
-                      <div className="rounded-xl border border-black/10 bg-white px-3 py-2"><span className="text-ink-500">Team:</span> {draft.capacity || "-"} platser</div>
-                      <div className="rounded-xl border border-black/10 bg-white px-3 py-2"><span className="text-ink-500">Inflyttning:</span> {draft.moveInDate || "-"}</div>
-                      <div className="rounded-xl border border-black/10 bg-white px-3 py-2"><span className="text-ink-500">Kommunaltrafik:</span> {draft.transitDistance || "-"}</div>
-                      <div className="rounded-xl border border-black/10 bg-white px-3 py-2"><span className="text-ink-500">Avtalsflex:</span> {draft.contractFlex || "-"}</div>
-                      <div className="rounded-xl border border-black/10 bg-white px-3 py-2"><span className="text-ink-500">Access:</span> {draft.accessHours || "-"}</div>
-                      <div className="rounded-xl border border-black/10 bg-white px-3 py-2"><span className="text-ink-500">Parkering:</span> {draft.parkingType || "-"}</div>
-                      <div className="rounded-xl border border-black/10 bg-white px-3 py-2"><span className="text-ink-500">Planlösning:</span> {draft.layoutType || "-"}</div>
-                      <div className="rounded-xl border border-black/10 bg-white px-3 py-2"><span className="text-ink-500">Driftkostn. ingår:</span> {draft.includeOperatingCosts ? "Ja" : "Nej"}</div>
-                      <div className="rounded-xl border border-black/10 bg-white px-3 py-2"><span className="text-ink-500">Tillgänglighetsanp.:</span> {draft.accessibilityAdapted ? "Ja" : "Nej"}</div>
-                      <div className="rounded-xl border border-black/10 bg-white px-3 py-2"><span className="text-ink-500">Miljöcertifierad:</span> {draft.ecoCertified ? "Ja" : "Nej"}</div>
-                      <div className="rounded-xl border border-black/10 bg-white px-3 py-2"><span className="text-ink-500">Bilder:</span> {draft.images.length}</div>
-                      <div className="rounded-xl border border-black/10 bg-white px-3 py-2"><span className="text-ink-500">Omslagsfoto:</span> {draft.images[0]?.name || "Valt"}</div>
+                      <div className="rounded-xl border border-black/10 bg-[#fffffe] px-3 py-2"><span className="text-ink-500">Rubrik:</span> {draft.title || "-"}</div>
+                      <div className="rounded-xl border border-black/10 bg-[#fffffe] px-3 py-2"><span className="text-ink-500">Område:</span> {draft.district || "-"}</div>
+                      <div className="rounded-xl border border-black/10 bg-[#fffffe] px-3 py-2"><span className="text-ink-500">Typ:</span> {draft.type || "-"}</div>
+                      <div className="rounded-xl border border-black/10 bg-[#fffffe] px-3 py-2"><span className="text-ink-500">Yta:</span> {draft.sizeSqm || "-"} kvm</div>
+                      <div className="rounded-xl border border-black/10 bg-[#fffffe] px-3 py-2"><span className="text-ink-500">Team:</span> {draft.capacity || "-"} platser</div>
+                      <div className="rounded-xl border border-black/10 bg-[#fffffe] px-3 py-2"><span className="text-ink-500">Inflyttning:</span> {draft.moveInDate || "-"}</div>
+                      <div className="rounded-xl border border-black/10 bg-[#fffffe] px-3 py-2"><span className="text-ink-500">Kommunaltrafik:</span> {draft.transitDistance || "-"}</div>
+                      <div className="rounded-xl border border-black/10 bg-[#fffffe] px-3 py-2"><span className="text-ink-500">Avtalsflex:</span> {draft.contractFlex || "-"}</div>
+                      <div className="rounded-xl border border-black/10 bg-[#fffffe] px-3 py-2"><span className="text-ink-500">Access:</span> {draft.accessHours || "-"}</div>
+                      <div className="rounded-xl border border-black/10 bg-[#fffffe] px-3 py-2"><span className="text-ink-500">Parkering:</span> {draft.parkingType || "-"}</div>
+                      <div className="rounded-xl border border-black/10 bg-[#fffffe] px-3 py-2"><span className="text-ink-500">Planlösning:</span> {draft.layoutType || "-"}</div>
+                      <div className="rounded-xl border border-black/10 bg-[#fffffe] px-3 py-2"><span className="text-ink-500">Driftkostn. ingår:</span> {draft.includeOperatingCosts ? "Ja" : "Nej"}</div>
+                      <div className="rounded-xl border border-black/10 bg-[#fffffe] px-3 py-2"><span className="text-ink-500">Tillgänglighetsanp.:</span> {draft.accessibilityAdapted ? "Ja" : "Nej"}</div>
+                      <div className="rounded-xl border border-black/10 bg-[#fffffe] px-3 py-2"><span className="text-ink-500">Miljöcertifierad:</span> {draft.ecoCertified ? "Ja" : "Nej"}</div>
+                      <div className="rounded-xl border border-black/10 bg-[#fffffe] px-3 py-2"><span className="text-ink-500">Bilder:</span> {draft.images.length}</div>
+                      <div className="rounded-xl border border-black/10 bg-[#fffffe] px-3 py-2"><span className="text-ink-500">Omslagsfoto:</span> {draft.images[0]?.name || "Valt"}</div>
                     </div>
-                    <div className="rounded-xl border border-black/10 bg-white px-3 py-2 text-sm">
+                    <div className="rounded-xl border border-black/10 bg-[#fffffe] px-3 py-2 text-sm">
                       <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Beskrivning</p>
                       <p className="mt-1 text-ink-700">{draft.description || "-"}</p>
                     </div>
-                    <div className="rounded-xl border border-black/10 bg-white px-3 py-2">
+                    <div className="rounded-xl border border-black/10 bg-[#fffffe] px-3 py-2">
                       <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Bekvämligheter</p>
                       <div className="mt-2 flex flex-wrap gap-1.5">
                         {mergeAmenities(draft).map((amenity) => {
@@ -858,7 +858,7 @@ function PublishPage({ app }) {
               </div>
             ) : (
               <div className="mt-5 space-y-4 rounded-2xl border border-emerald-200 bg-emerald-50/50 p-4">
-                <div className="rounded-xl border border-emerald-200 bg-white px-3 py-2">
+                <div className="rounded-xl border border-emerald-200 bg-[#fffffe] px-3 py-2">
                   <p className="text-sm font-semibold text-emerald-700">Annons publicerad</p>
                   <p className="text-xs text-ink-600">Objektet är nu aktivt i sökflödet.</p>
                 </div>
@@ -909,16 +909,16 @@ function PublishPage({ app }) {
                 <div className="min-h-0">
                   <div className="grid gap-3 sm:grid-cols-2">
                     {publishFaqItems.slice(0, 4).map((item) => (
-                      <div key={item.q} className="rounded-xl border border-black/10 bg-white px-3 py-2.5">
+                      <div key={item.q} className="rounded-xl border border-black/10 bg-[#fffffe] px-3 py-2.5">
                         <p className="text-xs font-semibold text-ink-900">{item.q}</p>
                         <p className="mt-1 text-xs text-ink-600">{item.a}</p>
                       </div>
                     ))}
-                    <div className="rounded-xl border border-black/10 bg-white px-3 py-2.5">
+                    <div className="rounded-xl border border-black/10 bg-[#fffffe] px-3 py-2.5">
                       <p className="text-xs font-semibold text-ink-900">{publishFaqItems[4].q}</p>
                       <p className="mt-1 text-xs text-ink-600">{publishFaqItems[4].a}</p>
                     </div>
-                    <div className="rounded-xl border border-black/10 bg-white px-3 py-2.5">
+                    <div className="rounded-xl border border-black/10 bg-[#fffffe] px-3 py-2.5">
                       <p className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-ink-700">
                         Snabba tips
                         <LightbulbIcon className="h-4 w-4 text-[#0f1930]" />
@@ -939,7 +939,7 @@ function PublishPage({ app }) {
             <article className="surface p-4">
               <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                 <h3 className="text-xl font-semibold text-[#0f1930]">Förhandsvisning</h3>
-                <div className="min-w-[120px] rounded-xl border border-black/10 bg-white px-2.5 py-2">
+                <div className="min-w-[120px] rounded-xl border border-black/10 bg-[#fffffe] px-2.5 py-2">
                   <div className="flex items-end justify-between gap-2">
                     <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">Kvalitet</span>
                     <span className="text-base font-semibold leading-none text-ink-900">{qualityScore}</span>

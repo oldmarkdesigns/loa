@@ -155,11 +155,11 @@ function AppShell({ pathname, user, onSwitchRole, onLogout, onRequireAuth, isGue
   }
 
   return (
-    <main className="flex h-screen flex-col overflow-hidden bg-white text-black">
+    <main className="flex h-screen flex-col overflow-hidden bg-[#fffffe] text-black">
       {isAdminContext ? (
         <header
           className={`navbar-enter sticky top-0 z-40 shrink-0 border-b px-4 py-3 will-change-[background-color,border-color,backdrop-filter] transition-[background-color,border-color,backdrop-filter] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] sm:px-6 ${
-            isNavScrolled || shouldShowStaticNavBorder ? "border-black/10 bg-white/95 backdrop-blur-md" : "border-black/10 bg-white/0 backdrop-blur-0"
+            isNavScrolled || shouldShowStaticNavBorder ? "border-black/10 bg-[#fffffe]/95 backdrop-blur-md" : "border-black/10 bg-[#fffffe]/0 backdrop-blur-0"
           }`}
         >
           <div className="grid w-full grid-cols-[1fr_auto] items-center gap-4">
@@ -167,7 +167,7 @@ function AppShell({ pathname, user, onSwitchRole, onLogout, onRequireAuth, isGue
               <div ref={adminCompanyButtonRef} className="relative inline-block max-w-full">
                 <button
                   type="button"
-                  className="inline-flex h-11 w-auto max-w-full items-center gap-2 rounded-full border border-black/10 bg-white pl-1.5 pr-3 text-left transition hover:border-[#0f1930]/25"
+                  className="inline-flex h-11 w-auto max-w-full items-center gap-2 rounded-full border border-black/10 bg-[#fffffe] pl-1.5 pr-3 text-left transition hover:border-[#0f1930]/25"
                   onClick={() => setAdminCompanyOpen((value) => !value)}
                 >
                   <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0f1930] text-sm font-semibold text-white">
@@ -183,7 +183,7 @@ function AppShell({ pathname, user, onSwitchRole, onLogout, onRequireAuth, isGue
                 </button>
 
                 {adminCompanyOpen ? (
-                  <div ref={adminCompanyPanelRef} className="absolute left-0 top-[calc(100%+0.4rem)] z-[62] w-[280px] rounded-2xl border border-black/10 bg-white p-2 shadow-[0_10px_28px_rgba(15,25,48,0.12)]">
+                  <div ref={adminCompanyPanelRef} className="absolute left-0 top-[calc(100%+0.4rem)] z-[62] w-[280px] rounded-2xl border border-black/10 bg-[#fffffe] p-2 shadow-[0_10px_28px_rgba(15,25,48,0.12)]">
                     <div className="space-y-1">
                       {adminCompanies.map((company) => {
                         const selected = company.id === activeAdminCompanyId;
@@ -232,7 +232,7 @@ function AppShell({ pathname, user, onSwitchRole, onLogout, onRequireAuth, isGue
                 <button
                   type="button"
                   aria-label="Notiser"
-                  className="relative inline-flex h-full w-11 items-center justify-center rounded-full border border-black/20 bg-white text-ink-700"
+                  className="relative inline-flex h-full w-11 items-center justify-center rounded-full border border-black/20 bg-[#fffffe] text-ink-700"
                   onClick={() => setNotificationOpen((value) => !value)}
                 >
                   <BellIcon className="h-4 w-4" />
@@ -272,7 +272,7 @@ function AppShell({ pathname, user, onSwitchRole, onLogout, onRequireAuth, isGue
       ) : null}
 
       {notificationOpen && !isGuest ? (
-        <div ref={notificationPanelRef} className="fixed right-4 top-[72px] z-[60] w-[min(360px,calc(100vw-2rem))] rounded-2xl border border-black/10 bg-white p-3 shadow-[0_10px_28px_rgba(15,25,48,0.10)]">
+        <div ref={notificationPanelRef} className="fixed right-4 top-[72px] z-[60] w-[min(360px,calc(100vw-2rem))] rounded-2xl border border-black/10 bg-[#fffffe] p-3 shadow-[0_10px_28px_rgba(15,25,48,0.10)]">
           <div className="mb-2 flex items-center justify-between">
             <p className="text-sm font-semibold text-ink-900">Notiser</p>
             <span className="rounded-full border border-black/10 bg-[#f7f7f7] px-2 py-0.5 text-xs font-semibold text-ink-700">
@@ -281,7 +281,7 @@ function AppShell({ pathname, user, onSwitchRole, onLogout, onRequireAuth, isGue
           </div>
           <div className="space-y-2">
             {notificationItems.map((item) => (
-              <div key={item.id} className="rounded-xl border border-black/10 bg-white px-3 py-2">
+              <div key={item.id} className="rounded-xl border border-black/10 bg-[#fffffe] px-3 py-2">
                 <p className="text-sm font-semibold text-ink-800">{item.title}</p>
                 <p className="mt-1 text-xs text-ink-500">{item.time}</p>
               </div>
@@ -305,11 +305,11 @@ function AppShell({ pathname, user, onSwitchRole, onLogout, onRequireAuth, isGue
       {showPublisherWorkspaceNav && !deferPublisherWorkspaceNavToProfile ? (
         <>
           {hasProfileSource ? (
-            <div className="shrink-0 border-b border-black/10 bg-white px-4 py-2 sm:px-6">
+            <div className="shrink-0 border-b border-black/10 bg-[#fffffe] px-4 py-2 sm:px-6">
               <div className="mx-auto flex w-full max-w-[1240px] items-center justify-start">
                 <button
                   type="button"
-                  className="inline-flex items-center gap-1.5 rounded-full border border-black/20 bg-white px-3 py-2 text-xs font-semibold text-ink-800 hover:bg-[#f8fafc]"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-black/20 bg-[#fffffe] px-3 py-2 text-xs font-semibold text-ink-800 hover:bg-[#f8fafc]"
                   onClick={() => navigateTo("/app/profile")}
                 >
                   <ArrowLeftIcon className="h-3.5 w-3.5" />
@@ -318,7 +318,7 @@ function AppShell({ pathname, user, onSwitchRole, onLogout, onRequireAuth, isGue
               </div>
             </div>
           ) : null}
-          <div className="shrink-0 border-b border-black/10 bg-white px-4 py-2 sm:px-6">
+          <div className="shrink-0 border-b border-black/10 bg-[#fffffe] px-4 py-2 sm:px-6">
             <nav className="mx-auto flex w-full max-w-[1240px] flex-wrap items-center justify-start gap-5">
               {publisherWorkspaceItems.map((item) => {
                 const active = routeMatches(pathname, item.path);
@@ -349,11 +349,11 @@ function AppShell({ pathname, user, onSwitchRole, onLogout, onRequireAuth, isGue
         type="button"
         aria-label="Scrolla till toppen"
         onClick={handleScrollToTop}
-        className={`fixed bottom-6 z-30 inline-flex min-h-0 flex-col items-center justify-center gap-0.5 rounded-full border border-black/20 bg-white/25 p-3 text-[#0f1930] shadow-[0_8px_24px_rgba(15,25,48,0.18)] backdrop-blur-md transition-all duration-250 ${
+        className={`fixed bottom-6 z-30 inline-flex min-h-0 flex-col items-center justify-center gap-0.5 rounded-full border border-black/20 bg-[#fffffe]/25 p-3 text-[#0f1930] shadow-[0_8px_24px_rgba(15,25,48,0.18)] backdrop-blur-md transition-all duration-250 ${
           showScrollToTopButton
             ? "pointer-events-auto translate-y-0 opacity-100"
             : "pointer-events-none translate-y-3 opacity-0"
-        } ${isAdminStatisticsPage ? "right-6 xl:right-[max(1.5rem,calc((100vw-296px-1600px)/2+1.5rem))]" : "right-6"} hover:bg-white/35`}
+        } ${isAdminStatisticsPage ? "right-6 xl:right-[max(1.5rem,calc((100vw-296px-1600px)/2+1.5rem))]" : "right-6"} hover:bg-[#fffffe]/35`}
       >
         <ArrowUpIcon className="h-4 w-4" />
         <MouseScrollIcon className="h-4 w-4" />
@@ -365,7 +365,7 @@ function AppShell({ pathname, user, onSwitchRole, onLogout, onRequireAuth, isGue
           onClick={() => setShowLeaveSearchConfirm(false)}
         >
           <article
-            className="w-full max-w-lg rounded-2xl border border-black/10 bg-white p-5 shadow-[0_24px_64px_rgba(15,25,48,0.28)]"
+            className="w-full max-w-lg rounded-2xl border border-black/10 bg-[#fffffe] p-5 shadow-[0_24px_64px_rgba(15,25,48,0.28)]"
             onClick={(event) => event.stopPropagation()}
           >
             <h3 className="text-lg font-semibold text-ink-900">Byt till Lediga lokaler?</h3>
@@ -375,7 +375,7 @@ function AppShell({ pathname, user, onSwitchRole, onLogout, onRequireAuth, isGue
             <div className="mt-5 flex items-center justify-end gap-2">
               <button
                 type="button"
-                className="rounded-xl border border-black/10 bg-white px-4 py-2 text-sm font-semibold text-ink-700 hover:bg-white"
+                className="rounded-xl border border-black/10 bg-[#fffffe] px-4 py-2 text-sm font-semibold text-ink-700 hover:bg-[#fffffe]"
                 onClick={() => setShowLeaveSearchConfirm(false)}
               >
                 Avbryt

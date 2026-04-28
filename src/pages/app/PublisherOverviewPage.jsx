@@ -26,7 +26,7 @@ function statusPillClass(status) {
   if (status === "draft") {
     return "border-amber-200 bg-amber-50 text-amber-700";
   }
-  return "border-black/10 bg-white text-ink-700";
+  return "border-black/10 bg-[#fffffe] text-ink-700";
 }
 
 function statusLabel(status) {
@@ -251,7 +251,7 @@ function PublisherOverviewPage({ app }) {
                   <option value="active">Aktiva</option>
                   <option value="draft">Utkast</option>
                 </select>
-                <div className="inline-flex items-center gap-2 rounded-2xl border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-ink-700">
+                <div className="inline-flex items-center gap-2 rounded-2xl border border-black/10 bg-[#fffffe] px-3 py-2 text-xs font-semibold text-ink-700">
                   <span>Detaljvy</span>
                   <button
                     type="button"
@@ -263,7 +263,7 @@ function PublisherOverviewPage({ app }) {
                     }`}
                     onClick={() => setCardView((prev) => (prev === "detailed" ? "compact" : "detailed"))}
                   >
-                    <span aria-hidden="true" className="h-5 w-5 rounded-full bg-white shadow-[0_1px_2px_rgba(15,25,48,0.35)]" />
+                    <span aria-hidden="true" className="h-5 w-5 rounded-full bg-[#fffffe] shadow-[0_1px_2px_rgba(15,25,48,0.35)]" />
                   </button>
                 </div>
               </div>
@@ -287,7 +287,7 @@ function PublisherOverviewPage({ app }) {
                   <button
                     key={listing.id}
                     type="button"
-                    className="!rounded-[24px] border border-black/10 bg-white p-3 text-left transition hover:border-[#0f1930]/30 hover:bg-white sm:p-4"
+                    className="!rounded-[24px] border border-black/10 bg-[#fffffe] p-3 text-left transition hover:border-[#0f1930]/30 hover:bg-[#fffffe] sm:p-4"
                     onClick={() => navigateTo(`/app/my-listings/${encodeURIComponent(listing.id)}`)}
                   >
                     {cardView === "compact" ? (
@@ -330,24 +330,24 @@ function PublisherOverviewPage({ app }) {
                         </div>
 
                         <div className="grid grid-cols-2 gap-2 text-xs">
-                          <span className="rounded-xl border border-black/10 bg-white px-2.5 py-2 text-center font-semibold text-ink-800 whitespace-nowrap">
+                          <span className="rounded-xl border border-black/10 bg-[#fffffe] px-2.5 py-2 text-center font-semibold text-ink-800 whitespace-nowrap">
                             {listing.sizeSqm} kvm
                           </span>
-                          <span className="rounded-xl border border-black/10 bg-white px-2.5 py-2 text-center font-semibold text-ink-800 whitespace-nowrap">
+                          <span className="rounded-xl border border-black/10 bg-[#fffffe] px-2.5 py-2 text-center font-semibold text-ink-800 whitespace-nowrap">
                             {listing.capacity} platser
                           </span>
                         </div>
 
                         <div className="grid grid-cols-3 gap-2">
-                          <div className="rounded-xl border border-black/10 bg-white px-2.5 py-2">
+                          <div className="rounded-xl border border-black/10 bg-[#fffffe] px-2.5 py-2">
                             <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">Objektstatus</p>
                             <p className="mt-0.5 text-sm font-semibold text-ink-900">{listing.status === "active" ? "Aktiv" : "Utkast"}</p>
                           </div>
-                          <div className="rounded-xl border border-black/10 bg-white px-2.5 py-2">
+                          <div className="rounded-xl border border-black/10 bg-[#fffffe] px-2.5 py-2">
                             <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">Visningar</p>
                             <p className="mt-0.5 text-sm font-semibold text-ink-900">{listing.views.toLocaleString("sv-SE")}</p>
                           </div>
-                          <div className="rounded-xl border border-black/10 bg-white px-2.5 py-2">
+                          <div className="rounded-xl border border-black/10 bg-[#fffffe] px-2.5 py-2">
                             <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">Leads</p>
                             <p className="mt-0.5 text-sm font-semibold text-ink-900">{listing.listingLeads}</p>
                           </div>
@@ -356,7 +356,7 @@ function PublisherOverviewPage({ app }) {
                         {Array.isArray(listing.amenities) && listing.amenities.length > 0 ? (
                           <div className="flex flex-wrap gap-1.5">
                             {listing.amenities.slice(0, 4).map((amenity) => (
-                              <span key={`${listing.id}-${amenity}`} className="rounded-full border border-black/10 bg-white px-2 py-0.5 text-[11px] font-semibold text-ink-600">
+                              <span key={`${listing.id}-${amenity}`} className="rounded-full border border-black/10 bg-[#fffffe] px-2 py-0.5 text-[11px] font-semibold text-ink-600">
                                 {amenity}
                               </span>
                             ))}
@@ -388,7 +388,7 @@ function PublisherOverviewPage({ app }) {
                         <span className="truncate font-semibold">{entry.title}</span>
                         <span className="text-ink-600">{entry.views.toLocaleString("sv-SE")} visningar</span>
                       </div>
-                      <div className="h-2.5 rounded-full bg-white">
+                      <div className="h-2.5 rounded-full bg-[#fffffe]">
                         <div className="h-full rounded-full bg-[#0f1930]" style={{ width: `${width}%` }} />
                       </div>
                       <div className="mt-1 text-[11px] text-ink-600">
@@ -403,22 +403,22 @@ function PublisherOverviewPage({ app }) {
             <article className="surface p-4">
               <h3 className="text-sm font-semibold">Överblick</h3>
               <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                <div className="rounded-xl border border-black/10 bg-white px-2.5 py-2">
+                <div className="rounded-xl border border-black/10 bg-[#fffffe] px-2.5 py-2">
                   <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">Aktiva objekt</p>
                   <p className="mt-1 text-xl font-semibold leading-none">{activeCount}</p>
                   <p className="mt-1 text-[11px] text-ink-600">{draftCount} utkast</p>
                 </div>
-                <div className="rounded-xl border border-black/10 bg-white px-2.5 py-2">
+                <div className="rounded-xl border border-black/10 bg-[#fffffe] px-2.5 py-2">
                   <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">Visningar</p>
                   <p className="mt-1 text-xl font-semibold leading-none">{totalViews.toLocaleString("sv-SE")}</p>
                   <p className="mt-1 text-[11px] text-ink-600">30 dagar</p>
                 </div>
-                <div className="rounded-xl border border-black/10 bg-white px-2.5 py-2">
+                <div className="rounded-xl border border-black/10 bg-[#fffffe] px-2.5 py-2">
                   <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">Leads</p>
                   <p className="mt-1 text-xl font-semibold leading-none">{totalLeads}</p>
                   <p className="mt-1 text-[11px] text-ink-600">Konv. {conversionRate.toFixed(1)}%</p>
                 </div>
-                <div className="rounded-xl border border-black/10 bg-white px-2.5 py-2">
+                <div className="rounded-xl border border-black/10 bg-[#fffffe] px-2.5 py-2">
                   <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">Svarstid</p>
                   <p className="mt-1 text-xl font-semibold leading-none">{averageResponse}h</p>
                   <p className="mt-1 text-[11px] text-ink-600">Genomsnitt</p>
@@ -436,7 +436,7 @@ function PublisherOverviewPage({ app }) {
                   </p>
                 ) : null}
                 {pipelineEntries.map((entry) => (
-                  <div key={entry.status} className="flex items-center justify-between rounded-xl border border-black/10 bg-white px-3 py-2">
+                  <div key={entry.status} className="flex items-center justify-between rounded-xl border border-black/10 bg-[#fffffe] px-3 py-2">
                     <span className="text-sm text-ink-700">{entry.status}</span>
                     <span className="text-sm font-semibold text-ink-900">{entry.count}</span>
                   </div>
@@ -453,7 +453,7 @@ function PublisherOverviewPage({ app }) {
                   </p>
                 ) : null}
                 {activityFeed.map((event) => (
-                  <div key={event.id} className="rounded-xl border border-black/10 bg-white px-3 py-2.5">
+                  <div key={event.id} className="rounded-xl border border-black/10 bg-[#fffffe] px-3 py-2.5">
                     <p className="text-sm font-semibold">{event.label}</p>
                     <p className="text-xs text-ink-600">{event.meta}</p>
                     <p className="mt-1 text-[11px] text-ink-500">{formatDate(event.date)}</p>

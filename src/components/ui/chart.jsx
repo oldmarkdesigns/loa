@@ -72,7 +72,7 @@ export function ChartTooltipContent({
     : labelFor(config, labelKey || payload[0]?.dataKey, label);
 
   return (
-    <div className="min-w-[160px] rounded-xl border border-black/10 bg-white px-3 py-2 text-xs shadow-[0_10px_24px_rgba(15,25,48,0.1)]">
+    <div className="min-w-[160px] rounded-xl border border-black/10 bg-[#fffffe] px-3 py-2 text-xs shadow-[0_10px_24px_rgba(15,25,48,0.1)]">
       {displayLabel ? <p className="font-semibold text-ink-900">{displayLabel}</p> : null}
       <div className={displayLabel ? "mt-1.5 space-y-1" : "space-y-1"}>
         {payload.map((item) => {

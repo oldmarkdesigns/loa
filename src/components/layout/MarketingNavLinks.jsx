@@ -5,7 +5,6 @@ export const marketingPrimaryItems = [
 ];
 
 export const marketingSectionItems = [
-  { label: "Funktioner", hash: "#funktioner" },
   { label: "Så fungerar det", hash: "#sa-fungerar-det" },
   { label: "Priser", hash: "#priser" },
   { label: "FAQ", hash: "#faq" },
