@@ -1,8 +1,8 @@
 import {
+  BuildingIcon,
   CalendarIcon,
   RulerIcon,
   UsersGroupIcon,
-  SparklesIcon,
   StarIcon,
 } from "../icons/UiIcons";
 import { Icon } from "../icons/Icon";
@@ -102,42 +102,59 @@ function ListingVisualCard({
               onOpenListing(listing);
             }
           }}
-          className="card-click-surface relative grid cursor-pointer overflow-hidden text-left md:grid-cols-[320px_minmax(0,1fr)] md:items-stretch"
+          className="card-click-surface relative grid [grid-template-columns:minmax(0,1fr)_minmax(0,1fr)] items-stretch cursor-pointer overflow-hidden text-left"
           aria-label={`Open details for ${listing.title}`}
         >
-          <div className="relative min-h-0 self-stretch overflow-hidden border-r border-black/10">
-            <div className="absolute inset-0 grid grid-rows-[minmax(0,2fr)_minmax(0,1fr)]">
+          <div className="relative isolate col-span-1 min-h-0 self-stretch overflow-hidden border-r border-black/10">
+            <div className="grid h-full min-h-[300px] grid-rows-[minmax(0,2fr)_minmax(0,1fr)]">
               <div className="relative min-h-0">
-              <img src={listing.image} alt={listing.title} className="h-full w-full rounded-none object-cover" />
-              <span className="absolute left-4 top-4 inline-flex min-h-[38px] items-center rounded-full bg-[#fffffe] px-4 text-sm font-medium text-ink-900">
-                {listing.type || "Kontor"}
-              </span>
-              <button
-                type="button"
-                aria-label={shortlisted ? "Ta bort sparad" : "Spara"}
-                className="absolute right-4 top-4 inline-flex h-10 w-10 min-h-10 min-w-10 items-center justify-center rounded-full border border-black/10 bg-[#fffffe] p-0 text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onToggleShortlist(listing.id);
-                }}
-              >
-                <StarIcon className={`h-4 w-4 ${shortlisted ? "fill-current text-[#0f1930]" : ""}`} />
-              </button>
+                <div className="absolute inset-0 overflow-hidden">
+                  <img src={listing.image} alt={listing.title} className="h-full w-full rounded-none object-cover" />
+                </div>
+                <span className="absolute left-4 top-4 z-20 inline-flex min-h-[38px] items-center gap-1.5 rounded-full bg-[#fffffe] px-4 text-sm font-medium text-ink-900">
+                  <BuildingIcon className="h-4 w-4 text-ink-700" />
+                  {listing.type || "Kontor"}
+                </span>
+                <div className="absolute right-4 top-4 z-20 flex items-center gap-2">
+                  {showMatchChip ? (
+                    <div className="inline-flex h-10 items-center gap-1.5 rounded-full border border-black/5 bg-[#fffffe] px-3.5 text-sm font-semibold text-[#0f1930]">
+                      <Icon name="gauge" className="h-4 w-4 text-[#4f46e5]" />
+                      <span>{listing.score || 0}% match</span>
+                    </div>
+                  ) : null}
+                  <button
+                    type="button"
+                    aria-label={shortlisted ? "Ta bort sparad" : "Spara"}
+                    className="inline-flex h-10 w-10 min-h-10 min-w-10 items-center justify-center rounded-full border border-black/10 bg-[#fffffe] p-0 text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onToggleShortlist(listing.id);
+                    }}
+                  >
+                    <StarIcon className={`h-4 w-4 ${shortlisted ? "fill-current text-[#0f1930]" : ""}`} />
+                  </button>
+                </div>
               </div>
-              <div className="grid min-h-0 grid-cols-2 gap-0 border-t border-black/10 bg-[#f4f4f4]">
-                <img src={listing.image} alt="" className="h-full w-full rounded-none object-cover" />
-                <img src={listing.image} alt="" className="h-full w-full rounded-none object-cover" />
+              <div className="grid min-h-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-0 border-t border-black/10 bg-[#f4f4f4]">
+                <div className="relative min-h-0 overflow-hidden">
+                  <img src={listing.image} alt="" className="absolute inset-0 block h-full w-full min-w-0 rounded-none object-cover" />
+                </div>
+                <div className="relative min-h-0 overflow-hidden">
+                  <img src={listing.image} alt="" className="absolute inset-0 block h-full w-full min-w-0 rounded-none object-cover" />
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="relative flex flex-1 flex-col gap-3 p-5">
-            <p className="absolute right-5 top-5 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-[#0f1930]">
-              <Icon name="crown" className="h-3.5 w-3.5" />
-              <span>UTVALD</span>
-            </p>
+          <div className="relative z-10 col-span-1 min-w-0 flex flex-1 flex-col gap-3 bg-[#fffffe] p-5">
             <div className="space-y-1">
-              <h3 className="text-lg font-semibold leading-tight text-[#0f1930]">{listing.title}</h3>
+              <div className="flex items-center justify-between gap-3">
+                <h3 className="text-lg font-semibold leading-tight text-[#0f1930]">{listing.title}</h3>
+                <p className="inline-flex shrink-0 items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-[#0f1930]">
+                  <Icon name="crown" className="h-3.5 w-3.5" />
+                  <span>UTVALD</span>
+                </p>
+              </div>
               <p className="text-sm text-ink-600">{buildAddress(listing)}</p>
               <p className="text-sm text-ink-600">
                 Flexibelt kontor i centralt läge, utformat för hybridarbete och med direkt närhet till kommunikationer.
@@ -215,14 +232,15 @@ function ListingVisualCard({
       >
         <div className="relative">
           <img src={listing.image} alt={listing.title} className="h-44 w-full object-cover" />
-          <span className="absolute left-4 top-4 inline-flex min-h-[38px] items-center rounded-full bg-[#fffffe] px-4 text-sm font-medium text-ink-900">
+          <span className="absolute left-4 top-4 inline-flex min-h-[38px] items-center gap-1.5 rounded-full bg-[#fffffe] px-4 text-sm font-medium text-ink-900">
+            <BuildingIcon className="h-4 w-4 text-ink-700" />
             {listing.type || "Kontor"}
           </span>
         </div>
         <div className="absolute right-4 top-4 flex items-center gap-2">
           {showMatchChip ? (
             <div className="inline-flex h-10 items-center gap-1.5 rounded-full border border-black/5 bg-[#fffffe] px-3.5 text-sm font-semibold text-[#0f1930]">
-              <SparklesIcon className="h-4 w-4 text-[#4f46e5]" />
+              <Icon name="gauge" className="h-4 w-4 text-[#4f46e5]" />
               <span>{listing.score || 0}% match</span>
             </div>
           ) : null}

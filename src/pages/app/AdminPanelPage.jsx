@@ -1461,6 +1461,18 @@ function AdminNotificationsPage() {
 }
 
 function AdminBrokersPage() {
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [invitedBrokers, setInvitedBrokers] = useState(() =>
+    brokerTeam.map((broker) => ({
+      id: broker.id,
+      name: broker.name,
+      email: broker.email,
+      status: "Aktiv"
+    }))
+  );
+
+  const inviteCode = useMemo(() => "BROKER-" + String(Math.floor(100000 + Math.random() * 900000)), []);
+
   return (
     <div className="space-y-4">
       <header className="surface p-4 sm:p-5">
@@ -1470,43 +1482,88 @@ function AdminBrokersPage() {
             <h1 className="mt-1 text-2xl font-semibold text-ink-900">Mäklare</h1>
             <p className="mt-1 text-sm text-ink-600">Teamöversikt med kapacitet, aktivitet och svarsfrekvens.</p>
           </div>
-          <button type="button" className="btn-primary px-4">+ Bjud in mäklare</button>
         </div>
       </header>
 
-      <section className="grid gap-3 lg:grid-cols-3">
-        {brokerTeam.map((broker) => (
-          <article key={broker.id} className="surface p-4">
-            <div className="flex items-start justify-between gap-2">
-              <div className="flex min-w-0 items-center gap-2.5">
-                <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#0f1930] text-sm font-semibold text-white">
-                  {broker.initials}
-                </span>
-                <span className="min-w-0">
-                  <span className="block truncate text-sm font-semibold text-ink-900">{broker.name}</span>
-                  <span className="block truncate text-xs text-ink-600">{broker.email}</span>
-                </span>
-              </div>
-              <button type="button" className="inline-flex h-8 w-8 min-h-0 items-center justify-center rounded-full border border-transparent text-ink-600 hover:border-black/10 hover:bg-[#fffffe]">
-                <MoreHorizontalIcon className="h-4 w-4" />
-              </button>
-            </div>
-            <div className="mt-4 grid grid-cols-3 gap-3 border-t border-black/10 pt-3">
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">Annonser</p>
-                <p className="mt-1 text-lg font-semibold leading-none text-ink-900">{broker.listings}</p>
-              </div>
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">Förfr.</p>
-                <p className="mt-1 text-lg font-semibold leading-none text-ink-900">{broker.inquiries}</p>
-              </div>
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">Svarstid</p>
-                <p className="mt-1 text-lg font-semibold leading-none text-ink-900">{broker.response}</p>
-              </div>
-            </div>
-          </article>
-        ))}
+      <section className="grid gap-4 xl:grid-cols-2">
+        <article className="surface p-4 sm:p-5">
+          <h2 className="text-lg font-semibold text-ink-900">Inbjudna mäklare</h2>
+          <p className="mt-1 text-sm text-ink-600">Översikt över redan inbjudna och aktiva mäklare.</p>
+          <div className="mt-4 space-y-3">
+            {invitedBrokers.map((broker) => {
+              const initials = String(broker.name || broker.email || "AA")
+                .split(" ")
+                .filter(Boolean)
+                .slice(0, 2)
+                .map((part) => part[0])
+                .join("")
+                .toUpperCase();
+              return (
+                <div key={broker.id} className="flex items-center justify-between gap-3 rounded-2xl border border-black/10 bg-[#fffffe] px-3 py-2.5">
+                  <div className="flex min-w-0 items-center gap-2.5">
+                    <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#e6eefc] text-xs font-semibold text-[#2d4f83]">
+                      {initials}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-semibold text-ink-900">{broker.name}</span>
+                      <span className="block truncate text-xs text-ink-600">{broker.email}</span>
+                    </span>
+                  </div>
+                  <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
+                    {broker.status}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </article>
+
+        <article className="surface p-4 sm:p-5">
+          <h2 className="text-lg font-semibold text-ink-900">Bjud in mäklare</h2>
+          <p className="mt-1 text-sm text-ink-600">Använd samma inbjudningsflöde som onboarding, anpassat för adminpanelen.</p>
+
+          <div className="mt-4 rounded-2xl border border-black/10 bg-[#fafafa] px-4 py-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Inbjudningskod</p>
+            <p className="mt-2 text-[1.2rem] font-semibold text-[#0f1930]">{inviteCode}</p>
+            <p className="mt-1 text-sm text-ink-500">Dela med mäklare via e-post eller internt system.</p>
+          </div>
+
+          <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_150px]">
+            <input
+              className="field"
+              type="email"
+              value={inviteEmail}
+              onChange={(event) => setInviteEmail(event.target.value)}
+              placeholder="kollega@bolag.se"
+            />
+            <button
+              type="button"
+              className="btn-primary inline-flex w-full items-center justify-center px-4"
+              onClick={() => {
+                const email = String(inviteEmail || "").trim();
+                if (!email) return;
+                const name = email
+                  .split("@")[0]
+                  .split(/[._-]/)
+                  .filter(Boolean)
+                  .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+                  .join(" ");
+                setInvitedBrokers((prev) => [
+                  {
+                    id: `invited-${Date.now()}`,
+                    name: name || "Ny mäklare",
+                    email,
+                    status: "Väntar"
+                  },
+                  ...prev
+                ]);
+                setInviteEmail("");
+              }}
+            >
+              + Bjud in
+            </button>
+          </div>
+        </article>
       </section>
 
       <article className="surface p-4 sm:p-5">
@@ -2739,6 +2796,16 @@ function AdminOverview({ app }) {
       month: "long"
     }).format(now)
   ), [now]);
+  const [overviewInviteEmail, setOverviewInviteEmail] = useState("");
+  const [overviewInvitedBrokers, setOverviewInvitedBrokers] = useState(() =>
+    brokerTeam.map((broker) => ({
+      id: broker.id,
+      name: broker.name,
+      email: broker.email,
+      status: "Aktiv"
+    }))
+  );
+  const overviewInviteCode = useMemo(() => "BROKER-" + String(Math.floor(100000 + Math.random() * 900000)), []);
 
   return (
     <div className="space-y-4">
@@ -2901,123 +2968,92 @@ function AdminOverview({ app }) {
       <section className="surface p-4 sm:p-5">
         <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h2 className="text-lg font-semibold text-ink-900">Hyresgäster som matchar dina lokaler</h2>
-            <p className="mt-1 text-sm text-ink-600">Förslag baserat på lokaltyp, yta, område och budget</p>
-          </div>
-          <button type="button" className="btn-secondary px-4" onClick={() => navigateTo("/app/admin/maklare")}>
-            Visa alla matchningar
-          </button>
-        </div>
-
-        <div className="grid gap-3 lg:grid-cols-3">
-          {matchedRenters.map((renter) => (
-            <article key={renter.id} className="rounded-2xl border border-black/10 bg-[#fffffe] p-4">
-              {(() => {
-                const matchedListing = activeListings.find((listing) => listing.id === renter.matchListingId);
-                return matchedListing ? (
-                  <div className="mb-3 rounded-2xl border border-black/10 bg-[#fafafa] p-2.5">
-                    <div className="flex items-center gap-2.5">
-                      <img
-                        src={matchedListing.image}
-                        alt={matchedListing.title}
-                        className="h-16 w-24 shrink-0 rounded-xl border border-black/10 object-cover"
-                        loading="lazy"
-                      />
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-ink-900">{matchedListing.title}</p>
-                        <p className="mt-0.5 text-xs text-ink-600">
-                          {matchedListing.district} · {matchedListing.size} m²
-                        </p>
-                        <p className="mt-0.5 text-xs font-semibold text-ink-800">
-                          {formatSek(matchedListing.priceMonthly)}/mån
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ) : null;
-              })()}
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex min-w-0 items-center gap-2.5">
-                  <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#0f1930] text-sm font-semibold text-white">
-                    {renter.initials}
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block truncate text-sm font-semibold text-ink-900">{renter.name}</span>
-                    <span className="block truncate text-xs text-ink-600">{renter.company}</span>
-                  </span>
-                </div>
-                <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">
-                  {renter.score}% match
-                </span>
-              </div>
-              <div className="mt-4 border-t border-black/10 pt-3">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">Matchning mot lokal</p>
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  {renter.matchCriteria.map((item) => {
-                    const tone = item.status === "match"
-                      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                      : "border-amber-200 bg-amber-50 text-amber-700";
-                    return (
-                      <span key={`${renter.id}-${item.label}`} className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] font-semibold ${tone}`}>
-                        {item.label}: {item.value}
-                      </span>
-                    );
-                  })}
-                </div>
-              </div>
-              <div className="mt-4 flex justify-end border-t border-black/10 pt-3">
-                <button type="button" className="btn-secondary inline-flex min-h-0 w-auto items-center gap-1.5 px-3 py-2 text-xs">
-                  <SendHorizontalIcon className="h-3.5 w-3.5" />
-                  Skicka till mäklare
-                </button>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="surface p-4 sm:p-5">
-        <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-          <div>
             <h2 className="text-lg font-semibold text-ink-900">Mäklarteam</h2>
             <p className="mt-1 text-sm text-ink-600">3 aktiva mäklare i er organisation</p>
           </div>
-          <button type="button" className="btn-secondary px-4">+ Bjud in mäklare</button>
+          <button type="button" className="btn-secondary px-4" onClick={() => navigateTo("/app/admin/maklare")}>
+            <UsersGroupIcon className="mr-1.5 h-4 w-4" />
+            Hantera mäklare
+          </button>
         </div>
 
-        <div className="grid gap-3 lg:grid-cols-3">
-          {brokerTeam.map((broker) => (
-            <article key={broker.id} className="rounded-2xl border border-black/10 bg-[#fffffe] p-4">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex min-w-0 items-center gap-2.5">
-                  <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#0f1930] text-sm font-semibold text-white">
-                    {broker.initials}
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block truncate text-sm font-semibold text-ink-900">{broker.name}</span>
-                    <span className="block truncate text-xs text-ink-600">{broker.email}</span>
-                  </span>
-                </div>
-                <button type="button" className="inline-flex h-8 w-8 min-h-0 items-center justify-center rounded-full border border-transparent text-ink-600 hover:border-black/10 hover:bg-[#fffffe]">
-                  <MoreHorizontalIcon className="h-4 w-4" />
-                </button>
-              </div>
-              <div className="mt-4 grid grid-cols-3 gap-3 border-t border-black/10 pt-3">
-                <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">Annonser</p>
-                  <p className="mt-1 text-lg font-semibold leading-none text-ink-900">{broker.listings}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">Förfr.</p>
-                  <p className="mt-1 text-lg font-semibold leading-none text-ink-900">{broker.inquiries}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">Svarstid</p>
-                  <p className="mt-1 text-lg font-semibold leading-none text-ink-900">{broker.response}</p>
-                </div>
-              </div>
-            </article>
-          ))}
+        <div className="grid gap-4 xl:grid-cols-2">
+          <article className="rounded-2xl border border-black/10 bg-[#fffffe] p-4 sm:p-5">
+            <h3 className="text-lg font-semibold text-ink-900">Inbjudna mäklare</h3>
+            <p className="mt-1 text-sm text-ink-600">Översikt över redan inbjudna och aktiva mäklare.</p>
+            <div className="mt-4 space-y-3">
+              {overviewInvitedBrokers.map((broker) => {
+                const initials = String(broker.name || broker.email || "AA")
+                  .split(" ")
+                  .filter(Boolean)
+                  .slice(0, 2)
+                  .map((part) => part[0])
+                  .join("")
+                  .toUpperCase();
+                return (
+                  <div key={broker.id} className="flex items-center justify-between gap-3 rounded-2xl border border-black/10 bg-[#fffffe] px-3 py-2.5">
+                    <div className="flex min-w-0 items-center gap-2.5">
+                      <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#e6eefc] text-xs font-semibold text-[#2d4f83]">
+                        {initials}
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-semibold text-ink-900">{broker.name}</span>
+                        <span className="block truncate text-xs text-ink-600">{broker.email}</span>
+                      </span>
+                    </div>
+                    <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
+                      {broker.status}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </article>
+
+          <article className="rounded-2xl border border-black/10 bg-[#fffffe] p-4 sm:p-5">
+            <h3 className="text-lg font-semibold text-ink-900">Bjud in mäklare</h3>
+            <p className="mt-1 text-sm text-ink-600">Använd samma inbjudningsflöde som onboarding.</p>
+            <div className="mt-4 rounded-2xl border border-black/10 bg-[#fafafa] px-4 py-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Inbjudningskod</p>
+              <p className="mt-2 text-[1.2rem] font-semibold text-[#0f1930]">{overviewInviteCode}</p>
+              <p className="mt-1 text-sm text-ink-500">Dela med mäklare via e-post eller internt system.</p>
+            </div>
+            <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_150px]">
+              <input
+                className="field"
+                type="email"
+                value={overviewInviteEmail}
+                onChange={(event) => setOverviewInviteEmail(event.target.value)}
+                placeholder="kollega@bolag.se"
+              />
+              <button
+                type="button"
+                className="btn-primary inline-flex w-full items-center justify-center px-4"
+                onClick={() => {
+                  const email = String(overviewInviteEmail || "").trim();
+                  if (!email) return;
+                  const name = email
+                    .split("@")[0]
+                    .split(/[._-]/)
+                    .filter(Boolean)
+                    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+                    .join(" ");
+                  setOverviewInvitedBrokers((prev) => [
+                    {
+                      id: `overview-invited-${Date.now()}`,
+                      name: name || "Ny mäklare",
+                      email,
+                      status: "Väntar"
+                    },
+                    ...prev
+                  ]);
+                  setOverviewInviteEmail("");
+                }}
+              >
+                + Bjud in
+              </button>
+            </div>
+          </article>
         </div>
       </section>
     </div>

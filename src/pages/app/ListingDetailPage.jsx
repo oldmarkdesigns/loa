@@ -619,13 +619,6 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
   const [aboutOverlayVisible, setAboutOverlayVisible] = useState(false);
   const [aboutOverlayOpen, setAboutOverlayOpen] = useState(false);
   const [isClosingAboutOverlay, setIsClosingAboutOverlay] = useState(false);
-  const [inquiryOverlayVisible, setInquiryOverlayVisible] = useState(false);
-  const [inquiryOverlayOpen, setInquiryOverlayOpen] = useState(false);
-  const [isClosingInquiryOverlay, setIsClosingInquiryOverlay] = useState(false);
-  const [inquiryType, setInquiryType] = useState("contact");
-  const [inquiryMessage, setInquiryMessage] = useState("");
-  const [inquiryDate, setInquiryDate] = useState("");
-  const [inquirySent, setInquirySent] = useState(false);
   const [bookingListing, setBookingListing] = useState(null);
   const isGalleryView = initialView === "gallery";
   const source = useMemo(() => {
@@ -677,7 +670,6 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
     return `${base.slice(0, 237).trim()}...`;
   }, [shortDescription, longDescription]);
   const aboutOverlayTimerRef = useRef(null);
-  const inquiryOverlayTimerRef = useRef(null);
 
   const googleMapsHref = useMemo(
     () => `https://www.google.com/maps?q=${encodeURIComponent(`${insight.center.lat},${insight.center.lng}`)}`,
@@ -743,9 +735,6 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
       if (aboutOverlayTimerRef.current) {
         clearTimeout(aboutOverlayTimerRef.current);
       }
-      if (inquiryOverlayTimerRef.current) {
-        clearTimeout(inquiryOverlayTimerRef.current);
-      }
     };
   }, []);
 
@@ -766,22 +755,6 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
     };
   }, [aboutOverlayVisible, aboutOverlayOpen, isClosingAboutOverlay]);
 
-  useEffect(() => {
-    if (!inquiryOverlayVisible || inquiryOverlayOpen || isClosingInquiryOverlay) return;
-    if (inquiryOverlayTimerRef.current) {
-      clearTimeout(inquiryOverlayTimerRef.current);
-    }
-    inquiryOverlayTimerRef.current = setTimeout(() => {
-      setInquiryOverlayOpen(true);
-      inquiryOverlayTimerRef.current = null;
-    }, 16);
-    return () => {
-      if (inquiryOverlayTimerRef.current) {
-        clearTimeout(inquiryOverlayTimerRef.current);
-        inquiryOverlayTimerRef.current = null;
-      }
-    };
-  }, [inquiryOverlayVisible, inquiryOverlayOpen, isClosingInquiryOverlay]);
 
   useEffect(() => {
     if (!listing?.id || isGalleryView) return;
@@ -847,54 +820,6 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
     }, 240);
   }
 
-  function openInquiryOverlay(type) {
-    if (inquiryOverlayTimerRef.current) {
-      clearTimeout(inquiryOverlayTimerRef.current);
-      inquiryOverlayTimerRef.current = null;
-    }
-    setInquiryType(type === "viewing" ? "viewing" : "contact");
-    setInquiryMessage("");
-    setInquiryDate("");
-    setInquirySent(false);
-    setInquiryOverlayVisible(true);
-    setInquiryOverlayOpen(false);
-    setIsClosingInquiryOverlay(false);
-  }
-
-  function finalizeCloseInquiryOverlay() {
-    setInquiryOverlayVisible(false);
-    setInquiryOverlayOpen(false);
-    setIsClosingInquiryOverlay(false);
-    if (inquiryOverlayTimerRef.current) {
-      clearTimeout(inquiryOverlayTimerRef.current);
-      inquiryOverlayTimerRef.current = null;
-    }
-  }
-
-  function closeInquiryOverlay() {
-    if (!inquiryOverlayVisible || !inquiryOverlayOpen) return;
-    setIsClosingInquiryOverlay(true);
-    setInquiryOverlayOpen(false);
-    if (inquiryOverlayTimerRef.current) {
-      clearTimeout(inquiryOverlayTimerRef.current);
-    }
-    inquiryOverlayTimerRef.current = setTimeout(() => {
-      finalizeCloseInquiryOverlay();
-    }, 240);
-  }
-
-  function handleSendInquiry() {
-    if (!inquiryMessage.trim()) {
-      app.pushToast("Skriv ett meddelande innan du skickar.", "error");
-      return;
-    }
-    if (inquiryType === "viewing" && !inquiryDate) {
-      app.pushToast("Välj datum för visning.", "error");
-      return;
-    }
-
-    setInquirySent(true);
-  }
 
   async function handleShare() {
     if (!listing?.id) return;
@@ -1268,7 +1193,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                   <button
                     type="button"
                     className="inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-[#0f1930] bg-[#0f1930] px-4 py-3 text-sm font-semibold text-white hover:bg-[#16233f]"
-                    onClick={() => openInquiryOverlay("viewing")}
+                    onClick={() => setBookingListing(listing)}
                   >
                     <CalendarIcon className="h-4 w-4 text-white" />
                     Boka visning
@@ -1281,7 +1206,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                         listing_id: String(listing.id),
                         source
                       });
-                      openInquiryOverlay("contact");
+                      setBookingListing(listing);
                     }}
                   >
                     <MessageSquareIcon className="h-4 w-4" />
@@ -1295,99 +1220,6 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
           </div>
         </div>
 
-        {inquiryOverlayVisible ? (
-          <div
-            className={`fixed inset-0 z-[96] flex items-center justify-center bg-[#fffffe]/0 p-4 backdrop-blur-[2px] transition-all duration-200 sm:p-5 ${
-              inquiryOverlayOpen ? "opacity-100" : "opacity-0"
-            }`}
-            onClick={closeInquiryOverlay}
-          >
-            <div
-              className={`w-full max-w-xl rounded-3xl border border-black/10 bg-[#fffffe] p-5 shadow-[0_16px_40px_rgba(15,25,48,0.12)] transition-all duration-200 sm:p-6 ${
-                inquiryOverlayOpen
-                  ? "translate-y-0 scale-100 opacity-100"
-                  : "translate-y-2 scale-[0.985] opacity-0"
-              }`}
-              onClick={(event) => event.stopPropagation()}
-            >
-              {!inquirySent ? (
-                <>
-                  <h3 className="text-lg font-semibold">Skicka till uthyrare</h3>
-                  <p className="mt-1 text-sm text-ink-600">{listing.title}</p>
-
-                  <label className="mt-4 block text-xs font-semibold uppercase tracking-wide text-ink-500">
-                    Ärendetyp
-                    <select
-                      className="field mt-1.5"
-                      value={inquiryType}
-                      onChange={(event) => setInquiryType(event.target.value === "viewing" ? "viewing" : "contact")}
-                    >
-                      <option value="contact">Kontaktförfrågan</option>
-                      <option value="viewing">Boka visning</option>
-                    </select>
-                  </label>
-
-                  {inquiryType === "viewing" ? (
-                    <label className="mt-3 block text-xs font-semibold uppercase tracking-wide text-ink-500">
-                      Önskat datum
-                      <input
-                        type="date"
-                        className="field mt-1.5"
-                        value={inquiryDate}
-                        onChange={(event) => setInquiryDate(event.target.value)}
-                      />
-                    </label>
-                  ) : null}
-
-                  <label className="mt-3 block text-xs font-semibold uppercase tracking-wide text-ink-500">
-                    Meddelande
-                    <textarea
-                      className="field mt-1.5 min-h-[140px] resize-y"
-                      value={inquiryMessage}
-                      onChange={(event) => setInquiryMessage(event.target.value)}
-                      placeholder={inquiryType === "viewing" ? "Skriv önskad tid och övriga detaljer." : "Skriv ditt meddelande till uthyraren."}
-                    />
-                  </label>
-
-                  <div className="mt-5 flex flex-wrap items-center justify-end gap-2">
-                    <button
-                      type="button"
-                      className="rounded-xl border border-black/10 bg-[#fffffe] px-4 py-2 text-sm font-semibold text-ink-700 hover:bg-[#fffffe]"
-                      onClick={closeInquiryOverlay}
-                    >
-                      Avbryt
-                    </button>
-                    <button
-                      type="button"
-                      className="rounded-xl border border-[#0f1930] bg-[#0f1930] px-4 py-2 text-sm font-semibold text-white hover:bg-[#16233f]"
-                      onClick={handleSendInquiry}
-                    >
-                      Skicka
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <h3 className="text-lg font-semibold">Bekräftelse</h3>
-                  <p className="mt-2 text-sm text-ink-700">
-                    {inquiryType === "viewing"
-                      ? "Din visningsförfrågan är skickad till uthyraren."
-                      : "Din kontaktförfrågan är skickad till uthyraren."}
-                  </p>
-                  <div className="mt-5 flex justify-end">
-                    <button
-                      type="button"
-                      className="rounded-xl border border-[#0f1930] bg-[#0f1930] px-4 py-2 text-sm font-semibold text-white hover:bg-[#16233f]"
-                      onClick={closeInquiryOverlay}
-                    >
-                      Stäng
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        ) : null}
 
         {aboutOverlayVisible ? (
           <div
@@ -1599,7 +1431,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                       <button
                         type="button"
                         className="inline-flex items-center gap-1.5 rounded-full border border-[#0f1930] bg-[#0f1930] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#16233f]"
-                        onClick={() => openInquiryOverlay("viewing")}
+                        onClick={() => setBookingListing(listing)}
                       >
                         <CalendarIcon className="h-4 w-4 text-white" />
                         Boka visning
@@ -1612,7 +1444,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                             listing_id: String(listing.id),
                             source
                           });
-                          openInquiryOverlay("contact");
+                          setBookingListing(listing);
                         }}
                       >
                         <MessageSquareIcon className="h-4 w-4" />

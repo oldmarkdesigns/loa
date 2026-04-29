@@ -3329,27 +3329,25 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
     </div>
   ) : null;
 
-  const horizontalFeatureListing = displayedVisibleListings[0] || null;
-  const remainingListings = horizontalFeatureListing
-    ? displayedVisibleListings.slice(1)
-    : displayedVisibleListings;
+  const horizontalFeatureListings = displayedVisibleListings.slice(0, 3);
+  const remainingListings = displayedVisibleListings.slice(horizontalFeatureListings.length);
 
   const renderedListingCards = [
-    horizontalFeatureListing ? (
-      <div key={`${horizontalFeatureListing.id}-horizontal`} className="md:col-span-2">
+    ...horizontalFeatureListings.map((listing) => (
+      <div key={`${listing.id}-horizontal`} className="md:col-span-2">
         <ListingVisualCard
-          listing={horizontalFeatureListing}
-          shortlisted={favoriteIds.has(horizontalFeatureListing.id)}
+          listing={listing}
+          shortlisted={favoriteIds.has(listing.id)}
           onOpenListing={openListingDetail}
           onBookViewing={(item) => setBookingListing(item)}
           onToggleShortlist={handleToggleShortlist}
           onHoverStart={(item) => setHoveredListingId(item.id)}
           onHoverEnd={() => setHoveredListingId(null)}
-          showMatchChip={false}
+          showMatchChip
           horizontal
         />
       </div>
-    ) : null,
+    )),
     ...remainingListings.map((listing) => (
       <div key={listing.id}>
         <ListingVisualCard
