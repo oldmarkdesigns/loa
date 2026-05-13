@@ -39,6 +39,7 @@ export const ArchiveIcon = createSemanticIcon("archive", "ArchiveIcon");
 export const TagIcon = createSemanticIcon("tag", "TagIcon");
 export const UserPlusIcon = createSemanticIcon("userPlus", "UserPlusIcon");
 export const CircleDotIcon = createSemanticIcon("circleDot", "CircleDotIcon");
+export const PlusIcon = createSemanticIcon("plus", "PlusIcon");
 export const BarChart3Icon = createSemanticIcon("barChart3", "BarChart3Icon");
 export const MoreHorizontalIcon = createSemanticIcon("moreHorizontal", "MoreHorizontalIcon");
 export const DownloadIcon = createSemanticIcon("download", "DownloadIcon");

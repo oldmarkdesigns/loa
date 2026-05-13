@@ -5,6 +5,7 @@ import { propertyAmenityOptions } from "../../lib/propertyAmenityIcons";
 import {
   ArrowLeftIcon,
   BuildingIcon,
+  LoungeIcon,
   CalendarIcon,
   CarIcon,
   ClockIcon,
@@ -25,6 +26,47 @@ import PremiumPromoCard from "../../components/shared/PremiumPromoCard";
 import { navigateTo } from "../../lib/router";
 
 const DEFAULT_MAX_BUDGET = 250000;
+const mockRenterMatches = [
+  {
+    id: "renter-match-1",
+    matchPercent: 91,
+    name: "Elin Forsberg (29)",
+    verified: true,
+    title: "Growth Marketing Lead",
+    summary: "Snabbväxande team som söker kontor nära tunnelbana.",
+    timeline: "Nu → 3 månader",
+    budget: "Max SEK 28,000",
+    furnishing: "Möblerat eller flex",
+    people: "6 personer",
+    imageUrl: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    id: "renter-match-2",
+    matchPercent: 87,
+    name: "Arman Basic (34)",
+    verified: true,
+    title: "Tech & Consulting",
+    summary: "Två bolag som vill samlokalisera i Söderläge.",
+    timeline: "Nu → Tills vidare",
+    budget: "Max SEK 42,000",
+    furnishing: "Omöblerat",
+    people: "12 personer",
+    imageUrl: "https://images.unsplash.com/photo-1521119989659-a83eee488004?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    id: "renter-match-3",
+    matchPercent: 84,
+    name: "Maja Lind (41)",
+    verified: true,
+    title: "Creative Director",
+    summary: "Etablerad studio med stabil ekonomi och lång horisont.",
+    timeline: "1-2 månader → 24 månader",
+    budget: "Max SEK 36,000",
+    furnishing: "Flexibelt",
+    people: "8 personer",
+    imageUrl: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=800&q=80"
+  }
+];
 const typeOptions = ["Kontor", "Coworking", "Kontorshotell", "Butik", "Lager", "Showroom", "Ateljé", "Klinik", "Restaurang"];
 const districtOptions = ["Alla", "Norrmalm", "Södermalm", "Vasastan", "Östermalm", "Kungsholmen", "Solna", "Sundbyberg"];
 const contractOptions = ["Alla", "Kort (0-6 mån)", "Mellan (6-12 mån)", "Lång (12+ mån)"];
@@ -379,6 +421,7 @@ function ProfilePage({ app }) {
   const hasRenter = roleSet.has("renter");
   const hasCompanyAdmin = roleSet.has("company_admin");
   const hasBrokerRole = roleSet.has("broker");
+  const hideLocalProgramInProfile = hasRenter && hasBrokerRole;
   const hasPublisher = roleSet.has("broker") || roleSet.has("company_admin");
   const canSwitchToCompany = hasRenter && hasCompanyAdmin;
   const canSwitchToBroker = hasRenter && hasBrokerRole && !hasCompanyAdmin;
@@ -935,6 +978,7 @@ function ProfilePage({ app }) {
                   </article>
                   ) : null}
 
+                  {!hideLocalProgramInProfile ? (
                   <article className="rounded-3xl border border-black/10 bg-[#fffffe] p-5 sm:p-6">
                     <div className="flex items-start justify-between gap-3">
                       <div>
@@ -1009,53 +1053,103 @@ function ProfilePage({ app }) {
                       <p className="mt-4 rounded-2xl border border-black/10 bg-[#fffffe] px-3 py-3 text-sm text-ink-600">Ingen lokalprogramsdata ännu.</p>
                     )}
                   </article>
+                  ) : null}
 
-                  <section className="pt-3">
-                    <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                      <div>
-                        <h2 className="text-2xl font-semibold text-[#0f1930]">Lokaler som matchar dina preferenser</h2>
-                        <p className="mt-1 text-sm text-ink-600">Matchningar med tydlig motivering utifrån ditt lokalprogram.</p>
+                  {hideLocalProgramInProfile ? (
+                    <section className="pt-3">
+                      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                          <h2 className="text-2xl font-semibold text-[#0f1930]">Hyresgäster som matchar dina lokaler</h2>
+                          <p className="mt-1 text-sm text-ink-600">Kuraterade profiler med tydlig matchning mot ditt utbud.</p>
+                        </div>
                       </div>
-                    </div>
-
-                    {preferenceMatches.length === 0 ? (
-                      <p className="rounded-2xl border border-black/10 bg-[#fffffe] px-4 py-4 text-sm text-ink-600">
-                        Inga matchningar ännu. Fyll i fler preferenser i lokalprogrammet.
-                      </p>
-                    ) : (
-                      <div className="grid gap-4 md:grid-cols-2">
-                        {preferenceMatches.map((item) => (
-                          <ListingVisualCard
-                            key={item.listing.id}
-                            listing={{ ...item.listing, score: item.matchPercent }}
-                            shortlisted={favoriteIds.has(String(item.listing.id))}
-                            onOpenListing={(selected) => navigateTo(`/app/listings/${encodeURIComponent(selected.id)}`)}
-                            onBookViewing={(selected) => setBookingListing(selected)}
-                            onToggleShortlist={(listingId) => toggleFavorite?.(listingId)}
-                            showMatchChip
-                            highlightAmenities={desiredAmenities}
-                            missingAmenities={item.missingAmenities}
-                            comparedAmenitiesOnly
-                          />
+                      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                        {mockRenterMatches.map((renter) => (
+                          <article key={renter.id} className="relative rounded-3xl border border-black/10 bg-[#fffffe] p-4 sm:p-5">
+                            <span className="absolute right-3.5 top-3.5 rounded-full border border-[#0f1930]/20 bg-[#f8fafc] px-3 py-1 text-sm font-semibold text-[#0f1930]">
+                              {renter.matchPercent}%
+                            </span>
+                            <div className="flex items-center justify-between gap-3">
+                              <span className="inline-flex items-center gap-2 text-xs font-semibold text-ink-700">
+                                <span className="h-2 w-2 rounded-full bg-[#0f1930]" />
+                                New
+                              </span>
+                            </div>
+                            <img src={renter.imageUrl} alt={renter.name} className="mx-auto mt-3 h-28 w-28 rounded-full border-4 border-[#0f1930] object-cover" />
+                            <div className="mt-3 text-center">
+                              <p className="text-[20px] font-semibold leading-[1.15] text-[#241d1a]">{renter.name}</p>
+                              {renter.verified ? (
+                                <p className="mt-1 inline-flex items-center gap-1.5 text-sm font-semibold text-ink-700">
+                                  <span className="inline-flex h-4 w-4 items-center justify-center bg-[#0f1930] text-white" style={{ clipPath: "polygon(50% 1%,58% 4%,66% 2%,73% 8%,81% 8%,88% 15%,96% 19%,99% 28%,97% 36%,99% 44%,94% 51%,95% 59%,89% 66%,86% 75%,78% 79%,71% 86%,62% 87%,55% 94%,47% 92%,39% 97%,32% 91%,23% 91%,18% 83%,9% 81%,6% 72%,1% 65%,3% 56%,0% 48%,6% 41%,4% 33%,10% 26%,11% 17%,20% 13%,25% 5%,34% 5%,42% 1%)" }}>
+                                    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-3 w-3">
+                                      <path d="M5.5 12.5l4 4 9-9" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                  </span>
+                                  Verifierad
+                                </p>
+                              ) : null}
+                              <p className="mt-2 text-center text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-500">{renter.title}</p>
+                              <p className="mt-1.5 text-center text-base font-medium leading-snug text-[#241d1a]">{renter.summary}</p>
+                            </div>
+                            <ul className="mt-4 space-y-2.5 text-[#241d1a]">
+                              <li className="flex items-center gap-2.5 text-sm"><CalendarIcon className="h-4 w-4 text-ink-700" /><span>{renter.timeline}</span></li>
+                              <li className="flex items-center gap-2.5 text-sm"><CoinsIcon className="h-4 w-4 text-ink-700" /><span>{renter.budget}</span></li>
+                              <li className="flex items-center gap-2.5 text-sm"><LoungeIcon className="h-4 w-4 text-ink-700" /><span>{renter.furnishing}</span></li>
+                              <li className="flex items-center gap-2.5 text-sm"><UserIcon className="h-4 w-4 text-ink-700" /><span>{renter.people}</span></li>
+                            </ul>
+                          </article>
                         ))}
                       </div>
-                    )}
-                  </section>
+                    </section>
+                  ) : (
+                    <section className="pt-3">
+                      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                          <h2 className="text-2xl font-semibold text-[#0f1930]">Lokaler som matchar dina preferenser</h2>
+                          <p className="mt-1 text-sm text-ink-600">Matchningar med tydlig motivering utifrån ditt lokalprogram.</p>
+                        </div>
+                      </div>
+                      {preferenceMatches.length === 0 ? (
+                        <p className="rounded-2xl border border-black/10 bg-[#fffffe] px-4 py-4 text-sm text-ink-600">
+                          Inga matchningar ännu. Fyll i fler preferenser i lokalprogrammet.
+                        </p>
+                      ) : (
+                        <div className="grid gap-4 md:grid-cols-2">
+                          {preferenceMatches.map((item) => (
+                            <ListingVisualCard
+                              key={item.listing.id}
+                              listing={{ ...item.listing, score: item.matchPercent }}
+                              shortlisted={favoriteIds.has(String(item.listing.id))}
+                              onOpenListing={(selected) => navigateTo(`/app/listings/${encodeURIComponent(selected.id)}`)}
+                              onBookViewing={(selected) => setBookingListing(selected)}
+                              onToggleShortlist={(listingId) => toggleFavorite?.(listingId)}
+                              showMatchChip
+                              highlightAmenities={desiredAmenities}
+                              missingAmenities={item.missingAmenities}
+                              comparedAmenitiesOnly
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </section>
+                  )}
                 </div>
 
                 <aside className="space-y-6 lg:sticky lg:top-0 lg:self-start">
                   <div className="space-y-6">
-                    <article className="overflow-hidden rounded-3xl border border-black/10 bg-[#fffffe]">
-                      <div className="px-5 py-4">
-                        <p className="text-lg font-semibold text-[#0f1930]">Publicera din profil</p>
-                        <p className="mt-1 text-sm text-ink-600">Öka chansen att bli kontaktad av relevanta hyresvärder.</p>
-                      </div>
-                      <div className="border-t border-black/10 px-5 py-4">
-                        <button type="button" className="w-full rounded-full bg-[#0f1930] px-4 py-2.5 text-sm font-semibold text-white">
-                          Publicera profil
-                        </button>
-                      </div>
-                    </article>
+                    {!hideLocalProgramInProfile ? (
+                      <article className="overflow-hidden rounded-3xl border border-black/10 bg-[#fffffe]">
+                        <div className="px-5 py-4">
+                          <p className="text-lg font-semibold text-[#0f1930]">Publicera din profil</p>
+                          <p className="mt-1 text-sm text-ink-600">Öka chansen att bli kontaktad av relevanta hyresvärder.</p>
+                        </div>
+                        <div className="border-t border-black/10 px-5 py-4">
+                          <button type="button" className="w-full rounded-full bg-[#0f1930] px-4 py-2.5 text-sm font-semibold text-white">
+                            Publicera profil
+                          </button>
+                        </div>
+                      </article>
+                    ) : null}
 
                     <PremiumPromoCard />
                   </div>
@@ -1555,90 +1649,6 @@ function ProfilePage({ app }) {
                     </button>
                   </div>
                 </div>
-              </div>
-            </div>
-
-            <div className="mt-5 border-t border-black/10 pt-5">
-              <p className="text-2xl font-semibold text-[#0f1930]">Hantera team</p>
-            </div>
-            <form className="mt-4 grid gap-2 sm:grid-cols-[1.3fr_1fr_1fr_auto]" onSubmit={inviteTeamMember}>
-              <input
-                className="field w-full"
-                value={teamInvite.email}
-                onChange={(event) => setTeamInvite((prev) => ({ ...prev, email: event.target.value }))}
-                placeholder="E-post"
-                type="email"
-              />
-              <input
-                className="field w-full"
-                value={teamInvite.firstName}
-                onChange={(event) => setTeamInvite((prev) => ({ ...prev, firstName: event.target.value }))}
-                placeholder="Förnamn"
-              />
-              <input
-                className="field w-full"
-                value={teamInvite.lastName}
-                onChange={(event) => setTeamInvite((prev) => ({ ...prev, lastName: event.target.value }))}
-                placeholder="Efternamn"
-              />
-              <button type="submit" className="rounded-xl border border-[#0f1930] bg-[#0f1930] px-3 py-2 text-xs font-semibold text-white hover:bg-[#16233f]">
-                Bjud in
-              </button>
-            </form>
-
-            <p className="mt-5 text-sm font-semibold text-[#0f1930]">Teammedlemmar</p>
-            <div className="mt-4 overflow-hidden rounded-2xl border border-black/10">
-              <div className="grid grid-cols-[1.2fr_1fr_1fr_1fr_auto] gap-2 border-b border-black/10 bg-[#fffffe] px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-ink-500">
-                <span>E-post</span>
-                <span>Förnamn</span>
-                <span>Efternamn</span>
-                <span>Telefon</span>
-                <span className="text-right">Status</span>
-              </div>
-              <div className="divide-y divide-black/10">
-                {teamMembers.map((member) => (
-                  <div key={member.id} className="grid grid-cols-[1.2fr_1fr_1fr_1fr_auto] items-center gap-2 px-3 py-2 text-sm text-ink-700">
-                    <input
-                      className="field w-full"
-                      value={member.email}
-                      onChange={(event) => updateTeamMember(member.id, { email: event.target.value })}
-                    />
-                    <input
-                      className="field w-full"
-                      value={member.firstName || ""}
-                      onChange={(event) => updateTeamMember(member.id, { firstName: event.target.value })}
-                    />
-                    <input
-                      className="field w-full"
-                      value={member.lastName || ""}
-                      onChange={(event) => updateTeamMember(member.id, { lastName: event.target.value })}
-                    />
-                    <input
-                      className="field w-full"
-                      value={member.phone || ""}
-                      onChange={(event) => updateTeamMember(member.id, { phone: event.target.value })}
-                    />
-                    <div className="inline-flex items-center justify-end gap-2">
-                      <select
-                        className="field select-chevron w-full min-w-[140px]"
-                        value={member.status}
-                        onChange={(event) => updateTeamMember(member.id, { status: event.target.value })}
-                      >
-                        <option value="Aktiv">Aktiv</option>
-                        <option value="Inbjuden">Inbjuden</option>
-                      </select>
-                      {member.id !== "team-owner" ? (
-                        <button
-                          type="button"
-                          className="rounded-lg border border-black/10 bg-[#fffffe] px-2 py-1 text-[11px] font-semibold text-ink-700 hover:bg-[#fffffe]"
-                          onClick={() => removeTeamMember(member.id)}
-                        >
-                          Ta bort
-                        </button>
-                      ) : null}
-                    </div>
-                  </div>
-                ))}
               </div>
             </div>
 

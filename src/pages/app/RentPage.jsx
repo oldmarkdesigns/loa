@@ -3331,6 +3331,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
 
   const horizontalFeatureListings = displayedVisibleListings.slice(0, 3);
   const remainingListings = displayedVisibleListings.slice(horizontalFeatureListings.length);
+  const showMatchChipOnListingCards = displayedHasBegunSearch;
 
   const renderedListingCards = [
     ...horizontalFeatureListings.map((listing) => (
@@ -3343,7 +3344,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
           onToggleShortlist={handleToggleShortlist}
           onHoverStart={(item) => setHoveredListingId(item.id)}
           onHoverEnd={() => setHoveredListingId(null)}
-          showMatchChip
+          showMatchChip={showMatchChipOnListingCards}
           horizontal
         />
       </div>
@@ -3358,7 +3359,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
           onToggleShortlist={handleToggleShortlist}
           onHoverStart={(item) => setHoveredListingId(item.id)}
           onHoverEnd={() => setHoveredListingId(null)}
-          showMatchChip={hasTeamSizeForMatchChip}
+          showMatchChip={showMatchChipOnListingCards}
         />
       </div>
     ))

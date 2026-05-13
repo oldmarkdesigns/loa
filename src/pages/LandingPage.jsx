@@ -68,6 +68,24 @@ const processSteps = [
   }
 ];
 
+const localProgramBenefits = [
+  {
+    title: "Beskriv behov tidigt",
+    body: "Samla krav för läge, storlek, budget och lokaltyp innan sök eller dialog startar.",
+    icon: BuildingIcon
+  },
+  {
+    title: "Få mer relevanta matchningar",
+    body: "Sök och rekommendationer prioriterar lokaler som ligger närmare era faktiska preferenser.",
+    icon: SparklesIcon
+  },
+  {
+    title: "Spara tid i urvalet",
+    body: "Mindre brus, färre irrelevanta objekt och tydligare underlag inför nästa steg.",
+    icon: FilterIcon
+  }
+];
+
 const faqItems = [
   {
     q: "Kan jag publicera gratis?",
@@ -660,8 +678,6 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
     [favorites]
   );
   const totalAvailableListings = Array.isArray(listings) && listings.length > 0 ? listings.length : baseListingDataset.length;
-  const trustScore = 4.8;
-  const trustReviews = 127;
 
   useEffect(() => {
     if (typeof window === "undefined") return undefined;
@@ -881,7 +897,7 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
 
         <div className="relative z-20 w-full px-2 pt-4 sm:px-3 sm:pt-4 xl:px-0 xl:pt-0">
           <div className="relative min-h-[620px] xl:h-[620px]">
-            <div className="flex h-full flex-col items-center justify-center text-center xl:min-h-[560px] xl:w-[58%] xl:max-w-none">
+            <div className="flex h-full flex-col items-center justify-center text-center xl:min-h-[560px] xl:w-[58%] xl:max-w-none xl:-translate-y-8">
               <p className="inline-flex w-fit items-center gap-1.5 rounded-full border border-white/45 bg-[#fffffe]/22 px-3 py-1.5 text-xs font-semibold text-ink-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_8px_24px_rgba(15,25,48,0.12)] backdrop-blur-md">
                 <BuildingIcon className="h-3.5 w-3.5" />
                 {totalAvailableListings} lediga lokaler
@@ -933,27 +949,6 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
                 </div>
               </form>
 
-              <div className="mt-7 flex flex-col items-center">
-                <p className="text-[1rem] font-semibold text-[#0f1930]">
-                  TrustScore: {trustScore.toFixed(1)} <span className="ml-4 font-medium">{trustReviews}+ Reviews</span>
-                </p>
-                <div className="mt-1.5 inline-flex items-center gap-1.5">
-                  {Array.from({ length: 5 }).map((_, index) => {
-                    const fill = Math.max(0, Math.min(1, trustScore - index));
-                    return (
-                      <span key={`trust-star-${index}`} className="relative inline-flex h-4 w-4">
-                        <StarIcon className="h-4 w-4 fill-current text-[#0f1930]/20" />
-                        <span
-                          className="absolute inset-y-0 left-0 overflow-hidden"
-                          style={{ width: `${fill * 100}%` }}
-                        >
-                          <StarIcon className="h-4 w-4 fill-current text-[#0f1930]" />
-                        </span>
-                      </span>
-                    );
-                  })}
-                </div>
-              </div>
             </div>
             <div className="mt-8 h-[340px] w-full px-2 sm:h-[380px] sm:px-3 lg:h-[430px] lg:px-4 xl:absolute xl:top-6 xl:right-6 xl:bottom-6 xl:mt-0 xl:flex xl:h-auto xl:w-[42%] xl:px-0 xl:items-stretch">
               <HeroMapWidget
@@ -1092,6 +1087,86 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
               </div>
             </article>
           </div>
+        </div>
+      </section>
+
+      <section id="lokalprogram" className="mx-auto w-full max-w-[86rem] scroll-mt-28 px-4 py-16 sm:px-6">
+        <div className="mb-10">
+          <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Lokalprogram</p>
+          <h2 className="mt-2 text-3xl font-semibold">Sätt upp ert lokalprogram innan ni börjar leta brett</h2>
+          <p className="mt-2 max-w-3xl text-sm text-ink-600">
+            Tydliga behov från start ger bättre matchningar, mer relevanta rekommendationer och snabbare väg till rätt lokal.
+          </p>
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+          <article className="rounded-3xl border border-[#0f1930]/12 bg-[#f8fafc] p-6 sm:p-8">
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-ink-600">
+              Lokalprogrammet samlar det ni faktiskt söker i en lokal. När krav blir tydliga från start blir matchning, rekommendationer och dialog med hyresvärdar mer träffsäkra.
+            </p>
+
+            <div className="mt-6 grid gap-4 sm:grid-cols-3">
+              {localProgramBenefits.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <article key={item.title} className="rounded-2xl border border-black/10 bg-[#fffffe] p-4">
+                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#0f1930] text-white">
+                      <Icon className="h-4 w-4" />
+                    </span>
+                    <p className="mt-3 text-base font-semibold text-[#0f1930]">{item.title}</p>
+                    <p className="mt-1 text-sm text-ink-600">{item.body}</p>
+                  </article>
+                );
+              })}
+            </div>
+          </article>
+
+          <article className="rounded-3xl border border-black/10 bg-[#fffffe] p-6 sm:p-8">
+            <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">För hyresgäster</p>
+            <h3 className="mt-2 text-2xl font-semibold text-[#0f1930]">Bra första version räcker</h3>
+            <p className="mt-2 text-sm leading-6 text-ink-600">
+              Börja med grundkrav. Ni kan alltid uppdatera lokalprogrammet senare i profilen när behov ändras eller fler beslut landar.
+            </p>
+
+            <ul className="mt-5 space-y-3 text-sm text-ink-700">
+              <li className="flex items-start gap-3">
+                <span className="mt-1 inline-flex h-2.5 w-2.5 shrink-0 rounded-full bg-[#0f1930]" />
+                Tydligare kravbild för team och beslutsfattare.
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="mt-1 inline-flex h-2.5 w-2.5 shrink-0 rounded-full bg-[#0f1930]" />
+                Bättre utgångspunkt för matchningar på läge, storlek och budget.
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="mt-1 inline-flex h-2.5 w-2.5 shrink-0 rounded-full bg-[#0f1930]" />
+                Snabbare väg från första sökning till relevanta alternativ.
+              </li>
+            </ul>
+
+            <div className="mt-6 flex flex-wrap gap-3">
+              <button
+                type="button"
+                className="inline-flex items-center gap-2 rounded-xl border border-[#0f1930] bg-[#0f1930] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#16233f]"
+                onClick={() => {
+                  if (user) {
+                    navigateTo("/app/profile");
+                    return;
+                  }
+                  openAuth("signup", "renter");
+                }}
+              >
+                Skapa lokalprogram
+                <ArrowRightIcon className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                className="rounded-xl border border-black/20 bg-[#fffffe] px-4 py-2.5 text-sm font-semibold text-ink-700 hover:bg-black/5"
+                onClick={() => navigateTo("/app/rent?view=available")}
+              >
+                Se lediga lokaler
+              </button>
+            </div>
+          </article>
         </div>
       </section>
 

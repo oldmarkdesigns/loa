@@ -107,6 +107,7 @@ export const ICONS = {
   tag: "tag",
   userPlus: "user-plus",
   circleDot: "circle-dot",
+  plus: "plus",
 
   // --- Admin & settings ---
   settingsGear: "settings",       // SettingsGearIcon

@@ -1,6 +1,7 @@
 import {
   BuildingIcon,
   CalendarIcon,
+  PinIcon,
   RulerIcon,
   UsersGroupIcon,
   StarIcon,
@@ -135,7 +136,7 @@ function ListingVisualCard({
                   </button>
                 </div>
               </div>
-              <div className="grid min-h-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-0 border-t border-black/10 bg-[#f4f4f4]">
+              <div className="grid min-h-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-px border-t border-black/10 bg-black/10">
                 <div className="relative min-h-0 overflow-hidden">
                   <img src={listing.image} alt="" className="absolute inset-0 block h-full w-full min-w-0 rounded-none object-cover" />
                 </div>
@@ -155,21 +156,23 @@ function ListingVisualCard({
                   <span>UTVALD</span>
                 </p>
               </div>
-              <p className="text-sm text-ink-600">{buildAddress(listing)}</p>
+              <p className="inline-flex items-center gap-1.5 text-sm text-ink-600">
+                <PinIcon className="h-4 w-4 text-ink-600" />
+                <span>{buildAddress(listing)}</span>
+              </p>
+              <div className="mt-1 flex items-center gap-4 text-sm text-[#0f1930]">
+                <p className="flex items-center gap-2 font-medium">
+                  <RulerIcon className="h-5 w-5 text-[#0f1930]" />
+                  <span>{listing.sizeSqm} kvm</span>
+                </p>
+                <span className="h-5 w-px bg-black/20" />
+                <p className="flex items-center gap-2 font-medium">
+                  <UsersGroupIcon className="h-5 w-5 text-[#0f1930]" />
+                  <span>{formatCapacity(listing.capacity)}</span>
+                </p>
+              </div>
               <p className="text-sm text-ink-600">
                 Flexibelt kontor i centralt läge, utformat för hybridarbete och med direkt närhet till kommunikationer.
-              </p>
-            </div>
-
-            <div className="mt-1 flex items-center gap-4 text-sm text-[#0f1930]">
-              <p className="flex items-center gap-2 font-medium">
-                <RulerIcon className="h-5 w-5 text-[#0f1930]" />
-                <span>{listing.sizeSqm} kvm</span>
-              </p>
-              <span className="h-5 w-px bg-black/20" />
-              <p className="flex items-center gap-2 font-medium">
-                <UsersGroupIcon className="h-5 w-5 text-[#0f1930]" />
-                <span>{formatCapacity(listing.capacity)}</span>
               </p>
             </div>
 
@@ -260,19 +263,21 @@ function ListingVisualCard({
         <div className="flex flex-1 flex-col gap-3 p-5">
           <div className="space-y-1">
             <h3 className="text-lg font-semibold leading-tight text-[#0f1930]">{listing.title}</h3>
-            <p className="text-sm text-ink-600">{buildAddress(listing)}</p>
-          </div>
-
-          <div className="mt-1 flex items-center gap-4 text-sm text-[#0f1930]">
-            <p className="flex items-center gap-2 font-medium">
-              <RulerIcon className="h-5 w-5 text-[#0f1930]" />
-              <span>{listing.sizeSqm} kvm</span>
+            <p className="inline-flex items-center gap-1.5 text-sm text-ink-600">
+              <PinIcon className="h-4 w-4 text-ink-600" />
+              <span>{buildAddress(listing)}</span>
             </p>
-            <span className="h-5 w-px bg-black/20" />
-            <p className="flex items-center gap-2 font-medium">
-              <UsersGroupIcon className="h-5 w-5 text-[#0f1930]" />
-              <span>{formatCapacity(listing.capacity)}</span>
-            </p>
+            <div className="mt-1 flex items-center gap-4 text-sm text-[#0f1930]">
+              <p className="flex items-center gap-2 font-medium">
+                <RulerIcon className="h-5 w-5 text-[#0f1930]" />
+                <span>{listing.sizeSqm} kvm</span>
+              </p>
+              <span className="h-5 w-px bg-black/20" />
+              <p className="flex items-center gap-2 font-medium">
+                <UsersGroupIcon className="h-5 w-5 text-[#0f1930]" />
+                <span>{formatCapacity(listing.capacity)}</span>
+              </p>
+            </div>
           </div>
 
           <div className="mt-1 flex items-end gap-1.5">

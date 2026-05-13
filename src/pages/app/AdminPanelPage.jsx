@@ -41,6 +41,7 @@ import {
   PanelLeftIcon,
   PencilIcon,
   PinIcon,
+  PlusIcon,
   SearchIcon,
   SendHorizontalIcon,
   SettingsGearIcon,
@@ -2830,7 +2831,7 @@ function AdminOverview({ app }) {
                 Bjud in mäklare
               </button>
               <button type="button" className="btn-secondary inline-flex w-fit min-h-0 justify-start px-3 py-2 text-sm" onClick={() => navigateTo("/app/admin/annonser")}>
-                <BuildingIcon className="mr-2 h-4 w-4" />
+                <PlusIcon className="mr-2 h-4 w-4" />
                 Publicera annons
               </button>
             <button
