@@ -18,6 +18,7 @@ import {
 const MESSAGE_LISTING = {
   id: "msg-listing-1",
   title: "Kontorslokal Södermalm",
+  address: "Maria Prästgårdsgata",
   district: "Södermalm",
   size: 248,
   priceMonthly: 48500,
@@ -29,8 +30,7 @@ const BROKER_PROFILE = {
   initials: "AL",
   company: "Nordic Estate",
   role: "Mäklare",
-  responseTime: "~2h",
-  matchScore: 94
+  responseTime: "~2h"
 };
 
 const RENTER_PROFILE = {
@@ -38,8 +38,7 @@ const RENTER_PROFILE = {
   initials: "EA",
   company: "Nordic Product Studio AB",
   teamSize: "18 personer",
-  budget: "52 000 kr/mån",
-  matchScore: 94
+  budget: "52 000 kr/mån"
 };
 
 const renterConversations = [
@@ -49,7 +48,6 @@ const renterConversations = [
     counterpartInitials: "AL",
     company: "Nordic Estate",
     statusDot: "bg-[#2e5f43]",
-    favorite: true,
     unreadCount: 6,
     bucket: "all",
     saved: false,
@@ -75,7 +73,6 @@ const renterConversations = [
     counterpartInitials: "ES",
     company: "Nordic Estate",
     statusDot: "bg-[#2e5f43]",
-    favorite: false,
     unreadCount: 1,
     bucket: "unread",
     saved: false,
@@ -89,7 +86,6 @@ const renterConversations = [
     counterpartInitials: "MH",
     company: "Nordic Estate",
     statusDot: "bg-[#b08a3d]",
-    favorite: true,
     unreadCount: 0,
     bucket: "saved",
     saved: true,
@@ -103,7 +99,6 @@ const renterConversations = [
     counterpartInitials: "JB",
     company: "Fastighetsbyrån",
     statusDot: "bg-[#9aa7bd]",
-    favorite: false,
     unreadCount: 0,
     bucket: "all",
     saved: false,
@@ -117,7 +112,6 @@ const renterConversations = [
     counterpartInitials: "SE",
     company: "CBRE Stockholm",
     statusDot: "bg-[#2e5f43]",
-    favorite: false,
     unreadCount: 0,
     bucket: "all",
     saved: false,
@@ -131,7 +125,6 @@ const renterConversations = [
     counterpartInitials: "HL",
     company: "Newsec",
     statusDot: "bg-[#2e5f43]",
-    favorite: false,
     unreadCount: 0,
     bucket: "all",
     saved: false,
@@ -148,11 +141,9 @@ const brokerConversations = [
     counterpartInitials: "EA",
     company: "Nordic Product Studio AB",
     stage: "Ny",
-    matchScore: 94,
     pipelineLabel: "Ny",
     pipelineTone: "neutral",
     needsReply: true,
-    favorited: true,
     timestamp: "14:32",
     summary: "Vill boka visning av Kontorslokal Södermalm. Elin...",
     messages: [
@@ -173,11 +164,9 @@ const brokerConversations = [
     counterpartInitials: "SO",
     company: "Oldmark Designs AB",
     stage: "Kvalificerad",
-    matchScore: 92,
     pipelineLabel: "Kvalificerad",
     pipelineTone: "green",
     needsReply: false,
-    favorited: true,
     timestamp: "13:05",
     summary: "Absolut. Vi driver Oldmark Designs, en designstudio...",
     messages: []
@@ -188,11 +177,9 @@ const brokerConversations = [
     counterpartInitials: "MN",
     company: "Nilsson & Co",
     stage: "Visning klar",
-    matchScore: 88,
     pipelineLabel: "Visning klar",
     pipelineTone: "amber",
     needsReply: false,
-    favorited: true,
     timestamp: "11:42",
     summary: "Tack för visningen idag! Vi diskuterar internt och återkommer.",
     messages: []
@@ -203,11 +190,9 @@ const brokerConversations = [
     counterpartInitials: "LÅ",
     company: "Åberg Consulting",
     stage: "Ej aktuell",
-    matchScore: 45,
     pipelineLabel: "Ej aktuell",
     pipelineTone: "gray",
     needsReply: false,
-    favorited: false,
     timestamp: "09:20",
     summary: "Tyvärr känns lokalen lite för stor för våra behov just nu.",
     messages: []
@@ -218,11 +203,9 @@ const brokerConversations = [
     counterpartInitials: "DP",
     company: "Persson Tech",
     stage: "Uppföljning",
-    matchScore: 71,
     pipelineLabel: "Uppföljning",
     pipelineTone: "amber",
     needsReply: false,
-    favorited: false,
     timestamp: "Igår",
     summary: "Hej! Jag leder en startup på 25 personer och söker vårt nästa...",
     messages: []
@@ -233,11 +216,9 @@ const brokerConversations = [
     counterpartInitials: "EF",
     company: "Forsberg Arkitekter",
     stage: "Kontrakt",
-    matchScore: 95,
     pipelineLabel: "Kontrakt",
     pipelineTone: "green",
     needsReply: true,
-    favorited: true,
     timestamp: "Igår",
     summary: "Vi är redo att skriva kontrakt. Kan ni skicka över underlag?",
     messages: []
@@ -263,6 +244,7 @@ function MessagesPage({ app }) {
   const [activeConversationId, setActiveConversationId] = useState(isBrokerView ? brokerConversations[0].id : renterConversations[0].id);
   const [draft, setDraft] = useState("");
   const [filter, setFilter] = useState("all");
+  const [favoriteConversationIds, setFavoriteConversationIds] = useState(() => new Set());
 
   const conversations = isBrokerView ? brokerConversations : renterConversations;
 
@@ -274,30 +256,40 @@ function MessagesPage({ app }) {
       if (!matchesQuery) return false;
       if (isBrokerView) {
         if (filter === "unread") return conversation.needsReply;
-        if (filter === "needs_reply") return conversation.needsReply;
+        if (filter === "saved") return favoriteConversationIds.has(conversation.id);
+        if (filter === "archived") return false;
         return true;
       }
       if (filter === "unread") return conversation.unreadCount > 0;
-      if (filter === "saved") return conversation.saved;
+      if (filter === "saved") return favoriteConversationIds.has(conversation.id);
+      if (filter === "archived") return false;
       return true;
     });
-  }, [conversations, filter, isBrokerView, searchQuery]);
+  }, [conversations, favoriteConversationIds, filter, isBrokerView, searchQuery]);
 
   const activeConversation = filteredConversations.find((item) => item.id === activeConversationId)
     || conversations.find((item) => item.id === activeConversationId)
     || filteredConversations[0]
     || conversations[0];
 
-  const filterTabs = isBrokerView
-    ? [
-      { key: "all", label: "Alla", count: brokerConversations.length },
-      { key: "unread", label: "Olästa", count: brokerConversations.filter((item) => item.needsReply).length }
-    ]
-    : [
-      { key: "all", label: "Alla", count: renterConversations.length },
-      { key: "unread", label: "Olästa", count: renterConversations.filter((item) => item.unreadCount > 0).length },
-      { key: "saved", label: "Sparade", count: renterConversations.filter((item) => item.saved).length }
-    ];
+  const filterTabs = [
+    { key: "all", label: "Alla", count: conversations.length },
+    {
+      key: "unread",
+      label: "Olästa",
+      count: isBrokerView
+        ? brokerConversations.filter((item) => item.needsReply).length
+        : renterConversations.filter((item) => item.unreadCount > 0).length
+    },
+    {
+      key: "saved",
+      label: "Favoriter",
+      count: conversations.filter((item) => favoriteConversationIds.has(item.id)).length
+    },
+    { key: "archived", label: "Arkiverade", count: 0 }
+  ];
+
+  const activeConversationIsFavorite = activeConversation ? favoriteConversationIds.has(activeConversation.id) : false;
 
   function useSuggestion(text) {
     setDraft(text);
@@ -308,10 +300,20 @@ function MessagesPage({ app }) {
     setDraft("");
   }
 
+  function toggleActiveConversationFavorite() {
+    if (!activeConversation) return;
+    setFavoriteConversationIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(activeConversation.id)) next.delete(activeConversation.id);
+      else next.add(activeConversation.id);
+      return next;
+    });
+  }
+
   return (
     <section className="h-full overflow-y-auto bg-[#fffffe] lg:overflow-hidden">
-      <div className="mx-auto min-h-full w-full max-w-[1600px] p-4 sm:p-6 lg:h-full">
-        <div className="surface grid min-h-full overflow-hidden lg:h-full lg:min-h-0 lg:grid-cols-[312px,minmax(0,1fr)] xl:grid-cols-[312px,minmax(0,1fr),320px]">
+      <div className="min-h-full w-full lg:h-full">
+        <div className="grid min-h-full overflow-hidden lg:h-full lg:min-h-0 lg:grid-cols-[380px,minmax(0,1fr)] xl:grid-cols-[420px,minmax(0,1fr),320px]">
           <aside className="flex min-h-0 flex-col border-b border-black/10 bg-[#fbfbfa] lg:border-b-0 lg:border-r">
             <div className="border-b border-black/10 p-4 sm:p-5">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ink-500">
@@ -329,7 +331,7 @@ function MessagesPage({ app }) {
                   onChange={(event) => setSearchQuery(event.target.value)}
                 />
               </label>
-              <div className="mt-3 flex flex-wrap gap-2">
+              <div className="mt-3 flex flex-nowrap gap-2 overflow-x-auto pb-1">
                 {filterTabs.map((tab) => {
                   const active = filter === tab.key;
                   return (
@@ -355,7 +357,7 @@ function MessagesPage({ app }) {
               </div>
             </div>
 
-            <div className="max-h-[360px] overflow-y-auto lg:min-h-0 lg:max-h-none lg:flex-1">
+            <div className="max-h-[360px] overflow-y-auto px-3 py-3 lg:min-h-0 lg:max-h-none lg:flex-1">
               {filteredConversations.map((conversation) => {
                 const active = conversation.id === activeConversation?.id;
                 return (
@@ -363,16 +365,13 @@ function MessagesPage({ app }) {
                     key={conversation.id}
                     type="button"
                     onClick={() => setActiveConversationId(conversation.id)}
-                    className={`message-list-row grid w-full grid-cols-[auto,1fr,auto] gap-3 border-b border-black/5 px-4 py-4 text-left transition ${
-                      active ? "bg-[#fffffe] shadow-[inset_3px_0_0_#0f1930]" : "hover:bg-[#fffffe]/80"
+                    className={`message-list-row mb-2 grid w-full grid-cols-[auto,1fr,auto] gap-3 rounded-[26px] px-4 py-4 text-left transition ${
+                      active
+                        ? "rounded-[26px] bg-[#efefee]"
+                        : "bg-transparent hover:bg-[#efefee]"
                     }`}
                   >
                     <div className="flex flex-col items-center gap-2 pt-1">
-                      {isBrokerView ? (
-                        <StarIcon className={`h-3.5 w-3.5 ${conversation.favorited ? "fill-[#d6b65b] text-[#d6b65b]" : "text-ink-300"}`} />
-                      ) : (
-                        <StarIcon className={`h-3.5 w-3.5 ${conversation.favorite ? "fill-[#d6b65b] text-[#d6b65b]" : "text-ink-300"}`} />
-                      )}
                       <span className={`inline-flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold ${
                         active ? "bg-[#0f1930] text-white" : "bg-[#dbe6f3] text-[#0f1930]"
                       }`}>
@@ -381,22 +380,20 @@ function MessagesPage({ app }) {
                     </div>
 
                     <div className="min-w-0">
-                      <div className="flex items-start gap-2">
-                        <span className={`mt-1.5 inline-flex h-1.5 w-1.5 shrink-0 rounded-full ${conversation.statusDot || "bg-[#2e5f43]"}`} />
-                        <div className="min-w-0">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
                           <p className="truncate text-sm font-semibold text-ink-900">{conversation.counterpartName}</p>
-                          <p className="truncate text-xs text-ink-500">{conversation.company}</p>
+                          {isBrokerView ? (
+                            <span className={`shrink-0 inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold ${pipelineToneClass(conversation.pipelineTone)}`}>
+                              {conversation.pipelineLabel}
+                            </span>
+                          ) : null}
                         </div>
+                        <p className="truncate text-xs text-ink-500">{conversation.company}</p>
                       </div>
-                      <p className="mt-2 line-clamp-2 text-sm leading-snug text-ink-700">{conversation.summary}</p>
-                      {isBrokerView ? (
-                        <div className="mt-2 flex items-center justify-between gap-3">
-                          <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold ${pipelineToneClass(conversation.pipelineTone)}`}>
-                            {conversation.pipelineLabel}
-                          </span>
-                          <span className="text-xs font-semibold text-ink-800">{conversation.matchScore}% match</span>
-                        </div>
-                      ) : null}
+                      <p className="mt-2 truncate text-sm leading-snug text-ink-700">
+                        {MESSAGE_LISTING.address} · {MESSAGE_LISTING.size} m² · {MESSAGE_LISTING.title}
+                      </p>
                     </div>
 
                     <div className="text-right">
@@ -453,12 +450,28 @@ function MessagesPage({ app }) {
                             <CalendarIcon className="h-3.5 w-3.5" />
                             Visning att boka
                           </button>
+                          <button
+                            type="button"
+                            onClick={toggleActiveConversationFavorite}
+                            className="inline-flex h-10 w-10 min-h-0 items-center justify-center rounded-full border border-black/10 bg-[#fffffe] p-0 text-ink-800"
+                          >
+                            <StarIcon className={`h-3.5 w-3.5 ${activeConversationIsFavorite ? "fill-[#0f1930] text-[#0f1930]" : "text-ink-500"}`} />
+                          </button>
                         </>
                       ) : (
-                        <button type="button" className="inline-flex min-h-0 items-center gap-1.5 rounded-full border border-black/10 bg-[#fffffe] px-3 py-2 text-xs font-semibold text-ink-800">
-                          <CalendarIcon className="h-3.5 w-3.5" />
-                          Svara på tider
-                        </button>
+                        <>
+                          <button type="button" className="inline-flex min-h-0 items-center gap-1.5 rounded-full border border-black/10 bg-[#fffffe] px-3 py-2 text-xs font-semibold text-ink-800">
+                            <CalendarIcon className="h-3.5 w-3.5" />
+                            Svara på tider
+                          </button>
+                          <button
+                            type="button"
+                            onClick={toggleActiveConversationFavorite}
+                            className="inline-flex h-10 w-10 min-h-0 items-center justify-center rounded-full border border-black/10 bg-[#fffffe] p-0 text-ink-800"
+                          >
+                            <StarIcon className={`h-3.5 w-3.5 ${activeConversationIsFavorite ? "fill-[#0f1930] text-[#0f1930]" : "text-ink-500"}`} />
+                          </button>
+                        </>
                       )}
                       <button type="button" className="inline-flex h-10 w-10 min-h-0 items-center justify-center rounded-full border border-black/10 bg-[#fffffe] text-ink-700">
                         <MoreHorizontalIcon className="h-4 w-4" />
@@ -545,7 +558,7 @@ function MessagesPage({ app }) {
               </article>
 
               <article className="mt-3 rounded-3xl border border-black/10 bg-[#fffffe] p-4">
-                <div className="flex items-start justify-between gap-3">
+                <div>
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ink-500">
                       {isBrokerView ? "Hyresgäst" : "Mäklare"}
@@ -553,12 +566,6 @@ function MessagesPage({ app }) {
                     <h3 className="mt-2 text-base font-semibold text-[#0f1930]">
                       {isBrokerView ? RENTER_PROFILE.name : BROKER_PROFILE.name}
                     </h3>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ink-500">Match</p>
-                    <p className="mt-2 text-2xl font-semibold text-[#0f1930]">
-                      {isBrokerView ? RENTER_PROFILE.matchScore : BROKER_PROFILE.matchScore}%
-                    </p>
                   </div>
                 </div>
 
@@ -581,9 +588,8 @@ function MessagesPage({ app }) {
                   </div>
                 ) : (
                   <div className="mt-4 space-y-2">
-                    <div className="flex items-center justify-between text-sm text-ink-900">
+                    <div className="text-sm text-ink-900">
                       <span className="font-semibold">{BROKER_PROFILE.name}</span>
-                      <span className="font-semibold text-[#0f1930]">{BROKER_PROFILE.matchScore}%</span>
                     </div>
                     <div className="rounded-2xl border border-black/10 px-3 py-3">
                       <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-500">Byrå</p>

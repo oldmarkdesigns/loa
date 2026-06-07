@@ -22,7 +22,7 @@ function MarketingHeader({
   onMessagesClick
 }) {
   const shouldShowGuestActions = isGuest || !user?.id;
-  const { activeRole, hasCompanyAdminRole } = deriveNavbarRoleState(user, { isGuest });
+  const { activeRole, hasCompanyAdminRole, hasBrokerAccess } = deriveNavbarRoleState(user, { isGuest });
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const menuRef = useRef(null);
@@ -127,11 +127,16 @@ function MarketingHeader({
                   Växla till adminläge
                 </button>
               ) : null}
-              {!hasCompanyAdminRole && activeRole === "broker" ? (
+              {!hasCompanyAdminRole && hasBrokerAccess ? (
                 <button
                   type="button"
-                  className="inline-flex h-11 items-center gap-1.5 rounded-xl border border-[#0f1930] px-3 text-xs font-semibold text-[#0f1930] transition hover:bg-[#0f1930] hover:text-white"
-                  onClick={() => navigateTo("/app/publish")}
+                  className="btn-primary inline-flex h-11 items-center gap-1.5 px-4 text-xs"
+                  onClick={async () => {
+                    if (activeRole === "renter") {
+                      await onSwitchRole?.("broker");
+                    }
+                    navigateTo("/app/publish");
+                  }}
                 >
                   <span aria-hidden="true" className="text-sm leading-none">+</span>
                   <span>Publicera annons</span>

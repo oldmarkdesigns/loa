@@ -212,6 +212,18 @@ function safeProfileUpdatePayload(payload = {}) {
   };
 }
 
+function safeOnboardingPayload(payload = {}) {
+  const account = payload?.account && typeof payload.account === "object" ? payload.account : {};
+  return {
+    ...(payload?.primaryRole !== undefined ? { primaryRole: payload.primaryRole } : {}),
+    account: {
+      ...(account.name !== undefined ? { name: account.name } : {}),
+      ...(account.phone !== undefined ? { phone: account.phone } : {})
+    },
+    ...(payload?.profile !== undefined ? { profile: payload.profile } : {})
+  };
+}
+
 export function AppProvider({ children }) {
   const { user: authUser, isLoading: isAuthLoading, signOut } = useAuth();
   const { isAuthenticated: isConvexAuthenticated, isLoading: isConvexAuthLoading } = useConvexAuth();
@@ -374,14 +386,22 @@ export function AppProvider({ children }) {
   }, [authUser?.id, isAuthLoading, isConvexAuthLoading, isConvexAuthenticated]);
 
   async function completeSignup(payload) {
-    if (!user) {
+    const testToken = typeof window !== "undefined" ? window.localStorage.getItem(TEST_SESSION_STORAGE_KEY) : null;
+    const isTestSession = Boolean(testToken) && (user?.authProvider === "test" || !user);
+    if (!user && !isTestSession) {
       throw new Error("Skapa konto med WorkOS först.");
     }
 
-    const testToken = typeof window !== "undefined" ? window.localStorage.getItem(TEST_SESSION_STORAGE_KEY) : null;
-    const { user: nextUser } = user?.authProvider === "test" && testToken
-      ? await profileApi.updateTestMe(testToken, safeProfileUpdatePayload(payload))
-      : await profileApi.updateMe(safeProfileUpdatePayload(payload));
+    const safePayload = safeProfileUpdatePayload(payload);
+    const { user: nextUser } = isTestSession
+      ? await profileApi.updateTestMe(testToken, {
+          ...safePayload,
+          role: normalizeUserRole(payload.role),
+          roles: Array.isArray(payload.roles) && payload.roles.length
+            ? payload.roles.map(normalizeUserRole)
+            : [normalizeUserRole(payload.role)]
+        })
+      : await profileApi.updateMe(safePayload);
     hydrateLocalUserState(nextUser);
     await refreshCoreData(nextUser);
     trackSignupCompleted({
@@ -407,13 +427,14 @@ export function AppProvider({ children }) {
   }
 
   async function completeOnboarding(payload) {
+    const safePayload = safeOnboardingPayload(payload);
     const testToken = typeof window !== "undefined" ? window.localStorage.getItem(TEST_SESSION_STORAGE_KEY) : null;
     let { user: nextUser } = user?.authProvider === "test" && testToken
-      ? await profileApi.completeTestOnboarding(testToken, payload)
-      : await profileApi.completeOnboarding(payload);
+      ? await profileApi.completeTestOnboarding(testToken, safePayload)
+      : await profileApi.completeOnboarding(safePayload);
 
     hydrateLocalUserState(nextUser);
-    const renterProgram = payload?.primaryRole === "renter" ? payload?.profile?.renterProgram : null;
+    const renterProgram = safePayload?.primaryRole === "renter" ? safePayload?.profile?.renterProgram : null;
     const onboardingFilters = renterProgram ? mapRenterProgramToFilters(renterProgram) : null;
 
     if (onboardingFilters) {
@@ -439,7 +460,7 @@ export function AppProvider({ children }) {
     }
 
     await trackEvent(analyticsEventNames.ONBOARDING_COMPLETED, {
-      role: payload.primaryRole
+      role: safePayload.primaryRole
     });
     pushToast("Onboarding slutförd.", "success");
     return nextUser;
@@ -485,8 +506,8 @@ export function AppProvider({ children }) {
     return nextUser;
   }
 
-  async function createTestSignup() {
-    const { user: nextUser, token } = await authApi.createTestUser();
+  async function createTestSignup(role = "renter") {
+    const { user: nextUser, token } = await authApi.createTestUser(normalizeUserRole(role));
     if (typeof window !== "undefined") {
       window.localStorage.setItem(TEST_SESSION_STORAGE_KEY, token);
     }

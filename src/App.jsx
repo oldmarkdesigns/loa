@@ -25,7 +25,11 @@ import { AppProvider, useAppState } from "./state/AppState";
 
 function AppContent() {
   const pathname = usePathname();
-  const routeAnimationKey = pathname.startsWith("/app/") ? "/app" : pathname;
+  const routeAnimationKey = pathname.startsWith("/app/")
+    ? "/app"
+    : pathname.startsWith("/onboarding/")
+      ? "/onboarding"
+      : pathname;
   const app = useAppState();
   const { signIn } = useAuth();
   const [bookingListing, setBookingListing] = useState(null);
@@ -242,7 +246,15 @@ function AppContent() {
   } else if (pathname === "/forgot-password") {
     content = <ForgotPasswordPage />;
   } else if (pathname === "/onboarding" || pathname.startsWith("/onboarding/")) {
-    content = <OnboardingPage user={app.user} onComplete={app.completeOnboarding} pathname={pathname} />;
+    content = (
+      <OnboardingPage
+        user={app.user}
+        onComplete={app.completeOnboarding}
+        onSwitchRole={app.switchRole}
+        onLogout={app.logout}
+        pathname={pathname}
+      />
+    );
   } else if (pathname.startsWith("/app")) {
     const listingDetailMatch = pathname.match(/^\/app\/listings\/([^/]+)(?:\/gallery)?$/);
     const manageListingMatch = pathname.match(/^\/app\/my-listings\/([^/]+)$/);

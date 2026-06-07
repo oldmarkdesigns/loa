@@ -7,6 +7,7 @@ import {
   ArrowUpIcon,
   BuildingIcon,
   CalendarIcon,
+  CarIcon,
   ClockIcon,
   CoinsIcon,
   LightbulbIcon,
@@ -343,12 +344,13 @@ function buildInviteCode(companyName = "") {
   return `${normalized}-2026-XK9`;
 }
 
-function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
+function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "/onboarding" }) {
   const search = typeof window !== "undefined" ? window.location.search : "";
   const searchParams = new URLSearchParams(search);
   const requestedRole = searchParams.get("role");
+  const hasExplicitRoleRequest = requestedRole === "broker" || requestedRole === "company_admin" || requestedRole === "renter";
   const isAddRoleIntent = searchParams.get("intent") === "add-role";
-  const normalizedInitialRole = requestedRole === "broker" || requestedRole === "company_admin"
+  const normalizedInitialRole = requestedRole === "broker" || requestedRole === "company_admin" || requestedRole === "renter"
     ? requestedRole
     : user?.role === "publisher" ? "broker" : user?.role;
   const [primaryRole, setPrimaryRole] = useState(
@@ -440,7 +442,7 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
       const raw = window.localStorage.getItem(draftStorageKey);
       if (!raw) return;
       const draft = JSON.parse(raw);
-      if (draft?.primaryRole) setPrimaryRole(draft.primaryRole);
+      if (draft?.primaryRole && !hasExplicitRoleRequest) setPrimaryRole(draft.primaryRole);
       if (draft?.account) setAccount((previous) => ({ ...previous, ...draft.account }));
       if (draft?.renterProgram) setRenterProgram((previous) => ({ ...previous, ...draft.renterProgram }));
       if (draft?.publisherProfile) setPublisherProfile((previous) => ({ ...previous, ...draft.publisherProfile }));
@@ -448,7 +450,7 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
     } catch (_error) {
       // ignore invalid local draft
     }
-  }, [draftStorageKey]);
+  }, [draftStorageKey, hasExplicitRoleRequest]);
 
   useEffect(() => {
     const payload = {
@@ -747,7 +749,7 @@ function OnboardingPage({ user, onComplete, pathname = "/onboarding" }) {
 
   return (
     <main className="grid min-h-screen content-start justify-items-center bg-[#fffffe] px-4 pb-8 pt-28">
-      <AuthFlowNav />
+      <AuthFlowNav user={user} onSwitchRole={onSwitchRole} onLogout={onLogout} />
       <div className="w-full max-w-[760px]">
         <section className="rounded-[30px] border border-black/10 bg-[#fffffe] px-6 py-7 sm:px-7 sm:py-8">
           {!(currentStep === "publisher-profile" || currentStep === "company-admin-profile") ? (

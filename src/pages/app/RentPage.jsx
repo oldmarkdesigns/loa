@@ -1456,6 +1456,10 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
     const roles = Array.isArray(user?.roles) ? user.roles : [user?.role].filter(Boolean);
     return roles.map((role) => role === "publisher" ? "broker" : role).includes("company_admin");
   }, [user?.role, user?.roles]);
+  const hasRenterRole = useMemo(() => {
+    const roles = Array.isArray(user?.roles) ? user.roles : [user?.role].filter(Boolean);
+    return roles.map((role) => role === "publisher" ? "broker" : role).includes("renter");
+  }, [user?.role, user?.roles]);
   const implicitMaxBudget = app.allListingsFilters?.maxBudget ?? app.defaultFilters?.maxBudget ?? "";
   const hasTeamSizeForMatchChip = useMemo(() => {
     const parsed = Number(String(filters.teamSize || "").trim());
@@ -3268,7 +3272,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
     </div>
   );
 
-  const primaryHeaderAction = !hideLocalProgramQuickCard && !hasCompanyAdminRole ? (
+  const primaryHeaderAction = !hideLocalProgramQuickCard && hasRenterRole && !hasCompanyAdminRole ? (
     <button
       type="button"
       className={`inline-flex h-[38px] items-center justify-center gap-1.5 rounded-full border border-[#0f1930]/15 bg-gradient-to-r from-[#f8fafc] to-white pl-1.5 pr-3 text-xs font-semibold text-ink-900 transition hover:border-[#0f1930] hover:text-[#0f1930] ${

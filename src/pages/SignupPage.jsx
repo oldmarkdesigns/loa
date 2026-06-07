@@ -113,6 +113,12 @@ function SignupPage({ onCompleteSignup, onTestSignup, currentUser }) {
     setForm((previous) => ({ ...previous, role: selection, roles: [selection], roleSelection: selection }));
   }
 
+  function onboardingPathForRole(role) {
+    if (role === "broker") return "/onboarding/publisher-profile?role=broker";
+    if (role === "company_admin") return "/onboarding/company-admin-profile?role=company_admin";
+    return "/onboarding/program-core?role=renter";
+  }
+
   async function startSignup() {
     if (signupUser) {
       setDetailsStep(2);
@@ -156,9 +162,9 @@ function SignupPage({ onCompleteSignup, onTestSignup, currentUser }) {
     setPending(true);
     setError("");
     try {
-      await onTestSignup();
+      await onTestSignup(form.role);
       setDetailsStep(2);
-      navigateTo("/signup?step=details", { replace: true });
+      navigateTo(`/signup?step=details&mode=test&role=${encodeURIComponent(form.role)}`, { replace: true });
     } catch (submitError) {
       setError(submitError.message || "Kunde inte skapa testkonto.");
     } finally {
@@ -200,7 +206,7 @@ function SignupPage({ onCompleteSignup, onTestSignup, currentUser }) {
         role: form.role,
         roles: form.roles
       });
-      navigateTo(nextUser.onboardingCompleted ? defaultAppPathForUser(nextUser) : "/onboarding");
+      navigateTo(nextUser.onboardingCompleted ? defaultAppPathForUser(nextUser) : onboardingPathForRole(form.role));
     } catch (submitError) {
       setError(submitError.message || "Kunde inte skapa konto.");
     } finally {
@@ -219,7 +225,7 @@ function SignupPage({ onCompleteSignup, onTestSignup, currentUser }) {
             <h1 className="text-[1.95rem] font-semibold leading-tight text-[#0f1930]">Skapa konto</h1>
             <p className="mt-1 text-sm text-ink-600">WorkOS hanterar registreringen. Du väljer roll i nästa steg.</p>
 
-            {!isConfigured ? (
+            {!isConfigured && signupMode !== "test" ? (
               <div className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
                 WorkOS saknar miljövariabler. Lägg till <code>VITE_CONVEX_URL</code>, <code>VITE_WORKOS_CLIENT_ID</code> och <code>VITE_WORKOS_REDIRECT_URI</code>.
               </div>

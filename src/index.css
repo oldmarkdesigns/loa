@@ -407,7 +407,8 @@ button,
 }
 
 .message-list-row {
-  border-radius: 0 !important;
+  border-radius: 1.625rem !important;
+  overflow: hidden;
   min-height: 0 !important;
 }
 

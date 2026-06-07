@@ -22,7 +22,14 @@ const onboardingAccountValidator = v.object({
 });
 
 function assertTestAuthEnabled() {
-  if (process.env.ENABLE_TEST_AUTH !== "true") {
+  const envEnabled = process.env.ENABLE_TEST_AUTH === "true";
+  const siteUrl = String(process.env.CONVEX_SITE_URL || "");
+  const isLocalDev =
+    siteUrl.includes("localhost")
+    || siteUrl.includes("127.0.0.1")
+    || process.env.NODE_ENV === "development";
+
+  if (!envEnabled && !isLocalDev) {
     throw new Error("Testauth är inte aktiverat.");
   }
 }
@@ -246,6 +253,8 @@ export const switchActiveRole = mutationGeneric({
 export const updateTestUser = mutationGeneric({
   args: {
     token: v.string(),
+    role: v.optional(appRoleValidator),
+    roles: v.optional(v.array(appRoleValidator)),
     name: v.optional(v.string()),
     phone: v.optional(v.string()),
     profile: v.optional(profileValidator)
@@ -256,9 +265,19 @@ export const updateTestUser = mutationGeneric({
       throw new Error("Testsessionen hittades inte.");
     }
 
+    const requestedRoles = Array.isArray(args.roles) && args.roles.length > 0
+      ? args.roles
+      : (args.role ? [args.role] : []);
+    const roles = requestedRoles.length > 0
+      ? normalizeRoles(requestedRoles, args.role || viewer.role || "renter")
+      : userGrantedRoles(viewer);
+    const role = args.role ? normalizeRole(args.role) : normalizeRole(viewer.role);
+
     await ctx.db.patch(viewer._id, {
       name: args?.name ?? viewer.name,
       phone: args?.phone ?? viewer.phone,
+      role: roles.includes(role) ? role : (roles[0] || "renter"),
+      roles,
       profile: {
         ...(viewer.profile || {}),
         ...(args?.profile || {})
@@ -359,16 +378,19 @@ export const completeTestOnboarding = mutationGeneric({
     }
 
     const requestedRole = normalizeRole(args?.primaryRole);
-    const roles = userGrantedRoles(viewer);
+    const roles = normalizeRoles([...userGrantedRoles(viewer), requestedRole], viewer.role || "renter");
     const account = args?.account || {};
 
     await ctx.db.patch(viewer._id, {
       name: account.name || viewer.name,
       phone: account.phone || viewer.phone,
-      role: activeRoleAfterRequest(viewer, requestedRole),
+      role: roles.includes(requestedRole) ? requestedRole : activeRoleAfterRequest(viewer, requestedRole),
       roles,
       onboardingCompleted: true,
-      profile: roleRequestProfile(viewer, requestedRole, args?.profile || {}),
+      profile: {
+        ...(viewer.profile || {}),
+        ...(args?.profile || {})
+      },
       updatedAt: nowIso()
     });
 
