@@ -3,11 +3,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Clerk auth cards: match flat app surface style */
-.cl-card {
-  box-shadow: none !important;
-}
-
 :root {
   color: #1b2838;
   background: #fffffe;
