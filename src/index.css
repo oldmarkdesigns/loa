@@ -374,6 +374,10 @@ button,
   min-height: 0 !important;
 }
 
+.profile-card-button {
+  border-radius: 1.5rem !important;
+}
+
 .close-circle-button {
   width: 2.625rem !important;
   height: 2.625rem !important;
@@ -410,6 +414,10 @@ button,
 .message-suggestion-card {
   border-radius: 1rem !important;
   min-height: 0 !important;
+}
+
+.notification-card-button {
+  border-radius: 0.625rem !important;
 }
 
 .nav-underline-anim {

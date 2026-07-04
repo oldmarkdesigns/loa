@@ -1619,6 +1619,15 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
     }, 280);
   }
 
+  function restoreLocalProgramHeaderCta() {
+    if (localProgramQuickCardTimerRef.current) {
+      clearTimeout(localProgramQuickCardTimerRef.current);
+      localProgramQuickCardTimerRef.current = null;
+    }
+    setIsLocalProgramQuickCardDissolving(false);
+    setHideLocalProgramQuickCard(false);
+  }
+
   function animateLocalProgramResultsPresentation(delay = 0) {
     if (localProgramResultsAnimationTimerRef.current) {
       clearTimeout(localProgramResultsAnimationTimerRef.current);
@@ -2122,6 +2131,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
   async function handleResetSearchResults() {
     const resetFilters = { ...(app.allListingsFilters || app.defaultFilters), accessHours: "" };
     transitionFromResultsToAvailable(async () => {
+      restoreLocalProgramHeaderCta();
       setFilters(resetFilters);
       setAmenityQuery("");
       setFurnishedFilter("all");

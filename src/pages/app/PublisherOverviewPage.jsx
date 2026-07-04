@@ -236,7 +236,7 @@ function PublisherOverviewPage({ app }) {
         </header>
 
         <div className="grid gap-4 xl:grid-cols-[1.55fr_0.95fr]">
-          <article className="surface p-4 sm:p-5">
+          <article className="surface self-start p-4 sm:p-5">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <h2 className="text-2xl font-semibold">Hantera objekt</h2>
               <div className="grid w-full gap-2 sm:w-auto sm:grid-cols-[280px_170px_auto]">

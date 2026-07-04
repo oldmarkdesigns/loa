@@ -8,6 +8,7 @@ import {
   LoungeIcon,
   CalendarIcon,
   CarIcon,
+  CheckBadgeIcon,
   ClockIcon,
   CoinsIcon,
   EyeIcon,
@@ -15,12 +16,14 @@ import {
   MapIcon,
   PencilIcon,
   PinIcon,
+  PlusIcon,
   RulerIcon,
   ShieldIcon,
   SwitchHorizontalIcon,
   TrashIcon,
   CameraIcon,
   UserIcon,
+  XIcon,
 } from "../../components/icons/UiIcons";
 import PremiumPromoCard from "../../components/shared/PremiumPromoCard";
 import { navigateTo } from "../../lib/router";
@@ -30,41 +33,41 @@ const mockRenterMatches = [
   {
     id: "renter-match-1",
     matchPercent: 91,
-    name: "Elin Forsberg (29)",
+    name: "Nordic Growth AB",
     verified: true,
-    title: "Growth Marketing Lead",
-    summary: "Snabbväxande team som söker kontor nära tunnelbana.",
+    title: "SCALEUP · MARKNAD",
+    summary: "Växande marknadsteam söker kontor nära tunnelbana.",
     timeline: "Nu → 3 månader",
-    budget: "Max SEK 28,000",
+    budget: "Max SEK 28,000/mån",
     furnishing: "Möblerat eller flex",
-    people: "6 personer",
-    imageUrl: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=800&q=80"
+    people: "6 arbetsplatser",
+    logo: "NG"
   },
   {
     id: "renter-match-2",
     matchPercent: 87,
-    name: "Arman Basic (34)",
+    name: "BASIC Studio Group",
     verified: true,
-    title: "Tech & Consulting",
+    title: "TECH · KONSULT",
     summary: "Två bolag som vill samlokalisera i Söderläge.",
     timeline: "Nu → Tills vidare",
-    budget: "Max SEK 42,000",
+    budget: "Max SEK 42,000/mån",
     furnishing: "Omöblerat",
-    people: "12 personer",
-    imageUrl: "https://images.unsplash.com/photo-1521119989659-a83eee488004?auto=format&fit=crop&w=800&q=80"
+    people: "12 arbetsplatser",
+    logo: "BS"
   },
   {
     id: "renter-match-3",
     matchPercent: 84,
-    name: "Maja Lind (41)",
+    name: "Lind & Partners",
     verified: true,
-    title: "Creative Director",
-    summary: "Etablerad studio med stabil ekonomi och lång horisont.",
+    title: "KREATIV BYRÅ",
+    summary: "Etablerad byrå med stabil ekonomi och lång horisont.",
     timeline: "1-2 månader → 24 månader",
-    budget: "Max SEK 36,000",
+    budget: "Max SEK 36,000/mån",
     furnishing: "Flexibelt",
-    people: "8 personer",
-    imageUrl: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=800&q=80"
+    people: "8 arbetsplatser",
+    logo: "LP"
   }
 ];
 const typeOptions = ["Kontor", "Coworking", "Kontorshotell", "Butik", "Lager", "Showroom", "Ateljé", "Klinik", "Restaurang"];
@@ -379,6 +382,7 @@ function ProfilePage({ app }) {
     switchRole,
     toggleFavorite,
     deleteSavedFilter,
+    resendBrokerVerificationRequest,
     updateProfile
   } = app;
 
@@ -388,6 +392,8 @@ function ProfilePage({ app }) {
   const [showTeamOverlay, setShowTeamOverlay] = useState(false);
   const [showProfileOverlay, setShowProfileOverlay] = useState(false);
   const [isProfileSetupCollapsed, setIsProfileSetupCollapsed] = useState(false);
+  const [dismissedBrokerApprovalCard, setDismissedBrokerApprovalCard] = useState(false);
+  const [resendingBrokerVerification, setResendingBrokerVerification] = useState(false);
   const [savingProgram, setSavingProgram] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
   const [bookingListing, setBookingListing] = useState(null);
@@ -422,14 +428,29 @@ function ProfilePage({ app }) {
   const hasCompanyAdmin = roleSet.has("company_admin");
   const hasBrokerRole = roleSet.has("broker");
   const hideLocalProgramInProfile = !hasRenter || hasBrokerRole;
-  const hasPublisher = roleSet.has("broker") || roleSet.has("company_admin");
   const canSwitchToCompany = hasRenter && hasCompanyAdmin;
   const canSwitchToBroker = hasRenter && hasBrokerRole && !hasCompanyAdmin;
   const activeRole = user?.role === "publisher" ? "broker" : user?.role;
+  const hasPendingBrokerVerification =
+    user?.profile?.requestedRole === "broker" &&
+    user?.profile?.roleRequestStatus === "pending";
+  const brokerVerificationApproved =
+    user?.profile?.roleRequestStatus === "approved" ||
+    (Array.isArray(user?.roles) && user.roles.includes("broker") && !user.roles.includes("company_admin"));
+  const brokerVerificationRejected = user?.profile?.roleRequestStatus === "rejected";
+  const brokerApprovalNotification = (Array.isArray(app?.notifications) ? app.notifications : [])
+    .find((item) => item.type === "broker_verification_approved");
+  const brokerVerificationCompanyName =
+    user?.profile?.companyName ||
+    user?.profile?.legalEntity ||
+    "angivet företag";
+  const brokerVerificationOrganizationNumber =
+    user?.profile?.organizationNumber ||
+    user?.profile?.companyOrganizationNumber ||
+    "";
   const currentRoleLabel = useMemo(() => (
     activeRole === "broker" ? "Mäklare" : activeRole === "company_admin" ? "Bolagsadmin" : "Hyresgäst"
   ), [activeRole]);
-  const showPublisherWorkspaceTabs = hasPublisher && (activeRole === "broker" || activeRole === "company_admin");
 
   const renterProgram = useMemo(() => user?.profile?.renterProgram || {}, [user?.profile?.renterProgram]);
   const preferredTypes = useMemo(() => listFromDelimitedValue(renterProgram.type), [renterProgram.type]);
@@ -456,11 +477,23 @@ function ProfilePage({ app }) {
   }));
   const selectedProgramAmenities = useMemo(() => listFromDelimitedValue(programDraft.amenities), [programDraft.amenities]);
 
-  useEffect(() => {
+  function syncActiveTabFromLocation() {
     const tab = new URLSearchParams(window.location.search).get("tab");
     if (tab === "profile" || tab === "favorites" || tab === "history") {
       setActiveTab(tab);
+      return;
     }
+    setActiveTab("profile");
+  }
+
+  useEffect(() => {
+    syncActiveTabFromLocation();
+    window.addEventListener("popstate", syncActiveTabFromLocation);
+    window.addEventListener("app:navigate", syncActiveTabFromLocation);
+    return () => {
+      window.removeEventListener("popstate", syncActiveTabFromLocation);
+      window.removeEventListener("app:navigate", syncActiveTabFromLocation);
+    };
   }, []);
 
   useEffect(() => {
@@ -565,7 +598,7 @@ function ProfilePage({ app }) {
   const showProfileSetupCard = profileSetupProgress.done < profileSetupProgress.total;
 
   const localProgramProgress = useMemo(() => {
-    if (!hasRenter) return { done: 0, total: 0, percent: 0 };
+    if (!hasRenter && !hasBrokerRole) return { done: 0, total: 0, percent: 0 };
     const checks = [
       isFilled(renterProgram.district, { disallowAll: true }),
       isFilled(preferredTypes, { disallowAll: true }),
@@ -579,16 +612,15 @@ function ProfilePage({ app }) {
     const total = checks.length;
     const percent = total > 0 ? Math.round((done / total) * 100) : 0;
     return { done, total, percent };
-  }, [desiredAmenities.length, hasRenter, preferredTypes, renterProgram]);
+  }, [desiredAmenities.length, hasBrokerRole, hasRenter, preferredTypes, renterProgram]);
+  const hasLocalProgramInput = useMemo(() => localProgramProgress.done > 0 || desiredAmenities.length > 0, [desiredAmenities.length, localProgramProgress.done]);
+  const enteredLocalProgramSummary = useMemo(() => (
+    localProgramSummary.filter((item) => !["-", "Alla", "Alla typer"].includes(String(item.value || "").trim()))
+  ), [localProgramSummary]);
 
   function activateTab(tabKey) {
     setActiveTab(tabKey);
-    const params = new URLSearchParams(window.location.search);
-    if (tabKey === "profile") params.delete("tab");
-    else params.set("tab", tabKey);
-    const nextSearch = params.toString();
-    const basePath = window.location.pathname;
-    window.history.replaceState(window.history.state, "", nextSearch ? `${basePath}?${nextSearch}` : basePath);
+    navigateTo(tabKey === "profile" ? "/app/profile" : `/app/profile?tab=${tabKey}`);
   }
 
   function inviteTeamMember(event) {
@@ -656,6 +688,22 @@ function ProfilePage({ app }) {
     }
   }
 
+  async function resendRejectedBrokerVerification() {
+    if (!resendBrokerVerificationRequest) {
+      app.pushToast?.("Kunde inte skicka förfrågan igen just nu.", "error");
+      return;
+    }
+
+    setResendingBrokerVerification(true);
+    try {
+      await resendBrokerVerificationRequest();
+    } catch (error) {
+      app.pushToast?.(error.message || "Kunde inte skicka förfrågan igen.", "error");
+    } finally {
+      setResendingBrokerVerification(false);
+    }
+  }
+
   async function saveProgramChanges() {
     if (!updateProfile) {
       app.pushToast?.("Kunde inte spara ändringarna just nu.", "error");
@@ -716,50 +764,30 @@ function ProfilePage({ app }) {
 
   return (
     <section className="relative flex h-full min-h-0 flex-col">
-      <div className="shrink-0 border-b border-black/10 bg-[#fffffe] px-4 py-2 sm:px-6">
-        <nav className="mx-auto flex w-full max-w-[1240px] flex-wrap items-center justify-start gap-5">
-          {[
-            { key: "profile", label: "Profil" },
-            { key: "favorites", label: "Sparade objekt" },
-            { key: "history", label: "Sparade sökningar" }
-          ].map((tab) => {
-            const active = activeTab === tab.key;
-            return (
-              <button
-                key={tab.key}
-                type="button"
-                className={`tab-underline-button border-b-2 pb-0.5 text-sm font-semibold transition ${
-                  active ? "border-[#0f1930] text-[#0f1930]" : "border-transparent text-ink-600 hover:text-black"
-                }`}
-                onClick={() => activateTab(tab.key)}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
-        </nav>
-      </div>
-      {showPublisherWorkspaceTabs ? (
+      {activeTab === "favorites" || activeTab === "history" ? (
         <div className="shrink-0 border-b border-black/10 bg-[#fffffe] px-4 py-2 sm:px-6">
           <nav className="mx-auto flex w-full max-w-[1240px] flex-wrap items-center justify-start gap-5">
             {[
-              { label: "Publicera annons", path: "/app/publish" },
-              { label: "Dina objekt", path: "/app/my-listings" },
-              { label: "Intresse och visningar", path: "/app/leads" }
-            ].map((item) => (
-              <button
-                key={item.path}
-                type="button"
-                className="tab-underline-button border-b-2 border-transparent pb-0.5 text-sm font-semibold text-[#0f1930]/85 transition hover:text-[#0f1930]"
-                onClick={() => navigateTo(`${item.path}?from=profile`)}
-              >
-                {item.label}
-              </button>
-            ))}
+              { key: "favorites", label: "Sparade objekt" },
+              { key: "history", label: "Sparade sökningar" }
+            ].map((tab) => {
+              const active = activeTab === tab.key;
+              return (
+                <button
+                  key={tab.key}
+                  type="button"
+                  className={`tab-underline-button border-b-2 pb-0.5 text-sm font-semibold transition ${
+                    active ? "border-[#0f1930] text-[#0f1930]" : "border-transparent text-[#0f1930]/85 hover:text-[#0f1930]"
+                  }`}
+                  onClick={() => activateTab(tab.key)}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
           </nav>
         </div>
       ) : null}
-
       <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">
         <div className="mx-auto w-full max-w-[1240px]">
           {activeTab === "profile" ? (
@@ -767,7 +795,7 @@ function ProfilePage({ app }) {
               <div className="px-1 pt-1 pb-0 sm:px-2">
                 <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
                   <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="flex items-start gap-4">
+                    <div className="flex items-center gap-4">
                       <div className="relative">
                         {user?.profile?.avatarUrl ? (
                           <img
@@ -798,7 +826,6 @@ function ProfilePage({ app }) {
                         <div className="flex flex-wrap items-center gap-2">
                           <p className="text-2xl font-semibold text-[#0f1930]">{user?.name || "Användare"}</p>
                         </div>
-                        <p className="mt-2 text-sm text-ink-600">{user?.email || "-"} · {user?.phone || "-"}</p>
                         <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-black/10 bg-[#fffffe] px-4 py-2 text-sm font-semibold text-[#241d1a]">
                           <span
                             className="inline-flex h-5 w-5 items-center justify-center bg-[#0f1930] text-white"
@@ -969,9 +996,6 @@ function ProfilePage({ app }) {
                               style={{ width: `${localProgramProgress.percent}%` }}
                             />
                           </div>
-                          <p className="mt-3 text-sm text-ink-600">
-                            {localProgramProgress.done} av {localProgramProgress.total} steg klara
-                          </p>
                         </div>
 
                         <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2">
@@ -1017,6 +1041,80 @@ function ProfilePage({ app }) {
 
                   {hideLocalProgramInProfile ? (
                     <section className="pt-3">
+                      {hasBrokerRole ? (
+                        hasLocalProgramInput ? (
+                          <article className="mb-4 rounded-3xl border border-black/10 bg-[#fffffe] p-4 sm:p-5">
+                            <div className="flex items-start justify-between gap-3">
+                              <div>
+                                <h2 className="text-xl font-semibold text-[#0f1930]">Lokalprogram</h2>
+                                <p className="mt-1 text-sm text-ink-600">Preferenser som används för matchning.</p>
+                              </div>
+                              <button
+                                type="button"
+                                className="inline-flex h-10 w-10 min-h-10 min-w-10 items-center justify-center rounded-full border border-black/20 bg-[#fffffe] p-0 text-xs font-semibold text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
+                                onClick={() => setShowProgramOverlay(true)}
+                                aria-label="Ändra lokalprogram"
+                              >
+                                <PencilIcon className="h-4 w-4" />
+                              </button>
+                            </div>
+                            <div className="mt-4 rounded-2xl border border-black/10 bg-[#fffffe] p-4">
+                              <div className="flex items-center justify-between gap-3">
+                                <p className="text-sm font-semibold text-ink-700">{localProgramProgress.percent}% klart</p>
+                                <p className="text-xs font-semibold text-ink-500">{localProgramProgress.done} av {localProgramProgress.total}</p>
+                              </div>
+                              <div className="mt-2 h-3 overflow-hidden rounded-full border border-black/10 bg-[#eef2f8]">
+                                <div
+                                  className="h-full rounded-full bg-[#0f1930] transition-all"
+                                  style={{ width: `${localProgramProgress.percent}%` }}
+                                />
+                              </div>
+                            </div>
+                            <div className="mt-4 grid gap-x-6 gap-y-4 sm:grid-cols-2">
+                              {enteredLocalProgramSummary.map(({ key, label, value, Icon }) => (
+                                <div key={key} className="flex items-start gap-2.5">
+                                  <span className="mt-0.5 inline-flex h-9 w-9 items-center justify-center rounded-full border border-black/10 bg-[#fffffe] text-[#0f1930]">
+                                    <Icon className="h-3.5 w-3.5" />
+                                  </span>
+                                  <div className="min-w-0">
+                                    <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">{label}</p>
+                                    <p className="mt-0.5 truncate text-[15px] font-semibold text-ink-900">{value}</p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            {desiredAmenities.length > 0 ? (
+                              <div className="mt-4 border-t border-black/10 pt-4">
+                                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-ink-700">Bekvämligheter</p>
+                                <div className="flex flex-wrap gap-2">
+                                  {desiredAmenities.map((amenity) => (
+                                    <span
+                                      key={amenity}
+                                      className="inline-flex shrink-0 items-center whitespace-nowrap rounded-full border border-black/10 bg-[#fffffe] px-3 py-1.5 text-xs font-semibold text-ink-700"
+                                    >
+                                      {amenity}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            ) : null}
+                          </article>
+                        ) : (
+                          <button
+                            type="button"
+                            className="profile-card-button mb-4 flex w-full items-center justify-between gap-4 rounded-3xl border border-black/10 bg-[#fffffe] p-4 text-left transition hover:border-[#0f1930]/35 hover:bg-[#f8fafc] sm:p-5"
+                            onClick={() => setShowProgramOverlay(true)}
+                          >
+                            <span className="min-w-0">
+                              <span className="block text-lg font-semibold text-[#0f1930]">Bygg lokalprogram</span>
+                              <span className="mt-0.5 block text-sm text-ink-600">Skapa preferenser för bättre matchning mot hyresgäster.</span>
+                            </span>
+                            <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center text-[#0f1930]">
+                              <PlusIcon className="h-6 w-6" />
+                            </span>
+                          </button>
+                        )
+                      ) : null}
                       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                         <div>
                           <h2 className="text-2xl font-semibold text-[#0f1930]">Hyresgäster som matchar dina lokaler</h2>
@@ -1029,13 +1127,10 @@ function ProfilePage({ app }) {
                             <span className="absolute right-3.5 top-3.5 rounded-full border border-[#0f1930]/20 bg-[#f8fafc] px-3 py-1 text-sm font-semibold text-[#0f1930]">
                               {renter.matchPercent}%
                             </span>
-                            <div className="flex items-center justify-between gap-3">
-                              <span className="inline-flex items-center gap-2 text-xs font-semibold text-ink-700">
-                                <span className="h-2 w-2 rounded-full bg-[#0f1930]" />
-                                New
-                              </span>
+                            <div className="h-5" />
+                            <div className="mx-auto mt-3 flex h-28 w-28 items-center justify-center rounded-2xl border border-[#0f1930]/15 bg-[#f8fafc] text-3xl font-semibold tracking-wide text-[#0f1930]">
+                              {renter.logo}
                             </div>
-                            <img src={renter.imageUrl} alt={renter.name} className="mx-auto mt-3 h-28 w-28 rounded-full border-4 border-[#0f1930] object-cover" />
                             <div className="mt-3 text-center">
                               <p className="text-[20px] font-semibold leading-[1.15] text-[#241d1a]">{renter.name}</p>
                               {renter.verified ? (
@@ -1045,7 +1140,7 @@ function ProfilePage({ app }) {
                                       <path d="M5.5 12.5l4 4 9-9" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                     </svg>
                                   </span>
-                                  Verifierad
+                                  Verifierad organisation
                                 </p>
                               ) : null}
                               <p className="mt-2 text-center text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-500">{renter.title}</p>
@@ -1097,17 +1192,101 @@ function ProfilePage({ app }) {
 
                 <aside className="space-y-6 lg:sticky lg:top-0 lg:self-start">
                   <div className="space-y-6">
-                    {!hideLocalProgramInProfile ? (
-                      <article className="overflow-hidden rounded-3xl border border-black/10 bg-[#fffffe]">
-                        <div className="px-5 py-4">
-                          <p className="text-lg font-semibold text-[#0f1930]">Publicera din profil</p>
-                          <p className="mt-1 text-sm text-ink-600">Öka chansen att bli kontaktad av relevanta hyresvärder.</p>
+                    {hasPendingBrokerVerification ? (
+                      <article className="rounded-3xl border border-[#0f1930]/15 bg-[#f8fafc] p-5">
+                        <div className="flex items-start gap-3">
+                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#0f1930] text-white">
+                            <ShieldIcon className="h-5 w-5" />
+                          </span>
+                          <div>
+                            <p className="text-lg font-semibold text-[#0f1930]">Verifiering skickad</p>
+                            <p className="mt-1 text-sm leading-relaxed text-ink-600">
+                              Din förfrågan om att bli mäklare hos{" "}
+                              <span className="font-semibold text-[#0f1930]">
+                                {brokerVerificationCompanyName}
+                                {brokerVerificationOrganizationNumber ? ` (${brokerVerificationOrganizationNumber})` : ""}
+                              </span>{" "}
+                              väntar på godkännande.
+                            </p>
+                          </div>
                         </div>
-                        <div className="border-t border-black/10 px-5 py-4">
-                          <button type="button" className="w-full rounded-full bg-[#0f1930] px-4 py-2.5 text-sm font-semibold text-white">
-                            Publicera profil
-                          </button>
+                        <button
+                          type="button"
+                          className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full border border-black/10 bg-[#fffffe] px-4 py-2.5 text-sm font-semibold text-[#0f1930] shadow-[0_1px_0_rgba(15,25,48,0.04)]"
+                          onClick={() => navigateTo("/onboarding/publisher-profile?role=broker&intent=add-role")}
+                        >
+                          <ShieldIcon className="h-4 w-4" />
+                          Visa verifiering
+                        </button>
+                      </article>
+                    ) : null}
+
+                    {!hasPendingBrokerVerification && brokerVerificationApproved && !dismissedBrokerApprovalCard ? (
+                      <article className="relative rounded-3xl border border-black/10 bg-[#fffffe] p-5 pr-12">
+                        <button
+                          type="button"
+                          className="absolute right-4 top-4 inline-flex h-8 w-8 min-h-0 items-center justify-center rounded-full border border-black/10 bg-[#fffffe] text-ink-600 transition hover:border-[#0f1930] hover:text-[#0f1930]"
+                          aria-label="Dölj verifieringskort"
+                          onClick={() => setDismissedBrokerApprovalCard(true)}
+                        >
+                          <XIcon className="h-3.5 w-3.5" />
+                        </button>
+                        <div className="flex items-start gap-3">
+                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-700">
+                            <CheckBadgeIcon className="h-5 w-5" />
+                          </span>
+                          <div>
+                            <p className="text-lg font-semibold text-[#0f1930]">Verifiering godkänd</p>
+                            <p className="mt-1 text-sm leading-relaxed text-ink-700">
+                              Du är verifierad som mäklare för{" "}
+                              <span className="font-semibold text-[#0f1930]">
+                                {brokerVerificationCompanyName}
+                                {brokerVerificationOrganizationNumber ? ` (${brokerVerificationOrganizationNumber})` : ""}
+                              </span>.
+                            </p>
+                            {brokerApprovalNotification?.createdAt ? (
+                              <p className="mt-2 text-xs font-medium text-ink-600">
+                                Godkänd {new Date(brokerApprovalNotification.createdAt).toLocaleString("sv-SE", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                              </p>
+                            ) : null}
+                          </div>
                         </div>
+                      </article>
+                    ) : null}
+
+                    {brokerVerificationRejected ? (
+                      <article className="rounded-3xl border border-black/10 bg-[#fffffe] p-5">
+                        <div className="flex items-start gap-3">
+                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-rose-100 bg-rose-50 text-rose-700">
+                            <ShieldIcon className="h-5 w-5" />
+                          </span>
+                          <div>
+                            <p className="text-lg font-semibold text-[#0f1930]">Verifiering nekad</p>
+                            <p className="mt-1 text-sm leading-relaxed text-ink-700">
+                              Bolagsadmin för{" "}
+                              <span className="font-semibold text-[#0f1930]">
+                                {brokerVerificationCompanyName}
+                                {brokerVerificationOrganizationNumber ? ` (${brokerVerificationOrganizationNumber})` : ""}
+                              </span>{" "}
+                              nekade din förfrågan om att bli verifierad som mäklare.
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full border border-[#0f1930] bg-[#0f1930] px-4 py-2.5 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60"
+                          disabled={resendingBrokerVerification}
+                          onClick={resendRejectedBrokerVerification}
+                        >
+                          {resendingBrokerVerification ? "Skickar..." : "Skicka förfrågan igen"}
+                        </button>
+                        <button
+                          type="button"
+                          className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-full border border-black/15 bg-[#fffffe] px-4 py-2.5 text-sm font-semibold text-[#0f1930] transition hover:border-[#0f1930]"
+                          onClick={() => navigateTo("/onboarding/publisher-profile?role=broker&intent=add-role")}
+                        >
+                          Ändra organisationsnummer
+                        </button>
                       </article>
                     ) : null}
 
@@ -1150,91 +1329,89 @@ function ProfilePage({ app }) {
 
           {activeTab === "history" ? (
             <div>
-              <article className="rounded-3xl border border-black/10 bg-[#fffffe] p-5">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div>
-                    <h2 className="text-xl font-semibold">Sparade filter</h2>
-                    <p className="mt-1 text-sm text-ink-600">Välj ett filter för att öppna sökresultat med samma inställningar.</p>
-                  </div>
-                  <span className="rounded-full border border-black/10 bg-[#fffffe] px-3 py-1 text-xs font-semibold text-ink-700">
-                    {filterPresets.length} sparade
-                  </span>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h2 className="text-xl font-semibold">Sparade sökningar</h2>
+                  <p className="mt-1 text-sm text-ink-600">Sökningar du har sparat för uppföljning.</p>
                 </div>
-                {filterPresets.length === 0 ? (
-                  <p className="mt-3 rounded-2xl border border-black/10 bg-[#fafafa] px-3 py-3 text-sm text-ink-600">Inga sparade filter ännu.</p>
-                ) : (
-                  <div className="mt-3 grid gap-3">
-                    {filterPresets.map((preset) => {
-                      const chips = buildHistoryChips(preset.filters);
-                      const details = buildHistoryDetails(preset.filters);
-                      const targetUrl = buildRentSearchUrl(preset.filters);
-                      return (
-                        <article
-                          key={preset.id}
-                          className="cursor-pointer rounded-2xl border border-black/10 bg-[#fffffe] p-3 transition hover:border-[#0f1930]/35"
-                          onClick={() => navigateTo(targetUrl)}
-                          onKeyDown={(event) => {
-                            if (event.key === "Enter" || event.key === " ") {
-                              event.preventDefault();
-                              navigateTo(targetUrl);
-                            }
-                          }}
-                          tabIndex={0}
-                          role="button"
-                        >
-                          <div className="flex flex-wrap items-start justify-between gap-2">
-                            <div>
-                              <p className="text-sm font-semibold text-black">{preset.title || "Sparat filter"}</p>
-                              <p className="text-xs text-ink-500">Uppdaterad {formatTimestamp(preset.updatedAt || preset.createdAt)}</p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <button
-                                type="button"
-                                className="rounded-xl border border-black/20 bg-[#fffffe] px-3 py-1.5 text-xs font-semibold text-ink-700 hover:bg-[#fffffe]"
-                                onClick={(event) => {
-                                  event.stopPropagation();
-                                  navigateTo(targetUrl);
-                                }}
-                              >
-                                Sök igen
-                              </button>
-                              <button
-                                type="button"
-                                className="rounded-xl border border-rose-200 bg-[#fffffe] px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-50"
-                                onClick={(event) => {
-                                  event.stopPropagation();
-                                  deleteSavedFilter?.(preset.id);
-                                }}
-                              >
-                                Radera
-                              </button>
-                            </div>
+                <span className="rounded-full border border-black/10 bg-[#fffffe] px-3 py-1 text-xs font-semibold text-ink-700">
+                  {filterPresets.length} sparade
+                </span>
+              </div>
+              {filterPresets.length === 0 ? (
+                <p className="mt-3 rounded-2xl border border-black/10 bg-[#fafafa] px-3 py-3 text-sm text-ink-600">Inga sparade sökningar ännu.</p>
+              ) : (
+                <div className="mt-3 grid gap-3">
+                  {filterPresets.map((preset) => {
+                    const chips = buildHistoryChips(preset.filters);
+                    const details = buildHistoryDetails(preset.filters);
+                    const targetUrl = buildRentSearchUrl(preset.filters);
+                    return (
+                      <article
+                        key={preset.id}
+                        className="cursor-pointer rounded-2xl border border-black/10 bg-[#fffffe] p-3 transition hover:border-[#0f1930]/35"
+                        onClick={() => navigateTo(targetUrl)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            navigateTo(targetUrl);
+                          }
+                        }}
+                        tabIndex={0}
+                        role="button"
+                      >
+                        <div className="flex flex-wrap items-start justify-between gap-2">
+                          <div>
+                            <p className="text-sm font-semibold text-black">{preset.title || "Sparad sökning"}</p>
+                            <p className="text-xs text-ink-500">Uppdaterad {formatTimestamp(preset.updatedAt || preset.createdAt)}</p>
                           </div>
-                          {details.length > 0 ? (
-                            <dl className="mt-3 grid gap-2 sm:grid-cols-2">
-                              {details.map((item) => (
-                                <div key={`${preset.id}-${item.label}-${item.value}`} className="rounded-xl border border-black/10 bg-[#fffffe] px-2.5 py-2">
-                                  <dt className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">{item.label}</dt>
-                                  <dd className="mt-0.5 text-xs font-medium text-ink-800">{item.value}</dd>
-                                </div>
-                              ))}
-                            </dl>
-                          ) : null}
-                          {chips.length > 0 ? (
-                            <div className="mt-2 flex flex-wrap gap-1.5">
-                              {chips.map((chip) => (
-                                <span key={`${preset.id}-${chip}`} className="rounded-full border border-black/10 bg-[#fffffe] px-2.5 py-1 text-[11px] font-semibold text-ink-700">
-                                  {chip}
-                                </span>
-                              ))}
-                            </div>
-                          ) : null}
-                        </article>
-                      );
-                    })}
-                  </div>
-                )}
-              </article>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              className="rounded-xl border border-black/20 bg-[#fffffe] px-3 py-1.5 text-xs font-semibold text-ink-700 hover:bg-[#fffffe]"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                navigateTo(targetUrl);
+                              }}
+                            >
+                              Sök igen
+                            </button>
+                            <button
+                              type="button"
+                              className="rounded-xl border border-rose-200 bg-[#fffffe] px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-50"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                deleteSavedFilter?.(preset.id);
+                              }}
+                            >
+                              Radera
+                            </button>
+                          </div>
+                        </div>
+                        {details.length > 0 ? (
+                          <dl className="mt-3 grid gap-2 sm:grid-cols-2">
+                            {details.map((item) => (
+                              <div key={`${preset.id}-${item.label}-${item.value}`} className="rounded-xl border border-black/10 bg-[#fffffe] px-2.5 py-2">
+                                <dt className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">{item.label}</dt>
+                                <dd className="mt-0.5 text-xs font-medium text-ink-800">{item.value}</dd>
+                              </div>
+                            ))}
+                          </dl>
+                        ) : null}
+                        {chips.length > 0 ? (
+                          <div className="mt-2 flex flex-wrap gap-1.5">
+                            {chips.map((chip) => (
+                              <span key={`${preset.id}-${chip}`} className="rounded-full border border-black/10 bg-[#fffffe] px-2.5 py-1 text-[11px] font-semibold text-ink-700">
+                                {chip}
+                              </span>
+                            ))}
+                          </div>
+                        ) : null}
+                      </article>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           ) : null}
         </div>
