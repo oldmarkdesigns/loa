@@ -56,8 +56,10 @@ export const ListIcon = createSemanticIcon("list", "ListIcon");
 export const BuildingIcon = createSemanticIcon("building", "BuildingIcon");
 export const CalendarIcon = createSemanticIcon("calendar", "CalendarIcon");
 export const StarIcon = createSemanticIcon("star", "StarIcon");
+export const CrownIcon = createSemanticIcon("crown", "CrownIcon");
 export const EyeIcon = createSemanticIcon("eye", "EyeIcon");
 export const UserIcon = createSemanticIcon("user", "UserIcon");
+export const LockIcon = createSemanticIcon("lock", "LockIcon");
 
 export function HomeIcon({ className }) {
   return (
@@ -107,6 +109,15 @@ export const ShareIcon = createSemanticIcon("share", "ShareIcon");
 export const ArrowLeftIcon = createSemanticIcon("arrowLeft", "ArrowLeftIcon");
 export const ArrowRightIcon = createSemanticIcon("arrowRight", "ArrowRightIcon");
 export const SwitchHorizontalIcon = createSemanticIcon("switchHorizontal", "SwitchHorizontalIcon");
+
+export function ChevronRightIcon({ className }) {
+  return (
+    <IconBase className={className}>
+      <path d="M9 6l6 6-6 6" />
+    </IconBase>
+  );
+}
+
 export const TrashIcon = createSemanticIcon("trash", "TrashIcon");
 export const SettingsGearIcon = createSemanticIcon("settingsGear", "SettingsGearIcon");
 export const InfoCircleIcon = createSemanticIcon("infoCircle", "InfoCircleIcon");

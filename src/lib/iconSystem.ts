@@ -15,6 +15,7 @@ export const ICONS = {
   usersGroup: "users-round",         // UsersGroupIcon — team / brokers list
   switchHorizontal: "arrow-left-right",   // SwitchHorizontalIcon — role switch (renter ↔ broker)
   logout: "log-out",             // LogoutIcon — sign out
+  lock: "lock",                // LockIcon — sign in / secure action
 
   // --- Search & filter ---
   search: "search",             // SearchIcon
