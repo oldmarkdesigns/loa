@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import ListingVisualCard from "../../components/app/ListingVisualCard";
 import ViewingRequestModal from "../../components/app/ViewingRequestModal";
+import LocalProgramPickerModal from "../../components/app/LocalProgramPickerModal";
 import FurnishingToggle from "../../components/app/FurnishingToggle";
 import AiGuidedAssistant from "../../components/app/AiGuidedAssistant";
 import Breadcrumbs from "../../components/layout/Breadcrumbs";
@@ -59,8 +60,8 @@ const amenityAliasesByValue = {
   säkerhetsdörr: ["säkerhetsdörr", "säkerhet", "secure", "security", "säker entré", "säker entre"]
 };
 
-const heroInputClass = "w-full rounded-2xl border border-black/10 bg-transparent px-3 py-3 text-sm text-ink-900 placeholder:text-ink-500 focus:border-[#0f1930] focus:outline-none";
-const heroSelectClass = "select-chevron w-full rounded-2xl border border-black/10 bg-transparent px-3 py-3 pr-10 text-sm text-ink-900 focus:border-[#0f1930] focus:outline-none";
+const heroInputClass = "w-full rounded-2xl border border-black/10 bg-transparent px-3 py-3 text-sm text-ink-900 placeholder:text-ink-500 focus:border-[#0b0a0e] focus:outline-none";
+const heroSelectClass = "select-chevron w-full rounded-2xl border border-black/10 bg-transparent px-3 py-3 pr-10 text-sm text-ink-900 focus:border-[#0b0a0e] focus:outline-none";
 
 function parseAmenityTerms(value) {
   return String(value || "")
@@ -276,7 +277,7 @@ function GoogleListingsMap({
     if (!window.google?.maps) return null;
     return {
       url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
-        `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="32" viewBox="0 0 24 32"><path fill="#0f1930" stroke="#0b1428" stroke-width="1.4" d="M12 1.75C6.34 1.75 1.75 6.34 1.75 12c0 7.71 8.58 16.56 9.57 17.55a.97.97 0 0 0 1.36 0c.99-.99 9.57-9.84 9.57-17.55 0-5.66-4.59-10.25-10.25-10.25Z"/><circle cx="12" cy="12" r="4.1" fill="#ffffff"/></svg>`
+        `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="32" viewBox="0 0 24 32"><path fill="#0b0a0e" stroke="#0b1428" stroke-width="1.4" d="M12 1.75C6.34 1.75 1.75 6.34 1.75 12c0 7.71 8.58 16.56 9.57 17.55a.97.97 0 0 0 1.36 0c.99-.99 9.57-9.84 9.57-17.55 0-5.66-4.59-10.25-10.25-10.25Z"/><circle cx="12" cy="12" r="4.1" fill="#ffffff"/></svg>`
       )}`,
       scaledSize: new window.google.maps.Size(30, 42),
       anchor: new window.google.maps.Point(15, 42)
@@ -287,7 +288,7 @@ function GoogleListingsMap({
     if (!window.google?.maps) return null;
     return {
       url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
-        `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="32" viewBox="0 0 24 32"><path fill="#1b2a4d" stroke="#0f1930" stroke-width="1.4" d="M12 1.75C6.34 1.75 1.75 6.34 1.75 12c0 7.71 8.58 16.56 9.57 17.55a.97.97 0 0 0 1.36 0c.99-.99 9.57-9.84 9.57-17.55 0-5.66-4.59-10.25-10.25-10.25Z"/><circle cx="12" cy="12" r="4.1" fill="#ffffff"/></svg>`
+        `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="32" viewBox="0 0 24 32"><path fill="#1b2a4d" stroke="#0b0a0e" stroke-width="1.4" d="M12 1.75C6.34 1.75 1.75 6.34 1.75 12c0 7.71 8.58 16.56 9.57 17.55a.97.97 0 0 0 1.36 0c.99-.99 9.57-9.84 9.57-17.55 0-5.66-4.59-10.25-10.25-10.25Z"/><circle cx="12" cy="12" r="4.1" fill="#ffffff"/></svg>`
       )}`,
       scaledSize: new window.google.maps.Size(26, 36),
       anchor: new window.google.maps.Point(13, 36)
@@ -482,15 +483,15 @@ function GoogleListingsMap({
     <div className={`relative overflow-hidden rounded-[28px] border border-black/10 bg-transparent ${dense ? "h-[340px] sm:h-[460px]" : "h-[480px]"} ${className}`}>
       <div ref={containerRef} className="absolute inset-0" />
       {status === "loading" ? (
-        <div className="absolute inset-0 grid place-items-center bg-[#fffffe]/55 text-xs font-semibold text-ink-700">Laddar karta...</div>
+        <div className="absolute inset-0 grid place-items-center bg-[#ffffff]/55 text-xs font-semibold text-ink-700">Laddar karta...</div>
       ) : null}
       {status === "missing_key" ? (
-        <div className="absolute inset-0 grid place-items-center bg-[#fffffe]/70 p-4 text-center text-xs font-semibold text-rose-700">
+        <div className="absolute inset-0 grid place-items-center bg-[#ffffff]/70 p-4 text-center text-xs font-semibold text-rose-700">
           Google Maps API-nyckel saknas. Lägg till `VITE_GOOGLE_MAPS_API_KEY` i `.env` och starta om `npm run dev`.
         </div>
       ) : null}
       {status === "error" ? (
-        <div className="absolute inset-0 grid place-items-center bg-[#fffffe]/75 p-4 text-center text-xs font-semibold text-rose-700">
+        <div className="absolute inset-0 grid place-items-center bg-[#ffffff]/75 p-4 text-center text-xs font-semibold text-rose-700">
           <div className="space-y-2">
             <p>{errorMessage || "Google Maps kunde inte laddas."}</p>
             <p>
@@ -499,7 +500,7 @@ function GoogleListingsMap({
             </p>
             <button
               type="button"
-              className="mx-auto rounded-lg border border-rose-300 bg-[#fffffe] px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-50"
+              className="mx-auto rounded-lg border border-rose-300 bg-[#ffffff] px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-50"
               onClick={() => setRetryToken((value) => value + 1)}
             >
               Försök igen
@@ -524,7 +525,7 @@ function GoogleListingsMap({
               <button
                 type="button"
                 aria-label="Stäng objekt"
-                className="close-circle-button inline-flex items-center justify-center rounded-full border border-black/10 bg-[#fffffe] text-lg font-semibold leading-none text-ink-700 hover:bg-[#eef3fa]"
+                className="close-circle-button inline-flex items-center justify-center rounded-full border border-black/10 bg-[#ffffff] text-lg font-semibold leading-none text-ink-700 hover:bg-[#eef3fa]"
                 onClick={() => onCloseSelectedListing?.()}
               >
                 ×
@@ -532,7 +533,7 @@ function GoogleListingsMap({
               <button
                 type="button"
                 aria-label="Föregående objekt"
-                className="inline-flex h-9 w-9 min-h-9 min-w-9 aspect-square items-center justify-center rounded-full border border-black/10 bg-[#fffffe] p-0 text-base font-semibold leading-none text-ink-700 hover:bg-[#eef3fa]"
+                className="inline-flex h-9 w-9 min-h-9 min-w-9 aspect-square items-center justify-center rounded-full border border-black/10 bg-[#ffffff] p-0 text-base font-semibold leading-none text-ink-700 hover:bg-[#eef3fa]"
                 onClick={() => handleCycleSelectedListing(-1)}
               >
                 ‹
@@ -540,7 +541,7 @@ function GoogleListingsMap({
               <button
                 type="button"
                 aria-label="Nästa objekt"
-                className="inline-flex h-9 w-9 min-h-9 min-w-9 aspect-square items-center justify-center rounded-full border border-black/10 bg-[#fffffe] p-0 text-base font-semibold leading-none text-ink-700 hover:bg-[#eef3fa]"
+                className="inline-flex h-9 w-9 min-h-9 min-w-9 aspect-square items-center justify-center rounded-full border border-black/10 bg-[#ffffff] p-0 text-base font-semibold leading-none text-ink-700 hover:bg-[#eef3fa]"
                 onClick={() => handleCycleSelectedListing(1)}
               >
                 ›
@@ -555,12 +556,12 @@ function GoogleListingsMap({
 
 function MapCanvas({ listings, onMarkerClick, dense = false }) {
   return (
-    <div className={`relative overflow-hidden rounded-2xl border border-[#c6d1df] bg-[#fffffe] ${dense ? "h-64 sm:h-72" : "h-[420px]"}`}>
+    <div className={`relative overflow-hidden rounded-2xl border border-[#c6d1df] bg-[#ffffff] ${dense ? "h-64 sm:h-72" : "h-[420px]"}`}>
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_25%,#e9f2fb_0%,transparent_35%),radial-gradient(circle_at_75%_65%,#d2e3f5_0%,transparent_40%),linear-gradient(135deg,#cfdfef_0%,#e9f2fb_100%)]" />
-      <div className="absolute inset-x-0 top-[32%] h-px bg-[#fffffe]/60" />
-      <div className="absolute inset-x-0 top-[58%] h-px bg-[#fffffe]/50" />
-      <div className="absolute left-[36%] top-0 h-full w-px bg-[#fffffe]/50" />
-      <div className="absolute left-[62%] top-0 h-full w-px bg-[#fffffe]/45" />
+      <div className="absolute inset-x-0 top-[32%] h-px bg-[#ffffff]/60" />
+      <div className="absolute inset-x-0 top-[58%] h-px bg-[#ffffff]/50" />
+      <div className="absolute left-[36%] top-0 h-full w-px bg-[#ffffff]/50" />
+      <div className="absolute left-[62%] top-0 h-full w-px bg-[#ffffff]/45" />
 
       {listings.map((listing) => {
         const point = markerPointForListing(listing);
@@ -569,7 +570,7 @@ function MapCanvas({ listings, onMarkerClick, dense = false }) {
             key={listing.id}
             type="button"
             onClick={() => onMarkerClick?.(listing)}
-            className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#0f1930]/25 bg-[#fffffe] px-2 py-1 text-[10px] font-semibold text-[#0f1930] hover:border-[#0f1930] hover:bg-[#0f1930] hover:text-white"
+            className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#0b0a0e]/25 bg-[#ffffff] px-2 py-1 text-[10px] font-semibold text-[#0b0a0e] hover:border-[#0b0a0e] hover:bg-[#0b0a0e] hover:text-white"
             style={{ left: `${point.x}%`, top: `${point.y}%` }}
             title={listing.title}
           >
@@ -589,13 +590,13 @@ function PillToggle({ checked, onToggle, ariaLabel, className = "", thumbClassNa
       aria-checked={checked}
       aria-label={ariaLabel}
       className={`relative inline-flex h-6 w-10 min-h-0 items-center rounded-full p-0.5 transition-[background-color,border-color] duration-200 ease-out ${
-        checked ? "bg-[#0f1930]" : "bg-[#d8dde5]"
+        checked ? "bg-[#0b0a0e]" : "bg-[#d8dde5]"
       } ${className}`}
       onClick={onToggle}
     >
       <span
         aria-hidden="true"
-        className={`rounded-full bg-[#fffffe] shadow-[0_1px_2px_rgba(15,25,48,0.35)] transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+        className={`rounded-full bg-[#ffffff] shadow-[0_1px_2px_rgba(15,25,48,0.35)] transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] ${
           checked ? "translate-x-4" : "translate-x-0"
         } ${thumbClassName}`}
       />
@@ -640,7 +641,7 @@ function AuthPromptModal({ mode, onClose, onRequireAuth }) {
             Skapa konto
           </button>
         </div>
-        <button type="button" className="mt-3 w-full rounded-xl border border-black/10 bg-[#fffffe] px-3 py-2 text-xs font-semibold text-ink-700" onClick={onClose}>
+        <button type="button" className="mt-3 w-full rounded-xl border border-black/10 bg-[#ffffff] px-3 py-2 text-xs font-semibold text-ink-700" onClick={onClose}>
           Fortsätt söka som gäst
         </button>
       </div>
@@ -1398,6 +1399,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
     aiChangedChipEntries: []
   });
   const [bookingListing, setBookingListing] = useState(null);
+  const [showProgramPicker, setShowProgramPicker] = useState(false);
   const [selectedMapListing, setSelectedMapListing] = useState(null);
   const [hoveredListingId, setHoveredListingId] = useState(null);
   const [authPromptMode, setAuthPromptMode] = useState("");
@@ -1452,6 +1454,11 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
 
   const favoriteIds = useMemo(() => new Set(favorites.map((entry) => entry.listingId)), [favorites]);
   const renterProgram = useMemo(() => app.user?.profile?.renterProgram || null, [app.user?.profile?.renterProgram]);
+  const renterPrograms = useMemo(() => {
+    const list = Array.isArray(app.user?.profile?.renterPrograms) ? app.user.profile.renterPrograms.filter(Boolean) : [];
+    if (list.length > 0) return list;
+    return renterProgram ? [renterProgram] : [];
+  }, [app.user?.profile?.renterPrograms, renterProgram]);
   const hasCompanyAdminRole = useMemo(() => {
     const roles = Array.isArray(user?.roles) ? user.roles : [user?.role].filter(Boolean);
     return roles.map((role) => role === "publisher" ? "broker" : role).includes("company_admin");
@@ -2772,35 +2779,37 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
     setSelectedMapListing(listing);
   }
 
-  async function applyLocalProgramSearch() {
+  async function applyLocalProgramSearch(programOverride) {
     if (isGuest) {
       openAuthPrompt("save");
       return false;
     }
 
-    if (!renterProgram) {
+    const activeProgram = programOverride || renterProgram;
+
+    if (!activeProgram) {
       app.pushToast("Inget lokalprogram hittades i din profil ännu.", "info");
       return false;
     }
 
     const hasAnyProgramInput = [
-      renterProgram.district,
-      renterProgram.type,
-      renterProgram.teamSize,
-      renterProgram.minSize,
-      renterProgram.maxSize,
-      renterProgram.minBudget,
-      renterProgram.maxBudget,
-      renterProgram.moveInDate,
-      renterProgram.contractFlex,
-      renterProgram.transitDistance,
-      renterProgram.accessHours,
-      renterProgram.parkingType,
-      renterProgram.layoutType,
-      renterProgram.amenities,
-      renterProgram.includeOperatingCosts,
-      renterProgram.accessibilityAdapted,
-      renterProgram.ecoCertified
+      activeProgram.district,
+      activeProgram.type,
+      activeProgram.teamSize,
+      activeProgram.minSize,
+      activeProgram.maxSize,
+      activeProgram.minBudget,
+      activeProgram.maxBudget,
+      activeProgram.moveInDate,
+      activeProgram.contractFlex,
+      activeProgram.transitDistance,
+      activeProgram.accessHours,
+      activeProgram.parkingType,
+      activeProgram.layoutType,
+      activeProgram.amenities,
+      activeProgram.includeOperatingCosts,
+      activeProgram.accessibilityAdapted,
+      activeProgram.ecoCertified
     ].some((value) => Boolean(String(value || "").trim() || value === true));
 
     if (!hasAnyProgramInput) {
@@ -2808,8 +2817,8 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
       return false;
     }
 
-    const nextFilters = mapRenterProgramToSearchFilters(renterProgram, app.defaultFilters || {});
-    const nextAmenityQuery = parseAmenityTerms(renterProgram.amenities || "").join(", ");
+    const nextFilters = mapRenterProgramToSearchFilters(activeProgram, app.defaultFilters || {});
+    const nextAmenityQuery = parseAmenityTerms(activeProgram.amenities || "").join(", ");
 
     // Use Filter-sök with prefilled values, but do not open the advanced
     // filter overlay here. Opening and immediately tearing it down causes
@@ -2842,7 +2851,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
     return true;
   }
 
-  async function handleApplyLocalProgramFromQuickCard() {
+  async function handleApplyLocalProgramFromQuickCard(programOverride) {
     setLocalProgramTransitionSnapshot({
       visibleListings,
       selectedMapListing,
@@ -2852,7 +2861,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
       showPreferencesSummaryCard
     });
     setIsLocalProgramResultsTransitioning(true);
-    const didApply = await applyLocalProgramSearch();
+    const didApply = await applyLocalProgramSearch(programOverride);
     if (!didApply) {
       setIsLocalProgramResultsTransitioning(false);
       setLocalProgramTransitionSnapshot(null);
@@ -3076,13 +3085,13 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
   ]);
 
   const viewToggleControl = (
-      <div className="view-toggle-group inline-flex items-center gap-1 rounded-full border border-black/10 bg-[#fffffe] p-1 xl:hidden">
+      <div className="view-toggle-group inline-flex items-center gap-1 rounded-full border border-black/10 bg-[#ffffff] p-1 xl:hidden">
         <button
           type="button"
           className={`view-toggle-option inline-flex min-h-[34px] items-center gap-1.5 rounded-full px-3 text-xs font-semibold transition ${
             resultViewMode === "list"
-              ? "bg-[#0f1930] text-white"
-              : "text-ink-700 hover:bg-[#fffffe]"
+              ? "bg-[#0b0a0e] text-white"
+              : "text-ink-700 hover:bg-[#ffffff]"
           }`}
           onClick={() => setResultViewMode("list")}
           aria-pressed={resultViewMode === "list"}
@@ -3094,8 +3103,8 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
           type="button"
           className={`view-toggle-option inline-flex min-h-[34px] items-center gap-1.5 rounded-full px-3 text-xs font-semibold transition ${
             resultViewMode === "map"
-              ? "bg-[#0f1930] text-white"
-              : "text-ink-700 hover:bg-[#fffffe]"
+              ? "bg-[#0b0a0e] text-white"
+              : "text-ink-700 hover:bg-[#ffffff]"
           }`}
           onClick={() => setResultViewMode("map")}
           aria-pressed={resultViewMode === "map"}
@@ -3110,7 +3119,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
       <div className="inline-flex items-center gap-2">
         <label className="text-xs font-semibold text-ink-700">Sortera</label>
         <select
-          className="select-chevron min-h-[40px] min-w-[132px] rounded-full border border-black/10 bg-[#fffffe] px-4 text-xs font-semibold text-ink-800 focus:border-[#0f1930] focus:outline-none"
+          className="select-chevron min-h-[40px] min-w-[132px] rounded-full border border-black/10 bg-[#ffffff] px-4 text-xs font-semibold text-ink-800 focus:border-[#0b0a0e] focus:outline-none"
           value={sortBy}
           onChange={(event) => setSortBy(event.target.value)}
         >
@@ -3140,7 +3149,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
     >
       <div className="flex flex-nowrap items-start justify-between gap-2">
         <div className="min-w-0 space-y-0.5">
-          <p className="inline-flex min-h-[36px] items-center gap-1.5 rounded-full border border-black/10 bg-[#fffffe] px-3 py-1 text-sm font-semibold text-ink-800">
+          <p className="inline-flex min-h-[36px] items-center gap-1.5 rounded-full border border-black/10 bg-[#ffffff] px-3 py-1 text-sm font-semibold text-ink-800">
             {displayedHasBegunSearch ? <SparklesIcon className="h-4 w-4 text-[#4f46e5]" /> : null}
             {displayedHasBegunSearch ? `${displayedSummaryResultCount} lokaler matchar dina preferenser` : `${displayedSummaryResultCount} lediga lokaler`}
           </p>
@@ -3152,7 +3161,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
         <div className="hidden xl:flex shrink-0 items-center gap-2">
           <label className="text-xs font-semibold text-ink-700">Sortera</label>
           <select
-            className="select-chevron min-h-[40px] min-w-[132px] rounded-full border border-black/10 bg-[#fffffe] px-4 text-xs font-semibold text-ink-800 focus:border-[#0f1930] focus:outline-none"
+            className="select-chevron min-h-[40px] min-w-[132px] rounded-full border border-black/10 bg-[#ffffff] px-4 text-xs font-semibold text-ink-800 focus:border-[#0b0a0e] focus:outline-none"
             value={sortBy}
             onChange={(event) => setSortBy(event.target.value)}
           >
@@ -3189,7 +3198,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
               </p>
             </div>
             <div className="mt-3 flex flex-wrap gap-2">
-              <span className="inline-flex items-center gap-1 rounded-full border border-[#4f46e5]/35 bg-[#fffffe] px-3 py-1.5 text-[13px] font-semibold text-[#312e81]">
+              <span className="inline-flex items-center gap-1 rounded-full border border-[#4f46e5]/35 bg-[#ffffff] px-3 py-1.5 text-[13px] font-semibold text-[#312e81]">
                 Föreslagen ändring: {visibleResultsSuggestion.suggestedChange}
               </span>
               <span className="rounded-full border border-[#4f46e5]/35 px-3 py-1.5 text-[13px] font-semibold text-[#312e81]">
@@ -3199,7 +3208,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <button
                 type="button"
-                className="inline-flex h-[40px] items-center gap-1.5 rounded-xl bg-[#0f1930] px-3 text-xs font-semibold text-white"
+                className="inline-flex h-[40px] items-center gap-1.5 rounded-xl bg-[#0b0a0e] px-3 text-xs font-semibold text-white"
                 onClick={() => void applyResultsSuggestion(visibleResultsSuggestion)}
               >
                 <SparklesIcon className="h-3.5 w-3.5" />
@@ -3207,7 +3216,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
               </button>
               <button
                 type="button"
-                className="inline-flex h-[40px] items-center gap-1.5 rounded-xl border border-black/10 bg-[#fffffe] px-3 text-xs font-semibold text-ink-700 hover:bg-[#fffffe]"
+                className="inline-flex h-[40px] items-center gap-1.5 rounded-xl border border-black/10 bg-[#ffffff] px-3 text-xs font-semibold text-ink-700 hover:bg-[#ffffff]"
                 onClick={() => {
                   setShowEditorAiPanel(false);
                   setShowAdvancedSearchEditor(true);
@@ -3270,7 +3279,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
             </label>
             <button
               type="button"
-              className="inline-flex h-[48px] w-auto justify-center justify-self-start self-end items-center gap-1.5 rounded-2xl border border-black/10 bg-[#fffffe] px-4 text-xs font-semibold text-ink-700 hover:bg-[#fffffe]"
+              className="inline-flex h-[48px] w-auto justify-center justify-self-start self-end items-center gap-1.5 rounded-2xl border border-black/10 bg-[#ffffff] px-4 text-xs font-semibold text-ink-700 hover:bg-[#ffffff]"
               onClick={() => setShowAdvancedSearchEditor(true)}
             >
               <FilterIcon className="h-3.5 w-3.5" />
@@ -3285,10 +3294,14 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
   const primaryHeaderAction = !hideLocalProgramQuickCard && hasRenterRole && !hasCompanyAdminRole ? (
     <button
       type="button"
-      className={`inline-flex h-[38px] items-center justify-center gap-1.5 rounded-full border border-[#0f1930]/15 bg-gradient-to-r from-[#f8fafc] to-white pl-1.5 pr-3 text-xs font-semibold text-ink-900 transition hover:border-[#0f1930] hover:text-[#0f1930] ${
+      className={`inline-flex h-[38px] items-center justify-center gap-1.5 rounded-full border border-[#0b0a0e]/15 bg-gradient-to-r from-[#f8fafc] to-white pl-1.5 pr-3 text-xs font-semibold text-ink-900 transition hover:border-[#0b0a0e] hover:text-[#0b0a0e] ${
         isLocalProgramQuickCardDissolving ? "pointer-events-none opacity-0" : "opacity-100"
       }`}
       onClick={() => {
+        if (renterPrograms.length > 1) {
+          setShowProgramPicker(true);
+          return;
+        }
         void handleApplyLocalProgramFromQuickCard();
       }}
     >
@@ -3316,28 +3329,28 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
     <div className="flex flex-wrap items-center gap-2">
       <button
         type="button"
-        className="group inline-flex min-h-0 items-center gap-1 rounded-full border border-black/10 px-2.5 py-1 text-xs font-semibold text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
+        className="group inline-flex min-h-0 items-center gap-1 rounded-full border border-black/10 px-2.5 py-1 text-xs font-semibold text-ink-700 transition hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
         onClick={handleSaveSearchAction}
       >
-        <StarIcon className="h-4 w-4 shrink-0 transition group-hover:text-[#0f1930]" />
+        <StarIcon className="h-4 w-4 shrink-0 transition group-hover:text-[#0b0a0e]" />
         Spara sökning
       </button>
       <button
         type="button"
-        className="group inline-flex min-h-0 items-center gap-1 rounded-full border border-black/10 px-2.5 py-1 text-xs font-semibold text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
+        className="group inline-flex min-h-0 items-center gap-1 rounded-full border border-black/10 px-2.5 py-1 text-xs font-semibold text-ink-700 transition hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
         onClick={handleWatchSearchAction}
       >
-        <EyeIcon className="h-4 w-4 shrink-0 transition group-hover:text-[#0f1930]" />
+        <EyeIcon className="h-4 w-4 shrink-0 transition group-hover:text-[#0b0a0e]" />
         Bevaka sökning
       </button>
       <button
         type="button"
-        className="group inline-flex min-h-0 items-center gap-1 rounded-full border border-black/10 px-2.5 py-1 text-xs font-semibold text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
+        className="group inline-flex min-h-0 items-center gap-1 rounded-full border border-black/10 px-2.5 py-1 text-xs font-semibold text-ink-700 transition hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
         onClick={() => {
           void handleResetSearchResults();
         }}
       >
-        <ResetIcon className="h-4 w-4 shrink-0 transition group-hover:text-[#0f1930]" />
+        <ResetIcon className="h-4 w-4 shrink-0 transition group-hover:text-[#0b0a0e]" />
         Nollställ
       </button>
     </div>
@@ -3380,7 +3393,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
   ].filter(Boolean);
 
   const emptyResultsContent = displayedVisibleListings.length === 0 ? null : (
-    <div className="rounded-3xl border border-black/10 bg-[#fffffe] p-5">
+    <div className="rounded-3xl border border-black/10 bg-[#ffffff] p-5">
       <p className="text-xl font-semibold text-ink-900">Ingen matchning just nu</p>
       <p className="mt-1 text-[1.05rem] text-ink-700">
         Prova en snabb justering så kan jag hitta närliggande träffar direkt.
@@ -3400,24 +3413,24 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
               <button
                 key={suggestion.id}
                 type="button"
-                className="group rounded-[24px] border border-black/10 bg-[#fffffe] p-3 text-left transition hover:border-[#0f1930]/35 hover:bg-[#fffffe]"
+                className="group rounded-[24px] border border-black/10 bg-[#ffffff] p-3 text-left transition hover:border-[#0b0a0e]/35 hover:bg-[#ffffff]"
                 onClick={() => void applyNoMatchSuggestion(suggestion)}
               >
                 <div className="flex items-start justify-between gap-2">
                   <span className="text-sm font-semibold text-ink-900">{suggestion.label}</span>
-                  <span className="shrink-0 rounded-full border border-black/10 bg-[#fffffe] px-2 py-0.5 text-xs font-semibold text-ink-700">
+                  <span className="shrink-0 rounded-full border border-black/10 bg-[#ffffff] px-2 py-0.5 text-xs font-semibold text-ink-700">
                     {suggestion.count} träffar
                   </span>
                 </div>
                 <p className="mt-2 text-[11px] font-semibold uppercase tracking-wide text-ink-600">Ändrar</p>
                 <div className="mt-1.5 flex flex-wrap gap-1.5">
                   {visibleChanges.map((item) => (
-                    <span key={`${suggestion.id}-${item}`} className="rounded-full border border-black/10 bg-[#fffffe] px-2 py-0.5 text-xs font-medium text-ink-700">
+                    <span key={`${suggestion.id}-${item}`} className="rounded-full border border-black/10 bg-[#ffffff] px-2 py-0.5 text-xs font-medium text-ink-700">
                       {item}
                     </span>
                   ))}
                   {extraChanges > 0 ? (
-                    <span className="rounded-full border border-black/10 bg-[#fffffe] px-2 py-0.5 text-xs font-medium text-ink-700">
+                    <span className="rounded-full border border-black/10 bg-[#ffffff] px-2 py-0.5 text-xs font-medium text-ink-700">
                       +{extraChanges} fler
                     </span>
                   ) : null}
@@ -3481,7 +3494,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
       <div className="relative mx-auto flex h-full w-full max-w-[1540px] flex-col">
         {isHydratingLandingSearch ? (
           <div className="grid min-h-0 flex-1 place-items-center">
-            <div className="rounded-2xl border border-[#c8d1de] bg-[#fffffe] px-5 py-4 text-sm font-semibold text-ink-700">
+            <div className="rounded-2xl border border-[#c8d1de] bg-[#ffffff] px-5 py-4 text-sm font-semibold text-ink-700">
               Laddar sökresultat...
             </div>
           </div>
@@ -3781,7 +3794,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                                 {layoutTypeOptions.map((option) => <option key={option} value={option} className="text-black">{option}</option>)}
                               </select>
                             </label>
-                            <label className="inline-flex h-[48px] items-center gap-2 rounded-2xl border border-black/10 bg-[#fffffe] px-3 text-xs font-semibold text-ink-700">
+                            <label className="inline-flex h-[48px] items-center gap-2 rounded-2xl border border-black/10 bg-[#ffffff] px-3 text-xs font-semibold text-ink-700">
                               <input
                                 type="checkbox"
                                 className="search-flag-checkbox"
@@ -3790,7 +3803,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                               />
                               Driftkostn. ingår
                             </label>
-                            <label className="inline-flex h-[48px] items-center gap-2 rounded-2xl border border-black/10 bg-[#fffffe] px-3 text-xs font-semibold text-ink-700">
+                            <label className="inline-flex h-[48px] items-center gap-2 rounded-2xl border border-black/10 bg-[#ffffff] px-3 text-xs font-semibold text-ink-700">
                               <input
                                 type="checkbox"
                                 className="search-flag-checkbox"
@@ -3799,7 +3812,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                               />
                               Tillgänglighetsanp.
                             </label>
-                            <label className="inline-flex h-[48px] items-center gap-2 rounded-2xl border border-black/10 bg-[#fffffe] px-3 text-xs font-semibold text-ink-700">
+                            <label className="inline-flex h-[48px] items-center gap-2 rounded-2xl border border-black/10 bg-[#ffffff] px-3 text-xs font-semibold text-ink-700">
                               <input
                                 type="checkbox"
                                 className="search-flag-checkbox"
@@ -3821,7 +3834,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                                     key={option.value}
                                     type="button"
                                     className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition ${
-                                      active ? "border-[#0f1930] bg-[#0f1930] text-white" : "border-black/10 bg-[#fffffe] text-ink-700 hover:bg-[#fffffe]"
+                                      active ? "border-[#0b0a0e] bg-[#0b0a0e] text-white" : "border-black/10 bg-[#ffffff] text-ink-700 hover:bg-[#ffffff]"
                                     }`}
                                     onClick={() => toggleAmenity(option.value)}
                                   >
@@ -3839,7 +3852,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                         <div className="mt-5 flex items-center justify-between gap-2">
                           <button
                             type="button"
-                            className="inline-flex items-center gap-2 rounded-2xl border border-black/10 bg-[#fffffe] px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-[#fffffe]"
+                            className="inline-flex items-center gap-2 rounded-2xl border border-black/10 bg-[#ffffff] px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-[#ffffff]"
                             onClick={() => {
                               setShowAdvancedSearchEditor((value) => !value);
                             }}
@@ -3847,7 +3860,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                             <span>{showAdvancedSearchEditor ? "Visa färre filter" : "Visa alla filter"}</span>
                             <span aria-hidden="true" className="text-sm leading-none">{showAdvancedSearchEditor ? "−" : "+"}</span>
                           </button>
-                          <button type="submit" className="inline-flex items-center gap-1.5 rounded-2xl border border-[#0f1930] bg-[#0f1930] px-5 py-3 text-sm font-semibold text-white hover:bg-[#16233f]">
+                          <button type="submit" className="inline-flex items-center gap-1.5 rounded-2xl border border-[#0b0a0e] bg-[#0b0a0e] px-5 py-3 text-sm font-semibold text-white">
                             <SearchIcon className="h-4 w-4" />
                             Sök lokaler
                           </button>
@@ -3856,12 +3869,12 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                         <div className="mt-5 flex items-center justify-end gap-2">
                           <button
                             type="button"
-                            className="rounded-2xl border border-black/10 bg-[#fffffe] px-4 py-3 text-sm font-semibold text-ink-700 hover:bg-[#fffffe]"
+                            className="rounded-2xl border border-black/10 bg-[#ffffff] px-4 py-3 text-sm font-semibold text-ink-700 hover:bg-[#ffffff]"
                             onClick={closeSearchEditorSmooth}
                           >
                             Avbryt
                           </button>
-                          <button type="submit" className="rounded-2xl border border-[#0f1930] bg-[#0f1930] px-5 py-3 text-sm font-semibold text-white hover:bg-[#16233f]">
+                          <button type="submit" className="rounded-2xl border border-[#0b0a0e] bg-[#0b0a0e] px-5 py-3 text-sm font-semibold text-white">
                             Uppdatera sökning
                           </button>
                         </div>
@@ -3937,14 +3950,14 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
 
                     <div className="space-y-3">
                       {displayedShowPreferencesSummaryCard ? (
-                        <div className="bg-[#fffffe]">
+                        <div className="bg-[#ffffff]">
                           <div className="relative">
                             {preferencesSummaryCard}
                           </div>
                         </div>
                       ) : (
                         <div className="hidden items-center justify-between md:flex md:flex-nowrap xl:flex">
-                          <p className="inline-flex min-h-[36px] items-center gap-1.5 rounded-full border border-black/10 bg-[#fffffe] px-3 py-1 text-sm font-semibold text-ink-800">
+                          <p className="inline-flex min-h-[36px] items-center gap-1.5 rounded-full border border-black/10 bg-[#ffffff] px-3 py-1 text-sm font-semibold text-ink-800">
                             {displayedVisibleListings.length} lediga lokaler
                           </p>
                           <div className="flex flex-nowrap items-center justify-end gap-2">
@@ -4003,7 +4016,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                   </div>
 
                   {preferencesSummaryCard ? (
-                    <div className="bg-[#fffffe] pb-4">
+                    <div className="bg-[#ffffff] pb-4">
                       <div className="relative">
                         {preferencesSummaryCard}
                       </div>
@@ -4021,12 +4034,12 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
       {showAdvancedSearchOverlay ? (
         <div
           className={`fixed inset-0 z-[72] flex items-center justify-center p-4 backdrop-blur-[2px] transition-all duration-200 ${
-            isAdvancedSearchOverlayActive ? "bg-[#fffffe]/0 opacity-100" : "bg-[#fffffe]/0 opacity-0"
+            isAdvancedSearchOverlayActive ? "bg-[#ffffff]/0 opacity-100" : "bg-[#ffffff]/0 opacity-0"
           }`}
           onClick={closeAdvancedSearchOverlay}
         >
           <div
-            className={`relative w-full max-w-4xl rounded-[32px] border border-black/10 bg-[#fffffe] shadow-[0_16px_40px_rgba(15,25,48,0.12)] transition-all duration-200 ${
+            className={`relative w-full max-w-4xl rounded-[32px] border border-black/10 bg-[#ffffff] shadow-[0_16px_40px_rgba(15,25,48,0.12)] transition-all duration-200 ${
               isAdvancedSearchOverlayActive
                 ? "translate-y-0 scale-100 opacity-100"
                 : "translate-y-2 scale-[0.985] opacity-0"
@@ -4037,7 +4050,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
               <h3 className="text-lg font-semibold text-ink-900">Alla filter</h3>
               <button
                 type="button"
-                className="close-circle-button inline-flex items-center justify-center rounded-full border border-black/10 text-lg font-semibold leading-none text-ink-700 hover:bg-[#fffffe]"
+                className="close-circle-button inline-flex items-center justify-center rounded-full border border-black/10 text-lg font-semibold leading-none text-ink-700 hover:bg-[#ffffff]"
                 onClick={closeAdvancedSearchOverlay}
                 aria-label="Stäng filter"
               >
@@ -4187,7 +4200,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                   </label>
                 </div>
 
-                <div className="rounded-2xl border border-black/10 bg-[#fffffe] p-4">
+                <div className="rounded-2xl border border-black/10 bg-[#ffffff] p-4">
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-700">Särskilda krav</p>
                   <div className="mt-3 grid gap-2 md:grid-cols-3">
                     <label className="inline-flex items-center gap-2 text-sm text-ink-700">
@@ -4231,7 +4244,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                           key={option.value}
                           type="button"
                           className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
-                            active ? "border-[#0f1930] bg-[#0f1930] text-white" : "border-black/10 bg-[#fffffe] text-ink-700 hover:bg-[#fffffe]"
+                            active ? "border-[#0b0a0e] bg-[#0b0a0e] text-white" : "border-black/10 bg-[#ffffff] text-ink-700 hover:bg-[#ffffff]"
                           }`}
                           onClick={() => toggleAmenity(option.value)}
                         >
@@ -4247,7 +4260,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
               <div className="mt-6 flex items-center justify-between gap-3 border-t border-black/10 pt-4">
                 <button
                   type="button"
-                  className="rounded-2xl border border-black/10 bg-[#fffffe] px-4 py-3 text-sm font-semibold text-ink-700 hover:bg-[#fffffe]"
+                  className="rounded-2xl border border-black/10 bg-[#ffffff] px-4 py-3 text-sm font-semibold text-ink-700 hover:bg-[#ffffff]"
                   onClick={() => {
                     setFilters(savedFilters);
                     setAmenityQuery("");
@@ -4257,7 +4270,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                 >
                   Återställ
                 </button>
-                <button type="submit" className="rounded-2xl border border-[#0f1930] bg-[#0f1930] px-5 py-3 text-sm font-semibold text-white hover:bg-[#16233f]">
+                <button type="submit" className="rounded-2xl border border-[#0b0a0e] bg-[#0b0a0e] px-5 py-3 text-sm font-semibold text-white">
                   Visa {visibleListings.length} resultat
                 </button>
               </div>
@@ -4275,14 +4288,23 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
         }}
       />
 
+      <LocalProgramPickerModal
+        programs={showProgramPicker ? renterPrograms : null}
+        onClose={() => setShowProgramPicker(false)}
+        onSelect={(program) => {
+          setShowProgramPicker(false);
+          void handleApplyLocalProgramFromQuickCard(program);
+        }}
+      />
+
       <AuthPromptModal mode={authPromptMode} onClose={() => setAuthPromptMode("")} onRequireAuth={onRequireAuth} />
 
       {showEditorAiInfo ? (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-transparent p-4" onClick={() => setShowEditorAiInfo(false)}>
-          <div className="relative w-full max-w-lg rounded-2xl border border-black/10 bg-[#fffffe] p-5 shadow-[0_24px_64px_rgba(15,25,48,0.28)]" onClick={(event) => event.stopPropagation()}>
+          <div className="relative w-full max-w-lg rounded-2xl border border-black/10 bg-[#ffffff] p-5 shadow-[0_24px_64px_rgba(15,25,48,0.28)]" onClick={(event) => event.stopPropagation()}>
             <button
               type="button"
-              className="close-circle-button absolute right-3 top-3 inline-flex items-center justify-center rounded-full border border-black/10 text-lg font-semibold leading-none text-ink-700 hover:bg-[#fffffe]"
+              className="close-circle-button absolute right-3 top-3 inline-flex items-center justify-center rounded-full border border-black/10 text-lg font-semibold leading-none text-ink-700 hover:bg-[#ffffff]"
               onClick={() => setShowEditorAiInfo(false)}
               aria-label="Stäng"
             >

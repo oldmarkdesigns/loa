@@ -12,7 +12,7 @@ const rangeOptions = ["7d", "30d", "90d"];
 const chartConfig = {
   views: {
     label: "Visningar",
-    color: "#0f1930"
+    color: "#0b0a0e"
   },
   inquiries: {
     label: "Förfrågningar",
@@ -42,7 +42,7 @@ function BarInteractive({
           <h3 className="text-lg font-semibold text-ink-900">{title}</h3>
           <p className="mt-1 text-sm text-ink-600">{subtitle}</p>
         </div>
-        <div className="inline-flex items-center gap-1 rounded-full border border-black/10 bg-[#fffffe] p-1">
+        <div className="inline-flex items-center gap-1 rounded-full border border-black/10 bg-[#ffffff] p-1">
           {rangeOptions.map((option) => {
             const active = option === range;
             return (
@@ -51,7 +51,7 @@ function BarInteractive({
                 type="button"
                 className={`min-h-0 rounded-full px-2.5 py-1 text-xs font-semibold transition ${
                   active
-                    ? "bg-[#0f1930] text-white"
+                    ? "bg-[#0b0a0e] text-white"
                     : "text-ink-600 hover:text-ink-900"
                 }`}
                 onClick={() => setRange(option)}
@@ -111,7 +111,7 @@ function BarInteractive({
 
       <div className="mt-2 flex flex-wrap items-center gap-4 text-xs text-ink-700">
         <span className="inline-flex items-center gap-1.5">
-          <span className="h-2.5 w-2.5 rounded-full bg-[#0f1930]" />
+          <span className="h-2.5 w-2.5 rounded-full bg-[#0b0a0e]" />
           Visningar
         </span>
         <span className="inline-flex items-center gap-1.5">

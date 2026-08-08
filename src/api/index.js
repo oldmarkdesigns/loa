@@ -3,8 +3,8 @@ import { convexApiRefs } from "../lib/convex";
 
 export const authApi = {
   session: () => apiClient.query(convexApiRefs.users.me, {}, "Kunde inte läsa aktuell session."),
-  getTestSession: (token) => apiClient.query(convexApiRefs.users.getTestSession, { token }, "Kunde inte läsa testsessionen."),
-  createTestUser: (role) => apiClient.mutation(convexApiRefs.users.createTestUser, role ? { role } : {}, "Kunde inte skapa testkonto."),
+  checkEmailRegistered: (email) =>
+    apiClient.query(convexApiRefs.users.checkEmailRegistered, { email }, "Kunde inte kontrollera e-post."),
   syncWorkosSession: (payload = {}) =>
     apiClient.mutation(convexApiRefs.users.upsertFromAuth, payload, "Kunde inte synka WorkOS-sessionen."),
   signup: async () => {
@@ -22,19 +22,36 @@ export const setupApi = {
 
 export const profileApi = {
   getMe: () => apiClient.query(convexApiRefs.users.me, {}, "Kunde inte läsa användarprofilen."),
+  findCompanyByOrganizationNumber: (organizationNumber, excludeUserId) =>
+    apiClient.query(
+      convexApiRefs.users.findCompanyByOrganizationNumber,
+      { organizationNumber, excludeUserId },
+      "Kunde inte kontrollera organisationsnumret."
+    ),
   updateMe: (payload) => apiClient.mutation(convexApiRefs.users.updateMe, payload, "Kunde inte uppdatera profilen."),
+  completeSignup: (payload) => apiClient.mutation(convexApiRefs.users.completeSignup, payload, "Kunde inte slutföra registreringen."),
   switchActiveRole: (role) => apiClient.mutation(convexApiRefs.users.switchActiveRole, { role }, "Kunde inte byta roll."),
-  updateTestMe: (token, payload) => apiClient.mutation(convexApiRefs.users.updateTestUser, { token, ...payload }, "Kunde inte uppdatera testprofilen."),
-  addRoleToTestUser: (token, role) => apiClient.mutation(convexApiRefs.users.addRoleToTestUser, { token, role }, "Kunde inte lägga till testrollen."),
   completeOnboarding: (payload) =>
     apiClient.mutation(convexApiRefs.users.completeOnboarding, payload, "Kunde inte slutföra onboarding."),
-  completeTestOnboarding: (token, payload) =>
-    apiClient.mutation(convexApiRefs.users.completeTestOnboarding, { token, ...payload }, "Kunde inte slutföra test-onboarding.")
+  listNotifications: () => apiClient.query(convexApiRefs.users.listNotifications, {}, "Kunde inte läsa notiser."),
+  listCompanyBrokers: () => apiClient.query(convexApiRefs.users.listCompanyBrokers, {}, "Kunde inte läsa mäklarteamet."),
+  approveBrokerRequest: (userId) =>
+    apiClient.mutation(convexApiRefs.users.approveBrokerRequest, { userId }, "Kunde inte godkänna mäklaren."),
+  rejectBrokerRequest: (userId) =>
+    apiClient.mutation(convexApiRefs.users.rejectBrokerRequest, { userId }, "Kunde inte avslå mäklaren."),
+  resendBrokerVerificationRequest: () =>
+    apiClient.mutation(convexApiRefs.users.resendBrokerVerificationRequest, {}, "Kunde inte skicka förfrågan igen."),
+  updateCompanyBroker: (userId, payload) =>
+    apiClient.mutation(convexApiRefs.users.updateCompanyBroker, { userId, ...payload }, "Kunde inte uppdatera mäklaren."),
+  removeCompanyBroker: (userId) =>
+    apiClient.mutation(convexApiRefs.users.removeCompanyBroker, { userId }, "Kunde inte ta bort mäklaren.")
 };
 
 export const listingApi = {
   getListings: (filters = {}) => apiClient.query(convexApiRefs.listings.list, { filters }, "Kunde inte läsa objekt."),
   getListing: (id) => apiClient.query(convexApiRefs.listings.get, { id }, "Objektet hittades inte."),
+  recordView: (id, source) =>
+    apiClient.mutation(convexApiRefs.listings.recordView, { id, source }, "Kunde inte registrera visning."),
   createListing: (payload) => apiClient.mutation(convexApiRefs.listings.create, { payload }, "Kunde inte skapa objektet."),
   updateListing: (id, payload) =>
     apiClient.mutation(convexApiRefs.listings.update, { id, payload }, "Kunde inte uppdatera objektet."),

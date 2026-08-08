@@ -24,7 +24,7 @@ function SettingsRow({ title, subtitle, open, onToggle, children, isLast = false
         aria-expanded={open}
       >
         <div>
-          <h3 className="text-xl font-semibold leading-tight text-[#0f1930]">{title}</h3>
+          <h3 className="text-xl font-semibold leading-tight text-[#0b0a0e]">{title}</h3>
           <p className="mt-2.5 text-sm text-ink-600">{subtitle}</p>
         </div>
         <span className={`inline-flex h-10 w-10 items-center justify-center rounded-full border border-black/15 text-ink-700 transition ${open ? "rotate-90" : ""}`}>
@@ -101,7 +101,7 @@ function SettingsPage({ app }) {
     <section className="relative flex h-full min-h-0 flex-col">
       <div data-scroll-top-scope="results" className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">
         <div className="mx-auto w-full max-w-[860px]">
-          <h1 className="text-2xl font-semibold text-[#0f1930]">Inställningar</h1>
+          <h1 className="text-2xl font-semibold text-[#0b0a0e]">Inställningar</h1>
           <p className="mt-2 text-sm text-ink-600">Hantera dina personuppgifter, kontoalternativ och notisinställningar.</p>
           <div className="h-6 sm:h-7" />
           <div className="space-y-0">
@@ -119,7 +119,7 @@ function SettingsPage({ app }) {
                       <article className="pb-5">
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex-1">
-                            <p className="text-[16px] font-semibold leading-tight text-[#0f1930]">Namn</p>
+                            <p className="text-[16px] font-semibold leading-tight text-[#0b0a0e]">Namn</p>
                             {personalEditKey === "name" ? (
                               <div className="mt-4 grid max-w-[560px] gap-3 sm:grid-cols-2">
                                 <div className="max-w-[260px]">
@@ -154,7 +154,7 @@ function SettingsPage({ app }) {
                       <article className="pb-5">
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex-1">
-                            <p className="text-[16px] font-semibold leading-tight text-[#0f1930]">E-post</p>
+                            <p className="text-[16px] font-semibold leading-tight text-[#0b0a0e]">E-post</p>
                             {personalEditKey === "email" ? (
                               <div className="mt-4 max-w-[420px]">
                                 <label className="mb-1 block text-sm text-ink-700">E-post</label>
@@ -186,7 +186,7 @@ function SettingsPage({ app }) {
                       <article className="pb-5">
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex-1">
-                            <p className="text-[16px] font-semibold leading-tight text-[#0f1930]">Telefonnummer</p>
+                            <p className="text-[16px] font-semibold leading-tight text-[#0b0a0e]">Telefonnummer</p>
                             {personalEditKey === "phone" ? (
                               <div className="mt-4 max-w-[340px]">
                                 <label className="mb-1 block text-sm text-ink-700">Telefonnummer</label>
@@ -271,9 +271,9 @@ function SettingsPage({ app }) {
                   {section.key === "verifications" ? (
                     <div className="space-y-4">
                       {isIdVerified ? (
-                        <div className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-[#fffffe] px-4 py-2 text-sm font-semibold text-[#241d1a]">
+                        <div className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-[#ffffff] px-4 py-2 text-sm font-semibold text-[#241d1a]">
                           <span
-                            className="inline-flex h-5 w-5 items-center justify-center bg-[#0f1930] text-white"
+                            className="inline-flex h-5 w-5 items-center justify-center bg-[#0b0a0e] text-white"
                             style={{ clipPath: "polygon(50% 1%,58% 4%,66% 2%,73% 8%,81% 8%,88% 15%,96% 19%,99% 28%,97% 36%,99% 44%,94% 51%,95% 59%,89% 66%,86% 75%,78% 79%,71% 86%,62% 87%,55% 94%,47% 92%,39% 97%,32% 91%,23% 91%,18% 83%,9% 81%,6% 72%,1% 65%,3% 56%,0% 48%,6% 41%,4% 33%,10% 26%,11% 17%,20% 13%,25% 5%,34% 5%,42% 1%)" }}
                           >
                             <svg aria-hidden="true" viewBox="0 0 24 24" className="h-3.5 w-3.5">

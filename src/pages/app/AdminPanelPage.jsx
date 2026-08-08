@@ -28,9 +28,11 @@ import {
   BellIcon,
   BuildingIcon,
   CalendarIcon,
+  ChevronRightIcon,
   CheckBadgeIcon,
   ClockIcon,
   DownloadIcon,
+  ExternalLinkIcon,
   FilterIcon,
   HistoryIcon,
   InfoCircleIcon,
@@ -56,9 +58,9 @@ import {
 
 const ADMIN_NAV_ITEMS = [
   { key: "oversikt", label: "Översikt", path: "/app/admin", Icon: LayoutDashboardIcon },
-  { key: "annonser", label: "Annonser", path: "/app/admin/annonser", Icon: BuildingIcon, badge: "24" },
+  { key: "annonser", label: "Annonser", path: "/app/admin/annonser", Icon: BuildingIcon },
   { key: "leads", label: "Leads & Matchningar", path: "/app/admin/leads", Icon: SparklesIcon },
-  { key: "notifikationer", label: "Notifikationer", path: "/app/admin/notifikationer", Icon: BellIcon, badge: "3" },
+  { key: "notifikationer", label: "Notifikationer", path: "/app/admin/notifikationer", Icon: BellIcon },
   { key: "maklare", label: "Mäklare", path: "/app/admin/maklare", Icon: UsersGroupIcon },
   { key: "aktivitet", label: "Aktivitet", path: "/app/admin/aktivitet", Icon: HistoryIcon },
   { key: "statistik", label: "Statistik", path: "/app/admin/statistik", Icon: BarChart3Icon }
@@ -120,100 +122,38 @@ const LISTING_MODERATION_OPTIONS = [
 ];
 
 const kpiCards = [
-  { key: "active", label: "Aktiva annonser", value: "24", delta: "+3", deltaTone: "up", meta: "vs förra perioden", unit: "annonser" },
-  { key: "views", label: "Visningar (30d)", value: "18 420", delta: "+12.4%", deltaTone: "up", meta: "vs förra perioden", unit: "visningar" },
-  { key: "inquiries", label: "Förfrågningar", value: "142", delta: "+8", deltaTone: "up", meta: "vs förra perioden", unit: "förfrågningar" },
-  { key: "matches", label: "Matchade hyresgäster", value: "37", delta: "+6", deltaTone: "up", meta: "vs förra perioden", unit: "matchningar" }
+  { key: "active", label: "Aktiva annonser", value: "0", delta: "0", deltaTone: "flat", meta: "Ingen data", unit: "annonser" },
+  { key: "views", label: "Visningar (30d)", value: "0", delta: "0", deltaTone: "flat", meta: "Ingen data", unit: "visningar" },
+  { key: "inquiries", label: "Förfrågningar", value: "0", delta: "0", deltaTone: "flat", meta: "Ingen data", unit: "förfrågningar" },
+  { key: "matches", label: "Matchade hyresgäster", value: "0", delta: "0", deltaTone: "flat", meta: "Ingen data", unit: "matchningar" }
 ];
 
 const kpiSparklineSeries = {
-  active: [18, 19, 20, 21, 21, 22, 24],
-  views: [12800, 13600, 14500, 15200, 16400, 17100, 18420],
-  inquiries: [92, 105, 111, 118, 127, 134, 142],
-  matches: [18, 21, 24, 28, 30, 34, 37]
+  active: [],
+  views: [],
+  inquiries: [],
+  matches: []
 };
 
 const kpiAxisLabels = ["Mån", "Tis", "Ons", "Tor", "Fre", "Lör", "Sön"];
 
 const chartSeries = {
-  "7d": [
-    { label: "Mån", views: 420, inquiries: 24 },
-    { label: "Tis", views: 560, inquiries: 28 },
-    { label: "Ons", views: 490, inquiries: 23 },
-    { label: "Tor", views: 720, inquiries: 31 },
-    { label: "Fre", views: 680, inquiries: 29 },
-    { label: "Lör", views: 330, inquiries: 18 },
-    { label: "Sön", views: 290, inquiries: 16 }
-  ],
-  "30d": [
-    { label: "v1", views: 1260, inquiries: 62 },
-    { label: "v2", views: 1490, inquiries: 71 },
-    { label: "v3", views: 1380, inquiries: 64 },
-    { label: "v4", views: 1720, inquiries: 82 },
-    { label: "v5", views: 1830, inquiries: 88 },
-    { label: "v6", views: 1610, inquiries: 75 },
-    { label: "v7", views: 1520, inquiries: 69 }
-  ],
-  "90d": [
-    { label: "jan", views: 5120, inquiries: 244 },
-    { label: "feb", views: 5480, inquiries: 261 },
-    { label: "mar", views: 6010, inquiries: 289 },
-    { label: "apr", views: 6420, inquiries: 304 },
-    { label: "maj", views: 6240, inquiries: 296 },
-    { label: "jun", views: 6670, inquiries: 318 },
-    { label: "jul", views: 6510, inquiries: 309 }
-  ]
+  "7d": [],
+  "30d": [],
+  "90d": []
 };
 
-const distributionData = [
-  { key: "kontor", name: "Kontor", value: 42, color: "#0f1930" },
-  { key: "butik", name: "Butik", value: 28, color: "#476a99" },
-  { key: "lager", name: "Lager", value: 18, color: "#7ea1cc" },
-  { key: "ovrigt", name: "Övrigt", value: 12, color: "#cad9ec" }
-];
+const distributionData = [];
 
-const districtPerformance = [
-  { district: "Södermalm", views: 3240, inquiries: 44 },
-  { district: "Östermalm", views: 2680, inquiries: 33 },
-  { district: "Kista", views: 1420, inquiries: 19 },
-  { district: "Vasastan", views: 2980, inquiries: 38 },
-  { district: "Norrmalm", views: 3560, inquiries: 52 }
-];
+const districtPerformance = [];
 
-const funnelData = [
-  { stage: "Visningar", count: 18420, conversion: 100 },
-  { stage: "Matchade hyresgäster", count: 2140, conversion: 11.6 },
-  { stage: "Kontaktförfrågningar", count: 742, conversion: 4.0 },
-  { stage: "Bokade visningar", count: 206, conversion: 1.1 },
-  { stage: "Signerat avtal", count: 41, conversion: 0.2 }
-];
+const funnelData = [];
 
-const brokerPerformanceRadar = [
-  { metric: "Svarstid", anna: 88, erik: 71, maria: 92 },
-  { metric: "Förfrågningar", anna: 82, erik: 69, maria: 77 },
-  { metric: "Visningar", anna: 76, erik: 84, maria: 73 },
-  { metric: "Matchgrad", anna: 81, erik: 74, maria: 87 },
-  { metric: "Publiceringstakt", anna: 79, erik: 66, maria: 83 }
-];
+const brokerPerformanceRadar = [];
 
-const segmentTrend = [
-  { month: "Jan", kontor: 31, butik: 22, lager: 16 },
-  { month: "Feb", kontor: 35, butik: 24, lager: 18 },
-  { month: "Mar", kontor: 37, butik: 26, lager: 17 },
-  { month: "Apr", kontor: 40, butik: 27, lager: 19 },
-  { month: "Maj", kontor: 38, butik: 29, lager: 20 },
-  { month: "Jun", kontor: 42, butik: 30, lager: 21 }
-];
+const segmentTrend = [];
 
-const weeklyHeatmap = [
-  { day: "Mån", slots: [42, 56, 61, 48] },
-  { day: "Tis", slots: [45, 62, 68, 51] },
-  { day: "Ons", slots: [39, 58, 64, 49] },
-  { day: "Tor", slots: [52, 70, 76, 57] },
-  { day: "Fre", slots: [49, 66, 72, 54] },
-  { day: "Lör", slots: [24, 32, 36, 28] },
-  { day: "Sön", slots: [19, 25, 29, 22] }
-];
+const weeklyHeatmap = [];
 
 const statisticsSectionLinks = [
   { key: "kpi", id: "stats-kpi", label: "KPI-översikt", moduleKey: "kpi" },
@@ -227,416 +167,145 @@ const statisticsSectionLinks = [
   { key: "extended", id: "stats-extended", label: "Fördjupade nyckeltal", moduleKey: "extended" }
 ];
 
-const extendedStatCards = [
-  {
-    id: "occupancy",
-    label: "Beläggningsgrad",
-    value: "86%",
-    delta: "+2.1%",
-    meta: "mot förra månaden",
-    visualType: "gauge",
-    visual: { value: 86, target: 90, footer: "Mål 90%" }
-  },
-  {
-    id: "vacancy_days",
-    label: "Vakansdagar",
-    value: "19",
-    delta: "-3 dagar",
-    meta: "snitt per annons",
-    visualType: "sparkline",
-    visual: { data: [29, 27, 25, 24, 23, 21, 19], labels: ["v1", "v7"], direction: "down" }
-  },
-  {
-    id: "cost_per_inquiry",
-    label: "Kostnad per förfrågan",
-    value: "148 kr",
-    delta: "-12 kr",
-    meta: "marknadseffektivitet",
-    visualType: "sparkline",
-    visual: { data: [176, 171, 168, 162, 159, 154, 148], labels: ["jan", "nu"], direction: "down" }
-  },
-  {
-    id: "lead_to_viewing",
-    label: "Lead → Visning",
-    value: "27.8%",
-    delta: "+1.9%",
-    meta: "konverteringsgrad",
-    visualType: "funnel",
-    visual: {
-      steps: [
-        { label: "Lead", value: 100 },
-        { label: "Kval", value: 61 },
-        { label: "Visning", value: 27.8 }
-      ]
-    }
-  },
-  {
-    id: "viewing_to_deal",
-    label: "Visning → Avtal",
-    value: "19.9%",
-    delta: "+0.8%",
-    meta: "stängningsgrad",
-    visualType: "funnel",
-    visual: {
-      steps: [
-        { label: "Visning", value: 100 },
-        { label: "LOI", value: 46 },
-        { label: "Avtal", value: 19.9 }
-      ]
-    }
-  },
-  {
-    id: "avg_rent_sqm",
-    label: "Genomsnittlig hyra / m²",
-    value: "3 420 kr",
-    delta: "+4.5%",
-    meta: "årstakt",
-    visualType: "bars",
-    visual: {
-      items: [
-        { label: "CBD", value: 92 },
-        { label: "Innerstad", value: 78, active: true },
-        { label: "Närförort", value: 58 },
-        { label: "Ytterläge", value: 41 }
-      ]
-    }
-  },
-  {
-    id: "revenue_potential",
-    label: "Intäktspotential",
-    value: "2.1 Mkr/mån",
-    delta: "+0.2 Mkr",
-    meta: "aktiva annonser",
-    visualType: "sparkline",
-    visual: { data: [1.5, 1.6, 1.65, 1.78, 1.84, 1.97, 2.1], labels: ["jan", "jul"], direction: "up" }
-  },
-  {
-    id: "time_to_publish",
-    label: "Tid till publicering",
-    value: "1.8 dagar",
-    delta: "-0.4 dagar",
-    meta: "från utkast till live",
-    visualType: "bars",
-    visual: {
-      items: [
-        { label: "Utkast", value: 100 },
-        { label: "Media", value: 74 },
-        { label: "QC", value: 38 },
-        { label: "Live", value: 18, active: true }
-      ]
-    }
-  },
-  {
-    id: "verified_inquiries",
-    label: "Verifierade förfrågningar",
-    value: "73%",
-    delta: "+5%",
-    meta: "andel av totalen",
-    visualType: "gauge",
-    visual: { value: 73, target: 80, footer: "27% behöver manuell granskning" }
-  },
-  {
-    id: "response_24h",
-    label: "Svar inom 24h",
-    value: "91%",
-    delta: "+4%",
-    meta: "SLA-uppfyllnad",
-    visualType: "gauge",
-    visual: { value: 91, target: 95, footer: "SLA 95%" }
-  },
-  {
-    id: "viewing_reject_rate",
-    label: "Avvisningsgrad visningar",
-    value: "12%",
-    delta: "-2%",
-    meta: "kvalitetsutfall",
-    visualType: "gauge",
-    visual: { value: 12, target: 10, inverse: true, footer: "Lägre är bättre" }
-  },
-  {
-    id: "top_district",
-    label: "Toppområde denna månad",
-    value: "Norrmalm",
-    delta: "+18%",
-    meta: "högst efterfrågan",
-    visualType: "leaderboard",
-    visual: {
-      items: [
-        { label: "Norrmalm", value: 100, active: true },
-        { label: "Södermalm", value: 86 },
-        { label: "Vasastan", value: 74 },
-        { label: "Östermalm", value: 61 }
-      ]
-    }
-  }
-];
+const extendedStatCards = [];
 
-const activeListings = [
-  {
-    id: "adm-listing-1",
-    title: "Kontorslokal Södermalm",
-    image: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=240&h=160&q=80",
-    district: "Södermalm",
-    size: 248,
-    priceMonthly: 48500,
-    status: "Aktiv",
-    views: 1240,
-    inquiries: 18
-  },
-  {
-    id: "adm-listing-2",
-    title: "Butikslokal Östermalm",
-    image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=240&h=160&q=80",
-    district: "Östermalm",
-    size: 95,
-    priceMonthly: 32000,
-    status: "Aktiv",
-    views: 890,
-    inquiries: 11
-  },
-  {
-    id: "adm-listing-3",
-    title: "Lagerlokal Kista",
-    image: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=240&h=160&q=80",
-    district: "Kista",
-    size: 520,
-    priceMonthly: 62000,
-    status: "Väntande",
-    views: 340,
-    inquiries: 4
-  },
-  {
-    id: "adm-listing-4",
-    title: "Showroom Vasastan",
-    image: "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=240&h=160&q=80",
-    district: "Vasastan",
-    size: 180,
-    priceMonthly: 54000,
-    status: "Aktiv",
-    views: 1580,
-    inquiries: 26
-  },
-  {
-    id: "adm-listing-5",
-    title: "Kontor Norrmalm",
-    image: "https://images.unsplash.com/photo-1497215842964-222b430dc094?auto=format&fit=crop&w=240&h=160&q=80",
-    district: "Norrmalm",
-    size: 312,
-    priceMonthly: 72000,
-    status: "Utkast",
-    views: 0,
-    inquiries: 0
-  }
-];
+const activeListings = [];
 
-const adminNotifications = [
-  {
-    id: "admin-notification-1",
-    title: "Ny förfrågan på Kontorslokal Södermalm",
-    body: "En ny hyresgäst har skickat in en förfrågan och väntar på återkoppling från teamet.",
-    time: "12 min sedan",
-    tone: "new"
-  },
-  {
-    id: "admin-notification-2",
-    title: "Showroom Vasastan publicerad",
-    body: "Annonsen är nu live och har börjat samla visningar i sökflödet.",
-    time: "58 min sedan",
-    tone: "live"
-  },
-  {
-    id: "admin-notification-3",
-    title: "Anna Lind svarade på 6 förfrågningar",
-    body: "Mäklarteamet har hög aktivitet idag. Sex förfrågningar markerades som hanterade.",
-    time: "3h sedan",
-    tone: "activity"
-  }
-];
+function companyNameForAdmin(user) {
+  return (
+    user?.profile?.legalEntity ||
+    user?.profile?.companyName ||
+    user?.profile?.company ||
+    user?.profile?.organizationName ||
+    "Ditt bolag"
+  );
+}
 
-const activityItems = [
-  { id: "a1", type: "inquiry", text: "Ny förfrågan på Kontorslokal Södermalm", timestamp: "12 min sedan" },
-  { id: "a2", type: "views", text: "48 nya visningar senaste timmen", timestamp: "1h sedan" },
-  { id: "a3", type: "listing", text: "Showroom Vasastan publicerad", timestamp: "3h sedan" },
-  { id: "a4", type: "team", text: "Anna Lind svarade på 6 förfrågningar", timestamp: "5h sedan" }
-];
+function adminStatusLabel(status) {
+  if (status === "active") return "Aktiv";
+  if (status === "pending") return "Väntande";
+  return "Utkast";
+}
 
-const brokerTeam = [
-  { id: "b1", name: "Anna Lind", email: "anna@nordicestate.se", initials: "A", listings: 14, inquiries: 48, response: "2h" },
-  { id: "b2", name: "Erik Ström", email: "erik@nordicestate.se", initials: "E", listings: 9, inquiries: 31, response: "4h" },
-  { id: "b3", name: "Maria Holm", email: "maria@nordicestate.se", initials: "M", listings: 11, inquiries: 42, response: "1h" }
-];
+function adminListingFromListing(listing, app) {
+  const listingLeads = Array.isArray(app?.leads)
+    ? app.leads.filter((lead) => lead.listingId === listing.id || lead.listing?.id === listing.id)
+    : [];
 
-const matchedRenters = [
-  {
-    id: "r1",
-    name: "Elin Andersson",
-    company: "Nordic Product Studio AB",
-    initials: "EA",
-    district: "Södermalm",
-    teamSize: "18 personer",
-    budget: "52 000 kr/mån",
-    preferredType: "Kontor",
-    matchListingId: "adm-listing-1",
-    score: 94,
-    matchCriteria: [
-      { label: "Lokaltyp", value: "Kontor", status: "match" },
-      { label: "Område", value: "Södermalm", status: "match" },
-      { label: "Yta", value: "230-280 m²", status: "match" },
-      { label: "Budget", value: "upp till 52 000 kr/mån", status: "match" }
-    ]
-  },
-  {
-    id: "r2",
-    name: "Johan Berg",
-    company: "Urban Retail Group",
-    initials: "JB",
-    district: "Östermalm",
-    teamSize: "7 personer",
-    budget: "35 000 kr/mån",
-    preferredType: "Butik",
-    matchListingId: "adm-listing-2",
-    score: 89,
-    matchCriteria: [
-      { label: "Lokaltyp", value: "Butik", status: "match" },
-      { label: "Område", value: "Östermalm", status: "match" },
-      { label: "Yta", value: "90-120 m²", status: "match" },
-      { label: "Budget", value: "upp till 35 000 kr/mån", status: "partial" }
-    ]
-  },
-  {
-    id: "r3",
-    name: "Sara Ekholm",
-    company: "Logistikpartner Sverige",
-    initials: "SE",
-    district: "Kista",
-    teamSize: "24 personer",
-    budget: "70 000 kr/mån",
-    preferredType: "Lager",
-    matchListingId: "adm-listing-3",
-    score: 86,
-    matchCriteria: [
-      { label: "Lokaltyp", value: "Lager", status: "match" },
-      { label: "Område", value: "Kista", status: "match" },
-      { label: "Yta", value: "450-600 m²", status: "partial" },
-      { label: "Budget", value: "upp till 70 000 kr/mån", status: "match" }
-    ]
-  }
-];
+  return {
+    id: listing.id,
+    title: listing.title || "Namnlös annons",
+    image: listing.image || listing.images?.[0] || "/object-images/object-1.jpeg",
+    district: listing.district || "-",
+    type: listing.type || "Övrigt",
+    size: listing.sizeSqm || listing.size || 0,
+    priceMonthly: listing.priceMonthly || 0,
+    status: adminStatusLabel(listing.status),
+    views: listing.views || 0,
+    inquiries: listing.inquiries || listingLeads.length || 0,
+    ownerId: listing.ownerId || "",
+    responsible: listing.advertiserName || "Ej tilldelad"
+  };
+}
 
-const adminInquiryThreads = [
-  {
-    id: "iq-1",
-    renterId: "r1",
-    listingId: "adm-listing-1",
-    status: "Ny",
-    priority: "Hög",
-    receivedAt: "12 min sedan",
-    assignedBroker: "Anna Lind",
-    unreadCount: 2,
-    stage: "Visning att boka",
-    messages: [
-      {
-        id: "iq-1-m1",
-        sender: "renter",
-        text: "Hej! Lokalen på Södermalm ser väldigt rätt ut för vårt team. Vi vill gärna boka en visning nästa vecka, helst tisdag förmiddag om det går.",
-        timestamp: "09:12"
-      },
-      {
-        id: "iq-1-m2",
-        sender: "renter",
-        text: "Vi är 18 personer och behöver kunna flytta in redan i juni. Finns det möjlighet att ta en snabb digital avstämning innan vi bokar in platsbesök?",
-        timestamp: "09:18"
-      }
-    ]
-  },
-  {
-    id: "iq-2",
-    renterId: "r2",
-    listingId: "adm-listing-2",
-    status: "Pågående",
-    priority: "Medel",
-    receivedAt: "1h sedan",
-    assignedBroker: "Erik Ström",
-    unreadCount: 0,
-    stage: "Dokumentation",
-    messages: [
-      {
-        id: "iq-2-m1",
-        sender: "renter",
-        text: "Hej, butiken på Östermalm är intressant. Kan ni skicka planritning och lite mer info om skyltläge och bindningstid?",
-        timestamp: "13:06"
-      },
-      {
-        id: "iq-2-m2",
-        sender: "admin",
-        text: "Absolut. Jag plockar fram planritning och villkor från förvaltaren nu. Jag återkommer inom kort med underlaget.",
-        timestamp: "13:24"
-      },
-      {
-        id: "iq-2-m3",
-        sender: "renter",
-        text: "Perfekt. Om ni även har ungefärlig driftkostnad per månad vore det hjälpsamt för vårt beslutsunderlag.",
-        timestamp: "13:41"
-      }
-    ]
-  },
-  {
-    id: "iq-3",
-    renterId: "r3",
-    listingId: "adm-listing-3",
-    status: "Besvarad",
-    priority: "Låg",
-    receivedAt: "3h sedan",
-    assignedBroker: "Maria Holm",
-    unreadCount: 0,
-    stage: "Timing att kvalificera",
-    messages: [
-      {
-        id: "iq-3-m1",
-        sender: "renter",
-        text: "Lokalen i Kista matchar oss bra storleksmässigt. Intresse finns, men vi behöver inflyttning först i september. Är det möjligt att hålla dialogen varm tills dess?",
-        timestamp: "10:02"
-      },
-      {
-        id: "iq-3-m2",
-        sender: "admin",
-        text: "Det borde vara möjligt. Jag behöver bara stämma tillgänglighet och om nuvarande hyresgäst lämnar enligt plan innan jag kan lova något.",
-        timestamp: "10:26"
-      }
-    ]
-  },
-  {
-    id: "iq-4",
-    renterId: "r1",
-    listingId: "adm-listing-4",
-    status: "Pågående",
-    priority: "Hög",
-    receivedAt: "5h sedan",
-    assignedBroker: "Anna Lind",
-    unreadCount: 1,
-    stage: "Krav att klargöra",
-    messages: [
-      {
-        id: "iq-4-m1",
-        sender: "renter",
-        text: "Showroomet i Vasastan känns relevant för oss. Hur ser det ut med lastintag, parkering för kunder och möjlighet att göra mindre anpassningar i entrén?",
-        timestamp: "08:10"
-      },
-      {
-        id: "iq-4-m2",
-        sender: "admin",
-        text: "Bra frågor. Jag har bekräftat att mindre anpassningar brukar gå att godkänna, men jag inväntar exakt besked om lastintag och kundparkering.",
-        timestamp: "08:42"
-      },
-      {
-        id: "iq-4-m3",
-        sender: "renter",
-        text: "Toppen. Skicka gärna exempel på tidigare anpassningar om ni har, så kan vi avgöra om lokalen är värd ett nästa möte.",
-        timestamp: "08:57"
-      }
-    ]
-  }
-];
+function ownedAdminListings(app) {
+  const userId = app?.user?.id;
+  const companyId = app?.adminCompany?.id || app?.user?.profile?.companyId;
+  const activeBrokerIds = new Set(
+    (Array.isArray(app?.companyBrokers) ? app.companyBrokers : [])
+      .filter((broker) => broker.status === "active")
+      .map((broker) => broker.userId)
+      .filter(Boolean)
+  );
+  if (!userId) return [];
+  return (app?.listings || [])
+    .filter((listing) => (
+      listing.ownerId === userId
+      || (companyId && listing.companyId === companyId)
+      || activeBrokerIds.has(listing.ownerId)
+    ))
+    .map((listing) => adminListingFromListing(listing, app));
+}
+
+function buildAdminStats(app) {
+  const listings = ownedAdminListings(app);
+  const activeListingsCount = listings.filter((listing) => listing.status === "Aktiv").length;
+  const totalViews = listings.reduce((sum, listing) => sum + Number(listing.views || 0), 0);
+  const totalInquiries = listings.reduce((sum, listing) => sum + Number(listing.inquiries || 0), 0);
+  const leadCount = Array.isArray(app?.leads) ? app.leads.length : 0;
+  const hasData = listings.length > 0 || totalViews > 0 || totalInquiries > 0 || leadCount > 0;
+  const cards = [
+    { key: "active", label: "Aktiva annonser", value: String(activeListingsCount), delta: "0", deltaTone: "flat", meta: hasData ? "Faktisk data" : "Ingen data", unit: "annonser" },
+    { key: "views", label: "Visningar (30d)", value: totalViews.toLocaleString("sv-SE"), delta: "0", deltaTone: "flat", meta: totalViews > 0 ? "Faktisk data" : "Ingen data", unit: "visningar" },
+    { key: "inquiries", label: "Förfrågningar", value: totalInquiries.toLocaleString("sv-SE"), delta: "0", deltaTone: "flat", meta: totalInquiries > 0 ? "Faktisk data" : "Ingen data", unit: "förfrågningar" },
+    { key: "matches", label: "Matchade hyresgäster", value: String(leadCount), delta: "0", deltaTone: "flat", meta: leadCount > 0 ? "Faktisk data" : "Ingen data", unit: "matchningar" }
+  ];
+  const sparklineSeries = {
+    active: activeListingsCount > 0 ? [activeListingsCount] : [],
+    views: totalViews > 0 ? [totalViews] : [],
+    inquiries: totalInquiries > 0 ? [totalInquiries] : [],
+    matches: leadCount > 0 ? [leadCount] : []
+  };
+  const currentSeries = totalViews > 0 || totalInquiries > 0
+    ? [{ label: "Nu", views: totalViews, inquiries: totalInquiries }]
+    : [];
+  const typeTotals = new Map();
+  listings.forEach((listing) => {
+    const type = listing.type || "Övrigt";
+    typeTotals.set(type, (typeTotals.get(type) || 0) + 1);
+  });
+  const colors = ["#0b0a0e", "#476a99", "#7ea1cc", "#cad9ec"];
+  const distribution = Array.from(typeTotals.entries()).map(([name, value], index) => ({
+    key: name.toLowerCase(),
+    name,
+    value,
+    color: colors[index % colors.length]
+  }));
+  const districtTotals = new Map();
+  listings.forEach((listing) => {
+    const district = listing.district || "-";
+    const current = districtTotals.get(district) || { district, views: 0, inquiries: 0 };
+    current.views += Number(listing.views || 0);
+    current.inquiries += Number(listing.inquiries || 0);
+    districtTotals.set(district, current);
+  });
+
+  return {
+    cards,
+    sparklineSeries,
+    chartSeries: { "7d": currentSeries, "30d": currentSeries, "90d": currentSeries },
+    distributionData: distribution,
+    districtPerformance: Array.from(districtTotals.values()).filter((item) => item.views > 0 || item.inquiries > 0)
+  };
+}
+
+function countAdminNotifications(app) {
+  const backendNotifications = (Array.isArray(app?.notifications) ? app.notifications : [])
+    .filter((item) => item.status !== "handled");
+  const backendDedupeKeys = new Set(
+    backendNotifications.map((item) => (
+      item.type === "broker_verification_requested" && item.metadata?.brokerUserId
+        ? `broker-request-${item.metadata.brokerUserId}-${item.metadata.companyId || ""}`
+        : `notification-${item.id}`
+    ))
+  );
+  const pendingBrokerCount = (Array.isArray(app?.companyBrokers) ? app.companyBrokers : [])
+    .filter((broker) => broker.status === "pending")
+    .filter((broker) => !backendDedupeKeys.has(`broker-request-${broker.userId}-${broker.companyId || ""}`))
+    .length;
+
+  return backendNotifications.length + pendingBrokerCount;
+}
+
+const adminNotifications = [];
+
+const activityItems = [];
+
+const brokerTeam = [];
+
+const matchedRenters = [];
+
+const adminInquiryThreads = [];
 
 function sectionFromPath(pathname) {
   const match = pathname.match(/^\/(?:app\/)?admin\/([^/?#]+)/);
@@ -712,27 +381,53 @@ function moveInSortValue(renter) {
   return 12;
 }
 
-function buildAdminLeadRows() {
-  // Intended real source: interaction events for inquiries, favorites, and repeated listing visits.
-  // Current demo data has explicit inquiry threads only, so leads are hydrated from those threads.
-  return adminInquiryThreads
-    .map((inquiry, index) => {
-      const renter = matchedRenters.find((item) => item.id === inquiry.renterId);
-      const listing = activeListings.find((item) => item.id === inquiry.listingId);
-      if (!renter || !listing) return null;
+function initialsForAdminLead(value) {
+  return String(value || "??")
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase() || "??";
+}
+
+function relativeAdminTime(value) {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return "Nyss";
+  const diffMs = Date.now() - parsed.getTime();
+  const diffMinutes = Math.max(0, Math.round(diffMs / 60000));
+  if (diffMinutes < 1) return "Nyss";
+  if (diffMinutes < 60) return `${diffMinutes} min sedan`;
+  const diffHours = Math.round(diffMinutes / 60);
+  if (diffHours < 24) return `${diffHours}h sedan`;
+  return parsed.toLocaleDateString("sv-SE", { month: "short", day: "numeric" });
+}
+
+function buildAdminLeadRows(app) {
+  return (Array.isArray(app?.leads) ? app.leads : [])
+    .map((lead, index) => {
+      const renterName = lead.renter?.name || lead.renter?.email || "Hyresgäst";
+      const listing = lead.listing || {};
       return {
-        id: inquiry.id,
-        inquiryId: inquiry.id,
-        renter,
-        listing,
-        interest: "Förfrågan",
-        score: renter.score,
-        time: inquiry.receivedAt,
-        isUnread: inquiry.unreadCount > 0 || inquiry.status === "Ny",
+        id: lead.id,
+        inquiryId: "",
+        renter: {
+          id: lead.renter?.id || lead.renterId,
+          name: renterName,
+          company: lead.renter?.profile?.companyName || lead.renter?.profile?.legalEntity || lead.renter?.email || "Hyresgäst",
+          initials: initialsForAdminLead(renterName)
+        },
+        listing: {
+          id: listing.id || lead.listingId,
+          title: listing.title || "Namnlös annons"
+        },
+        interest: lead.status || "Förfrågan",
+        score: Number(lead.fitScore || 0),
+        time: relativeAdminTime(lead.createdAt),
+        isUnread: String(lead.status || "").toLowerCase() === "ny",
         sortOrder: index
       };
     })
-    .filter(Boolean)
     .sort((a, b) => a.sortOrder - b.sortOrder);
 }
 
@@ -749,7 +444,7 @@ function openLeadConversation(app, lead) {
     return;
   }
 
-  sendToBroker(app, lead.renter, lead.listing);
+  navigateTo("/app/admin/leads");
 }
 
 function latestMessageForInquiry(inquiry) {
@@ -871,7 +566,7 @@ function ExtendedMetricSparkline({ data = [], labels = [], direction = "up" }) {
     return `${x},${y}`;
   }).join(" ");
   const areaPoints = `0,100 ${points} 100,100`;
-  const stroke = direction === "down" ? "#0f766e" : "#0f1930";
+  const stroke = direction === "down" ? "#0f766e" : "#0b0a0e";
   const fill = direction === "down" ? "rgba(15,118,110,0.16)" : "rgba(15,25,48,0.14)";
 
   return (
@@ -909,17 +604,17 @@ function ExtendedMetricGauge({ value = 0, target, inverse = false, footer }) {
           <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-400">
             {inverse ? "Risknivå" : "Måluppfyllnad"}
           </p>
-          <p className="mt-1 text-2xl font-semibold leading-none text-[#0f1930]">{normalized}%</p>
+          <p className="mt-1 text-2xl font-semibold leading-none text-[#0b0a0e]">{normalized}%</p>
         </div>
         {targetValue !== null ? (
-          <div className="rounded-full border border-black/10 bg-[#fffffe] px-2 py-1 text-[10px] font-semibold text-ink-600">
+          <div className="rounded-full border border-black/10 bg-[#ffffff] px-2 py-1 text-[10px] font-semibold text-ink-600">
             mål {targetValue}%
           </div>
         ) : null}
       </div>
       <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-[#dde7eb]">
         <div
-          className={`h-full rounded-full ${inverse ? "bg-[#0f766e]" : "bg-[#0f1930]"}`}
+          className={`h-full rounded-full ${inverse ? "bg-[#0f766e]" : "bg-[#0b0a0e]"}`}
           style={{ width: `${fillWidth}%` }}
         />
       </div>
@@ -941,7 +636,7 @@ function ExtendedMetricFunnel({ steps = [] }) {
           </div>
           <div className="h-2.5 overflow-hidden rounded-full bg-[#dde7eb]">
             <div
-              className="h-full rounded-full bg-[#0f1930]"
+              className="h-full rounded-full bg-[#0b0a0e]"
               style={{
                 width: `${Math.max(step.value, 12)}%`,
                 opacity: 1 - index * 0.18
@@ -963,12 +658,12 @@ function ExtendedMetricBars({ items = [], compact = false }) {
         {items.map((item) => (
           <div key={item.label}>
             <div className="mb-1 flex items-center justify-between text-[11px]">
-              <span className={`font-semibold ${item.active ? "text-[#0f1930]" : "text-ink-600"}`}>{item.label}</span>
+              <span className={`font-semibold ${item.active ? "text-[#0b0a0e]" : "text-ink-600"}`}>{item.label}</span>
               <span className="text-ink-400">{item.value}</span>
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-[#dde7eb]">
               <div
-                className={`h-full rounded-full ${item.active ? "bg-[#0f1930]" : "bg-[#7ea1cc]"}`}
+                className={`h-full rounded-full ${item.active ? "bg-[#0b0a0e]" : "bg-[#7ea1cc]"}`}
                 style={{ width: `${Math.max(item.value, 10)}%`, opacity: item.active ? 1 : 0.8 }}
               />
             </div>
@@ -999,11 +694,11 @@ function ExtendedStatCard({ item }) {
   }
 
   return (
-    <article className="rounded-[28px] border border-black/10 bg-[#fffffe] p-4 shadow-[0_12px_30px_rgba(15,25,48,0.04)]">
+    <article className="rounded-[28px] border border-black/10 bg-[#ffffff] p-4 shadow-[0_12px_30px_rgba(15,25,48,0.04)]">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-[12px] font-semibold text-ink-600">{item.label}</p>
-          <p className="mt-2 text-[30px] font-semibold leading-none tracking-[-0.04em] text-[#0f1930]">{item.value}</p>
+          <p className="mt-2 text-[30px] font-semibold leading-none tracking-[-0.04em] text-[#0b0a0e]">{item.value}</p>
         </div>
         <span className="shrink-0 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
           {item.delta}
@@ -1015,17 +710,17 @@ function ExtendedStatCard({ item }) {
   );
 }
 
-function KpiCardsSection({ showMatchLink = false } = {}) {
+function KpiCardsSection({ showMatchLink = false, cards = kpiCards, sparklineSeries = kpiSparklineSeries } = {}) {
   return (
     <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-      {kpiCards.map((card) => {
+      {cards.map((card) => {
         if (card.key === "matches") {
           return (
             <article key="upgrade" className="surface p-4">
               <div className="flex h-full flex-col justify-between gap-4">
                 <div className="min-w-0">
                   <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">Uppgradera</p>
-                  <h2 className="mt-2 text-lg font-semibold leading-tight text-[#0f1930]">
+                  <h2 className="mt-2 text-lg font-semibold leading-tight text-[#0b0a0e]">
                     <span className="w-fit rounded-xl bg-[#f3d571] px-2 py-1 text-[#352922]">
                       Lokalflöde Business+
                     </span>
@@ -1040,7 +735,7 @@ function KpiCardsSection({ showMatchLink = false } = {}) {
           );
         }
 
-        const series = (kpiSparklineSeries[card.key] || []).map((value, index) => ({
+        const series = (sparklineSeries[card.key] || []).map((value, index) => ({
           x: kpiAxisLabels[index] || `${index + 1}`,
           y: value
         }));
@@ -1052,11 +747,11 @@ function KpiCardsSection({ showMatchLink = false } = {}) {
                 {card.delta}
               </span>
             </div>
-            <p className="mt-3 text-[30px] font-semibold leading-none text-[#0f1930]">{card.value}</p>
+            <p className="mt-3 text-[30px] font-semibold leading-none text-[#0b0a0e]">{card.value}</p>
             {showMatchLink && card.key === "matches" ? (
               <button
                 type="button"
-                className="mt-2 min-h-0 p-0 text-xs font-semibold text-[#0f1930]"
+                className="mt-2 min-h-0 p-0 text-xs font-semibold text-[#0b0a0e]"
                 onClick={() => navigateTo("/app/admin/leads#matchningar")}
               >
                 ↗ Visa alla matchningar
@@ -1064,35 +759,41 @@ function KpiCardsSection({ showMatchLink = false } = {}) {
             ) : null}
             <p className="mt-2 text-xs text-ink-500">{card.meta}</p>
             <div className="mt-3 h-16">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={series} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id={`kpi-gradient-${card.key}`} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#0f1930" stopOpacity={0.22} />
-                      <stop offset="100%" stopColor="#0f1930" stopOpacity={0.03} />
-                    </linearGradient>
-                  </defs>
-                  <Area
-                    type="monotone"
-                    dataKey="y"
-                    stroke="#0f1930"
-                    strokeWidth={1.7}
-                    fill={`url(#kpi-gradient-${card.key})`}
-                    fillOpacity={1}
-                  />
-                  <Tooltip
-                    cursor={{ stroke: "#0f1930", strokeOpacity: 0.18, strokeWidth: 1 }}
-                    contentStyle={{
-                      borderRadius: "12px",
-                      border: "1px solid rgba(15,25,48,0.12)",
-                      background: "#fff",
-                      boxShadow: "0 8px 24px rgba(15,25,48,0.10)"
-                    }}
-                    labelFormatter={(label) => `X: ${label}`}
-                    formatter={(value) => [`Y: ${Number(value).toLocaleString("sv-SE")} ${card.unit}`, ""]}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+              {series.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={series} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id={`kpi-gradient-${card.key}`} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#0b0a0e" stopOpacity={0.22} />
+                        <stop offset="100%" stopColor="#0b0a0e" stopOpacity={0.03} />
+                      </linearGradient>
+                    </defs>
+                    <Area
+                      type="monotone"
+                      dataKey="y"
+                      stroke="#0b0a0e"
+                      strokeWidth={1.7}
+                      fill={`url(#kpi-gradient-${card.key})`}
+                      fillOpacity={1}
+                    />
+                    <Tooltip
+                      cursor={{ stroke: "#0b0a0e", strokeOpacity: 0.18, strokeWidth: 1 }}
+                      contentStyle={{
+                        borderRadius: "12px",
+                        border: "1px solid rgba(15,25,48,0.12)",
+                        background: "#fff",
+                        boxShadow: "0 8px 24px rgba(15,25,48,0.10)"
+                      }}
+                      labelFormatter={(label) => `X: ${label}`}
+                      formatter={(value) => [`Y: ${Number(value).toLocaleString("sv-SE")} ${card.unit}`, ""]}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="grid h-full place-items-center rounded-xl border border-dashed border-black/15 bg-[#fafafa] text-xs font-semibold text-ink-500">
+                  Ingen data
+                </div>
+              )}
             </div>
           </article>
         );
@@ -1108,17 +809,38 @@ function activityIcon(type) {
   return UsersGroupIcon;
 }
 
+function hasChartSeriesData(datasets) {
+  return Object.values(datasets || {}).some((items) => Array.isArray(items) && items.length > 0);
+}
+
+function NoDataPanel({ title = "Ingen data", subtitle, className = "" }) {
+  return (
+    <article className={["surface p-4 sm:p-5", className].filter(Boolean).join(" ")}>
+      <h3 className="text-lg font-semibold text-ink-900">Ingen data</h3>
+      {title && title !== "Ingen data" ? <p className="mt-1 text-sm text-ink-600">{title}</p> : null}
+      {subtitle ? <p className="mt-1 text-sm text-ink-500">{subtitle}</p> : null}
+      <div className="mt-4 grid h-[220px] place-items-center rounded-2xl border border-dashed border-black/15 bg-[#fafafa] text-sm font-semibold text-ink-500">
+        Ingen data
+      </div>
+    </article>
+  );
+}
+
 function WeeklyActivityHeatmap() {
+  if (weeklyHeatmap.length === 0) {
+    return <NoDataPanel title="Veckoaktivitet" />;
+  }
+
   const labels = ["06-10", "10-14", "14-18", "18-22"];
   const values = weeklyHeatmap.flatMap((row) => row.slots);
   const minValue = Math.min(...values);
   const maxValue = Math.max(...values);
   const range = maxValue - minValue || 1;
   const heatmapPalette = [
-    { bg: "#cad9ec", text: "#0f1930", border: "rgba(202, 217, 236, 0.9)" },
-    { bg: "#7ea1cc", text: "#0f1930", border: "rgba(126, 161, 204, 0.9)" },
+    { bg: "#cad9ec", text: "#0b0a0e", border: "rgba(202, 217, 236, 0.9)" },
+    { bg: "#7ea1cc", text: "#0b0a0e", border: "rgba(126, 161, 204, 0.9)" },
     { bg: "#476a99", text: "#ffffff", border: "rgba(71, 106, 153, 0.95)" },
-    { bg: "#0f1930", text: "#ffffff", border: "rgba(15, 25, 48, 0.95)" }
+    { bg: "#0b0a0e", text: "#ffffff", border: "rgba(15, 25, 48, 0.95)" }
   ];
 
   function heatmapCellStyle(value) {
@@ -1186,7 +908,7 @@ function WeeklyActivityHeatmap() {
   );
 }
 
-function AdminSidebar({ pathname, onNavigate, onLogout }) {
+function AdminSidebar({ pathname, onNavigate, onLogout, hasCompanyData = true, listingCount = 0, notificationCount = 0 }) {
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="px-4 pb-4 pt-4 sm:px-6 sm:pt-6">
@@ -1195,21 +917,26 @@ function AdminSidebar({ pathname, onNavigate, onLogout }) {
             const active = item.key === "oversikt"
               ? pathname === "/app/admin" || pathname === "/app/admin/"
               : routeMatches(pathname, item.path);
+            const badgeValue = item.key === "annonser" && hasCompanyData && listingCount > 0
+              ? listingCount
+              : item.key === "notifikationer" && notificationCount > 0
+                ? notificationCount
+                : null;
             return (
               <button
                 key={item.key}
                 type="button"
                 className={`menu-hover-row w-full px-3 py-2.5 text-left text-sm font-semibold transition ${
-                  active ? "bg-[#0f1930] text-white" : "text-ink-700 hover:bg-black/5"
+                  active ? "bg-[#0b0a0e] text-white" : "text-ink-700 hover:bg-black/5"
                 }`}
                 onClick={() => onNavigate(item.path)}
               >
                 <span className="flex items-center gap-2">
                   <item.Icon className="h-[18px] w-[18px] shrink-0" />
                   <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                  {item.badge ? (
-                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${active ? "bg-[#fffffe]/20 text-white" : "bg-black/10 text-ink-700"}`}>
-                      {item.badge}
+                  {badgeValue ? (
+                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${active ? "bg-[#ffffff]/20 text-white" : "bg-black/10 text-ink-700"}`}>
+                      {badgeValue}
                     </span>
                   ) : null}
                 </span>
@@ -1226,7 +953,7 @@ function AdminSidebar({ pathname, onNavigate, onLogout }) {
               type="button"
               className={`menu-hover-row w-full px-3 py-2.5 text-left text-sm font-semibold transition ${
                 routeMatches(pathname, "/app/admin/adminprofil")
-                  ? "bg-[#0f1930] text-white"
+                  ? "bg-[#0b0a0e] text-white"
                   : "text-ink-700 hover:bg-black/5"
               }`}
               onClick={() => onNavigate("/app/admin/adminprofil")}
@@ -1240,7 +967,7 @@ function AdminSidebar({ pathname, onNavigate, onLogout }) {
               type="button"
               className={`menu-hover-row w-full px-3 py-2.5 text-left text-sm font-semibold transition ${
                 routeMatches(pathname, "/app/admin/installningar")
-                  ? "bg-[#0f1930] text-white"
+                  ? "bg-[#0b0a0e] text-white"
                   : "text-ink-700 hover:bg-black/5"
               }`}
               onClick={() => onNavigate("/app/admin/installningar")}
@@ -1254,7 +981,7 @@ function AdminSidebar({ pathname, onNavigate, onLogout }) {
               type="button"
               className={`menu-hover-row w-full px-3 py-2.5 text-left text-sm font-semibold transition ${
                 routeMatches(pathname, "/app/admin/hjalp")
-                  ? "bg-[#0f1930] text-white"
+                  ? "bg-[#0b0a0e] text-white"
                   : "text-ink-700 hover:bg-black/5"
               }`}
               onClick={() => onNavigate("/app/admin/hjalp")}
@@ -1284,12 +1011,18 @@ function AdminSidebar({ pathname, onNavigate, onLogout }) {
   );
 }
 
-function AdminListingsPage() {
+function AdminListingsPage({ listings = [] }) {
   const [selectedStatus, setSelectedStatus] = useState("Alla");
   const statusFilters = ["Alla", "Aktiv", "Väntande", "Utkast"];
+  const listingRows = Array.isArray(listings) ? listings : [];
   const filteredListings = selectedStatus === "Alla"
-    ? activeListings
-    : activeListings.filter((item) => item.status === selectedStatus);
+    ? listingRows
+    : listingRows.filter((item) => item.status === selectedStatus);
+
+  function previewListing(listingId) {
+    if (typeof window === "undefined") return;
+    window.open(`/app/listings/${encodeURIComponent(listingId)}`, "_blank", "noopener,noreferrer");
+  }
 
   return (
     <div className="space-y-4">
@@ -1305,7 +1038,10 @@ function AdminListingsPage() {
               <FilterIcon className="mr-1.5 h-4 w-4" />
               Filter
             </button>
-            <button type="button" className="btn-primary px-4">+ Ny annons</button>
+            <button type="button" className="btn-primary px-4" onClick={() => navigateTo("/app/publish")}>
+              <PlusIcon className="mr-1.5 h-4 w-4" />
+              Ny annons
+            </button>
           </div>
         </div>
       </header>
@@ -1319,8 +1055,8 @@ function AdminListingsPage() {
               <div className="mt-3 flex flex-wrap gap-2">
                 {statusFilters.map((status) => {
                   const count = status === "Alla"
-                    ? activeListings.length
-                    : activeListings.filter((item) => item.status === status).length;
+                    ? listingRows.length
+                    : listingRows.filter((item) => item.status === status).length;
                   const isActive = selectedStatus === status;
                   return (
                     <button
@@ -1330,9 +1066,9 @@ function AdminListingsPage() {
                       className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-semibold transition ${
                         isActive
                           ? status === "Alla"
-                            ? "border-[#0f1930] bg-[#0f1930] text-white"
+                            ? "border-[#0b0a0e] bg-[#0b0a0e] text-white"
                             : statusClass(status)
-                          : "border-black/10 bg-[#fffffe] text-ink-700 hover:bg-black/5"
+                          : "border-black/10 bg-[#ffffff] text-ink-700 hover:bg-black/5"
                       }`}
                     >
                       <span className="font-medium">{status === "Alla" ? "Alla" : status === "Aktiv" ? "Aktiva" : status}</span>
@@ -1344,10 +1080,10 @@ function AdminListingsPage() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <button type="button" className="inline-flex h-9 w-9 min-h-0 items-center justify-center rounded-full border border-black/10 bg-[#fffffe] text-ink-700">
+              <button type="button" className="inline-flex h-9 w-9 min-h-0 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] text-ink-700">
                 <FilterIcon className="h-4 w-4" />
               </button>
-              <button type="button" className="inline-flex h-9 w-9 min-h-0 items-center justify-center rounded-full border border-black/10 bg-[#fffffe] text-ink-700">
+              <button type="button" className="inline-flex h-9 w-9 min-h-0 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] text-ink-700">
                 <SearchIcon className="h-4 w-4" />
               </button>
             </div>
@@ -1374,7 +1110,7 @@ function AdminListingsPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredListings.map((item, index) => (
+              {filteredListings.map((item) => (
                 <tr key={item.id} className="border-t border-black/10">
                   <td className="px-4 py-3.5 align-top sm:px-5">
                     <div className="flex items-center gap-3">
@@ -1391,12 +1127,19 @@ function AdminListingsPage() {
                   <td className="px-4 py-3.5 text-right font-semibold text-ink-800">{item.views.toLocaleString("sv-SE")}</td>
                   <td className="px-4 py-3.5 text-right font-semibold text-ink-800">{item.inquiries}</td>
                   <td className="px-4 py-3.5 text-xs text-ink-700">
-                    <span className="block truncate">{brokerTeam[index % brokerTeam.length]?.name}</span>
+                    <span className="block truncate">{item.responsible}</span>
                   </td>
                   <td className="px-4 py-3.5 text-right sm:px-5">
-                    <button type="button" className="inline-flex h-8 w-8 min-h-0 items-center justify-center rounded-full border border-transparent text-ink-600 hover:border-black/10 hover:bg-[#fffffe]">
-                      <MoreHorizontalIcon className="h-4 w-4" />
-                    </button>
+                    <div className="flex justify-end gap-1">
+                      <button
+                        type="button"
+                        className="inline-flex h-8 w-8 min-h-0 items-center justify-center rounded-full border border-transparent text-ink-600 hover:border-black/10 hover:bg-[#ffffff]"
+                        title="Förhandsgranska i nytt fönster"
+                        onClick={() => previewListing(item.id)}
+                      >
+                        <ExternalLinkIcon className="h-4 w-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -1421,7 +1164,37 @@ function notificationToneClass(tone) {
   return "border-black/10 bg-[#f7f7f7] text-ink-700";
 }
 
-function AdminNotificationsPage() {
+function AdminNotificationsPage({ app }) {
+  const [seenNotificationIds, setSeenNotificationIds] = useState([]);
+  const brokerRequestNotifications = (Array.isArray(app?.companyBrokers) ? app.companyBrokers : [])
+    .filter((broker) => broker.status === "pending")
+    .map((broker) => ({
+      id: `broker-request-${broker.userId}`,
+      dedupeKey: `broker-request-${broker.userId}-${broker.companyId || ""}`,
+      title: "Mäklarförfrågan",
+      body: broker.name || broker.email,
+      time: broker.requestedAt ? new Date(broker.requestedAt).toLocaleString("sv-SE", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "Nyss",
+      tone: "new",
+      actionPath: "/app/admin/maklare"
+    }));
+  const backendNotifications = (Array.isArray(app?.notifications) ? app.notifications : [])
+    .filter((item) => item.status !== "handled")
+    .map((item) => ({
+    id: item.id,
+    dedupeKey: item.type === "broker_verification_requested" && item.metadata?.brokerUserId
+      ? `broker-request-${item.metadata.brokerUserId}-${item.metadata.companyId || ""}`
+      : `notification-${item.id}`,
+    title: item.type === "broker_verification_requested" ? "Mäklarförfrågan" : item.title,
+    body: item.type === "broker_verification_requested"
+      ? String(item.body || "").replace(/^(.+?) vill bli verifierad.*$/, "$1").trim()
+      : item.body,
+    time: item.createdAt ? new Date(item.createdAt).toLocaleString("sv-SE", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "Nyss",
+    tone: item.status === "unread" ? "new" : "activity",
+    actionPath: item.type === "broker_verification_requested" ? "/app/admin/maklare" : "/app/admin/notifikationer"
+  }));
+  const notificationItems = [...brokerRequestNotifications, ...backendNotifications]
+    .filter((item, index, list) => list.findIndex((candidate) => candidate.dedupeKey === item.dedupeKey) === index);
+
   return (
     <div className="space-y-4">
       <header className="surface p-4 sm:p-5">
@@ -1432,47 +1205,163 @@ function AdminNotificationsPage() {
             <p className="mt-1 text-sm text-ink-600">Samlad vy för nya händelser, publiceringar och teamaktivitet.</p>
           </div>
           <span className="inline-flex items-center rounded-full border border-black/10 bg-[#f7f7f7] px-3 py-1 text-xs font-semibold text-ink-700">
-            {adminNotifications.length} nya
+            {notificationItems.length} nya
           </span>
         </div>
       </header>
 
-      <section className="surface p-4 sm:p-5">
-        <div className="space-y-3">
-          {adminNotifications.map((item) => (
-            <article key={item.id} className="rounded-2xl border border-black/10 bg-[#fffffe] p-4">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-sm font-semibold text-ink-900">{item.title}</p>
-                    <span className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${notificationToneClass(item.tone)}`}>
-                      {item.tone === "new" ? "Ny" : item.tone === "live" ? "Live" : "Aktivitet"}
-                    </span>
+      <section className="surface p-3 sm:p-4">
+        {notificationItems.length === 0 ? (
+          <div>
+            <p className="rounded-2xl border border-black/10 bg-[#fafafa] px-4 py-4 text-sm text-ink-600">
+              Inga notifikationer
+            </p>
+          </div>
+        ) : (
+          <div className="overflow-hidden rounded-2xl border border-black/10 bg-[#ffffff]">
+            <div className="divide-y divide-black/10">
+              {notificationItems.map((item) => (
+                <article
+                  key={item.id}
+                  className="cursor-pointer px-4 py-3.5 transition hover:bg-[#fafafa] sm:px-5"
+                  onClick={() => {
+                    setSeenNotificationIds((current) => Array.from(new Set([...current, item.id])));
+                    navigateTo(item.actionPath || "/app/admin/notifikationer");
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      setSeenNotificationIds((current) => Array.from(new Set([...current, item.id])));
+                      navigateTo(item.actionPath || "/app/admin/notifikationer");
+                    }
+                  }}
+                  tabIndex={0}
+                  aria-label={`Öppna notis: ${item.title}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className={`inline-flex h-2.5 w-2.5 shrink-0 rounded-full ${seenNotificationIds.includes(item.id) ? "bg-ink-300" : "bg-[#0b0a0e]"}`} />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex min-w-0 items-baseline gap-3">
+                        <p className="shrink-0 truncate text-sm font-semibold text-ink-900">{item.title}</p>
+                        <p className="min-w-0 flex-1 truncate text-sm leading-snug text-ink-600">{item.body}</p>
+                        <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap text-xs font-medium text-ink-500">
+                          {item.time}
+                          <ChevronRightIcon className="h-3.5 w-3.5 text-ink-500" />
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <p className="mt-2 max-w-3xl text-sm text-ink-600">{item.body}</p>
-                </div>
-                <span className="text-xs font-medium text-ink-500">{item.time}</span>
-              </div>
-            </article>
-          ))}
-        </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        )}
       </section>
     </div>
   );
 }
 
-function AdminBrokersPage() {
+function AdminBrokersPage({ app }) {
   const [inviteEmail, setInviteEmail] = useState("");
-  const [invitedBrokers, setInvitedBrokers] = useState(() =>
-    brokerTeam.map((broker) => ({
-      id: broker.id,
-      name: broker.name,
-      email: broker.email,
-      status: "Aktiv"
-    }))
-  );
+  const [pendingApprovalUserId, setPendingApprovalUserId] = useState("");
+  const [brokerManagerOpen, setBrokerManagerOpen] = useState(false);
+  const [activityOverlayOpen, setActivityOverlayOpen] = useState(false);
+  const [deleteBrokerCandidate, setDeleteBrokerCandidate] = useState(null);
+  const [deleteBrokerConfirmName, setDeleteBrokerConfirmName] = useState("");
+  const [selectedBrokerId, setSelectedBrokerId] = useState("");
+  const [brokerDraft, setBrokerDraft] = useState({ name: "", phone: "", fmiNumber: "" });
+  const [savingBrokerId, setSavingBrokerId] = useState("");
+  const [removingBrokerId, setRemovingBrokerId] = useState("");
+  const companyBrokers = Array.isArray(app?.companyBrokers) ? app.companyBrokers : [];
+  const pendingBrokerRequests = companyBrokers.filter((broker) => broker.status === "pending");
+  const activeBrokers = companyBrokers.filter((broker) => broker.status === "active");
+  const selectedBroker = activeBrokers.find((broker) => broker.userId === selectedBrokerId) || activeBrokers[0] || null;
 
   const inviteCode = useMemo(() => "BROKER-" + String(Math.floor(100000 + Math.random() * 900000)), []);
+  const formatRequestTime = (value) => {
+    if (!value) return "Nyss";
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return "Nyss";
+    return parsed.toLocaleString("sv-SE", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  };
+  const formatJoinedDate = (value) => {
+    if (!value) return "-";
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return "-";
+    return parsed.toLocaleDateString("sv-SE", { year: "numeric", month: "short", day: "numeric" });
+  };
+
+  async function approveBroker(userId) {
+    setPendingApprovalUserId(userId);
+    try {
+      await app?.approveBrokerRequest?.(userId);
+    } finally {
+      setPendingApprovalUserId("");
+    }
+  }
+
+  async function rejectBroker(userId) {
+    setPendingApprovalUserId(userId);
+    try {
+      await app?.rejectBrokerRequest?.(userId);
+    } finally {
+      setPendingApprovalUserId("");
+    }
+  }
+
+  function openBrokerManager(broker = activeBrokers[0]) {
+    const nextBroker = broker || null;
+    setSelectedBrokerId(nextBroker?.userId || "");
+    setBrokerDraft({
+      name: nextBroker?.name || "",
+      phone: nextBroker?.phone || "",
+      fmiNumber: nextBroker?.fmiNumber || ""
+    });
+    setBrokerManagerOpen(true);
+  }
+
+  function selectBrokerForEdit(broker) {
+    setSelectedBrokerId(broker.userId);
+    setBrokerDraft({
+      name: broker.name || "",
+      phone: broker.phone || "",
+      fmiNumber: broker.fmiNumber || ""
+    });
+  }
+
+  async function saveBrokerChanges(event) {
+    event.preventDefault();
+    if (!selectedBroker) return;
+    setSavingBrokerId(selectedBroker.userId);
+    try {
+      await app?.updateCompanyBroker?.(selectedBroker.userId, brokerDraft);
+    } finally {
+      setSavingBrokerId("");
+    }
+  }
+
+  function openDeleteBrokerConfirmation(broker) {
+    setDeleteBrokerCandidate(broker);
+    setDeleteBrokerConfirmName("");
+  }
+
+  async function removeBroker(broker = deleteBrokerCandidate) {
+    if (!broker) return;
+    setRemovingBrokerId(broker.userId);
+    try {
+      await app?.removeCompanyBroker?.(broker.userId);
+      const nextBroker = activeBrokers.find((item) => item.userId !== broker.userId) || null;
+      if (nextBroker) {
+        selectBrokerForEdit(nextBroker);
+      } else {
+        setBrokerManagerOpen(false);
+      }
+      setDeleteBrokerCandidate(null);
+      setDeleteBrokerConfirmName("");
+    } finally {
+      setRemovingBrokerId("");
+    }
+  }
 
   return (
     <div className="space-y-4">
@@ -1481,17 +1370,29 @@ function AdminBrokersPage() {
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Adminpanel</p>
             <h1 className="mt-1 text-2xl font-semibold text-ink-900">Mäklare</h1>
-            <p className="mt-1 text-sm text-ink-600">Teamöversikt med kapacitet, aktivitet och svarsfrekvens.</p>
+            <p className="mt-1 text-sm text-ink-600">
+              Godkänn mäklarförfrågningar och hantera aktiva mäklare för {app?.adminCompany?.name || "bolaget"}.
+            </p>
           </div>
         </div>
       </header>
 
-      <section className="grid gap-4 xl:grid-cols-2">
-        <article className="surface p-4 sm:p-5">
-          <h2 className="text-lg font-semibold text-ink-900">Inbjudna mäklare</h2>
-          <p className="mt-1 text-sm text-ink-600">Översikt över redan inbjudna och aktiva mäklare.</p>
-          <div className="mt-4 space-y-3">
-            {invitedBrokers.map((broker) => {
+      {pendingBrokerRequests.length > 0 ? (
+        <section className="surface p-4 sm:p-5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-semibold text-ink-900">Väntar på godkännande</h2>
+              <p className="mt-1 text-sm text-ink-600">
+                Mäklare som har begärt verifiering för {app?.adminCompany?.organizationNumber || "ert organisationsnummer"}.
+              </p>
+            </div>
+            <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
+              {pendingBrokerRequests.length} väntar
+            </span>
+          </div>
+
+          <div className="mt-4 grid gap-3">
+            {pendingBrokerRequests.map((broker) => {
               const initials = String(broker.name || broker.email || "AA")
                 .split(" ")
                 .filter(Boolean)
@@ -1499,33 +1400,58 @@ function AdminBrokersPage() {
                 .map((part) => part[0])
                 .join("")
                 .toUpperCase();
+              const isBusy = pendingApprovalUserId === broker.userId;
               return (
-                <div key={broker.id} className="flex items-center justify-between gap-3 rounded-2xl border border-black/10 bg-[#fffffe] px-3 py-2.5">
-                  <div className="flex min-w-0 items-center gap-2.5">
-                    <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#e6eefc] text-xs font-semibold text-[#2d4f83]">
-                      {initials}
-                    </span>
-                    <span className="min-w-0">
-                      <span className="block truncate text-sm font-semibold text-ink-900">{broker.name}</span>
-                      <span className="block truncate text-xs text-ink-600">{broker.email}</span>
-                    </span>
+                <article key={broker.id} className="rounded-2xl border border-black/10 bg-[#ffffff] p-4 shadow-[0_1px_0_rgba(15,25,48,0.03)]">
+                  <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <div className="flex min-w-0 items-start gap-3">
+                      <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#0b0a0e] text-xs font-semibold text-white">
+                        {initials}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-ink-900">{broker.name || broker.email}</p>
+                        <p className="mt-0.5 truncate text-xs text-ink-600">{broker.email}</p>
+                        <p className="mt-2 text-sm text-ink-700">
+                          Vill bli verifierad som mäklare för{" "}
+                          <span className="font-semibold text-[#0b0a0e]">{broker.companyName} ({broker.organizationNumber})</span>.
+                        </p>
+                        <p className="mt-1 text-xs text-ink-500">Skickad {formatRequestTime(broker.requestedAt)}</p>
+                      </div>
+                    </div>
+                    <div className="flex shrink-0 flex-wrap gap-2">
+                      <button
+                        type="button"
+                        className="btn-secondary min-h-0 px-4 py-2 text-sm"
+                        disabled={isBusy}
+                        onClick={() => rejectBroker(broker.userId)}
+                      >
+                        Avslå
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-primary min-h-0 px-4 py-2 text-sm"
+                        disabled={isBusy}
+                        onClick={() => approveBroker(broker.userId)}
+                      >
+                        {isBusy ? "Sparar..." : "Godkänn"}
+                      </button>
+                    </div>
                   </div>
-                  <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
-                    {broker.status}
-                  </span>
-                </div>
+                </article>
               );
             })}
           </div>
-        </article>
+        </section>
+      ) : null}
 
+      <section className="grid gap-4 xl:grid-cols-2">
         <article className="surface p-4 sm:p-5">
           <h2 className="text-lg font-semibold text-ink-900">Bjud in mäklare</h2>
           <p className="mt-1 text-sm text-ink-600">Använd samma inbjudningsflöde som onboarding, anpassat för adminpanelen.</p>
 
           <div className="mt-4 rounded-2xl border border-black/10 bg-[#fafafa] px-4 py-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Inbjudningskod</p>
-            <p className="mt-2 text-[1.2rem] font-semibold text-[#0f1930]">{inviteCode}</p>
+            <p className="mt-2 text-[1.2rem] font-semibold text-[#0b0a0e]">{inviteCode}</p>
             <p className="mt-1 text-sm text-ink-500">Dela med mäklare via e-post eller internt system.</p>
           </div>
 
@@ -1543,21 +1469,7 @@ function AdminBrokersPage() {
               onClick={() => {
                 const email = String(inviteEmail || "").trim();
                 if (!email) return;
-                const name = email
-                  .split("@")[0]
-                  .split(/[._-]/)
-                  .filter(Boolean)
-                  .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-                  .join(" ");
-                setInvitedBrokers((prev) => [
-                  {
-                    id: `invited-${Date.now()}`,
-                    name: name || "Ny mäklare",
-                    email,
-                    status: "Väntar"
-                  },
-                  ...prev
-                ]);
+                app?.pushToast?.("Inbjudningar är inte kopplade till e-post ännu. Använd verifieringsflödet tills mailutskick finns.", "info");
                 setInviteEmail("");
               }}
             >
@@ -1565,28 +1477,323 @@ function AdminBrokersPage() {
             </button>
           </div>
         </article>
+
+        <article className="surface p-4 sm:p-5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-semibold text-ink-900">Teamaktivitet</h2>
+              <p className="mt-1 text-sm text-ink-600">Senaste händelser relaterade till mäklarteamet.</p>
+            </div>
+            <button type="button" className="btn-secondary min-h-0 px-4 py-2 text-sm" onClick={() => setActivityOverlayOpen(true)}>
+              Visa all aktivitet
+            </button>
+          </div>
+          <ul className="mt-4 space-y-3">
+            {activityItems.filter((item) => item.type === "team" || item.type === "inquiry").slice(0, 4).map((item, index, list) => {
+              const Icon = activityIcon(item.type);
+              const hasNext = index < list.length - 1;
+              return (
+                <li key={item.id} className="relative pl-10">
+                  <span className="absolute left-0 top-0 inline-flex h-8 w-8 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] text-ink-700">
+                    <Icon className="h-4 w-4" />
+                  </span>
+                  {hasNext ? <span className="absolute left-[15px] top-8 h-[calc(100%+0.75rem)] w-px bg-black/10" /> : null}
+                  <p className="text-sm font-semibold text-ink-800">{item.text}</p>
+                  <p className="mt-0.5 text-xs text-ink-500">{item.timestamp}</p>
+                </li>
+              );
+            })}
+          </ul>
+        </article>
       </section>
 
-      <article className="surface p-4 sm:p-5">
-        <h2 className="text-lg font-semibold text-ink-900">Teamaktivitet</h2>
-        <p className="mt-1 text-sm text-ink-600">Senaste händelser relaterade till mäklarteamet.</p>
-        <ul className="mt-4 space-y-3">
-          {activityItems.filter((item) => item.type === "team" || item.type === "inquiry").map((item, index, list) => {
-            const Icon = activityIcon(item.type);
-            const hasNext = index < list.length - 1;
-            return (
-              <li key={item.id} className="relative pl-10">
-                <span className="absolute left-0 top-0 inline-flex h-8 w-8 items-center justify-center rounded-full border border-black/10 bg-[#fffffe] text-ink-700">
-                  <Icon className="h-4 w-4" />
-                </span>
-                {hasNext ? <span className="absolute left-[15px] top-8 h-[calc(100%+0.75rem)] w-px bg-black/10" /> : null}
-                <p className="text-sm font-semibold text-ink-800">{item.text}</p>
-                <p className="mt-0.5 text-xs text-ink-500">{item.timestamp}</p>
-              </li>
-            );
-          })}
-        </ul>
-      </article>
+      <section className="surface p-4 sm:p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold text-ink-900">Aktiva mäklare</h2>
+            <p className="mt-1 text-sm text-ink-600">Verifierade mäklare som kan arbeta för bolaget.</p>
+          </div>
+          {activeBrokers.length > 0 ? (
+            <button
+              type="button"
+              className="btn-secondary min-h-0 px-4 py-2 text-sm"
+              onClick={() => openBrokerManager()}
+            >
+              Hantera mäklare
+            </button>
+          ) : null}
+        </div>
+        <div className="mt-4 overflow-hidden rounded-2xl border border-black/10 bg-[#ffffff]">
+          {activeBrokers.length === 0 ? (
+            <p className="bg-[#fafafa] px-4 py-4 text-sm text-ink-600">
+              Inga verifierade mäklare ännu.
+            </p>
+          ) : (
+            <div className="divide-y divide-black/10">
+              {activeBrokers.map((broker) => {
+                const initials = String(broker.name || broker.email || "AA")
+                  .split(" ")
+                  .filter(Boolean)
+                  .slice(0, 2)
+                  .map((part) => part[0])
+                  .join("")
+                  .toUpperCase();
+                return (
+                  <div key={broker.id} className="grid gap-3 px-4 py-3.5 md:grid-cols-[minmax(0,1.4fr)_170px_180px_auto] md:items-center">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#0b0a0e] text-xs font-semibold text-white">
+                        {initials}
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-semibold text-ink-900">{broker.name || broker.email}</span>
+                        <span className="block truncate text-xs text-ink-600">{broker.email}</span>
+                      </span>
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">Mäklarnummer (FMI)</p>
+                      <p className="mt-0.5 text-sm font-medium text-ink-800">{broker.fmiNumber || "-"}</p>
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">Gick med</p>
+                      <p className="mt-0.5 text-sm font-medium text-ink-800">{formatJoinedDate(broker.approvedAt || broker.requestedAt)}</p>
+                    </div>
+                    <div className="flex flex-wrap gap-2 md:justify-end">
+                      <button
+                        type="button"
+                        className="btn-secondary min-h-0 px-3.5 py-2 text-sm"
+                        onClick={() => openBrokerManager(broker)}
+                      >
+                        Redigera
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-secondary min-h-0 px-3.5 py-2 text-sm"
+                        onClick={() => openDeleteBrokerConfirmation(broker)}
+                      >
+                        Ta bort
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {activityOverlayOpen ? (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-[#0b0a0e]/45 px-4 py-6">
+          <div className="w-full max-w-[720px] overflow-hidden rounded-[28px] border border-black/10 bg-[#ffffff] shadow-[0_24px_70px_rgba(15,25,48,0.25)]">
+            <div className="flex items-start justify-between gap-4 border-b border-black/10 px-5 py-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Mäklarteam</p>
+                <h2 className="mt-1 text-xl font-semibold text-ink-900">All teamaktivitet</h2>
+              </div>
+              <button
+                type="button"
+                className="close-circle-button inline-flex items-center justify-center border border-black/10 bg-[#ffffff] p-0 leading-none text-ink-700 hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
+                aria-label="Stäng"
+                onClick={() => setActivityOverlayOpen(false)}
+              >
+                <XIcon className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="max-h-[68vh] overflow-y-auto p-5">
+              <ul className="space-y-4">
+                {activityItems.filter((item) => item.type === "team" || item.type === "inquiry").map((item, index, list) => {
+                  const Icon = activityIcon(item.type);
+                  const hasNext = index < list.length - 1;
+                  return (
+                    <li key={item.id} className="relative pl-10">
+                      <span className="absolute left-0 top-0 inline-flex h-8 w-8 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] text-ink-700">
+                        <Icon className="h-4 w-4" />
+                      </span>
+                      {hasNext ? <span className="absolute left-[15px] top-8 h-[calc(100%+1rem)] w-px bg-black/10" /> : null}
+                      <p className="text-sm font-semibold text-ink-800">{item.text}</p>
+                      <p className="mt-0.5 text-xs text-ink-500">{item.timestamp}</p>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {deleteBrokerCandidate ? (
+        <div className="fixed inset-0 z-[85] flex items-center justify-center bg-[#0b0a0e]/45 px-4 py-6">
+          <div className="w-full max-w-[520px] rounded-[28px] border border-black/10 bg-[#ffffff] p-5 shadow-[0_24px_70px_rgba(15,25,48,0.25)]">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-semibold text-ink-900">Ta bort mäklare?</h2>
+                <p className="mt-2 text-sm leading-relaxed text-ink-600">
+                  Detta tar bort <span className="font-semibold text-[#0b0a0e]">{deleteBrokerCandidate.name || deleteBrokerCandidate.email}</span> från bolagets mäklarteam. Mäklaren kan inte längre arbeta för bolaget.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="close-circle-button inline-flex items-center justify-center border border-black/10 bg-[#ffffff] p-0 leading-none text-ink-700 hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
+                aria-label="Stäng"
+                onClick={() => {
+                  setDeleteBrokerCandidate(null);
+                  setDeleteBrokerConfirmName("");
+                }}
+              >
+                <XIcon className="h-4 w-4" />
+              </button>
+            </div>
+            <label className="mt-5 block">
+              <span className="text-xs font-semibold uppercase tracking-wide text-ink-500">Skriv mäklarens namn för att bekräfta</span>
+              <input
+                className="field mt-1.5"
+                value={deleteBrokerConfirmName}
+                onChange={(event) => setDeleteBrokerConfirmName(event.target.value)}
+                placeholder={deleteBrokerCandidate.name || deleteBrokerCandidate.email}
+              />
+            </label>
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                className="btn-secondary min-h-0 px-4 py-2 text-sm"
+                onClick={() => {
+                  setDeleteBrokerCandidate(null);
+                  setDeleteBrokerConfirmName("");
+                }}
+              >
+                Avbryt
+              </button>
+              <button
+                type="button"
+                className="btn-primary min-h-0 px-4 py-2 text-sm disabled:cursor-not-allowed disabled:border-black/10 disabled:bg-[#e5e7eb] disabled:text-ink-500"
+                disabled={
+                  deleteBrokerConfirmName.trim() !== String(deleteBrokerCandidate.name || deleteBrokerCandidate.email || "").trim()
+                  || removingBrokerId === deleteBrokerCandidate.userId
+                }
+                onClick={() => removeBroker(deleteBrokerCandidate)}
+              >
+                {removingBrokerId === deleteBrokerCandidate.userId ? "Tar bort..." : "Ta bort"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {brokerManagerOpen ? (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-[#0b0a0e]/45 px-4 py-6">
+          <div className="w-full max-w-[880px] overflow-hidden rounded-[28px] border border-black/10 bg-[#ffffff] shadow-[0_24px_70px_rgba(15,25,48,0.25)]">
+            <div className="flex items-start justify-between gap-4 border-b border-black/10 px-5 py-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Mäklarteam</p>
+                <h2 className="mt-1 text-xl font-semibold text-ink-900">Hantera mäklare</h2>
+              </div>
+              <button
+                type="button"
+                className="close-circle-button inline-flex items-center justify-center border border-black/10 bg-[#ffffff] p-0 leading-none text-ink-700 hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
+                aria-label="Stäng"
+                onClick={() => setBrokerManagerOpen(false)}
+              >
+                <XIcon className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="grid max-h-[72vh] min-h-[420px] overflow-hidden md:grid-cols-[280px_1fr]">
+              <aside className="overflow-y-auto border-b border-black/10 p-3 md:border-b-0 md:border-r">
+                <div className="space-y-2">
+                  {activeBrokers.map((broker) => {
+                    const initials = String(broker.name || broker.email || "AA")
+                      .split(" ")
+                      .filter(Boolean)
+                      .slice(0, 2)
+                      .map((part) => part[0])
+                      .join("")
+                      .toUpperCase();
+                    const selected = broker.userId === selectedBroker?.userId;
+                    return (
+                      <button
+                        key={broker.userId}
+                        type="button"
+                        className={`menu-hover-row flex w-full items-center gap-3 px-3 py-2.5 text-left ${selected ? "bg-[#eef2f8]" : "bg-transparent"}`}
+                        onClick={() => selectBrokerForEdit(broker)}
+                      >
+                        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#0b0a0e] text-xs font-semibold text-white">
+                          {initials}
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block truncate text-sm font-semibold text-ink-900">{broker.name || broker.email}</span>
+                          <span className="block truncate text-xs text-ink-600">{broker.email}</span>
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </aside>
+
+              <form className="overflow-y-auto p-5" onSubmit={saveBrokerChanges}>
+                {selectedBroker ? (
+                  <div className="space-y-5">
+                    <div>
+                      <h3 className="text-lg font-semibold text-ink-900">{selectedBroker.name || selectedBroker.email}</h3>
+                      <p className="mt-1 text-sm text-ink-600">Uppdatera mäklarinformation eller ta bort behörigheten från bolaget.</p>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <label className="block">
+                        <span className="text-xs font-semibold uppercase tracking-wide text-ink-500">Namn</span>
+                        <input
+                          className="field mt-1.5"
+                          value={brokerDraft.name}
+                          onChange={(event) => setBrokerDraft((current) => ({ ...current, name: event.target.value }))}
+                        />
+                      </label>
+                      <label className="block">
+                        <span className="text-xs font-semibold uppercase tracking-wide text-ink-500">Telefon</span>
+                        <input
+                          className="field mt-1.5"
+                          value={brokerDraft.phone}
+                          onChange={(event) => setBrokerDraft((current) => ({ ...current, phone: event.target.value }))}
+                          placeholder="Telefonnummer"
+                        />
+                      </label>
+                      <label className="block">
+                        <span className="text-xs font-semibold uppercase tracking-wide text-ink-500">Mäklarnummer (FMI)</span>
+                        <input
+                          className="field mt-1.5"
+                          value={brokerDraft.fmiNumber}
+                          onChange={(event) => setBrokerDraft((current) => ({ ...current, fmiNumber: event.target.value }))}
+                          placeholder="Ex. 2024001234"
+                        />
+                      </label>
+                      <label className="block">
+                        <span className="text-xs font-semibold uppercase tracking-wide text-ink-500">E-post</span>
+                        <input className="field mt-1.5 bg-[#f7f7f7] text-ink-600" value={selectedBroker.email || ""} disabled />
+                      </label>
+                    </div>
+
+                    <div className="flex flex-col gap-3 border-t border-black/10 pt-5 sm:flex-row sm:items-center sm:justify-end">
+                      <div className="flex gap-2 sm:justify-end">
+                        <button type="button" className="btn-secondary min-h-0 px-4 py-2 text-sm" onClick={() => setBrokerManagerOpen(false)}>
+                          Avbryt
+                        </button>
+                        <button
+                          type="submit"
+                          className="btn-primary min-h-0 px-4 py-2 text-sm"
+                          disabled={savingBrokerId === selectedBroker.userId}
+                        >
+                          {savingBrokerId === selectedBroker.userId ? "Sparar..." : "Spara ändringar"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="rounded-2xl border border-black/10 bg-[#fafafa] px-4 py-4 text-sm text-ink-600">
+                    Inga aktiva mäklare att hantera.
+                  </p>
+                )}
+              </form>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -1721,7 +1928,7 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
           </div>
           <div className="rounded-2xl border border-[#d7e2ee] bg-[#f4f7fb] px-4 py-3">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-[#476a99]">Svar inom 24h</p>
-            <p className="mt-1 text-xl font-semibold text-[#0f1930]">91%</p>
+            <p className="mt-1 text-xl font-semibold text-[#0b0a0e]">91%</p>
           </div>
         </div>
       </header>
@@ -1729,15 +1936,15 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
       <section className="grid gap-3 sm:grid-cols-3">
         <article className="surface p-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Nya</p>
-          <p className="mt-2 text-2xl font-semibold text-[#0f1930]">{inquiries.filter((item) => item.status === "Ny").length}</p>
+          <p className="mt-2 text-2xl font-semibold text-[#0b0a0e]">{inquiries.filter((item) => item.status === "Ny").length}</p>
         </article>
         <article className="surface p-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Pågående</p>
-          <p className="mt-2 text-2xl font-semibold text-[#0f1930]">{inquiries.filter((item) => item.status === "Pågående").length}</p>
+          <p className="mt-2 text-2xl font-semibold text-[#0b0a0e]">{inquiries.filter((item) => item.status === "Pågående").length}</p>
         </article>
         <article className="surface p-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Hög prioritet</p>
-          <p className="mt-2 text-2xl font-semibold text-[#0f1930]">{inquiries.filter((item) => item.priority === "Hög").length}</p>
+          <p className="mt-2 text-2xl font-semibold text-[#0b0a0e]">{inquiries.filter((item) => item.priority === "Hög").length}</p>
         </article>
       </section>
 
@@ -1746,12 +1953,12 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
           <aside className="border-b border-black/10 bg-[#fbfcfd] lg:border-b-0 lg:border-r">
             <div className="border-b border-black/10 p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ink-500">Inkorg</p>
-              <h2 className="mt-1 text-lg font-semibold text-[#0f1930]">Konversationer</h2>
+              <h2 className="mt-1 text-lg font-semibold text-[#0b0a0e]">Konversationer</h2>
               <div className="mt-3">
                 <label className="relative block">
                   <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
                   <input
-                    className="field !rounded-2xl !bg-[#fffffe] pl-9"
+                    className="field !rounded-2xl !bg-[#ffffff] pl-9"
                     placeholder="Sök namn, bolag eller annons"
                     value={searchQuery}
                     onChange={(event) => setSearchQuery(event.target.value)}
@@ -1768,13 +1975,13 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                       onClick={() => setFilter(tab.key)}
                       className={`inline-flex min-h-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold transition ${
                         active
-                          ? "bg-[#0f1930] text-white"
-                          : "border border-black/10 bg-[#fffffe] text-ink-700 hover:border-[#bfd0e3]"
+                          ? "bg-[#0b0a0e] text-white"
+                          : "border border-black/10 bg-[#ffffff] text-ink-700 hover:border-[#bfd0e3]"
                       }`}
                     >
                       {tab.label}
                       <span className={`inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] ${
-                        active ? "bg-[#fffffe]/15 text-white" : "bg-[#eef3f8] text-[#476a99]"
+                        active ? "bg-[#ffffff]/15 text-white" : "bg-[#eef3f8] text-[#476a99]"
                       }`}>
                         {tab.count}
                       </span>
@@ -1797,11 +2004,11 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                     type="button"
                     onClick={() => selectInquiry(inquiry.id)}
                     className={`flex w-full items-start gap-3 border-b border-black/5 px-4 py-4 text-left transition ${
-                      isActive ? "bg-[#fffffe] shadow-[inset_3px_0_0_#0f1930]" : "hover:bg-[#fffffe]/80"
+                      isActive ? "bg-[#ffffff] shadow-[inset_3px_0_0_#0b0a0e]" : "hover:bg-[#ffffff]/80"
                     }`}
                   >
                     <span className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${
-                      isActive ? "bg-[#0f1930] text-white" : "bg-[#dbe6f3] text-[#0f1930]"
+                      isActive ? "bg-[#0b0a0e] text-white" : "bg-[#dbe6f3] text-[#0b0a0e]"
                     }`}>
                       {renter.initials}
                     </span>
@@ -1842,16 +2049,16 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
 
           <div className="min-w-0 border-b border-black/10 lg:border-b-0 xl:border-r">
             {activeInquiry && activeRenter && activeListing ? (
-              <div className="flex h-full min-h-[760px] flex-col bg-[#fffffe]">
-                <div className="border-b border-black/10 bg-[#fffffe] px-4 py-4 sm:px-5">
+              <div className="flex h-full min-h-[760px] flex-col bg-[#ffffff]">
+                <div className="border-b border-black/10 bg-[#ffffff] px-4 py-4 sm:px-5">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-3">
-                      <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#0f1930] text-sm font-semibold text-white">
+                      <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#0b0a0e] text-sm font-semibold text-white">
                         {activeRenter.initials}
                       </span>
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="truncate text-lg font-semibold text-[#0f1930]">{activeRenter.name}</h3>
+                          <h3 className="truncate text-lg font-semibold text-[#0b0a0e]">{activeRenter.name}</h3>
                           <span className={`inline-flex rounded-full border px-2 py-0.5 text-[11px] font-semibold ${inquiryStatusClass(activeInquiry.status)}`}>{activeInquiry.status}</span>
                         </div>
                         <p className="truncate text-sm text-ink-600">{activeRenter.company} · {activeSummary}</p>
@@ -1871,33 +2078,33 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                 </div>
 
                 <div className="border-b border-black/10 bg-[#fbfcfd] px-4 py-3 sm:px-5 xl:hidden">
-                  <div className="flex flex-wrap items-center gap-3 rounded-3xl border border-[#d7e2ee] bg-[#fffffe] p-3">
+                  <div className="flex flex-wrap items-center gap-3 rounded-3xl border border-[#d7e2ee] bg-[#ffffff] p-3">
                     <img src={activeListing.image} alt={activeListing.title} className="h-16 w-24 rounded-2xl border border-black/10 object-cover" loading="lazy" />
                     <div className="min-w-0 flex-1">
                       <p className="text-[11px] font-semibold uppercase tracking-wide text-[#476a99]">Matchad annons</p>
-                      <p className="mt-1 truncate text-sm font-semibold text-[#0f1930]">{activeListing.title}</p>
+                      <p className="mt-1 truncate text-sm font-semibold text-[#0b0a0e]">{activeListing.title}</p>
                       <p className="mt-1 text-xs text-ink-600">{activeListing.district} · {activeListing.size} m² · {formatSek(activeListing.priceMonthly)}/mån</p>
                     </div>
                     <div className="rounded-2xl border border-[#d7e2ee] bg-[#f4f7fb] px-3 py-2 text-center">
                       <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">Match</p>
-                      <p className="mt-1 text-lg font-semibold text-[#0f1930]">{activeRenter.score}%</p>
+                      <p className="mt-1 text-lg font-semibold text-[#0b0a0e]">{activeRenter.score}%</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex-1 space-y-4 overflow-y-auto bg-[linear-gradient(180deg,#fffffe_0%,#fbfbfa_100%)] px-4 py-5 sm:px-5">
+                <div className="flex-1 space-y-4 overflow-y-auto bg-[linear-gradient(180deg,#ffffff_0%,#fbfbfa_100%)] px-4 py-5 sm:px-5">
                   <div className="mx-auto max-w-3xl rounded-3xl border border-[#d9e4f1] bg-[#f4f7fb] p-4">
                     <div className="flex flex-wrap items-start gap-3">
                       <div className="min-w-0 flex-1">
                         <p className="text-xs font-semibold uppercase tracking-wide text-[#476a99]">Dialogsammanfattning</p>
-                        <p className="mt-1 text-sm font-semibold text-[#0f1930]">{activeSummary}</p>
+                        <p className="mt-1 text-sm font-semibold text-[#0b0a0e]">{activeSummary}</p>
                         <p className="mt-2 text-sm leading-relaxed text-ink-700">
                           {activeRenter.name.split(" ")[0]} söker {activeRenter.preferredType.toLowerCase()} i {activeRenter.district} för {activeRenter.teamSize.toLowerCase()} med budget {activeRenter.budget}.
                         </p>
                       </div>
-                      <div className="rounded-2xl border border-[#c9d8e7] bg-[#fffffe] px-3 py-2">
+                      <div className="rounded-2xl border border-[#c9d8e7] bg-[#ffffff] px-3 py-2">
                         <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">Nästa steg</p>
-                        <p className="mt-1 text-sm font-semibold text-[#0f1930]">{activeInquiry.stage}</p>
+                        <p className="mt-1 text-sm font-semibold text-[#0b0a0e]">{activeInquiry.stage}</p>
                       </div>
                     </div>
                   </div>
@@ -1918,8 +2125,8 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                               isSystem
                                 ? "border border-dashed border-black/10 bg-[#fafafa] text-ink-600"
                                 : isAdmin
-                                  ? "rounded-br-md bg-[#0f1930] text-white"
-                                  : "rounded-bl-md border border-black/10 bg-[#fffffe] text-ink-800"
+                                  ? "rounded-br-md bg-[#0b0a0e] text-white"
+                                  : "rounded-bl-md border border-black/10 bg-[#ffffff] text-ink-800"
                             }`}>
                               {message.text}
                             </div>
@@ -1931,7 +2138,7 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                   </div>
                 </div>
 
-                <div className="border-t border-black/10 bg-[#fffffe] px-4 py-4 sm:px-5">
+                <div className="border-t border-black/10 bg-[#ffffff] px-4 py-4 sm:px-5">
                   <div className="mx-auto max-w-3xl">
                     <div className="mb-3 flex flex-wrap gap-2">
                       {quickPromptChips.map((prompt) => (
@@ -1939,7 +2146,7 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                           key={prompt.id}
                           type="button"
                           onClick={() => applySuggestedPrompt(prompt.text)}
-                          className="inline-flex min-h-0 items-center gap-2 rounded-full border border-[#cbd8e6] bg-[#f4f7fb] px-3 py-2 text-xs font-semibold text-[#0f1930] transition hover:bg-[#eaf1f8]"
+                          className="inline-flex min-h-0 items-center gap-2 rounded-full border border-[#cbd8e6] bg-[#f4f7fb] px-3 py-2 text-xs font-semibold text-[#0b0a0e] transition hover:bg-[#eaf1f8]"
                         >
                           <SparklesIcon className="h-3.5 w-3.5" />
                           {prompt.label}
@@ -1972,24 +2179,24 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
           <aside className="hidden bg-[#f8fafc] xl:block">
             {activeInquiry && activeRenter && activeListing ? (
               <div className="h-full space-y-4 overflow-y-auto p-4 sm:p-5">
-                <article className="rounded-[28px] border border-[#d7e2ee] bg-[#fffffe] p-4">
+                <article className="rounded-[28px] border border-[#d7e2ee] bg-[#ffffff] p-4">
                   <img src={activeListing.image} alt={activeListing.title} className="h-40 w-full rounded-[22px] border border-black/10 object-cover" loading="lazy" />
                   <div className="mt-3">
                     <p className="text-[11px] font-semibold uppercase tracking-wide text-[#476a99]">Matchad annons</p>
-                    <h3 className="mt-1 text-base font-semibold text-[#0f1930]">{activeListing.title}</h3>
+                    <h3 className="mt-1 text-base font-semibold text-[#0b0a0e]">{activeListing.title}</h3>
                     <p className="mt-1 text-sm text-ink-600">{activeListing.district} · {activeListing.size} m² · {formatSek(activeListing.priceMonthly)}/mån</p>
                   </div>
                 </article>
 
-                <article className="rounded-[28px] border border-[#d7e2ee] bg-[#fffffe] p-4">
+                <article className="rounded-[28px] border border-[#d7e2ee] bg-[#ffffff] p-4">
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">Hyresgäst</p>
-                      <h3 className="mt-1 text-base font-semibold text-[#0f1930]">{activeRenter.name}</h3>
+                      <h3 className="mt-1 text-base font-semibold text-[#0b0a0e]">{activeRenter.name}</h3>
                     </div>
                     <div className="rounded-2xl border border-[#d7e2ee] bg-[#f4f7fb] px-3 py-2 text-center">
                       <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">Match</p>
-                      <p className="mt-1 text-lg font-semibold text-[#0f1930]">{activeRenter.score}%</p>
+                      <p className="mt-1 text-lg font-semibold text-[#0b0a0e]">{activeRenter.score}%</p>
                     </div>
                   </div>
                   <div className="mt-3 grid gap-2">
@@ -2010,10 +2217,10 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                   </div>
                 </article>
 
-                <article className="rounded-[28px] border border-[#d7e2ee] bg-[#fffffe] p-4">
+                <article className="rounded-[28px] border border-[#d7e2ee] bg-[#ffffff] p-4">
                   <div className="flex items-center gap-2">
                     <SparklesIcon className="h-4 w-4 text-[#476a99]" />
-                    <h3 className="text-sm font-semibold text-[#0f1930]">Föreslagna svar</h3>
+                    <h3 className="text-sm font-semibold text-[#0b0a0e]">Föreslagna svar</h3>
                   </div>
                   <p className="mt-1 text-xs leading-relaxed text-ink-600">Direkt baserat på senaste hyresgästmeddelandet.</p>
                   <div className="mt-3 space-y-2.5">
@@ -2022,7 +2229,7 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                         key={prompt.id}
                         type="button"
                         onClick={() => applySuggestedPrompt(prompt.text)}
-                        className="w-full rounded-3xl border border-black/10 bg-[#fbfbfa] p-3 text-left transition hover:border-[#bfd0e3] hover:bg-[#fffffe]"
+                        className="w-full rounded-3xl border border-black/10 bg-[#fbfbfa] p-3 text-left transition hover:border-[#bfd0e3] hover:bg-[#ffffff]"
                       >
                         <div className="flex items-center justify-between gap-2">
                           <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
@@ -2038,8 +2245,8 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                   </div>
                 </article>
 
-                <article className="rounded-[28px] border border-[#d7e2ee] bg-[#fffffe] p-4">
-                  <h3 className="text-sm font-semibold text-[#0f1930]">Matchkriterier</h3>
+                <article className="rounded-[28px] border border-[#d7e2ee] bg-[#ffffff] p-4">
+                  <h3 className="text-sm font-semibold text-[#0b0a0e]">Matchkriterier</h3>
                   <div className="mt-3 space-y-2">
                     {activeRenter.matchCriteria.map((item) => (
                       <div key={`${activeInquiry.id}-${item.label}`} className="flex items-start justify-between gap-3 rounded-2xl border border-black/10 bg-[#fbfbfa] px-3 py-2.5">
@@ -2057,8 +2264,8 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                   </div>
                 </article>
 
-                <article className="rounded-[28px] border border-[#d7e2ee] bg-[#fffffe] p-4">
-                  <h3 className="text-sm font-semibold text-[#0f1930]">Snabböversikt</h3>
+                <article className="rounded-[28px] border border-[#d7e2ee] bg-[#ffffff] p-4">
+                  <h3 className="text-sm font-semibold text-[#0b0a0e]">Snabböversikt</h3>
                   <ul className="mt-3 space-y-2">
                     <li className="flex items-center gap-2 text-sm text-ink-700">
                       <ClockIcon className="h-4 w-4 text-ink-500" />
@@ -2087,7 +2294,11 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
   );
 }
 
-function AdminStatistics() {
+function AdminStatistics({ app }) {
+  const adminStats = useMemo(() => buildAdminStats(app), [app?.listings, app?.leads, app?.companyBrokers, app?.adminCompany]);
+  const statsChartSeries = adminStats.chartSeries;
+  const statsDistributionData = adminStats.distributionData;
+  const statsDistrictPerformance = adminStats.districtPerformance;
   const [customizeOpen, setCustomizeOpen] = useState(false);
   const [customizeClosing, setCustomizeClosing] = useState(false);
   const rootRef = useRef(null);
@@ -2223,7 +2434,7 @@ function AdminStatistics() {
                   href={`#${item.id}`}
                   className={`menu-hover-row block whitespace-nowrap rounded-2xl px-3 py-2.5 text-sm transition ${
                     active
-                      ? "bg-[#0f1930] font-semibold text-white"
+                      ? "bg-[#0b0a0e] font-semibold text-white"
                       : "text-ink-600 hover:bg-black/5 hover:text-ink-900"
                   }`}
                   onClick={(event) => handleSectionLinkClick(event, item.id)}
@@ -2253,7 +2464,7 @@ function AdminStatistics() {
 
         {visibleModules.kpi ? (
           <section id="stats-kpi">
-            <KpiCardsSection />
+            <KpiCardsSection cards={adminStats.cards} sparklineSeries={adminStats.sparklineSeries} />
           </section>
         ) : null}
 
@@ -2261,12 +2472,20 @@ function AdminStatistics() {
           <section className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
           {visibleModules.trend ? (
             <div id="stats-trend">
-              <BarInteractive title="Visningar & förfrågningar" subtitle="Senaste period" datasets={chartSeries} defaultRange="30d" />
+              {hasChartSeriesData(statsChartSeries) ? (
+                <BarInteractive title="Visningar & förfrågningar" subtitle="Senaste period" datasets={statsChartSeries} defaultRange="30d" />
+              ) : (
+                <NoDataPanel title="Visningar & förfrågningar" />
+              )}
             </div>
           ) : <div />}
           {visibleModules.distribution ? (
             <div id="stats-distribution">
-              <TypeDistributionDonut title="Fördelning" subtitle="Typ av lokal" data={distributionData} />
+              {statsDistributionData.length > 0 ? (
+                <TypeDistributionDonut title="Fördelning" subtitle="Typ av lokal" data={statsDistributionData} />
+              ) : (
+                <NoDataPanel title="Fördelning" />
+              )}
             </div>
           ) : <div />}
           </section>
@@ -2275,27 +2494,34 @@ function AdminStatistics() {
         {(visibleModules.district || visibleModules.funnel) ? (
           <section className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
           {visibleModules.district ? (
-            <article id="stats-district" className="surface p-4 sm:p-5">
+            statsDistrictPerformance.length > 0 ? (
+              <article id="stats-district" className="surface p-4 sm:p-5">
                 <h3 className="text-lg font-semibold text-ink-900">Prestanda per område</h3>
                 <p className="mt-1 text-sm text-ink-600">Visningar och förfrågningar för era starkaste delmarknader</p>
                 <div className="mt-4 h-[280px]">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={districtPerformance} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                    <BarChart data={statsDistrictPerformance} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(15,25,48,0.12)" />
                       <XAxis dataKey="district" tick={{ fontSize: 11, fill: "#6f7a86" }} />
                       <YAxis tick={{ fontSize: 11, fill: "#6f7a86" }} />
                       <Tooltip />
                       <Legend />
-                      <Bar dataKey="views" name="Visningar" fill="#0f1930" radius={[6, 6, 0, 0]} />
+                      <Bar dataKey="views" name="Visningar" fill="#0b0a0e" radius={[6, 6, 0, 0]} />
                       <Bar dataKey="inquiries" name="Förfrågningar" fill="#7ea1cc" radius={[6, 6, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
               </article>
+            ) : (
+              <div id="stats-district">
+                <NoDataPanel title="Prestanda per område" />
+              </div>
+            )
           ) : <div />}
 
           {visibleModules.funnel ? (
-            <article id="stats-funnel" className="surface p-4 sm:p-5">
+            funnelData.length > 0 ? (
+              <article id="stats-funnel" className="surface p-4 sm:p-5">
               <h3 className="text-lg font-semibold text-ink-900">Konverteringstratt</h3>
               <p className="mt-1 text-sm text-ink-600">Från visning till signerat avtal</p>
               <div className="mt-4 space-y-2.5">
@@ -2306,12 +2532,17 @@ function AdminStatistics() {
                       <span className="text-ink-600">{step.count.toLocaleString("sv-SE")} · {step.conversion}%</span>
                     </div>
                     <div className="h-2.5 overflow-hidden rounded-full border border-black/10 bg-[#eef2f8]">
-                      <div className="h-full rounded-full bg-[#0f1930]" style={{ width: `${Math.max(step.conversion, 6)}%` }} />
+                      <div className="h-full rounded-full bg-[#0b0a0e]" style={{ width: `${Math.max(step.conversion, 6)}%` }} />
                     </div>
                   </div>
                 ))}
               </div>
             </article>
+            ) : (
+              <div id="stats-funnel">
+                <NoDataPanel title="Konverteringstratt" />
+              </div>
+            )
           ) : <div />}
           </section>
         ) : null}
@@ -2319,7 +2550,8 @@ function AdminStatistics() {
         {(visibleModules.brokerRadar || visibleModules.heatmap) ? (
           <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
           {visibleModules.brokerRadar ? (
-            <article id="stats-broker-radar" className="surface p-4 sm:p-5">
+            brokerPerformanceRadar.length > 0 ? (
+              <article id="stats-broker-radar" className="surface p-4 sm:p-5">
               <h3 className="text-lg font-semibold text-ink-900">Mäklarprestanda</h3>
               <p className="mt-1 text-sm text-ink-600">Jämförelse av teamets nyckelområden (index)</p>
               <div className="mt-4 h-[280px]">
@@ -2330,13 +2562,22 @@ function AdminStatistics() {
                     <PolarRadiusAxis tick={{ fontSize: 10, fill: "#6f7a86" }} />
                     <Tooltip />
                     <Legend />
-                    <Radar name="Anna" dataKey="anna" stroke="#0f1930" fill="#0f1930" fillOpacity={0.2} />
-                    <Radar name="Erik" dataKey="erik" stroke="#476a99" fill="#476a99" fillOpacity={0.16} />
-                    <Radar name="Maria" dataKey="maria" stroke="#7ea1cc" fill="#7ea1cc" fillOpacity={0.16} />
+                    {Object.keys(brokerPerformanceRadar[0] || {})
+                      .filter((key) => key !== "metric")
+                      .map((key, index) => {
+                        const colors = ["#0b0a0e", "#476a99", "#7ea1cc"];
+                        const color = colors[index % colors.length];
+                        return <Radar key={key} name={key} dataKey={key} stroke={color} fill={color} fillOpacity={0.18} />;
+                      })}
                   </RadarChart>
                 </ResponsiveContainer>
               </div>
             </article>
+            ) : (
+              <div id="stats-broker-radar">
+                <NoDataPanel title="Mäklarprestanda" />
+              </div>
+            )
           ) : <div />}
 
           {visibleModules.heatmap ? (
@@ -2348,7 +2589,8 @@ function AdminStatistics() {
         ) : null}
 
         {visibleModules.segment ? (
-          <section id="stats-segment" className="surface p-4 sm:p-5">
+          segmentTrend.length > 0 ? (
+            <section id="stats-segment" className="surface p-4 sm:p-5">
           <h3 className="text-lg font-semibold text-ink-900">Trend per lokaltyp</h3>
           <p className="mt-1 text-sm text-ink-600">Utveckling av efterfrågan i respektive segment</p>
           <div className="mt-4 h-[300px]">
@@ -2359,13 +2601,18 @@ function AdminStatistics() {
                 <YAxis tick={{ fontSize: 11, fill: "#6f7a86" }} />
                 <Tooltip />
                 <Legend />
-                <Line type="monotone" dataKey="kontor" stroke="#0f1930" strokeWidth={2} dot={{ r: 2 }} />
+                <Line type="monotone" dataKey="kontor" stroke="#0b0a0e" strokeWidth={2} dot={{ r: 2 }} />
                 <Line type="monotone" dataKey="butik" stroke="#476a99" strokeWidth={2} dot={{ r: 2 }} />
                 <Line type="monotone" dataKey="lager" stroke="#7ea1cc" strokeWidth={2} dot={{ r: 2 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
           </section>
+          ) : (
+            <section id="stats-segment">
+              <NoDataPanel title="Trend per lokaltyp" />
+            </section>
+          )
         ) : null}
 
         {visibleModules.extended ? (
@@ -2375,20 +2622,24 @@ function AdminStatistics() {
             <p className="mt-1 text-sm text-ink-600">Operativa och kommersiella KPI:er för portföljstyrning</p>
           </div>
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-            {displayedExtendedCards.map((item) => <ExtendedStatCard key={item.id} item={item} />)}
+            {displayedExtendedCards.length > 0 ? (
+              displayedExtendedCards.map((item) => <ExtendedStatCard key={item.id} item={item} />)
+            ) : (
+              <NoDataPanel title="Fördjupade nyckeltal" className="md:col-span-2 xl:col-span-4" />
+            )}
           </div>
           </section>
         ) : null}
 
         {customizeOpen ? (
           <div
-            className={`fixed inset-0 z-[95] flex items-center justify-center bg-[#fffffe]/0 p-4 backdrop-blur-[2px] transition-all duration-200 ${
+            className={`fixed inset-0 z-[95] flex items-center justify-center bg-[#ffffff]/0 p-4 backdrop-blur-[2px] transition-all duration-200 ${
               customizeClosing ? "opacity-0" : "opacity-100"
             }`}
             onClick={closeCustomize}
           >
             <div
-              className={`w-full max-w-2xl rounded-3xl border border-black/10 bg-[#fffffe] p-5 shadow-[0_24px_64px_rgba(15,25,48,0.22)] transition ${customizeClosing ? "translate-y-2 opacity-0" : "translate-y-0 opacity-100"}`}
+              className={`w-full max-w-2xl rounded-3xl border border-black/10 bg-[#ffffff] p-5 shadow-[0_24px_64px_rgba(15,25,48,0.22)] transition ${customizeClosing ? "translate-y-2 opacity-0" : "translate-y-0 opacity-100"}`}
               onClick={(event) => event.stopPropagation()}
             >
               <div className="mb-4 flex items-start justify-between gap-3">
@@ -2396,13 +2647,13 @@ function AdminStatistics() {
                   <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Anpassa statistik</p>
                   <h3 className="mt-1 text-xl font-semibold text-ink-900">Välj vilka nyckeltal som ska visas</h3>
                 </div>
-                <button type="button" className="close-circle-button inline-flex items-center justify-center rounded-full border border-black/15 bg-[#fffffe] text-xl leading-none text-ink-700" onClick={closeCustomize}>
+                <button type="button" className="close-circle-button inline-flex items-center justify-center rounded-full border border-black/15 bg-[#ffffff] text-xl leading-none text-ink-700" onClick={closeCustomize}>
                   ×
                 </button>
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
-                <div className="rounded-2xl border border-black/10 bg-[#fffffe] p-3">
+                <div className="rounded-2xl border border-black/10 bg-[#ffffff] p-3">
                   <p className="text-sm font-semibold text-ink-800">Diagramsektioner</p>
                   <div className="mt-3 space-y-2 text-sm">
                     {[
@@ -2428,7 +2679,7 @@ function AdminStatistics() {
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-black/10 bg-[#fffffe] p-3">
+                <div className="rounded-2xl border border-black/10 bg-[#ffffff] p-3">
                   <p className="text-sm font-semibold text-ink-800">Fördjupade nyckeltal</p>
                   <div className="mt-3 max-h-[280px] space-y-2 overflow-y-auto pr-1 text-sm">
                     {extendedStatCards.map((item) => (
@@ -2457,19 +2708,17 @@ function AdminStatistics() {
 }
 
 function AdminLeadMatchesPage({ app }) {
-  const leadRows = useMemo(() => buildAdminLeadRows(), []);
+  const companyListings = ownedAdminListings(app);
+  const leadRows = useMemo(() => buildAdminLeadRows(app), [app?.leads]);
   const [sortMode, setSortMode] = useState("best");
   const [listingFilter, setListingFilter] = useState("all");
 
   const activeListingOptions = useMemo(
-    () => activeListings.filter((listing) => listing.status === "Aktiv"),
-    []
+    () => companyListings.filter((listing) => listing.status === "Aktiv"),
+    [companyListings]
   );
 
   const suggestedMatches = useMemo(() => {
-    // Intended real source: saved search profiles joined against active company listings,
-    // excluding tenants already present in inquiry/favorite/repeated-visit interaction tables.
-    // Current demo data only has matched renter cards, so this keeps those cards and filters by listing.
     const rows = matchedRenters.filter((renter) => (
       listingFilter === "all" || renter.matchListingId === listingFilter
     ));
@@ -2508,7 +2757,7 @@ function AdminLeadMatchesPage({ app }) {
             <button
               type="button"
               className="btn-secondary px-4"
-              onClick={() => app?.pushToast?.("Exporten är på väg (demo).", "info")}
+              onClick={() => app?.pushToast?.("Ingen data att exportera.", "info")}
             >
               <DownloadIcon className="mr-1.5 h-4 w-4" />
               Exportera
@@ -2516,7 +2765,7 @@ function AdminLeadMatchesPage({ app }) {
             <button
               type="button"
               className="btn-primary px-4"
-              onClick={() => app?.pushToast?.("Urval skickat till mäklarteamet (demo).", "success")}
+              onClick={() => app?.pushToast?.("Ingen data att skicka.", "info")}
             >
               + Skicka urval till mäklare
             </button>
@@ -2556,13 +2805,13 @@ function AdminLeadMatchesPage({ app }) {
                 <tr
                   key={lead.id}
                   className={`cursor-pointer border-t border-black/10 transition hover:bg-[#fafafa] ${
-                    lead.isUnread ? "shadow-[inset_3px_0_0_#0f1930]" : ""
+                    lead.isUnread ? "shadow-[inset_3px_0_0_#0b0a0e]" : ""
                   }`}
                   onClick={() => openLeadConversation(app, lead)}
                 >
                   <td className="px-4 py-3.5 align-top sm:px-5">
                     <div className="flex items-center gap-3">
-                      <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#0f1930] text-sm font-semibold text-white">
+                      <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#0b0a0e] text-sm font-semibold text-white">
                         {lead.renter.initials}
                       </span>
                       <span className="min-w-0">
@@ -2596,7 +2845,7 @@ function AdminLeadMatchesPage({ app }) {
                       </button>
                       <button
                         type="button"
-                        className="inline-flex h-8 w-8 min-h-0 items-center justify-center rounded-full border border-transparent text-ink-600 hover:border-black/10 hover:bg-[#fffffe]"
+                        className="inline-flex h-8 w-8 min-h-0 items-center justify-center rounded-full border border-transparent text-ink-600 hover:border-black/10 hover:bg-[#ffffff]"
                         onClick={(event) => event.stopPropagation()}
                       >
                         <MoreHorizontalIcon className="h-4 w-4" />
@@ -2635,23 +2884,19 @@ function AdminLeadMatchesPage({ app }) {
             </div>
             <p className="mt-1 text-sm text-ink-600">Hyresgäster vars sökprofil matchar era lokaler — de har inte kontaktat er än</p>
           </div>
-          <div className="inline-flex items-center gap-1 rounded-full border border-black/10 bg-[#fffffe] p-1">
-            {sortTabs.map((tab) => {
-              const active = sortMode === tab.key;
-              return (
-                <button
-                  key={tab.key}
-                  type="button"
-                  className={`min-h-0 rounded-full px-2.5 py-1 text-xs font-semibold transition ${
-                    active ? "bg-[#0f1930] text-white" : "text-ink-600 hover:text-ink-900"
-                  }`}
-                  onClick={() => setSortMode(tab.key)}
-                >
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
+          <label className="relative inline-flex min-w-[190px] items-center">
+            <span className="sr-only">Sortera matchningar</span>
+            <select
+              className="field min-h-0 w-full appearance-none rounded-full border-black/10 bg-[#ffffff] py-2 pl-4 pr-10 text-sm font-semibold text-ink-800"
+              value={sortMode}
+              onChange={(event) => setSortMode(event.target.value)}
+            >
+              {sortTabs.map((tab) => (
+                <option key={tab.key} value={tab.key}>{tab.label}</option>
+              ))}
+            </select>
+            <ChevronRightIcon className="pointer-events-none absolute right-3 h-4 w-4 rotate-90 text-ink-500" />
+          </label>
         </div>
 
         <div className="mb-4 flex flex-wrap gap-2">
@@ -2659,8 +2904,8 @@ function AdminLeadMatchesPage({ app }) {
             type="button"
             className={`inline-flex min-h-0 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
               listingFilter === "all"
-                ? "bg-[#0f1930] text-white"
-                : "border border-black/10 bg-[#fffffe] text-ink-700 hover:border-[#bfd0e3]"
+                ? "bg-[#0b0a0e] text-white"
+                : "border border-black/10 bg-[#ffffff] text-ink-700 hover:border-[#bfd0e3]"
             }`}
             onClick={() => setListingFilter("all")}
           >
@@ -2674,8 +2919,8 @@ function AdminLeadMatchesPage({ app }) {
                 type="button"
                 className={`inline-flex min-h-0 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
                   active
-                    ? "bg-[#0f1930] text-white"
-                    : "border border-black/10 bg-[#fffffe] text-ink-700 hover:border-[#bfd0e3]"
+                    ? "bg-[#0b0a0e] text-white"
+                    : "border border-black/10 bg-[#ffffff] text-ink-700 hover:border-[#bfd0e3]"
                 }`}
                 onClick={() => setListingFilter(listing.id)}
               >
@@ -2690,10 +2935,10 @@ function AdminLeadMatchesPage({ app }) {
             {suggestedMatches.map((renter) => {
               const matchedListing = activeListings.find((listing) => listing.id === renter.matchListingId) || activeListings[0];
               return (
-                <article key={renter.id} className="rounded-2xl border border-black/10 bg-[#fffffe] p-4">
+                <article key={renter.id} className="rounded-2xl border border-black/10 bg-[#ffffff] p-4">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex min-w-0 items-center gap-2.5">
-                      <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#0f1930] text-sm font-semibold text-white">
+                      <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#0b0a0e] text-sm font-semibold text-white">
                         {renter.initials}
                       </span>
                       <span className="min-w-0">
@@ -2703,7 +2948,7 @@ function AdminLeadMatchesPage({ app }) {
                     </div>
                     <button
                       type="button"
-                      className="inline-flex h-8 w-8 min-h-0 items-center justify-center rounded-full border border-transparent text-ink-600 hover:border-black/10 hover:bg-[#fffffe]"
+                      className="inline-flex h-8 w-8 min-h-0 items-center justify-center rounded-full border border-transparent text-ink-600 hover:border-black/10 hover:bg-[#ffffff]"
                       onClick={() => app?.pushToast?.(`${renter.name} flaggad för senare.`, "success")}
                     >
                       <StarIcon className="h-4 w-4" />
@@ -2773,7 +3018,7 @@ function AdminActivityPage() {
           const hasNext = index < activityItems.length - 1;
           return (
             <li key={item.id} className="relative pl-10">
-              <span className="absolute left-0 top-0 inline-flex h-8 w-8 items-center justify-center rounded-full border border-black/10 bg-[#fffffe] text-ink-700">
+              <span className="absolute left-0 top-0 inline-flex h-8 w-8 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] text-ink-700">
                 <Icon className="h-4 w-4" />
               </span>
               {hasNext ? <span className="absolute left-[15px] top-8 h-[calc(100%+0.75rem)] w-px bg-black/10" /> : null}
@@ -2787,8 +3032,45 @@ function AdminActivityPage() {
   );
 }
 
+function EmptyCompanyAdminPage({ app, sectionKey }) {
+  const companyName = companyNameForAdmin(app?.user);
+  const title = SECTION_TITLES[sectionKey] || "Översikt";
+
+  return (
+    <div className="space-y-4">
+      <header className="surface p-4 sm:p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Adminpanel</p>
+            <h1 className="mt-1 text-2xl font-semibold text-ink-900">{companyName}</h1>
+            <p className="mt-1 text-sm text-ink-600">{title}</p>
+          </div>
+          <button type="button" className="btn-secondary px-4" onClick={() => navigateTo("/app/admin/adminprofil")}>
+            <PencilIcon className="mr-1.5 h-4 w-4" />
+            Hantera adminprofil
+          </button>
+        </div>
+      </header>
+
+      <section className="surface p-6 sm:p-8">
+        <div className="mx-auto max-w-[560px] py-8 text-center">
+          <span className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] text-ink-700">
+            <BuildingIcon className="h-5 w-5" />
+          </span>
+          <h2 className="mt-4 text-xl font-semibold text-ink-900">Inget innehåll ännu</h2>
+          <p className="mt-2 text-sm leading-relaxed text-ink-600">
+            Bolagets adminyta är tom tills ni skapar första annonsen, bjuder in mäklare eller får inkommande intresse.
+          </p>
+        </div>
+      </section>
+    </div>
+  );
+}
+
 function AdminOverview({ app }) {
   const now = useMemo(() => new Date(), []);
+  const companyListings = ownedAdminListings(app);
+  const adminStats = useMemo(() => buildAdminStats(app), [app?.listings, app?.leads, app?.companyBrokers, app?.adminCompany]);
   const greeting = useMemo(() => greetingForHour(now.getHours()), [now]);
   const dateLabel = useMemo(() => (
     new Intl.DateTimeFormat("sv-SE", {
@@ -2797,17 +3079,6 @@ function AdminOverview({ app }) {
       month: "long"
     }).format(now)
   ), [now]);
-  const [overviewInviteEmail, setOverviewInviteEmail] = useState("");
-  const [overviewInvitedBrokers, setOverviewInvitedBrokers] = useState(() =>
-    brokerTeam.map((broker) => ({
-      id: broker.id,
-      name: broker.name,
-      email: broker.email,
-      status: "Aktiv"
-    }))
-  );
-  const overviewInviteCode = useMemo(() => "BROKER-" + String(Math.floor(100000 + Math.random() * 900000)), []);
-
   return (
     <div className="space-y-4">
       <div className="flex flex-col items-stretch gap-4 xl:flex-row">
@@ -2859,11 +3130,19 @@ function AdminOverview({ app }) {
         </button>
       </div>
 
-      <KpiCardsSection showMatchLink />
+      <KpiCardsSection showMatchLink cards={adminStats.cards} sparklineSeries={adminStats.sparklineSeries} />
 
       <section className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-        <BarInteractive title="Visningar & förfrågningar" subtitle="Senaste period" datasets={chartSeries} defaultRange="7d" />
-        <TypeDistributionDonut title="Fördelning" subtitle="Typ av lokal" data={distributionData} />
+        {hasChartSeriesData(adminStats.chartSeries) ? (
+          <BarInteractive title="Visningar & förfrågningar" subtitle="Senaste period" datasets={adminStats.chartSeries} defaultRange="7d" />
+        ) : (
+          <NoDataPanel title="Visningar & förfrågningar" />
+        )}
+        {adminStats.distributionData.length > 0 ? (
+          <TypeDistributionDonut title="Fördelning" subtitle="Typ av lokal" data={adminStats.distributionData} />
+        ) : (
+          <NoDataPanel title="Fördelning" />
+        )}
       </section>
 
       <section className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
@@ -2875,10 +3154,10 @@ function AdminOverview({ app }) {
                 <p className="mt-1 text-sm text-ink-600">Övervaka era pågående annonseringar</p>
               </div>
               <div className="flex items-center gap-2">
-                <button type="button" className="inline-flex h-9 w-9 min-h-0 items-center justify-center rounded-full border border-black/10 bg-[#fffffe] text-ink-700">
+                <button type="button" className="inline-flex h-9 w-9 min-h-0 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] text-ink-700">
                   <FilterIcon className="h-4 w-4" />
                 </button>
-                <button type="button" className="inline-flex h-9 w-9 min-h-0 items-center justify-center rounded-full border border-black/10 bg-[#fffffe] text-ink-700">
+                <button type="button" className="inline-flex h-9 w-9 min-h-0 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] text-ink-700">
                   <SearchIcon className="h-4 w-4" />
                 </button>
               </div>
@@ -2897,7 +3176,7 @@ function AdminOverview({ app }) {
                 </tr>
               </thead>
               <tbody>
-                {activeListings.map((item) => (
+                {companyListings.map((item) => (
                   <tr key={item.id} className="border-t border-black/10">
                     <td className="px-4 py-3.5 align-top sm:px-5">
                       <div className="flex items-center gap-3">
@@ -2923,19 +3202,26 @@ function AdminOverview({ app }) {
                     <td className="px-4 py-3.5 text-right font-semibold text-ink-800">{item.views.toLocaleString("sv-SE")}</td>
                     <td className="px-4 py-3.5 text-right font-semibold text-ink-800">{item.inquiries}</td>
                     <td className="px-4 py-3.5 text-right sm:px-5">
-                      <button type="button" className="inline-flex h-8 w-8 min-h-0 items-center justify-center rounded-full border border-transparent text-ink-600 hover:border-black/10 hover:bg-[#fffffe]">
+                      <button type="button" className="inline-flex h-8 w-8 min-h-0 items-center justify-center rounded-full border border-transparent text-ink-600 hover:border-black/10 hover:bg-[#ffffff]">
                         <MoreHorizontalIcon className="h-4 w-4" />
                       </button>
                     </td>
                   </tr>
                 ))}
+                {companyListings.length === 0 ? (
+                  <tr className="border-t border-black/10">
+                    <td className="px-4 py-8 text-center text-sm font-semibold text-ink-500 sm:px-5" colSpan={5}>
+                      Ingen data
+                    </td>
+                  </tr>
+                ) : null}
               </tbody>
             </table>
           </div>
 
           <div className="flex items-center justify-between border-t border-black/10 px-4 py-3 text-xs text-ink-500 sm:px-5">
-            <span>Visar 5 av 24 annonser</span>
-            <button type="button" className="min-h-0 p-0 text-xs font-semibold text-[#0f1930]" onClick={() => navigateTo("/app/admin/annonser")}>
+            <span>Visar {companyListings.length} annonser</span>
+            <button type="button" className="min-h-0 p-0 text-xs font-semibold text-[#0b0a0e]" onClick={() => navigateTo("/app/admin/annonser")}>
               Visa alla
             </button>
           </div>
@@ -2950,7 +3236,7 @@ function AdminOverview({ app }) {
               const hasNext = index < activityItems.length - 1;
               return (
                 <li key={item.id} className="relative pl-9">
-                  <span className="absolute left-0 top-0 inline-flex h-7 w-7 items-center justify-center rounded-full border border-black/10 bg-[#fffffe] text-ink-700">
+                  <span className="absolute left-0 top-0 inline-flex h-7 w-7 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] text-ink-700">
                     <Icon className="h-3.5 w-3.5" />
                   </span>
                   {hasNext ? <span className="absolute left-[13px] top-7 h-[calc(100%+0.65rem)] w-px bg-black/10" /> : null}
@@ -2959,6 +3245,11 @@ function AdminOverview({ app }) {
                 </li>
               );
             })}
+            {activityItems.length === 0 ? (
+              <li className="rounded-2xl border border-dashed border-black/15 bg-[#fafafa] px-4 py-8 text-center text-sm font-semibold text-ink-500">
+                Ingen data
+              </li>
+            ) : null}
           </ul>
           <button type="button" className="btn-secondary mt-4 w-full min-h-0 py-2 text-xs" onClick={() => navigateTo("/app/admin/aktivitet")}>
             Se all aktivitet
@@ -2966,97 +3257,6 @@ function AdminOverview({ app }) {
         </article>
       </section>
 
-      <section className="surface p-4 sm:p-5">
-        <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-semibold text-ink-900">Mäklarteam</h2>
-            <p className="mt-1 text-sm text-ink-600">3 aktiva mäklare i er organisation</p>
-          </div>
-          <button type="button" className="btn-secondary px-4" onClick={() => navigateTo("/app/admin/maklare")}>
-            <UsersGroupIcon className="mr-1.5 h-4 w-4" />
-            Hantera mäklare
-          </button>
-        </div>
-
-        <div className="grid gap-4 xl:grid-cols-2">
-          <article className="rounded-2xl border border-black/10 bg-[#fffffe] p-4 sm:p-5">
-            <h3 className="text-lg font-semibold text-ink-900">Inbjudna mäklare</h3>
-            <p className="mt-1 text-sm text-ink-600">Översikt över redan inbjudna och aktiva mäklare.</p>
-            <div className="mt-4 space-y-3">
-              {overviewInvitedBrokers.map((broker) => {
-                const initials = String(broker.name || broker.email || "AA")
-                  .split(" ")
-                  .filter(Boolean)
-                  .slice(0, 2)
-                  .map((part) => part[0])
-                  .join("")
-                  .toUpperCase();
-                return (
-                  <div key={broker.id} className="flex items-center justify-between gap-3 rounded-2xl border border-black/10 bg-[#fffffe] px-3 py-2.5">
-                    <div className="flex min-w-0 items-center gap-2.5">
-                      <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#e6eefc] text-xs font-semibold text-[#2d4f83]">
-                        {initials}
-                      </span>
-                      <span className="min-w-0">
-                        <span className="block truncate text-sm font-semibold text-ink-900">{broker.name}</span>
-                        <span className="block truncate text-xs text-ink-600">{broker.email}</span>
-                      </span>
-                    </div>
-                    <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
-                      {broker.status}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </article>
-
-          <article className="rounded-2xl border border-black/10 bg-[#fffffe] p-4 sm:p-5">
-            <h3 className="text-lg font-semibold text-ink-900">Bjud in mäklare</h3>
-            <p className="mt-1 text-sm text-ink-600">Använd samma inbjudningsflöde som onboarding.</p>
-            <div className="mt-4 rounded-2xl border border-black/10 bg-[#fafafa] px-4 py-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Inbjudningskod</p>
-              <p className="mt-2 text-[1.2rem] font-semibold text-[#0f1930]">{overviewInviteCode}</p>
-              <p className="mt-1 text-sm text-ink-500">Dela med mäklare via e-post eller internt system.</p>
-            </div>
-            <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_150px]">
-              <input
-                className="field"
-                type="email"
-                value={overviewInviteEmail}
-                onChange={(event) => setOverviewInviteEmail(event.target.value)}
-                placeholder="kollega@bolag.se"
-              />
-              <button
-                type="button"
-                className="btn-primary inline-flex w-full items-center justify-center px-4"
-                onClick={() => {
-                  const email = String(overviewInviteEmail || "").trim();
-                  if (!email) return;
-                  const name = email
-                    .split("@")[0]
-                    .split(/[._-]/)
-                    .filter(Boolean)
-                    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-                    .join(" ");
-                  setOverviewInvitedBrokers((prev) => [
-                    {
-                      id: `overview-invited-${Date.now()}`,
-                      name: name || "Ny mäklare",
-                      email,
-                      status: "Väntar"
-                    },
-                    ...prev
-                  ]);
-                  setOverviewInviteEmail("");
-                }}
-              >
-                + Bjud in
-              </button>
-            </div>
-          </article>
-        </div>
-      </section>
     </div>
   );
 }
@@ -3082,7 +3282,7 @@ function AdminProfile({ app }) {
 
   useEffect(() => {
     setDraft({
-      legalEntity: user?.profile?.legalEntity || "",
+      legalEntity: user?.profile?.legalEntity || user?.profile?.companyName || "",
       organizationNumber: user?.profile?.organizationNumber || "",
       companyType: user?.profile?.companyType || "",
       portfolioSize: user?.profile?.portfolioSize || "",
@@ -3105,10 +3305,12 @@ function AdminProfile({ app }) {
     }
     setSaving(true);
     try {
+      const legalEntity = String(draft.legalEntity || "").trim();
       await app.updateProfile({
         profile: {
           ...(user?.profile || {}),
-          legalEntity: String(draft.legalEntity || "").trim(),
+          legalEntity,
+          companyName: legalEntity,
           organizationNumber: String(draft.organizationNumber || "").trim(),
           companyType: String(draft.companyType || "").trim(),
           portfolioSize: String(draft.portfolioSize || "").trim(),
@@ -3167,7 +3369,7 @@ function AdminProfile({ app }) {
         <div className="grid gap-1.5 text-sm lg:col-span-2">
           <span className="text-sm font-semibold text-ink-700">Logotyp</span>
           <label className="flex min-h-[132px] cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-black/15 bg-[#fafafa] px-5 py-6 text-center transition hover:bg-black/5">
-            <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-black/10 bg-[#fffffe] text-ink-700">
+            <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] text-ink-700">
               <ArrowUpIcon className="h-4 w-4" />
             </span>
             <span className="mt-3 text-base font-semibold text-ink-700">Dra och släpp eller klicka för att ladda upp</span>
@@ -3216,16 +3418,16 @@ function AdminProfile({ app }) {
                 type="button"
                 className={`flex w-full items-center gap-3 !rounded-2xl border px-4 py-3 text-left transition ${
                   draft.approvalFlow === option.key
-                    ? "border-[#0f1930] bg-[#f8fafc]"
-                    : "border-black/10 bg-[#fffffe] hover:bg-black/5"
+                    ? "border-[#0b0a0e] bg-[#f8fafc]"
+                    : "border-black/10 bg-[#ffffff] hover:bg-black/5"
                 }`}
                 onClick={() => setDraft((prev) => ({ ...prev, approvalFlow: option.key }))}
               >
-                <span className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${draft.approvalFlow === option.key ? "border-[#0f1930]" : "border-black/20"}`}>
-                  <span className={`h-2.5 w-2.5 rounded-full ${draft.approvalFlow === option.key ? "bg-[#0f1930]" : "bg-transparent"}`} />
+                <span className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${draft.approvalFlow === option.key ? "border-[#0b0a0e]" : "border-black/20"}`}>
+                  <span className={`h-2.5 w-2.5 rounded-full ${draft.approvalFlow === option.key ? "bg-[#0b0a0e]" : "bg-transparent"}`} />
                 </span>
                 <span>
-                  <span className="block text-[0.92rem] font-semibold leading-tight text-[#0f1930]">{option.title}</span>
+                  <span className="block text-[0.92rem] font-semibold leading-tight text-[#0b0a0e]">{option.title}</span>
                   <span className="mt-1 block text-[0.8rem] leading-snug text-ink-600">{option.description}</span>
                 </span>
               </button>
@@ -3241,16 +3443,16 @@ function AdminProfile({ app }) {
                 type="button"
                 className={`flex w-full items-center gap-3 !rounded-2xl border px-4 py-3 text-left transition ${
                   draft.listingModeration === option.key
-                    ? "border-[#0f1930] bg-[#f8fafc]"
-                    : "border-black/10 bg-[#fffffe] hover:bg-black/5"
+                    ? "border-[#0b0a0e] bg-[#f8fafc]"
+                    : "border-black/10 bg-[#ffffff] hover:bg-black/5"
                 }`}
                 onClick={() => setDraft((prev) => ({ ...prev, listingModeration: option.key }))}
               >
-                <span className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${draft.listingModeration === option.key ? "border-[#0f1930]" : "border-black/20"}`}>
-                  <span className={`h-2.5 w-2.5 rounded-full ${draft.listingModeration === option.key ? "bg-[#0f1930]" : "bg-transparent"}`} />
+                <span className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${draft.listingModeration === option.key ? "border-[#0b0a0e]" : "border-black/20"}`}>
+                  <span className={`h-2.5 w-2.5 rounded-full ${draft.listingModeration === option.key ? "bg-[#0b0a0e]" : "bg-transparent"}`} />
                 </span>
                 <span>
-                  <span className="block text-[0.92rem] font-semibold leading-tight text-[#0f1930]">{option.title}</span>
+                  <span className="block text-[0.92rem] font-semibold leading-tight text-[#0b0a0e]">{option.title}</span>
                   <span className="mt-1 block text-[0.8rem] leading-snug text-ink-600">{option.description}</span>
                 </span>
               </button>
@@ -3288,19 +3490,23 @@ function AdminPanelPage({ app, pathname }) {
   const sectionKey = sectionFromPath(pathname);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const currentSectionLabel = SECTION_TITLES[sectionKey] || "Översikt";
+  const companyListings = ownedAdminListings(app);
+  const notificationCount = countAdminNotifications(app);
+  const hasCompanyProfile = Boolean(app?.adminCompany?.id || app?.user?.profile?.companyId || app?.user?.profile?.companyName || app?.user?.profile?.legalEntity);
+  const shouldShowEmptyCompanyPage = !hasCompanyProfile && !["adminprofil", "hjalp", "installningar", "notifikationer", "maklare", "annonser"].includes(sectionKey);
 
   return (
-    <section className="flex h-full min-h-0 bg-[#fffffe]">
-      <aside className="hidden h-full w-[296px] shrink-0 border-r border-black/10 bg-[#fffffe] lg:block">
-        <AdminSidebar pathname={pathname} onNavigate={(nextPath) => navigateTo(nextPath)} onLogout={app?.logout} />
+    <section className="flex h-full min-h-0 bg-[#ffffff]">
+      <aside className="hidden h-full w-[296px] shrink-0 border-r border-black/10 bg-[#ffffff] lg:block">
+        <AdminSidebar pathname={pathname} onNavigate={(nextPath) => navigateTo(nextPath)} onLogout={app?.logout} hasCompanyData={companyListings.length > 0} listingCount={companyListings.length} notificationCount={notificationCount} />
       </aside>
 
       <div data-admin-scroll-container="true" className="min-h-0 flex-1 overflow-y-auto">
-        <div className="sticky top-0 z-10 border-b border-black/10 bg-[#fffffe] px-4 py-2.5 lg:hidden">
+        <div className="sticky top-0 z-10 border-b border-black/10 bg-[#ffffff] px-4 py-2.5 lg:hidden">
           <div className="flex items-center justify-between gap-3">
             <button
               type="button"
-              className="inline-flex min-h-0 items-center gap-1.5 rounded-full border border-black/20 bg-[#fffffe] px-3 py-2 text-xs font-semibold text-ink-700"
+              className="inline-flex min-h-0 items-center gap-1.5 rounded-full border border-black/20 bg-[#ffffff] px-3 py-2 text-xs font-semibold text-ink-700"
               onClick={() => setMobileSidebarOpen(true)}
             >
               <PanelLeftIcon className="h-4 w-4" />
@@ -3310,27 +3516,28 @@ function AdminPanelPage({ app, pathname }) {
           </div>
         </div>
 
-        <div className={`mx-auto w-full max-w-[1600px] ${sectionKey === "statistik" ? "pb-4 pr-4 pt-4 pl-2 sm:pb-6 sm:pr-6 sm:pt-6 sm:pl-3" : "p-4 sm:p-6"}`}>
-          {sectionKey === "oversikt" ? <AdminOverview app={app} /> : null}
-          {sectionKey === "annonser" ? <AdminListingsPage /> : null}
-          {sectionKey === "leads" ? <AdminLeadMatchesPage app={app} /> : null}
-          {sectionKey === "inkorg" ? <AdminInquiriesPage pathname={pathname} /> : null}
-          {sectionKey === "notifikationer" ? <AdminNotificationsPage /> : null}
-          {sectionKey === "maklare" ? <AdminBrokersPage /> : null}
-          {sectionKey === "statistik" ? <AdminStatistics /> : null}
-          {sectionKey === "aktivitet" ? <AdminActivityPage /> : null}
+        <div className="mx-auto w-full max-w-[1600px] p-4 sm:p-6">
+          {shouldShowEmptyCompanyPage ? <EmptyCompanyAdminPage app={app} sectionKey={sectionKey} /> : null}
+          {!shouldShowEmptyCompanyPage && sectionKey === "oversikt" ? <AdminOverview app={app} /> : null}
+          {!shouldShowEmptyCompanyPage && sectionKey === "annonser" ? <AdminListingsPage listings={companyListings} /> : null}
+          {!shouldShowEmptyCompanyPage && sectionKey === "leads" ? <AdminLeadMatchesPage app={app} /> : null}
+          {!shouldShowEmptyCompanyPage && sectionKey === "inkorg" ? <AdminInquiriesPage pathname={pathname} /> : null}
+          {!shouldShowEmptyCompanyPage && sectionKey === "notifikationer" ? <AdminNotificationsPage app={app} /> : null}
+          {!shouldShowEmptyCompanyPage && sectionKey === "maklare" ? <AdminBrokersPage app={app} /> : null}
+          {!shouldShowEmptyCompanyPage && sectionKey === "statistik" ? <AdminStatistics app={app} /> : null}
+          {!shouldShowEmptyCompanyPage && sectionKey === "aktivitet" ? <AdminActivityPage /> : null}
           {sectionKey === "adminprofil" ? <AdminProfile app={app} /> : null}
-          {sectionKey !== "oversikt" && sectionKey !== "annonser" && sectionKey !== "leads" && sectionKey !== "inkorg" && sectionKey !== "notifikationer" && sectionKey !== "maklare" && sectionKey !== "adminprofil" && sectionKey !== "statistik" && sectionKey !== "aktivitet" ? <AdminPlaceholder sectionKey={sectionKey} /> : null}
+          {!shouldShowEmptyCompanyPage && sectionKey !== "oversikt" && sectionKey !== "annonser" && sectionKey !== "leads" && sectionKey !== "inkorg" && sectionKey !== "notifikationer" && sectionKey !== "maklare" && sectionKey !== "adminprofil" && sectionKey !== "statistik" && sectionKey !== "aktivitet" ? <AdminPlaceholder sectionKey={sectionKey} /> : null}
         </div>
       </div>
 
       {mobileSidebarOpen ? (
         <div className="fixed inset-0 z-[70] bg-transparent lg:hidden" onClick={() => setMobileSidebarOpen(false)}>
-          <div className="h-full w-[min(88vw,320px)] border-r border-black/10 bg-[#fffffe]" onClick={(event) => event.stopPropagation()}>
+          <div className="h-full w-[min(88vw,320px)] border-r border-black/10 bg-[#ffffff]" onClick={(event) => event.stopPropagation()}>
             <div className="flex items-center justify-end border-b border-black/10 p-3">
               <button
                 type="button"
-                className="inline-flex h-9 w-9 min-h-0 items-center justify-center rounded-full border border-black/10 bg-[#fffffe] text-ink-700"
+                className="inline-flex h-9 w-9 min-h-0 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] text-ink-700"
                 onClick={() => setMobileSidebarOpen(false)}
               >
                 <XIcon className="h-4 w-4" />
@@ -3343,6 +3550,9 @@ function AdminPanelPage({ app, pathname }) {
                 navigateTo(nextPath);
               }}
               onLogout={app?.logout}
+              hasCompanyData={companyListings.length > 0}
+              listingCount={companyListings.length}
+              notificationCount={notificationCount}
             />
           </div>
         </div>

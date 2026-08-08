@@ -73,9 +73,36 @@ function AppContent() {
       ? app.user.roles.map((item) => item === "publisher" ? "broker" : item)
       : [app.user?.role === "publisher" ? "broker" : (app.user?.role || "renter")];
     const hasCompanyAdminRole = normalizedRoles.includes("company_admin");
+    const hasPendingBrokerVerification =
+      app.user?.profile?.requestedRole === "broker" &&
+      app.user?.profile?.roleRequestStatus === "pending";
+    const userReadyForApp = Boolean(app.user?.onboardingCompleted || hasPendingBrokerVerification);
+    const userNeedsOnboarding = isAuthenticated && !userReadyForApp;
     const isAddBrokerIntent = isOnboardingPath && searchParams.get("intent") === "add-role" && searchParams.get("role") === "broker";
+    const isExplicitRoleSetupOnboarding =
+      isOnboardingPath
+      && (
+        (searchParams.get("role") === "company_admin" && searchParams.get("onboardingFlow") === "company_admin")
+        || (searchParams.get("role") === "broker" && (searchParams.get("onboardingFlow") === "broker" || searchParams.get("onboardingFlow") === "broker-with-program"))
+      );
     const canAddBrokerRole = isAuthenticated && !normalizedRoles.includes("broker") && !normalizedRoles.includes("company_admin");
     const authJustCompleted = typeof window !== "undefined" && window.sessionStorage.getItem("office_auth_just_completed") === "1";
+    const logoutInProgress = typeof window !== "undefined" && window.sessionStorage.getItem("office_auth_logout_in_progress") === "1";
+    const hasSignupDraft = typeof window !== "undefined" && Boolean(window.sessionStorage.getItem("office_rental_signup_draft"));
+    const onboardingCompletionScreen = typeof window !== "undefined" ? window.sessionStorage.getItem("office_onboarding_completion_screen") : "";
+
+    if (logoutInProgress && pathname !== "/") {
+      navigateTo("/", { replace: true });
+      return;
+    }
+
+    if (isAuthenticated && hasSignupDraft) {
+      const isSignupProfileExtraPath = pathname === "/signup" && searchParams.get("step") === "profile-extra";
+      if (!isSignupProfileExtraPath) {
+        navigateTo("/signup?step=profile-extra", { replace: true });
+      }
+      return;
+    }
 
     if (!isAuthenticated && pathname === "/app") {
       navigateTo("/login?returnTo=/app", { replace: true });
@@ -92,21 +119,23 @@ function AppContent() {
       return;
     }
 
-    if (isAuthenticated && !app.user.onboardingCompleted && !isOnboardingPath && (pathname === "/app" || pathname.startsWith("/app/"))) {
+    if (userNeedsOnboarding && !isOnboardingPath && (pathname === "/app" || pathname.startsWith("/app/"))) {
       navigateTo("/onboarding", { replace: true });
       return;
     }
 
-    if (isAuthenticated && !app.user.onboardingCompleted && isCallbackPath) {
-      navigateTo("/onboarding", { replace: true });
+    if (userNeedsOnboarding && isCallbackPath) {
+      navigateTo(hasSignupDraft ? "/signup?step=profile-extra" : "/signup", { replace: true });
       return;
     }
 
     if (
       isAuthenticated
-      && app.user.onboardingCompleted
+      && userReadyForApp
       && hasCompanyAdminRole
       && authJustCompleted
+      && !onboardingCompletionScreen
+      && !isExplicitRoleSetupOnboarding
       && !isAdminPath
     ) {
       window.sessionStorage.removeItem("office_auth_just_completed");
@@ -114,7 +143,14 @@ function AppContent() {
       return;
     }
 
-    if (isAuthenticated && app.user.onboardingCompleted && (isAuthPath || (isOnboardingPath && !(isAddBrokerIntent && canAddBrokerRole)))) {
+    if (
+      isAuthenticated
+      && userReadyForApp
+      && (
+        isAuthPath ||
+        (isOnboardingPath && !onboardingCompletionScreen && !isExplicitRoleSetupOnboarding && !(isAddBrokerIntent && canAddBrokerRole))
+      )
+    ) {
       if (typeof window !== "undefined") {
         window.sessionStorage.removeItem("office_auth_just_completed");
       }
@@ -130,7 +166,7 @@ function AppContent() {
       return;
     }
 
-    if (isAuthenticated && app.user.onboardingCompleted) {
+    if (isAuthenticated && userReadyForApp) {
       const normalizedRole = app.user.role === "publisher" ? "broker" : app.user.role;
       const fallbackRole = normalizedRole === "broker" || normalizedRole === "company_admin" ? normalizedRole : "renter";
       const rawRoles = Array.isArray(app.user.roles) ? app.user.roles.map((item) => item === "publisher" ? "broker" : item) : [fallbackRole];
@@ -187,7 +223,7 @@ function AppContent() {
 
     const targets = Array.from(
       document.querySelectorAll("h1, h2, h3, article, .surface, [data-reveal]")
-    ).filter((element) => !element.closest("header"));
+    ).filter((element) => !element.closest("header") && !element.closest("[data-no-reveal]"));
 
     targets.forEach((element) => {
       element.classList.remove("reveal-in");
@@ -216,7 +252,7 @@ function AppContent() {
 
   if (app.isBootstrapping) {
     return (
-      <main className="min-h-screen bg-[#fffffe]" aria-hidden="true">
+      <main className="min-h-screen bg-[#ffffff]" aria-hidden="true">
         <div className="h-screen w-full" />
       </main>
     );
@@ -240,7 +276,13 @@ function AppContent() {
   } else if (pathname === "/login") {
     content = <LoginPage />;
   } else if (pathname === "/signup") {
-    content = <SignupPage onCompleteSignup={app.completeSignup} onTestSignup={app.createTestSignup} currentUser={app.user} />;
+    content = (
+      <SignupPage
+        onCheckCompanyByOrganizationNumber={app.findCompanyByOrganizationNumber}
+        onCompleteSignup={app.completeSignup}
+        currentUser={app.user}
+      />
+    );
   } else if (pathname === "/callback") {
     content = <CallbackPage />;
   } else if (pathname === "/forgot-password") {
@@ -250,6 +292,7 @@ function AppContent() {
       <OnboardingPage
         user={app.user}
         onComplete={app.completeOnboarding}
+        onCheckCompanyByOrganizationNumber={app.findCompanyByOrganizationNumber}
         onSwitchRole={app.switchRole}
         onLogout={app.logout}
         pathname={pathname}
@@ -324,7 +367,15 @@ function AppContent() {
     }
 
       content = (
-        <AppShell pathname={pathname} user={app.user} onSwitchRole={app.switchRole} onLogout={app.logout}>
+        <AppShell
+          pathname={pathname}
+          user={app.user}
+          listings={app.listings}
+          notifications={app.notifications}
+          companyBrokers={app.companyBrokers}
+          onSwitchRole={app.switchRole}
+          onLogout={app.logout}
+        >
           {appRouteContent}
         </AppShell>
       );

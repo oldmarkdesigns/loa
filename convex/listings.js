@@ -4,8 +4,10 @@ import {
   assertViewerHasRole,
   duplicateSignal,
   findListingByPublicId,
+  getViewer,
   getViewerOrThrow,
   getVisibleListingOrThrow,
+  companyBrokerUserIds,
   listVisibleListings,
   listingQualityScore,
   listingWithOwner,
@@ -13,7 +15,8 @@ import {
   nowIso,
   parseAmenities,
   slugId,
-  stripSystemFields
+  stripSystemFields,
+  userCompanyId
 } from "./lib.js";
 
 function toNumber(value, fallback = 0) {
@@ -30,7 +33,7 @@ function normalizeImages(payload) {
   return cover ? [cover] : ["/object-images/object-1.jpeg"];
 }
 
-function buildListingPayload(payload, ownerId, existingListing = null) {
+function buildListingPayload(payload, ownerId, companyId = "", existingListing = null) {
   const images = normalizeImages(payload);
   const image = payload.image || payload.coverImage || images[0] || existingListing?.image || "/object-images/object-1.jpeg";
 
@@ -53,6 +56,7 @@ function buildListingPayload(payload, ownerId, existingListing = null) {
     amenities: Array.isArray(payload.amenities) ? payload.amenities : parseAmenities(payload.amenities ?? existingListing?.amenities ?? ""),
     tags: Array.isArray(payload.tags) ? payload.tags : existingListing?.tags ?? ["Ny annons"],
     ownerId,
+    ...(companyId || existingListing?.companyId ? { companyId: companyId || existingListing.companyId } : {}),
     status: payload.status ?? existingListing?.status ?? "draft",
     isBostadsratt: payload.isBostadsratt !== undefined ? Boolean(payload.isBostadsratt) : existingListing?.isBostadsratt ?? false,
     verifyRequestedAt: existingListing?.verifyRequestedAt ?? null,
@@ -68,12 +72,19 @@ async function collectAllListings(ctx) {
 async function findOwnedListingOrThrow(ctx, listingId) {
   const viewer = await getViewerOrThrow(ctx);
   const listing = await findListingByPublicId(ctx, listingId);
+  const viewerCompanyId = userCompanyId(viewer);
 
   if (!listing) {
     throw new Error("Objektet hittades inte.");
   }
 
-  if (listing.ownerId !== viewer.id) {
+  const brokerUserIds = await companyBrokerUserIds(ctx, viewer);
+
+  if (
+    listing.ownerId !== viewer.id
+    && (!viewerCompanyId || listing.companyId !== viewerCompanyId)
+    && !brokerUserIds.has(listing.ownerId)
+  ) {
     throw new Error("Du kan bara uppdatera dina egna objekt.");
   }
 
@@ -99,6 +110,28 @@ export const get = queryGeneric({
   }
 });
 
+export const recordView = mutationGeneric({
+  args: {
+    id: v.string(),
+    source: v.optional(v.string())
+  },
+  handler: async (ctx, args) => {
+    const listing = await getVisibleListingOrThrow(ctx, args?.id || "");
+    const viewer = await getViewer(ctx);
+    const createdAt = nowIso();
+
+    await ctx.db.insert("listingViews", {
+      id: slugId("lv"),
+      listingId: listing.id,
+      ...(viewer?.id ? { viewerId: viewer.id } : {}),
+      ...(args?.source ? { source: String(args.source).slice(0, 120) } : {}),
+      createdAt
+    });
+
+    return { ok: true };
+  }
+});
+
 export const create = mutationGeneric({
   args: {
     payload: v.optional(v.any())
@@ -107,7 +140,7 @@ export const create = mutationGeneric({
     const viewer = await getViewerOrThrow(ctx);
     assertViewerHasRole(viewer, "publisher");
     const createdAt = nowIso();
-    const payload = buildListingPayload(args?.payload || {}, viewer.id);
+    const payload = buildListingPayload(args?.payload || {}, viewer.id, userCompanyId(viewer));
     const listing = {
       id: slugId("L"),
       ...payload,
@@ -137,7 +170,7 @@ export const update = mutationGeneric({
   handler: async (ctx, args) => {
     const { viewer, listing } = await findOwnedListingOrThrow(ctx, args?.id || "");
     assertViewerHasRole(viewer, "publisher");
-    const nextPayload = buildListingPayload(args?.payload || {}, listing.ownerId, stripSystemFields(listing));
+    const nextPayload = buildListingPayload(args?.payload || {}, listing.ownerId, listing.companyId || userCompanyId(viewer), stripSystemFields(listing));
     const patch = {
       ...nextPayload,
       qualityScore: listingQualityScore(nextPayload),

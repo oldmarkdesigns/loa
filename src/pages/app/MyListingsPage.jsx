@@ -112,10 +112,10 @@ function StepProgress({ currentStep }) {
               key={label}
               className={`rounded-2xl border px-3 py-2 ${
                 active
-                  ? "border-[#0d162b]/30 bg-[#fffffe]"
+                  ? "border-[#0d162b]/30 bg-[#ffffff]"
                   : complete
-                    ? "border-[#0d162b]/20 bg-[#fffffe]"
-                    : "border-black/10 bg-[#fffffe]/70"
+                    ? "border-[#0d162b]/20 bg-[#ffffff]"
+                    : "border-black/10 bg-[#ffffff]/70"
               }`}
             >
               <div className="flex items-center gap-2">
@@ -125,7 +125,7 @@ function StepProgress({ currentStep }) {
                       ? "bg-[#0d162b] text-white"
                       : complete
                         ? "bg-[#1a2845] text-white"
-                        : "border border-black/10 bg-[#fffffe] text-ink-500"
+                        : "border border-black/10 bg-[#ffffff] text-ink-500"
                   }`}
                 >
                   {index + 1}
@@ -145,7 +145,7 @@ function ListingPreview({ draft }) {
   const amenities = parseAmenities(draft.amenities);
 
   return (
-    <article className="overflow-hidden rounded-3xl border border-black/10 bg-[#fffffe]">
+    <article className="overflow-hidden rounded-3xl border border-black/10 bg-[#ffffff]">
       <img src={draft.image || "/object-images/object-1.jpeg"} alt={draft.title || "Objekt"} className="h-28 w-full object-cover" />
       <div className="space-y-3 p-4">
         <div>
@@ -162,7 +162,7 @@ function ListingPreview({ draft }) {
         <div className="flex flex-wrap gap-2">
           {amenities.length === 0 ? <span className="text-xs text-ink-500">Lägg till faciliteter för att förbättra annonsen.</span> : null}
           {amenities.slice(0, 6).map((amenity) => (
-            <span key={amenity} className="rounded-full border border-black/10 bg-[#fffffe] px-2 py-1 text-[11px] font-semibold text-ink-700">{amenity}</span>
+            <span key={amenity} className="rounded-full border border-black/10 bg-[#ffffff] px-2 py-1 text-[11px] font-semibold text-ink-700">{amenity}</span>
           ))}
         </div>
       </div>
@@ -172,16 +172,16 @@ function ListingPreview({ draft }) {
 
 function PublishReview({ draft, onEdit, onApproveAndPublish, pending }) {
   return (
-    <div className="mt-6 space-y-4 rounded-2xl border border-black/10 bg-[#fffffe] p-4">
-      <div className="rounded-2xl border border-black/10 bg-[#fffffe] px-3 py-2 text-sm font-semibold text-ink-700">
+    <div className="mt-6 space-y-4 rounded-2xl border border-black/10 bg-[#ffffff] p-4">
+      <div className="rounded-2xl border border-black/10 bg-[#ffffff] px-3 py-2 text-sm font-semibold text-ink-700">
         Kontrollera annonsen innan publicering.
       </div>
       <ListingPreview draft={draft} />
       <div className="flex w-full justify-end gap-2">
-        <button type="button" className="rounded-2xl border border-black/20 bg-[#fffffe] px-4 py-2 text-xs font-semibold" onClick={onEdit}>
+        <button type="button" className="rounded-2xl border border-black/20 bg-[#ffffff] px-4 py-2 text-xs font-semibold" onClick={onEdit}>
           Ändra annons
         </button>
-        <button type="button" className="rounded-2xl border border-[#0d162b] bg-[#0d162b] px-4 py-2 text-xs font-semibold text-white hover:bg-[#16233f]" onClick={onApproveAndPublish} disabled={pending}>
+        <button type="button" className="rounded-2xl border border-[#0d162b] bg-[#0d162b] px-4 py-2 text-xs font-semibold text-white" onClick={onApproveAndPublish} disabled={pending}>
           {pending ? "Publicerar..." : "Godkänn och publicera"}
         </button>
       </div>
@@ -194,10 +194,10 @@ function PublishSuccess({ draft, onCreateAnother, onViewListing }) {
     <div className="mt-6 space-y-4 rounded-2xl border border-emerald-200 bg-emerald-50/40 p-4">
       <ListingPreview draft={draft} />
       <div className="flex justify-end gap-2">
-        <button type="button" className="rounded-2xl border border-black/20 bg-[#fffffe] px-4 py-2 text-xs font-semibold text-black" onClick={onCreateAnother}>
+        <button type="button" className="rounded-2xl border border-black/20 bg-[#ffffff] px-4 py-2 text-xs font-semibold text-black" onClick={onCreateAnother}>
           Publicera nytt objekt
         </button>
-        <button type="button" className="rounded-2xl border border-[#0d162b] bg-[#0d162b] px-4 py-2 text-xs font-semibold text-white hover:bg-[#16233f]" onClick={onViewListing}>
+        <button type="button" className="rounded-2xl border border-[#0d162b] bg-[#0d162b] px-4 py-2 text-xs font-semibold text-white" onClick={onViewListing}>
           Visa objekt
         </button>
       </div>
@@ -289,7 +289,7 @@ function MyListingsPage({ app }) {
   if (user?.role !== "publisher") {
     return (
       <section className="p-4 sm:p-6">
-        <div className="mx-auto max-w-[1000px] rounded-3xl border border-black/10 bg-[#fffffe] p-6 text-sm text-ink-600">
+        <div className="mx-auto max-w-[1000px] rounded-3xl border border-black/10 bg-[#ffffff] p-6 text-sm text-ink-600">
           Dina objekt är tillgängligt i hyresvärdsläge.
         </div>
       </section>
@@ -470,14 +470,14 @@ function MyListingsPage({ app }) {
               <h1 className="text-3xl font-semibold">Ändra objekt</h1>
               <p className="text-sm text-ink-600">Uppdatera all information och publicera ändringarna direkt.</p>
             </div>
-            <button type="button" className="rounded-2xl border border-black/20 bg-[#fffffe] px-4 py-2.5 text-sm font-semibold" onClick={resetEditView}>
-              Tillbaka till dina objekt
+            <button type="button" className="rounded-2xl border border-black/20 bg-[#ffffff] px-4 py-2.5 text-sm font-semibold" onClick={resetEditView}>
+              Stäng
             </button>
           </div>
 
           <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
-            <div className="space-y-3 rounded-3xl border border-black/10 bg-[#fffffe] p-4">
-              <div className="rounded-2xl border border-black/10 bg-[#fffffe] p-3">
+            <div className="space-y-3 rounded-3xl border border-black/10 bg-[#ffffff] p-4">
+              <div className="rounded-2xl border border-black/10 bg-[#ffffff] p-3">
                 <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">1. Grund</p>
                 <div className="mt-2 space-y-3">
                   <input className="field" value={draft.title} onChange={(event) => setDraft((prev) => ({ ...prev, title: event.target.value }))} placeholder="Rubrik" />
@@ -497,7 +497,7 @@ function MyListingsPage({ app }) {
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-black/10 bg-[#fffffe] p-3">
+              <div className="rounded-2xl border border-black/10 bg-[#ffffff] p-3">
                 <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">2. Villkor</p>
                 <div className="mt-2 space-y-3">
                   <div className="grid gap-3 sm:grid-cols-2">
@@ -523,7 +523,7 @@ function MyListingsPage({ app }) {
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-black/10 bg-[#fffffe] p-3">
+              <div className="rounded-2xl border border-black/10 bg-[#ffffff] p-3">
                 <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">3. Media</p>
                 <div className="mt-2 space-y-3">
                   <input className="field" value={draft.image} onChange={(event) => setDraft((prev) => ({ ...prev, image: event.target.value }))} placeholder="Sökväg till omslagsbild" />
@@ -535,17 +535,17 @@ function MyListingsPage({ app }) {
 
               <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
                 <div className="flex flex-wrap gap-2">
-                  <button type="button" className="rounded-2xl border border-black/20 bg-[#fffffe] px-4 py-2 text-sm font-semibold" onClick={resetEditView}>
+                  <button type="button" className="rounded-2xl border border-black/20 bg-[#ffffff] px-4 py-2 text-sm font-semibold" onClick={resetEditView}>
                     Avbryt
                   </button>
-                  <button type="button" className="rounded-2xl border border-[#0f1930] bg-[#0f1930] px-4 py-2 text-sm font-semibold text-white hover:bg-[#16233f]" onClick={handleSaveAndPublish} disabled={pending}>
+                  <button type="button" className="rounded-2xl border border-[#0b0a0e] bg-[#0b0a0e] px-4 py-2 text-sm font-semibold text-white" onClick={handleSaveAndPublish} disabled={pending}>
                     {pending ? "Sparar..." : "Spara och publicera"}
                   </button>
                 </div>
               </div>
             </div>
 
-            <div className="space-y-2 rounded-3xl border border-black/10 bg-[#fffffe] p-4">
+            <div className="space-y-2 rounded-3xl border border-black/10 bg-[#ffffff] p-4">
               <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Förhandsvisning för hyresgäst</p>
               <ListingPreview draft={draft} />
             </div>
@@ -563,7 +563,7 @@ function MyListingsPage({ app }) {
             <div className="mb-2 flex flex-wrap items-center gap-5">
               <button
                 type="button"
-                className="tab-underline-button inline-flex items-center gap-1.5 border-b-2 border-[#0f1930] pb-1 text-sm font-semibold text-[#0f1930]"
+                className="tab-underline-button inline-flex items-center gap-1.5 border-b-2 border-[#0b0a0e] pb-1 text-sm font-semibold text-[#0b0a0e]"
                 onClick={() => navigateTo("/app/my-listings")}
               >
                 <Icon name="building" className="h-3.5 w-3.5" />
@@ -589,7 +589,7 @@ function MyListingsPage({ app }) {
         </div>
 
         <div className="grid min-h-0 flex-1 gap-5 xl:grid-cols-[minmax(0,1fr)_1px_minmax(0,1fr)] xl:gap-6">
-          <aside className="xl:order-3 self-start rounded-3xl border border-[#c8d1de] bg-[#fffffe] p-4 sm:p-5">
+          <aside className="xl:order-3 self-start rounded-3xl border border-[#c8d1de] bg-[#ffffff] p-4 sm:p-5">
             <div className="mb-3 flex items-start justify-between gap-3">
               <div>
                 <p className={`text-xs font-semibold uppercase tracking-wide ${publishedPreview ? "text-emerald-600" : "text-ink-500"}`}>
@@ -610,7 +610,7 @@ function MyListingsPage({ app }) {
                 onViewListing={() => navigateTo("/app/my-listings")}
               />
             ) : (
-              <div className="mt-6 space-y-4 rounded-3xl border border-black/10 bg-[#fffffe] p-4">
+              <div className="mt-6 space-y-4 rounded-3xl border border-black/10 bg-[#ffffff] p-4">
                 {createStep === 0 ? (
                   <div className="space-y-3">
                     <input className={createFieldClass(0, "title")} value={createDraft.title} onChange={(event) => setCreateDraft((prev) => ({ ...prev, title: event.target.value }))} placeholder="Rubrik" />
@@ -688,17 +688,17 @@ function MyListingsPage({ app }) {
                   <div className="flex flex-wrap items-center justify-between gap-2 border-t border-black/10 pt-4">
                     <button
                       type="button"
-                      className="rounded-2xl border border-black/20 bg-[#fffffe] px-4 py-2 text-sm font-semibold disabled:opacity-50"
+                      className="rounded-2xl border border-black/20 bg-[#ffffff] px-4 py-2 text-sm font-semibold disabled:opacity-50"
                       onClick={() => setCreateStep((value) => Math.max(0, value - 1))}
                       disabled={createStep === 0}
                     >
                       Föregående
                     </button>
                     <div className="flex gap-2">
-                      <button type="button" className="rounded-2xl border border-black/20 bg-[#fffffe] px-4 py-2 text-sm font-semibold" onClick={resetCreateFlow}>
+                      <button type="button" className="rounded-2xl border border-black/20 bg-[#ffffff] px-4 py-2 text-sm font-semibold" onClick={resetCreateFlow}>
                         Nollställ
                       </button>
-                      <button type="button" className="rounded-2xl border border-[#0d162b] bg-[#0d162b] px-4 py-2 text-sm font-semibold text-white hover:bg-[#16233f]" onClick={handleCreateNext}>
+                      <button type="button" className="rounded-2xl border border-[#0d162b] bg-[#0d162b] px-4 py-2 text-sm font-semibold text-white" onClick={handleCreateNext}>
                         Nästa steg
                       </button>
                     </div>
@@ -712,7 +712,7 @@ function MyListingsPage({ app }) {
 
           <section className="min-w-0 xl:order-1 xl:pr-1 flex min-h-0 flex-col">
             <div className="mb-3 shrink-0 space-y-3">
-              <div className="rounded-2xl border border-black/10 bg-[#fffffe] p-3">
+              <div className="rounded-2xl border border-black/10 bg-[#ffffff] p-3">
                 <div className="grid gap-2 sm:grid-cols-[1fr_170px_250px]">
                   <input
                     className="field"
@@ -743,15 +743,15 @@ function MyListingsPage({ app }) {
             <div className="min-h-0 flex-1 pr-1">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {sortedOwnListings.length === 0 ? (
-                <div className="rounded-3xl border border-black/10 bg-[#fffffe] p-5 text-sm text-ink-500">
+                <div className="rounded-3xl border border-black/10 bg-[#ffffff] p-5 text-sm text-ink-500">
                   Du har inte publicerat några objekt ännu.
                 </div>
               ) : null}
 
               {sortedOwnListings.map((listing) => (
-                <article key={listing.id} className="rounded-3xl border border-black/10 bg-[#fffffe] p-3">
+                <article key={listing.id} className="rounded-3xl border border-black/10 bg-[#ffffff] p-3">
                   <div className="flex items-start gap-3">
-                    <div className="w-28 shrink-0 rounded-2xl border border-black/10 bg-[#fffffe] p-1.5">
+                    <div className="w-28 shrink-0 rounded-2xl border border-black/10 bg-[#ffffff] p-1.5">
                       <img src={listing.image || "/object-images/object-1.jpeg"} alt={listing.title} className="h-24 w-full rounded-xl object-cover" />
                     </div>
 
@@ -761,7 +761,7 @@ function MyListingsPage({ app }) {
                           <p className="truncate text-base font-semibold leading-tight">{listing.title}</p>
                           <p className="truncate text-xs text-ink-600">{listing.district} • {listing.address}</p>
                         </div>
-                        <span className="shrink-0 rounded-xl border border-black/10 bg-[#fffffe] px-2 py-1 text-[10px] font-semibold uppercase text-ink-700">
+                        <span className="shrink-0 rounded-xl border border-black/10 bg-[#ffffff] px-2 py-1 text-[10px] font-semibold uppercase text-ink-700">
                           {statusLabel(listing.status)}
                         </span>
                       </div>
@@ -780,10 +780,10 @@ function MyListingsPage({ app }) {
                       </div>
 
                       <div className="flex flex-wrap justify-end gap-1.5">
-                        <button type="button" className="whitespace-nowrap rounded-2xl border border-black/20 bg-[#fffffe] px-3 py-1.5 text-[11px] font-semibold" onClick={() => requestListingVerification(listing.id)}>
+                        <button type="button" className="whitespace-nowrap rounded-2xl border border-black/20 bg-[#ffffff] px-3 py-1.5 text-[11px] font-semibold" onClick={() => requestListingVerification(listing.id)}>
                           Begär verifiering
                         </button>
-                        <button type="button" className="whitespace-nowrap rounded-2xl border border-black/20 bg-[#fffffe] px-3 py-1.5 text-[11px] font-semibold" onClick={() => startEdit(listing)}>
+                        <button type="button" className="whitespace-nowrap rounded-2xl border border-black/20 bg-[#ffffff] px-3 py-1.5 text-[11px] font-semibold" onClick={() => startEdit(listing)}>
                           Ändra
                         </button>
                         <button type="button" className="whitespace-nowrap rounded-2xl border border-rose-200 bg-rose-50 px-3 py-1.5 text-[11px] font-semibold text-rose-700" onClick={() => handleDelete(listing)}>

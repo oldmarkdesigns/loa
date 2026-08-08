@@ -19,13 +19,24 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       onRedirectCallback={({ state }) => {
         if (typeof window !== "undefined") {
           window.sessionStorage.setItem("office_auth_just_completed", "1");
+          window.sessionStorage.removeItem("office_auth_logout_in_progress");
+          if (state?.signupDraft && typeof state.signupDraft === "object") {
+            window.sessionStorage.setItem("office_rental_signup_draft", JSON.stringify(state.signupDraft));
+          }
         }
+        const hasSignupDraft = typeof window !== "undefined" && Boolean(window.sessionStorage.getItem("office_rental_signup_draft"));
         const returnTo = typeof state?.returnTo === "string" && state.returnTo.startsWith("/")
           ? state.returnTo
-          : "/callback";
+          : hasSignupDraft
+            ? "/signup?step=profile-extra"
+            : "/signup";
         navigateTo(returnTo, { replace: true });
       }}
       onRefreshFailure={({ signIn }) => {
+        if (typeof window !== "undefined" && window.sessionStorage.getItem("office_auth_logout_in_progress") === "1") {
+          navigateTo("/", { replace: true });
+          return;
+        }
         const returnTo = `${window.location.pathname}${window.location.search}`;
         signIn({ state: { returnTo } }).catch(() => {});
       }}

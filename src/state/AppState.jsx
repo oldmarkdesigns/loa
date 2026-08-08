@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState } from 
 import { useAuth } from "@workos-inc/authkit-react";
 import { useConvexAuth } from "convex/react";
 import { aiApi, authApi, favoriteApi, leadsApi, listingApi, profileApi, viewingsApi } from "../api";
+import { navigateTo } from "../lib/router";
 import {
   analyticsEventNames,
   trackEvent,
@@ -10,7 +11,6 @@ import {
 } from "../lib/analytics";
 
 const AppStateContext = createContext(null);
-const TEST_SESSION_STORAGE_KEY = "office_rental_test_session_token";
 
 const defaultFilters = {
   county: "Stockholms län",
@@ -212,6 +212,17 @@ function safeProfileUpdatePayload(payload = {}) {
   };
 }
 
+function safeSignupPayload(payload = {}) {
+  const { name, phone, role, roles, profile } = payload;
+  return {
+    ...(name !== undefined ? { name } : {}),
+    ...(phone !== undefined ? { phone } : {}),
+    ...(role !== undefined ? { role } : {}),
+    ...(Array.isArray(roles) ? { roles } : {}),
+    ...(profile && typeof profile === "object" && !Array.isArray(profile) ? { profile } : {})
+  };
+}
+
 function safeOnboardingPayload(payload = {}) {
   const account = payload?.account && typeof payload.account === "object" ? payload.account : {};
   return {
@@ -236,6 +247,9 @@ export function AppProvider({ children }) {
   const [favorites, setFavorites] = useState([]);
   const [viewings, setViewings] = useState([]);
   const [leads, setLeads] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [companyBrokers, setCompanyBrokers] = useState([]);
+  const [adminCompany, setAdminCompany] = useState(null);
   const [savedFilters, setSavedFiltersState] = useState(defaultFilters);
   const [filterPresets, setFilterPresets] = useState([]);
   const [savedAiSearches, setSavedAiSearches] = useState([]);
@@ -265,37 +279,48 @@ export function AppProvider({ children }) {
       setFavorites([]);
       setViewings([]);
       setLeads([]);
+      setNotifications([]);
+      setCompanyBrokers([]);
+      setAdminCompany(null);
       return;
     }
 
     const activeRoles = (Array.isArray(activeUser.roles) ? activeUser.roles : [activeUser.role || "renter"]).map(normalizeUserRole);
     const hasPublisherAccess = activeRoles.includes("broker") || activeRoles.includes("company_admin");
     const hasRenterAccess = activeRoles.includes("renter");
+    const hasCompanyAdminAccess = activeRoles.includes("company_admin");
 
-    if (activeUser.authProvider === "test") {
-      const { listings: listingsData } = await listingApi.getListings(allListingsFilters);
-      setListings(listingsData);
-      setFavorites([]);
-      setViewings([]);
-      setLeads([]);
-      return;
-    }
-
-    const [{ listings: listingsData }, { favorites: favoriteData }, { viewings: viewingData }] = await Promise.all([
+    const [{ listings: listingsData }, { favorites: favoriteData }, { viewings: viewingData }, { notifications: notificationData }] = await Promise.all([
       listingApi.getListings(allListingsFilters),
       hasRenterAccess ? favoriteApi.getFavorites() : Promise.resolve({ favorites: [] }),
-      hasRenterAccess ? viewingsApi.getViewings() : Promise.resolve({ viewings: [] })
+      hasRenterAccess ? viewingsApi.getViewings() : Promise.resolve({ viewings: [] }),
+      profileApi.listNotifications().catch(() => ({ notifications: [] }))
     ]);
 
     setListings(listingsData);
     setFavorites(favoriteData);
     setViewings(viewingData);
+    setNotifications(notificationData);
 
     if (hasPublisherAccess) {
       const { leads: leadData } = await leadsApi.getLeads();
       setLeads(leadData);
     } else {
       setLeads([]);
+    }
+
+    if (hasCompanyAdminAccess) {
+      try {
+        const { company, brokers } = await profileApi.listCompanyBrokers();
+        setAdminCompany(company || null);
+        setCompanyBrokers(brokers || []);
+      } catch (_error) {
+        setAdminCompany(null);
+        setCompanyBrokers([]);
+      }
+    } else {
+      setAdminCompany(null);
+      setCompanyBrokers([]);
     }
   }
 
@@ -316,11 +341,14 @@ export function AppProvider({ children }) {
 
   async function clearLocalSessionState() {
     hydrateLocalUserState(null);
-    setFavorites([]);
-    setViewings([]);
-    setLeads([]);
-    setAiHistory([]);
-    await loadPublicListings();
+      setFavorites([]);
+      setViewings([]);
+      setLeads([]);
+      setNotifications([]);
+      setCompanyBrokers([]);
+      setAdminCompany(null);
+      setAiHistory([]);
+      await loadPublicListings();
   }
 
   async function bootstrapSession() {
@@ -332,18 +360,7 @@ export function AppProvider({ children }) {
     setIsSessionSyncing(true);
 
     try {
-      const storedTestToken = typeof window !== "undefined" ? window.localStorage.getItem(TEST_SESSION_STORAGE_KEY) : null;
-
       if (!isConvexAuthenticated || !authUser) {
-        if (storedTestToken) {
-          const { user: testUser } = await authApi.getTestSession(storedTestToken);
-          if (testUser) {
-            hydrateLocalUserState(testUser);
-            await refreshCoreData(testUser);
-            return;
-          }
-          window.localStorage.removeItem(TEST_SESSION_STORAGE_KEY);
-        }
         await clearLocalSessionState();
         return;
       }
@@ -363,6 +380,9 @@ export function AppProvider({ children }) {
       setFavorites([]);
       setViewings([]);
       setLeads([]);
+      setNotifications([]);
+      setCompanyBrokers([]);
+      setAdminCompany(null);
       setAiHistory([]);
       try {
         await loadPublicListings();
@@ -386,55 +406,46 @@ export function AppProvider({ children }) {
   }, [authUser?.id, isAuthLoading, isConvexAuthLoading, isConvexAuthenticated]);
 
   async function completeSignup(payload) {
-    const testToken = typeof window !== "undefined" ? window.localStorage.getItem(TEST_SESSION_STORAGE_KEY) : null;
-    const isTestSession = Boolean(testToken) && (user?.authProvider === "test" || !user);
-    if (!user && !isTestSession) {
+    if (!authUser) {
       throw new Error("Skapa konto med WorkOS först.");
     }
 
-    const safePayload = safeProfileUpdatePayload(payload);
-    const { user: nextUser } = isTestSession
-      ? await profileApi.updateTestMe(testToken, {
-          ...safePayload,
-          role: normalizeUserRole(payload.role),
-          roles: Array.isArray(payload.roles) && payload.roles.length
-            ? payload.roles.map(normalizeUserRole)
-            : [normalizeUserRole(payload.role)]
-        })
-      : await profileApi.updateMe(safePayload);
+    const safePayload = safeSignupPayload(payload);
+    const { user: nextUser } = await profileApi.completeSignup(safePayload);
     hydrateLocalUserState(nextUser);
     await refreshCoreData(nextUser);
     trackSignupCompleted({
       role: payload.role
     });
-    pushToast("Konto skapat. Fortsätt med onboarding.", "success");
+    pushToast("Konto skapat.", "success");
     return nextUser;
   }
 
   async function logout() {
     try {
       if (typeof window !== "undefined") {
-        window.localStorage.removeItem(TEST_SESSION_STORAGE_KEY);
+        window.sessionStorage.setItem("office_auth_logout_in_progress", "1");
+        window.sessionStorage.removeItem("office_auth_just_completed");
       }
+      navigateTo("/", { replace: true });
       await clearLocalSessionState();
     } finally {
-      if (user?.authProvider !== "test") {
-        await Promise.resolve(signOut({
-          returnTo: `${window.location.origin}/`
-        }));
+      await Promise.resolve(signOut({
+        returnTo: `${window.location.origin}/`,
+        navigate: false
+      }));
+      if (typeof window !== "undefined") {
+        window.sessionStorage.removeItem("office_auth_logout_in_progress");
       }
     }
   }
 
   async function completeOnboarding(payload) {
     const safePayload = safeOnboardingPayload(payload);
-    const testToken = typeof window !== "undefined" ? window.localStorage.getItem(TEST_SESSION_STORAGE_KEY) : null;
-    let { user: nextUser } = user?.authProvider === "test" && testToken
-      ? await profileApi.completeTestOnboarding(testToken, safePayload)
-      : await profileApi.completeOnboarding(safePayload);
+    let { user: nextUser } = await profileApi.completeOnboarding(safePayload);
 
     hydrateLocalUserState(nextUser);
-    const renterProgram = safePayload?.primaryRole === "renter" ? safePayload?.profile?.renterProgram : null;
+    const renterProgram = safePayload?.profile?.renterProgram || null;
     const onboardingFilters = renterProgram ? mapRenterProgramToFilters(renterProgram) : null;
 
     if (onboardingFilters) {
@@ -498,22 +509,13 @@ export function AppProvider({ children }) {
 
   async function updateProfile(payload) {
     if (!user) return null;
-    const testToken = typeof window !== "undefined" ? window.localStorage.getItem(TEST_SESSION_STORAGE_KEY) : null;
-    const { user: nextUser } = user?.authProvider === "test" && testToken
-      ? await profileApi.updateTestMe(testToken, safeProfileUpdatePayload(payload))
-      : await profileApi.updateMe(safeProfileUpdatePayload(payload));
+    const { user: nextUser } = await profileApi.updateMe(safeProfileUpdatePayload(payload));
     hydrateLocalUserState(nextUser);
     return nextUser;
   }
 
-  async function createTestSignup(role = "renter") {
-    const { user: nextUser, token } = await authApi.createTestUser(normalizeUserRole(role));
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(TEST_SESSION_STORAGE_KEY, token);
-    }
-    hydrateLocalUserState(nextUser);
-    await refreshCoreData(nextUser);
-    return nextUser;
+  async function findCompanyByOrganizationNumber(organizationNumber, excludeUserId) {
+    return await profileApi.findCompanyByOrganizationNumber(String(organizationNumber || "").trim(), excludeUserId);
   }
 
   async function searchListings(filters) {
@@ -645,8 +647,25 @@ export function AppProvider({ children }) {
 
   async function requestViewing(payload) {
     const { viewing } = await viewingsApi.createViewing(payload);
-    const { viewings: viewingData } = await viewingsApi.getViewings();
-    setViewings(viewingData);
+    try {
+      const activeRoles = (Array.isArray(user?.roles) ? user.roles : [user?.role || "renter"]).map(normalizeUserRole);
+      if (activeRoles.includes("renter")) {
+        const { viewings: viewingData } = await viewingsApi.getViewings();
+        setViewings(viewingData);
+      }
+    } catch (_error) {
+      // Booking is already created; don't turn a secondary refresh failure into a submit failure.
+    }
+    try {
+      const [{ listings: listingData }, { leads: leadData }] = await Promise.all([
+        listingApi.getListings(allListingsFilters),
+        leadsApi.getLeads().catch(() => ({ leads: [] }))
+      ]);
+      setListings(listingData);
+      if (leadData.length > 0) setLeads(leadData);
+    } catch (_error) {
+      // Keep the submit successful even if follow-up counters fail to refresh.
+    }
 
     await trackEvent(analyticsEventNames.VIEWING_REQUESTED, {
       listingId: payload.listingId
@@ -654,6 +673,17 @@ export function AppProvider({ children }) {
 
     pushToast("Visningsförfrågan skickad.", "success");
     return viewing;
+  }
+
+  async function recordListingView(listingId, source = "") {
+    if (!listingId) return;
+    try {
+      await listingApi.recordView(listingId, source);
+      const { listings: listingData } = await listingApi.getListings(allListingsFilters);
+      setListings(listingData);
+    } catch (_error) {
+      // Analytics must never block the listing detail experience.
+    }
   }
 
   async function createListing(payload) {
@@ -692,6 +722,40 @@ export function AppProvider({ children }) {
     pushToast("Verifieringsförfrågan skickad.", "info");
   }
 
+  async function approveBrokerRequest(userId) {
+    const { broker } = await profileApi.approveBrokerRequest(userId);
+    await refreshCoreData(user);
+    pushToast(`${broker?.email || "Mäklaren"} är godkänd.`, "success");
+    return broker;
+  }
+
+  async function rejectBrokerRequest(userId) {
+    await profileApi.rejectBrokerRequest(userId);
+    await refreshCoreData(user);
+    pushToast("Mäklarförfrågan avslogs.", "info");
+  }
+
+  async function resendBrokerVerificationRequest() {
+    const { user: nextUser } = await profileApi.resendBrokerVerificationRequest();
+    hydrateLocalUserState(nextUser);
+    await refreshCoreData(nextUser);
+    pushToast("Verifieringsförfrågan skickad igen.", "success");
+    return nextUser;
+  }
+
+  async function updateCompanyBroker(userId, payload) {
+    const { broker } = await profileApi.updateCompanyBroker(userId, payload);
+    await refreshCoreData(user);
+    pushToast("Mäklaren är uppdaterad.", "success");
+    return broker;
+  }
+
+  async function removeCompanyBroker(userId) {
+    await profileApi.removeCompanyBroker(userId);
+    await refreshCoreData(user);
+    pushToast("Mäklaren har tagits bort från bolaget.", "info");
+  }
+
   async function runAiSearch(prompt, currentFilters) {
     const response = await aiApi.runSearch({
       prompt,
@@ -717,9 +781,8 @@ export function AppProvider({ children }) {
 
   async function updateLead(leadId, payload) {
     const { lead } = await leadsApi.updateLead(leadId, payload);
-    const [{ leads: leadData }, { viewings: viewingData }] = await Promise.all([leadsApi.getLeads(), viewingsApi.getViewings()]);
+    const { leads: leadData } = await leadsApi.getLeads();
     setLeads(leadData);
-    setViewings(viewingData);
 
     await trackEvent(analyticsEventNames.LEAD_STATUS_CHANGED, {
       leadId,
@@ -739,6 +802,9 @@ export function AppProvider({ children }) {
       favorites,
       viewings,
       leads,
+      notifications,
+      companyBrokers,
+      adminCompany,
       savedFilters,
       filterPresets,
       savedAiSearches,
@@ -746,11 +812,11 @@ export function AppProvider({ children }) {
       toasts,
       pushToast,
       completeSignup,
-      createTestSignup,
       logout,
       completeOnboarding,
       switchRole,
       updateProfile,
+      findCompanyByOrganizationNumber,
       searchListings,
       resetSearchToAllListings,
       saveCurrentFilters,
@@ -759,11 +825,17 @@ export function AppProvider({ children }) {
       deleteSavedAiSearch,
       toggleFavorite,
       requestViewing,
+      recordListingView,
       createListing,
       updateListing,
       deleteListing,
       publishListing,
       requestListingVerification,
+      approveBrokerRequest,
+      rejectBrokerRequest,
+      resendBrokerVerificationRequest,
+      updateCompanyBroker,
+      removeCompanyBroker,
       runAiSearch,
       updateLead,
       refreshCoreData,
@@ -779,6 +851,9 @@ export function AppProvider({ children }) {
       isSessionSyncing,
       isBootstrapping,
       leads,
+      notifications,
+      companyBrokers,
+      adminCompany,
       listings,
       savedAiSearches,
       savedFilters,

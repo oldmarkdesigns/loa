@@ -227,14 +227,14 @@ const brokerConversations = [
 
 function suggestionToneClass(tone) {
   if (tone === "question") return "border-[#cad9ec] bg-[#eef3f8] text-[#476a99]";
-  return "border-black/10 bg-[#fbfbfa] text-[#0f1930]";
+  return "border-black/10 bg-[#fbfbfa] text-[#0b0a0e]";
 }
 
 function pipelineToneClass(tone) {
-  if (tone === "green") return "border-[#cad9ec] bg-[#eef3f8] text-[#0f1930]";
+  if (tone === "green") return "border-[#cad9ec] bg-[#eef3f8] text-[#0b0a0e]";
   if (tone === "amber") return "border-black/10 bg-[#fbfbfa] text-ink-700";
-  if (tone === "gray") return "border-black/10 bg-[#fffffe] text-ink-600";
-  return "border-black/10 bg-[#fffffe] text-ink-700";
+  if (tone === "gray") return "border-black/10 bg-[#ffffff] text-ink-600";
+  return "border-black/10 bg-[#ffffff] text-ink-700";
 }
 
 function MessagesPage({ app }) {
@@ -311,7 +311,7 @@ function MessagesPage({ app }) {
   }
 
   return (
-    <section className="h-full overflow-y-auto bg-[#fffffe] lg:overflow-hidden">
+    <section className="h-full overflow-y-auto bg-[#ffffff] lg:overflow-hidden">
       <div className="min-h-full w-full lg:h-full">
         <div className="grid min-h-full overflow-hidden lg:h-full lg:min-h-0 lg:grid-cols-[380px,minmax(0,1fr)] xl:grid-cols-[420px,minmax(0,1fr),320px]">
           <aside className="flex min-h-0 flex-col border-b border-black/10 bg-[#fbfbfa] lg:border-b-0 lg:border-r">
@@ -319,13 +319,13 @@ function MessagesPage({ app }) {
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ink-500">
                 {isBrokerView ? "Inkorg" : "Hyresgäst"}
               </p>
-              <h1 className="mt-1 text-2xl font-semibold leading-tight text-[#0f1930]">
+              <h1 className="mt-1 text-2xl font-semibold leading-tight text-[#0b0a0e]">
                 {isBrokerView ? "Konversationer" : "Meddelanden"}
               </h1>
               <label className="relative mt-4 block">
                 <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
                 <input
-                  className="field !rounded-2xl !bg-[#fffffe] pl-9"
+                  className="field !rounded-2xl !bg-[#ffffff] pl-9"
                   placeholder={isBrokerView ? "Sök namn, bolag eller annons" : "Sök mäklare eller annons"}
                   value={searchQuery}
                   onChange={(event) => setSearchQuery(event.target.value)}
@@ -341,13 +341,13 @@ function MessagesPage({ app }) {
                       onClick={() => setFilter(tab.key)}
                       className={`inline-flex min-h-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold transition ${
                         active
-                          ? "bg-[#0f1930] text-white"
-                          : "border border-black/10 bg-[#fffffe] text-ink-700 hover:border-[#0f1930]"
+                          ? "bg-[#0b0a0e] text-white"
+                          : "border border-black/10 bg-[#ffffff] text-ink-700 hover:border-[#0b0a0e]"
                       }`}
                     >
                       {tab.label}
                       <span className={`inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] ${
-                        active ? "bg-[#fffffe]/15 text-white" : "bg-[#eef3f8] text-[#476a99]"
+                        active ? "bg-[#ffffff]/15 text-white" : "bg-[#eef3f8] text-[#476a99]"
                       }`}>
                         {tab.count}
                       </span>
@@ -373,7 +373,7 @@ function MessagesPage({ app }) {
                   >
                     <div className="flex flex-col items-center gap-2 pt-1">
                       <span className={`inline-flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold ${
-                        active ? "bg-[#0f1930] text-white" : "bg-[#dbe6f3] text-[#0f1930]"
+                        active ? "bg-[#0b0a0e] text-white" : "bg-[#dbe6f3] text-[#0b0a0e]"
                       }`}>
                         {conversation.counterpartInitials}
                       </span>
@@ -399,7 +399,7 @@ function MessagesPage({ app }) {
                     <div className="text-right">
                       <p className="text-[11px] font-semibold text-ink-400">{conversation.timestamp}</p>
                       {!isBrokerView && conversation.unreadCount > 0 ? (
-                        <span className="mt-2 inline-flex min-w-5 items-center justify-center rounded-full bg-[#0f1930] px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                        <span className="mt-2 inline-flex min-w-5 items-center justify-center rounded-full bg-[#0b0a0e] px-1.5 py-0.5 text-[10px] font-semibold text-white">
                           {conversation.unreadCount}
                         </span>
                       ) : null}
@@ -410,18 +410,18 @@ function MessagesPage({ app }) {
             </div>
           </aside>
 
-          <div className="flex min-h-[620px] flex-col border-b border-black/10 bg-[#fffffe] lg:min-h-0 lg:border-b-0 xl:border-r">
+          <div className="flex min-h-[620px] flex-col border-b border-black/10 bg-[#ffffff] lg:min-h-0 lg:border-b-0 xl:border-r">
             {activeConversation ? (
               <>
-                <header className="border-b border-black/10 bg-[#fffffe] px-4 py-4 sm:px-5">
+                <header className="border-b border-black/10 bg-[#ffffff] px-4 py-4 sm:px-5">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-3">
-                      <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#0f1930] text-sm font-semibold text-white">
+                      <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#0b0a0e] text-sm font-semibold text-white">
                         {activeConversation.counterpartInitials}
                       </span>
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                          <h2 className="truncate text-lg font-semibold text-[#0f1930]">{activeConversation.counterpartName}</h2>
+                          <h2 className="truncate text-lg font-semibold text-[#0b0a0e]">{activeConversation.counterpartName}</h2>
                           {isBrokerView ? (
                             <span className="inline-flex rounded-full border border-black/10 bg-[#eef3f8] px-2 py-0.5 text-[11px] font-semibold text-[#476a99]">{activeConversation.stage}</span>
                           ) : (
@@ -446,47 +446,47 @@ function MessagesPage({ app }) {
                     <div className="flex items-center gap-2">
                       {isBrokerView ? (
                         <>
-                          <button type="button" className="inline-flex min-h-0 items-center gap-1.5 rounded-full border border-black/10 bg-[#fffffe] px-3 py-2 text-xs font-semibold text-ink-800">
+                          <button type="button" className="inline-flex min-h-0 items-center gap-1.5 rounded-full border border-black/10 bg-[#ffffff] px-3 py-2 text-xs font-semibold text-ink-800">
                             <CalendarIcon className="h-3.5 w-3.5" />
                             Visning att boka
                           </button>
                           <button
                             type="button"
                             onClick={toggleActiveConversationFavorite}
-                            className="inline-flex h-10 w-10 min-h-0 items-center justify-center rounded-full border border-black/10 bg-[#fffffe] p-0 text-ink-800"
+                            className="inline-flex h-10 w-10 min-h-0 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] p-0 text-ink-800"
                           >
-                            <StarIcon className={`h-3.5 w-3.5 ${activeConversationIsFavorite ? "fill-[#0f1930] text-[#0f1930]" : "text-ink-500"}`} />
+                            <StarIcon className={`h-3.5 w-3.5 ${activeConversationIsFavorite ? "fill-[#0b0a0e] text-[#0b0a0e]" : "text-ink-500"}`} />
                           </button>
                         </>
                       ) : (
                         <>
-                          <button type="button" className="inline-flex min-h-0 items-center gap-1.5 rounded-full border border-black/10 bg-[#fffffe] px-3 py-2 text-xs font-semibold text-ink-800">
+                          <button type="button" className="inline-flex min-h-0 items-center gap-1.5 rounded-full border border-black/10 bg-[#ffffff] px-3 py-2 text-xs font-semibold text-ink-800">
                             <CalendarIcon className="h-3.5 w-3.5" />
                             Svara på tider
                           </button>
                           <button
                             type="button"
                             onClick={toggleActiveConversationFavorite}
-                            className="inline-flex h-10 w-10 min-h-0 items-center justify-center rounded-full border border-black/10 bg-[#fffffe] p-0 text-ink-800"
+                            className="inline-flex h-10 w-10 min-h-0 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] p-0 text-ink-800"
                           >
-                            <StarIcon className={`h-3.5 w-3.5 ${activeConversationIsFavorite ? "fill-[#0f1930] text-[#0f1930]" : "text-ink-500"}`} />
+                            <StarIcon className={`h-3.5 w-3.5 ${activeConversationIsFavorite ? "fill-[#0b0a0e] text-[#0b0a0e]" : "text-ink-500"}`} />
                           </button>
                         </>
                       )}
-                      <button type="button" className="inline-flex h-10 w-10 min-h-0 items-center justify-center rounded-full border border-black/10 bg-[#fffffe] text-ink-700">
+                      <button type="button" className="inline-flex h-10 w-10 min-h-0 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] text-ink-700">
                         <MoreHorizontalIcon className="h-4 w-4" />
                       </button>
                     </div>
                   </div>
                 </header>
 
-                <div className="min-h-0 flex-1 overflow-y-auto bg-[#fffffe] px-4 py-5 sm:px-5">
+                <div className="min-h-0 flex-1 overflow-y-auto bg-[#ffffff] px-4 py-5 sm:px-5">
                   <div className="mx-auto max-w-3xl space-y-4">
                     {activeConversation.messages.length > 0 ? activeConversation.messages.map((message) => {
                       if (message.type === "system") {
                         return (
                           <div key={message.id} className="space-y-2 text-center">
-                            <div className="inline-flex rounded-full border border-black/10 bg-[#fffffe] px-5 py-2 text-sm text-ink-600">
+                            <div className="inline-flex rounded-full border border-black/10 bg-[#ffffff] px-5 py-2 text-sm text-ink-600">
                               {message.text}
                             </div>
                             <p className="text-[11px] text-ink-400">{message.timestamp}</p>
@@ -501,7 +501,7 @@ function MessagesPage({ app }) {
                             <span className="px-1 text-[11px] text-ink-400">{message.timestamp}</span>
                             <div className={`rounded-[26px] px-4 py-3 text-sm leading-relaxed shadow-[0_12px_28px_rgba(15,25,48,0.06)] ${
                               self
-                                ? "rounded-br-md bg-[#0f1930] text-white"
+                                ? "rounded-br-md bg-[#0b0a0e] text-white"
                                 : "rounded-bl-md border border-black/10 bg-[#fbfbfa] text-ink-800"
                             }`}>
                               {message.text.split("\n").map((line) => (
@@ -517,7 +517,7 @@ function MessagesPage({ app }) {
                   </div>
                 </div>
 
-                <footer className="border-t border-black/10 bg-[#fffffe] px-4 py-4 sm:px-5">
+                <footer className="border-t border-black/10 bg-[#ffffff] px-4 py-4 sm:px-5">
                   <div className="mx-auto flex max-w-3xl items-center gap-3 rounded-[28px] border border-black/10 bg-[#fbfbfa] p-2">
                     <button type="button" className="inline-flex h-9 w-9 min-h-0 items-center justify-center rounded-full text-ink-500">
                       <PaperclipIcon className="h-4 w-4" />
@@ -532,7 +532,7 @@ function MessagesPage({ app }) {
                       type="button"
                       aria-label="Skicka"
                       onClick={sendDraft}
-                      className="inline-flex h-10 w-10 min-h-0 items-center justify-center rounded-full bg-[#0f1930] text-white"
+                      className="inline-flex h-10 w-10 min-h-0 items-center justify-center rounded-full bg-[#0b0a0e] text-white"
                     >
                       <SendHorizontalIcon className="h-4 w-4" />
                     </button>
@@ -544,26 +544,26 @@ function MessagesPage({ app }) {
 
           <aside className="hidden min-h-0 bg-[#fbfbfa] xl:block">
             <div className="h-full overflow-y-auto p-4">
-              <article className="overflow-hidden rounded-3xl border border-black/10 bg-[#fffffe]">
+              <article className="overflow-hidden rounded-3xl border border-black/10 bg-[#ffffff]">
                 <img src={MESSAGE_LISTING.image} alt={MESSAGE_LISTING.title} className="h-36 w-full object-cover" loading="lazy" />
                 <div className="p-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ink-500">Matchad annons</p>
-                  <h3 className="mt-2 text-base font-semibold text-[#0f1930]">{MESSAGE_LISTING.title}</h3>
+                  <h3 className="mt-2 text-base font-semibold text-[#0b0a0e]">{MESSAGE_LISTING.title}</h3>
                   <p className="mt-2 inline-flex items-center gap-1 text-xs text-ink-600">
                     <PinIcon className="h-3.5 w-3.5" />
                     {MESSAGE_LISTING.district} · {MESSAGE_LISTING.size} m²
                   </p>
-                  <p className="mt-2 text-sm font-semibold text-[#0f1930]">{formatSek(MESSAGE_LISTING.priceMonthly)}/mån</p>
+                  <p className="mt-2 text-sm font-semibold text-[#0b0a0e]">{formatSek(MESSAGE_LISTING.priceMonthly)}/mån</p>
                 </div>
               </article>
 
-              <article className="mt-3 rounded-3xl border border-black/10 bg-[#fffffe] p-4">
+              <article className="mt-3 rounded-3xl border border-black/10 bg-[#ffffff] p-4">
                 <div>
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ink-500">
                       {isBrokerView ? "Hyresgäst" : "Mäklare"}
                     </p>
-                    <h3 className="mt-2 text-base font-semibold text-[#0f1930]">
+                    <h3 className="mt-2 text-base font-semibold text-[#0b0a0e]">
                       {isBrokerView ? RENTER_PROFILE.name : BROKER_PROFILE.name}
                     </h3>
                   </div>
@@ -609,10 +609,10 @@ function MessagesPage({ app }) {
                 )}
               </article>
 
-              <article className="mt-3 rounded-3xl border border-black/10 bg-[#fffffe] p-4">
+              <article className="mt-3 rounded-3xl border border-black/10 bg-[#ffffff] p-4">
                 <div className="flex items-center gap-2">
-                  <SparklesIcon className="h-4 w-4 text-[#0f1930]" />
-                  <h3 className="text-base font-semibold text-[#0f1930]">Föreslagna svar</h3>
+                  <SparklesIcon className="h-4 w-4 text-[#0b0a0e]" />
+                  <h3 className="text-base font-semibold text-[#0b0a0e]">Föreslagna svar</h3>
                 </div>
                 <p className="mt-2 text-sm text-ink-600">Baserat på senaste meddelandet</p>
                 <div className="mt-3 space-y-2">
@@ -621,7 +621,7 @@ function MessagesPage({ app }) {
                       key={suggestion.id}
                       type="button"
                       onClick={() => useSuggestion(suggestion.text)}
-                      className="message-suggestion-card w-full border border-black/10 bg-[#fbfbfa] p-3 text-left transition hover:bg-[#fffffe]"
+                      className="message-suggestion-card w-full border border-black/10 bg-[#fbfbfa] p-3 text-left transition hover:bg-[#ffffff]"
                     >
                       <div className="flex items-center justify-between gap-2">
                         <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide ${suggestionToneClass(suggestion.tone)}`}>
@@ -637,15 +637,15 @@ function MessagesPage({ app }) {
 
               {isBrokerView ? (
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <button type="button" className="inline-flex min-h-0 items-center gap-1.5 rounded-full border border-black/10 bg-[#fffffe] px-3 py-2 text-sm text-ink-700">
+                  <button type="button" className="inline-flex min-h-0 items-center gap-1.5 rounded-full border border-black/10 bg-[#ffffff] px-3 py-2 text-sm text-ink-700">
                     <TagIcon className="h-3.5 w-3.5" />
                     Märk
                   </button>
-                  <button type="button" className="inline-flex min-h-0 items-center gap-1.5 rounded-full border border-black/10 bg-[#fffffe] px-3 py-2 text-sm text-ink-700">
+                  <button type="button" className="inline-flex min-h-0 items-center gap-1.5 rounded-full border border-black/10 bg-[#ffffff] px-3 py-2 text-sm text-ink-700">
                     <UserPlusIcon className="h-3.5 w-3.5" />
                     Tilldela
                   </button>
-                  <button type="button" className="inline-flex min-h-0 items-center gap-1.5 rounded-full border border-black/10 bg-[#fffffe] px-3 py-2 text-sm text-ink-700">
+                  <button type="button" className="inline-flex min-h-0 items-center gap-1.5 rounded-full border border-black/10 bg-[#ffffff] px-3 py-2 text-sm text-ink-700">
                     <ArchiveIcon className="h-3.5 w-3.5" />
                     Arkivera
                   </button>

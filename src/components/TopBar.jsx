@@ -22,7 +22,7 @@ function TopBar({ mode, onModeChange, shortlistCount }) {
             className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${
               mode === "buyer"
                 ? "bg-ink-900 text-white"
-                : "border border-ink-200 bg-[#fffffe] text-ink-700 hover:border-brand-300"
+                : "border border-ink-200 bg-[#ffffff] text-ink-700 hover:border-brand-300"
             }`}
           >
             Hyr lokal
@@ -33,12 +33,12 @@ function TopBar({ mode, onModeChange, shortlistCount }) {
             className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${
               mode === "seller"
                 ? "bg-ink-900 text-white"
-                : "border border-ink-200 bg-[#fffffe] text-ink-700 hover:border-brand-300"
+                : "border border-ink-200 bg-[#ffffff] text-ink-700 hover:border-brand-300"
             }`}
           >
             Publicera lokal
           </button>
-          <div className="hidden rounded-xl border border-ink-200 bg-[#fffffe] px-3 py-2 text-xs font-semibold text-ink-700 sm:block">
+          <div className="hidden rounded-xl border border-ink-200 bg-[#ffffff] px-3 py-2 text-xs font-semibold text-ink-700 sm:block">
             Sparade objekt: {shortlistCount}
           </div>
         </div>

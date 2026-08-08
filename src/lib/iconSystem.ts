@@ -107,6 +107,7 @@ export const ICONS = {
   archive: "archive",
   tag: "tag",
   userPlus: "user-plus",
+  userCheck: "user-check",
   circleDot: "circle-dot",
   plus: "plus",
 

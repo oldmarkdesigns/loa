@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Breadcrumbs from "../../components/layout/Breadcrumbs";
-import { ArrowLeftIcon } from "../../components/icons/UiIcons";
 import { parseAmenities } from "../../lib/formatters";
 import { navigateTo } from "../../lib/router";
 
@@ -46,18 +45,7 @@ function ManageListingPage({ app, listingId }) {
     return (
       <section className="h-full overflow-y-auto">
         <div className="mx-auto w-full max-w-6xl p-6">
-          <a
-            href="/app/my-listings"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-ink-700 transition hover:text-[#0f1930]"
-            onClick={(event) => {
-              event.preventDefault();
-              navigateTo("/app/my-listings");
-            }}
-          >
-            <ArrowLeftIcon className="h-3.5 w-3.5" />
-            Tillbaka till översikt
-          </a>
-          <div className="mt-4 rounded-2xl border border-black/10 bg-[#fffffe] p-6">
+          <div className="mt-4 rounded-2xl border border-black/10 bg-[#ffffff] p-6">
             <h1 className="text-2xl font-semibold">Objektet kunde inte öppnas</h1>
             <p className="mt-2 text-sm text-ink-600">Du har inte åtkomst till objektet eller så har det tagits bort.</p>
           </div>
@@ -108,24 +96,13 @@ function ManageListingPage({ app, listingId }) {
             { label: `Hantera ${listing.title || "Objekt"}` }
           ]}
         />
-        <a
-          href="/app/my-listings"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-ink-700 transition hover:text-[#0f1930]"
-          onClick={(event) => {
-            event.preventDefault();
-            navigateTo("/app/my-listings");
-          }}
-        >
-          <ArrowLeftIcon className="h-3.5 w-3.5" />
-          Tillbaka till översikt
-        </a>
 
-        <div className="mt-5 rounded-3xl border border-[#c8d1de] bg-[#fffffe] p-4 sm:p-5">
+        <div className="mt-5 rounded-3xl border border-[#c8d1de] bg-[#ffffff] p-4 sm:p-5">
         <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Objektredigering</p>
             <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <h1 className="text-xl font-semibold tracking-tight text-[#0f1930] sm:text-2xl">
+              <h1 className="text-xl font-semibold tracking-tight text-[#0b0a0e] sm:text-2xl">
                 {draft.title || "Hantera objekt"}
               </h1>
               <p className="text-base font-medium text-ink-600">{draft.address}, Stockholm</p>
@@ -163,7 +140,7 @@ function ManageListingPage({ app, listingId }) {
           <div className="space-y-3">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">Detaljer</p>
-              <h2 className="mt-0.5 text-xl font-semibold text-[#0f1930]">Specifikationer</h2>
+              <h2 className="mt-0.5 text-xl font-semibold text-[#0b0a0e]">Specifikationer</h2>
             </div>
             <label className="block text-sm font-medium text-ink-700">
               Plats
@@ -196,7 +173,7 @@ function ManageListingPage({ app, listingId }) {
           <div className="space-y-3">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">Media</p>
-              <h2 className="mt-0.5 text-xl font-semibold text-[#0f1930]">Bilder</h2>
+              <h2 className="mt-0.5 text-xl font-semibold text-[#0b0a0e]">Bilder</h2>
             </div>
             <input
               ref={imageInputRef}

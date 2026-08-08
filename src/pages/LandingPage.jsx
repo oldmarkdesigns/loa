@@ -5,9 +5,9 @@ import MarketingHeader from "../components/layout/MarketingHeader";
 import ListingVisualCard from "../components/app/ListingVisualCard";
 import MapListingPreviewCard from "../components/app/MapListingPreviewCard";
 import ViewingRequestModal from "../components/app/ViewingRequestModal";
-import { popularListingFallbackKey } from "../lib/popularListingFallback";
 import { PLATFORM_GOOGLE_MAP_STYLE } from "../lib/googleMapStyles";
 import heroOwnerPanelImage from "../../Assets/Hero Images/How To Design A Moody Navy Blue Study Room.jpeg";
+import stockholmLandingImage from "../../Assets/Hero Images/stockholm-landing.jpg";
 import {
   BalconyIcon,
   ArrowRightIcon,
@@ -34,7 +34,6 @@ import {
   RooftopIcon,
   RulerIcon,
   SearchIcon,
-  ShieldIcon,
   SnowflakeIcon,
   StarIcon,
   UserIcon,
@@ -192,7 +191,7 @@ function LokalprogramCreateMockup({ isActive }) {
     `${pricePerSqm} kr/kvm`
   ];
   return (
-    <div className={`overflow-hidden rounded-2xl border border-white/10 bg-[#141417] p-4 sm:p-6 ${mockupSlideClass(isActive)}`}>
+    <div className={`overflow-hidden rounded-2xl border border-white/10 bg-[#141417] p-4 pb-8 sm:p-6 sm:pb-10 ${mockupSlideClass(isActive)}`}>
       <div className="rounded-xl bg-white p-4 sm:p-6">
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -393,7 +392,7 @@ function LokalprogramSearchMockup({ isActive }) {
   }`;
   return (
     <div className={`h-[442px] overflow-hidden rounded-2xl border border-white/10 bg-[#141417] p-3 pb-8 sm:p-4 sm:pb-10 ${mockupSlideClass(isActive)}`}>
-      <div className="w-[178.57%] origin-top-left scale-[0.56] rounded-xl bg-white p-6">
+      <div className="w-[208.33%] origin-top-left scale-[0.48] rounded-xl bg-white p-6">
         <div className="grid grid-cols-[1.02fr_0.98fr] items-stretch gap-6">
           <div className="flex min-w-0 flex-col">
             <p className="text-[13px] font-semibold text-ink-500">Startsida / Lediga lokaler</p>
@@ -406,13 +405,6 @@ function LokalprogramSearchMockup({ isActive }) {
                     <img src="/object-images/object-6.jpeg" alt="" className="h-full w-full object-cover" />
                   </span>
                   Sök med lokalprogram
-                </span>
-                <span className="inline-flex items-center gap-2 rounded-full border border-[#4f46e5]/15 bg-[#f8fafc] px-3 py-2 text-sm font-semibold text-ink-700">
-                  <SearchIcon className="h-4 w-4 text-[#4f46e5]" />
-                  AI-guide
-                  <span className="relative h-8 w-12 rounded-full border border-black/10 bg-white shadow-inner">
-                    <span className="absolute left-1 top-1 h-6 w-6 rounded-full bg-white shadow-[0_2px_8px_rgba(15,25,48,0.2)]" />
-                  </span>
                 </span>
               </div>
             </div>
@@ -591,105 +583,6 @@ const faqItems = [
   {
     q: "Finns AI-sök för hyresgäster?",
     a: "Ja, AI-sök hjälper dig hitta relevanta objekt snabbare och justerar filter automatiskt."
-  }
-];
-
-const popularGroups = [
-  {
-    city: "Stockholm",
-    count: "2 745",
-    listings: [
-      {
-        id: "popular-1",
-        title: "Fregattvägen 8",
-        district: "Gröndal",
-        address: "Fregattvägen 8",
-        type: "Kontor",
-        priceMonthly: 92000,
-        sizeSqm: 159,
-        capacity: 18,
-        responseHours: 7,
-        score: 91,
-        verified: true,
-        tags: ["Industrier & verkstäder", "Lager & logistik", "Kontor"],
-        image: "/object-images/object-1.jpeg"
-      },
-      {
-        id: "popular-2",
-        title: "Tomtebogatan 30",
-        district: "Vasastan",
-        address: "Tomtebogatan 30",
-        type: "Kontor",
-        priceMonthly: 76000,
-        sizeSqm: 90,
-        capacity: 10,
-        responseHours: 9,
-        score: 88,
-        verified: false,
-        tags: ["Butiker", "Kontor"],
-        image: "/object-images/object-2.jpeg"
-      },
-      {
-        id: "popular-3",
-        title: "Ringvägen 129",
-        district: "Södermalm",
-        address: "Ringvägen 129",
-        type: "Butik",
-        priceMonthly: 68500,
-        sizeSqm: 75,
-        capacity: 8,
-        responseHours: 11,
-        score: 84,
-        verified: true,
-        tags: ["Restauranger & caféer"],
-        image: "/object-images/object-3.jpeg"
-      },
-      {
-        id: "popular-4",
-        title: "Riddargatan 28",
-        district: "Östermalm",
-        address: "Riddargatan 28",
-        type: "Kontor",
-        priceMonthly: 70500,
-        sizeSqm: 79,
-        capacity: 9,
-        responseHours: 8,
-        score: 86,
-        verified: false,
-        tags: ["Butiker", "Kontor"],
-        image: "/object-images/object-4.jpeg"
-      },
-      {
-        id: "popular-5",
-        title: "Sankt Eriksgatan 44",
-        district: "Kungsholmen",
-        address: "Sankt Eriksgatan 44",
-        type: "Kontor",
-        priceMonthly: 81200,
-        sizeSqm: 102,
-        capacity: 12,
-        responseHours: 6,
-        score: 89,
-        verified: true,
-        tags: ["Kontor", "Coworking"],
-        image: "/object-images/object-5.jpeg"
-      },
-      {
-        id: "popular-6",
-        title: "Götgatan 67",
-        district: "Södermalm",
-        address: "Götgatan 67",
-        type: "Kontor",
-        priceMonthly: 73400,
-        sizeSqm: 88,
-        capacity: 10,
-        responseHours: 8,
-        score: 87,
-        verified: false,
-        tags: ["Kontor", "Studio"],
-        image: "/object-images/object-6.jpeg"
-      }
-    ]
   }
 ];
 
@@ -1106,15 +999,6 @@ function HeroPillToggle({ checked, onToggle, ariaLabel }) {
   );
 }
 
-function normalizeMatchValue(value) {
-  return String(value || "")
-    .toLowerCase()
-    .replace(/[åä]/g, "a")
-    .replace(/ö/g, "o")
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim();
-}
-
 function parseAmenityTerms(value) {
   return String(value || "")
     .split(",")
@@ -1165,27 +1049,12 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
   });
   const heroShowcaseListings = useMemo(() => baseListingDataset.slice(0, 4), []);
   const currentHeroListing = heroShowcaseListings[heroShowcaseIndex] ?? heroShowcaseListings[0] ?? baseListingDataset[0];
-  const [activeProgramIndex, setActiveProgramIndex] = useState(0);
-  const programStepRefs = useRef([]);
-  const listingCarouselRef = useRef(null);
-  const listingCarouselDragRef = useRef({
-    isDragging: false,
-    pointerId: null,
-    startX: 0,
-    startScrollLeft: 0,
-    lastX: 0,
-    lastTimestamp: 0,
-    targetScrollLeft: 0,
-    velocity: 0,
-    moved: false,
-    tapListingId: null,
-    startedOnNativeButton: false
-  });
-  const listingCarouselMotionRef = useRef({
-    scrollLeft: 0,
-    velocity: 0
-  });
-  const listingCarouselSuppressClickRef = useRef(false);
+  const heroBannerRef = useRef(null);
+  const filmstripWrapperRef = useRef(null);
+  const filmstripTrackRef = useRef(null);
+  const [filmstripEnabled, setFilmstripEnabled] = useState(false);
+  const [filmstripActiveIndex, setFilmstripActiveIndex] = useState(0);
+  const heroBannerImageRef = useRef(null);
 
   useEffect(() => {
     if (heroShowcaseListings.length < 2) return undefined;
@@ -1257,175 +1126,105 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
   }
 
   useEffect(() => {
-    function updateActiveProgramStep() {
-      const referenceLine = window.innerHeight * 0.35;
-      let nextIndex = 0;
-      programStepRefs.current.forEach((el, index) => {
-        if (el && el.getBoundingClientRect().top <= referenceLine) {
-          nextIndex = index;
-        }
-      });
-      setActiveProgramIndex(nextIndex);
+    const container = heroBannerRef.current;
+    const image = heroBannerImageRef.current;
+    if (!container || !image) return undefined;
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) return undefined;
+
+    const parallaxRange = 72;
+    let frameId = null;
+
+    function applyParallax() {
+      frameId = null;
+      const rect = container.getBoundingClientRect();
+      const progress = (window.innerHeight - rect.top) / (window.innerHeight + rect.height);
+      const clamped = Math.min(Math.max(progress, 0), 1);
+      image.style.transform = `translateY(${(clamped - 0.5) * parallaxRange}px)`;
     }
 
-    updateActiveProgramStep();
-    window.addEventListener("scroll", updateActiveProgramStep, { passive: true });
-    window.addEventListener("resize", updateActiveProgramStep);
+    function onScroll() {
+      if (frameId) return;
+      frameId = requestAnimationFrame(applyParallax);
+    }
+
+    applyParallax();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
     return () => {
-      window.removeEventListener("scroll", updateActiveProgramStep);
-      window.removeEventListener("resize", updateActiveProgramStep);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (frameId) cancelAnimationFrame(frameId);
     };
   }, []);
 
-  function scrollToProgramStep(index) {
-    programStepRefs.current[index]?.scrollIntoView({ behavior: "smooth", block: "center" });
-  }
+  useEffect(() => {
+    function evaluateFilmstripEligibility() {
+      const isDesktop = window.innerWidth >= 1024;
+      const reducedMotion = Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches);
+      setFilmstripEnabled(isDesktop && !reducedMotion);
+    }
+
+    evaluateFilmstripEligibility();
+    window.addEventListener("resize", evaluateFilmstripEligibility);
+    return () => window.removeEventListener("resize", evaluateFilmstripEligibility);
+  }, []);
+
+  useEffect(() => {
+    if (!filmstripEnabled) return undefined;
+    const wrapper = filmstripWrapperRef.current;
+    const track = filmstripTrackRef.current;
+    if (!wrapper || !track) return undefined;
+
+    const stepCount = localProgramBenefits.length;
+    const smoothing = 0.055;
+    let frameId = null;
+    let currentProgress = 0;
+    let initialized = false;
+
+    function readTargetProgress() {
+      const rect = wrapper.getBoundingClientRect();
+      const scrollableDistance = rect.height - window.innerHeight;
+      const raw = scrollableDistance > 0 ? -rect.top / scrollableDistance : 0;
+      return Math.min(Math.max(raw, 0), 1);
+    }
+
+    function render() {
+      const targetProgress = readTargetProgress();
+      if (!initialized) {
+        currentProgress = targetProgress;
+        initialized = true;
+      } else {
+        currentProgress += (targetProgress - currentProgress) * smoothing;
+      }
+
+      const maxTranslate = (stepCount - 1) * window.innerWidth;
+      track.style.transform = `translateX(-${currentProgress * maxTranslate}px)`;
+      setFilmstripActiveIndex(Math.min(stepCount - 1, Math.round(currentProgress * (stepCount - 1))));
+
+      if (Math.abs(targetProgress - currentProgress) > 0.0004) {
+        frameId = requestAnimationFrame(render);
+      } else {
+        currentProgress = targetProgress;
+        frameId = null;
+      }
+    }
+
+    function onScroll() {
+      if (!frameId) frameId = requestAnimationFrame(render);
+    }
+
+    render();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (frameId) cancelAnimationFrame(frameId);
+    };
+  }, [filmstripEnabled]);
 
   function handlePopularBookViewing(listing) {
     setBookingListing(listing);
-  }
-
-  useEffect(() => {
-    const carousel = listingCarouselRef.current;
-    if (!carousel) return undefined;
-    if (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) return undefined;
-
-    let frameId;
-    let lastTimestamp = 0;
-    const autoVelocity = 10;
-    const dragEase = 0.42;
-    const friction = 6.2;
-
-    function normalizeScrollPosition() {
-      const loopWidth = carousel.scrollWidth / 2;
-      if (!loopWidth) return;
-      while (listingCarouselMotionRef.current.scrollLeft >= loopWidth) {
-        listingCarouselMotionRef.current.scrollLeft -= loopWidth;
-        listingCarouselDragRef.current.targetScrollLeft -= loopWidth;
-      }
-      while (listingCarouselMotionRef.current.scrollLeft < 0) {
-        listingCarouselMotionRef.current.scrollLeft += loopWidth;
-        listingCarouselDragRef.current.targetScrollLeft += loopWidth;
-      }
-      carousel.scrollLeft = listingCarouselMotionRef.current.scrollLeft;
-    }
-
-    listingCarouselMotionRef.current.scrollLeft = carousel.scrollLeft;
-
-    function tick(timestamp) {
-      if (!lastTimestamp) lastTimestamp = timestamp;
-      const deltaSeconds = Math.min((timestamp - lastTimestamp) / 1000, 0.05);
-      lastTimestamp = timestamp;
-
-      const dragState = listingCarouselDragRef.current;
-      const motionState = listingCarouselMotionRef.current;
-
-      if (dragState.isDragging) {
-        const distance = dragState.targetScrollLeft - motionState.scrollLeft;
-        motionState.scrollLeft += distance * dragEase;
-        motionState.velocity = distance * 9;
-      } else {
-        motionState.velocity += (autoVelocity - motionState.velocity) * Math.min(deltaSeconds * friction, 1);
-        motionState.scrollLeft += motionState.velocity * deltaSeconds;
-        normalizeScrollPosition();
-      }
-
-      if (dragState.isDragging) {
-        normalizeScrollPosition();
-      }
-
-      frameId = requestAnimationFrame(tick);
-    }
-
-    frameId = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frameId);
-  }, []);
-
-  function handleListingCarouselPointerDown(event) {
-    if (event.button !== undefined && event.button !== 0) return;
-    const carousel = listingCarouselRef.current;
-    if (!carousel) return;
-    listingCarouselSuppressClickRef.current = false;
-
-    listingCarouselDragRef.current = {
-      isDragging: true,
-      pointerId: event.pointerId,
-      startX: event.clientX,
-      startScrollLeft: carousel.scrollLeft,
-      lastX: event.clientX,
-      lastTimestamp: event.timeStamp,
-      targetScrollLeft: carousel.scrollLeft,
-      velocity: listingCarouselMotionRef.current.velocity,
-      moved: false,
-      tapListingId: event.target?.closest?.("[data-carousel-listing-id]")?.dataset?.carouselListingId || null,
-      startedOnNativeButton: Boolean(event.target?.closest?.("button"))
-    };
-    listingCarouselMotionRef.current.scrollLeft = carousel.scrollLeft;
-    carousel.setPointerCapture?.(event.pointerId);
-  }
-
-  function handleListingCarouselPointerMove(event) {
-    const carousel = listingCarouselRef.current;
-    const dragState = listingCarouselDragRef.current;
-    if (!carousel || !dragState.isDragging || dragState.pointerId !== event.pointerId) return;
-    event.preventDefault();
-
-    const deltaX = event.clientX - dragState.startX;
-    if (Math.abs(deltaX) > 4) {
-      dragState.moved = true;
-      listingCarouselSuppressClickRef.current = true;
-    }
-    const nextTarget = dragState.startScrollLeft - deltaX;
-    const deltaTime = Math.max((event.timeStamp - dragState.lastTimestamp) / 1000, 0.016);
-    dragState.velocity = ((dragState.lastX - event.clientX) / deltaTime) * 0.65;
-    dragState.targetScrollLeft = nextTarget;
-    dragState.lastX = event.clientX;
-    dragState.lastTimestamp = event.timeStamp;
-
-    const loopWidth = carousel.scrollWidth / 2;
-    if (loopWidth && dragState.targetScrollLeft >= loopWidth) {
-      listingCarouselMotionRef.current.scrollLeft -= loopWidth;
-      dragState.startScrollLeft -= loopWidth;
-      dragState.targetScrollLeft -= loopWidth;
-    } else if (loopWidth && dragState.targetScrollLeft < 0) {
-      listingCarouselMotionRef.current.scrollLeft += loopWidth;
-      dragState.startScrollLeft += loopWidth;
-      dragState.targetScrollLeft += loopWidth;
-    }
-  }
-
-  function handleListingCarouselPointerUp(event) {
-    const carousel = listingCarouselRef.current;
-    const dragState = listingCarouselDragRef.current;
-    if (carousel && dragState.pointerId === event.pointerId) {
-      carousel.releasePointerCapture?.(event.pointerId);
-    }
-    if (!dragState.moved && dragState.tapListingId && !dragState.startedOnNativeButton) {
-      navigateTo(`/app/listings/${encodeURIComponent(dragState.tapListingId)}`);
-    }
-    listingCarouselMotionRef.current.velocity = dragState.velocity || listingCarouselMotionRef.current.velocity;
-    listingCarouselDragRef.current = {
-      isDragging: false,
-      pointerId: null,
-      startX: 0,
-      startScrollLeft: 0,
-      lastX: 0,
-      lastTimestamp: 0,
-      targetScrollLeft: listingCarouselMotionRef.current.scrollLeft,
-      velocity: 0,
-      moved: false,
-      tapListingId: null,
-      startedOnNativeButton: false
-    };
-  }
-
-  function handleListingCarouselClickCapture(event) {
-    if (!listingCarouselSuppressClickRef.current) return;
-    event.preventDefault();
-    event.stopPropagation();
-    window.setTimeout(() => {
-      listingCarouselSuppressClickRef.current = false;
-    }, 0);
   }
 
   const favoriteIds = useMemo(
@@ -1433,6 +1232,7 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
     [favorites]
   );
   const totalAvailableListings = Array.isArray(listings) && listings.length > 0 ? listings.length : baseListingDataset.length;
+  const featuredGridListings = (Array.isArray(listings) && listings.length > 0 ? listings : baseListingDataset).slice(0, 8);
 
   function scrollToHashSection(hash, smooth = true) {
     if (!hash?.startsWith("#")) return false;
@@ -1514,63 +1314,6 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
     if (heroFilters.district !== "Alla") params.set("district", heroFilters.district);
     if (teamSize) params.set("teamSize", teamSize);
     navigateTo(`/app/rent?${params.toString()}`);
-  }
-
-  function resolvePopularListing(selected, fallbackIndex = 0) {
-    const queryAddress = normalizeMatchValue(selected?.address || selected?.title);
-    const queryTitle = normalizeMatchValue(selected?.title);
-    const queryDistrict = normalizeMatchValue(selected?.district);
-    const sourceListings = Array.isArray(listings) ? listings : [];
-    if (sourceListings.length === 0) return null;
-
-    let matchedListing = sourceListings.find((item) => {
-      const itemAddress = normalizeMatchValue(item?.address);
-      const itemTitle = normalizeMatchValue(item?.title);
-      return (queryAddress && itemAddress === queryAddress) || (queryTitle && itemTitle === queryTitle);
-    });
-
-    if (!matchedListing) {
-      matchedListing = sourceListings.find((item) => {
-        const sameDistrict = normalizeMatchValue(item?.district) === queryDistrict;
-        if (!sameDistrict) return false;
-        const itemTitle = normalizeMatchValue(item?.title);
-        const itemAddress = normalizeMatchValue(item?.address);
-        return (queryTitle && itemTitle.includes(queryTitle)) || (queryAddress && itemAddress.includes(queryAddress));
-      });
-    }
-
-    if (!matchedListing) {
-      const districtPool = sourceListings.filter(
-        (item) => normalizeMatchValue(item?.district) === queryDistrict
-      );
-      if (districtPool.length > 0) {
-        matchedListing = districtPool[fallbackIndex % districtPool.length];
-      }
-    }
-
-    return matchedListing || sourceListings[fallbackIndex % sourceListings.length] || null;
-  }
-
-  function resolvePopularListingId(selected, fallbackIndex = 0) {
-    return resolvePopularListing(selected, fallbackIndex)?.id || null;
-  }
-
-  function openPopularListingDetail(selected) {
-    const targetId = resolvePopularListingId(selected);
-    if (!targetId) return;
-    const matchedListing = Array.isArray(listings)
-      ? listings.find((item) => String(item?.id) === String(targetId))
-      : null;
-
-    if (!matchedListing && typeof window !== "undefined") {
-      try {
-        window.sessionStorage.setItem(popularListingFallbackKey(targetId), JSON.stringify(selected));
-      } catch {
-        // no-op: fallback storage is best effort only
-      }
-    }
-
-    navigateTo(`/app/listings/${encodeURIComponent(targetId)}`);
   }
 
   function handleTogglePopularShortlist(listingId) {
@@ -1713,67 +1456,18 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
             </aside>
           </div>
 
-          <div id="lokaler-just-nu" className="hero-load-featured relative mt-6 overflow-hidden py-2">
-            <div className="hero-load-featured-header mb-4 flex items-center justify-between gap-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Utvalda objekt</p>
-              <button
-                type="button"
-                className="inline-flex min-h-[40px] items-center gap-1.5 text-xs font-semibold text-ink-700 hover:text-black"
-                onClick={() => navigateTo("/app/rent?view=available")}
-              >
-                Se alla lediga objekt
-                <ArrowRightIcon className="h-4 w-4" />
-              </button>
-            </div>
-
-            <div className="-mx-4 overflow-hidden sm:-mx-6 lg:-mx-8" data-no-reveal>
-              <div
-                ref={listingCarouselRef}
-                className="listing-carousel-scroll min-h-[445px] cursor-grab select-none overflow-x-auto"
-                onPointerDown={handleListingCarouselPointerDown}
-                onPointerMove={handleListingCarouselPointerMove}
-                onPointerUp={handleListingCarouselPointerUp}
-                onPointerCancel={handleListingCarouselPointerUp}
-                onLostPointerCapture={handleListingCarouselPointerUp}
-                onClickCapture={handleListingCarouselClickCapture}
-                onDragStart={(event) => event.preventDefault()}
-              >
-                <div className="flex w-max gap-6 px-4 py-2 sm:px-6 lg:px-8">
-                  {[...popularGroups[0].listings.slice(1, 6), ...popularGroups[0].listings.slice(1, 6)].map((listing, index) => {
-                    const sourceIndex = index % 5;
-                    const favoriteListingId = resolvePopularListingId(listing, sourceIndex + 1);
-                    const canonicalListing = resolvePopularListing(listing, sourceIndex + 1);
-                    const cardListing = canonicalListing
-                      ? {
-                          ...canonicalListing,
-                          image: listing.image || canonicalListing.image
-                        }
-                      : listing;
-                    return (
-                      <div
-                        key={`${listing.id}-${index}`}
-                        data-carousel-listing-id={cardListing.id}
-                        className="hero-featured-card w-[420px] shrink-0 lg:w-[460px]"
-                        style={{ "--hero-card-delay": `${520 + sourceIndex * 85}ms` }}
-                      >
-                        <ListingVisualCard
-                          listing={cardListing}
-                          shortlisted={favoriteIds.has(String(favoriteListingId))}
-                          onOpenListing={(selected) => navigateTo(`/app/listings/${encodeURIComponent(selected.id)}`)}
-                          onBookViewing={handlePopularBookViewing}
-                          onToggleShortlist={() => handleTogglePopularShortlist(favoriteListingId)}
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-                    </div>
+          <div ref={heroBannerRef} className="hero-load-featured relative mt-8 h-56 overflow-hidden rounded-3xl sm:h-72 lg:h-80">
+            <img
+              ref={heroBannerImageRef}
+              src={stockholmLandingImage}
+              alt="Stockholm"
+              className="absolute inset-x-0 -top-[44px] h-[calc(100%+88px)] w-full object-cover will-change-transform"
+            />
           </div>
         </div>
       </section>
 
-      <section id="sa-fungerar-det" className="relative px-6 py-20 sm:px-14 sm:py-24 lg:px-20">
+      <section id="sa-fungerar-det" className="relative px-6 pb-6 pt-20 sm:px-14 sm:pb-8 sm:pt-24 lg:px-20">
         <div className="mx-auto max-w-3xl text-center">
           <p className="text-xs font-semibold uppercase tracking-wide text-ink-600">Så fungerar det</p>
           <h2 className="font-display-serif mt-4 text-4xl font-semibold leading-[0.95] text-[#0b0a0e] sm:text-5xl">
@@ -1800,9 +1494,26 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
         </div>
       </section>
 
+      <section className="relative px-6 pb-16 pt-3 text-center sm:px-14 sm:pb-20 sm:pt-5 lg:px-20">
+        <div className="mx-auto max-w-4xl">
+          <h2 className="text-sm font-normal leading-snug sm:text-base lg:whitespace-nowrap">
+            <span className="text-ink-400">Vill du få ut det mesta av våra funktioner? </span>
+            <span className="text-[#0b0a0e]">Skapa ditt konto idag.</span>
+          </h2>
+          <button
+            type="button"
+            onClick={() => openAuth("signup", "renter")}
+            className="mt-8 inline-flex h-6 items-center gap-2 rounded-full bg-[#0b0a0e] px-5 text-xs font-semibold text-white transition"
+          >
+            Skapa konto
+            <UserIcon className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </section>
+
       <section id="lokalprogram" className="relative scroll-mt-28 bg-[#0b0a0e] py-4 sm:py-6">
         <div className="relative bg-[#0b0a0e]">
-          <div className="relative px-6 py-16 sm:px-10 sm:py-20 lg:px-16">
+          <div className="relative px-6 pt-16 sm:px-10 sm:pt-20 lg:px-16">
             <p className="text-xs font-semibold uppercase tracking-wide text-white/60">Lokalprogram</p>
             <h2 className="font-display-serif mt-4 max-w-xl text-4xl font-semibold leading-[0.95] text-white sm:text-5xl">
               Sätt upp ert lokalprogram innan ni börjar leta brett
@@ -1810,61 +1521,71 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
             <p className="mt-4 max-w-md text-sm leading-6 text-white/70">
               Tydliga behov från start ger bättre matchningar och en snabbare väg till rätt lokal.
             </p>
+          </div>
 
-            <div className="mt-12 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,2.2fr)] lg:gap-16">
-              <aside className="hidden lg:sticky lg:top-28 lg:block lg:self-start">
-                <div className="flex flex-col">
+          {filmstripEnabled ? (
+            <div ref={filmstripWrapperRef} style={{ height: `${localProgramBenefits.length * 100}vh` }}>
+              <div className="sticky top-0 h-screen overflow-hidden">
+                <div
+                  ref={filmstripTrackRef}
+                  className="absolute inset-0 flex will-change-transform"
+                  style={{ width: `${localProgramBenefits.length * 100}vw` }}
+                >
                   {localProgramBenefits.map((item, index) => {
-                    const isActive = index === activeProgramIndex;
+                    const Mockup = lokalprogramMockups[index];
                     return (
-                      <button
-                        key={item.title}
-                        type="button"
-                        onClick={() => scrollToProgramStep(index)}
-                        className={`!rounded-none border-b border-white/10 py-5 text-left transition-colors duration-300 ${
-                          isActive ? "text-white" : "text-white/40"
-                        }`}
-                      >
-                        <span className="block text-xl font-semibold leading-tight">{item.title}</span>
-                        <span
-                          className="grid overflow-hidden transition-[grid-template-rows,opacity,margin-top] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
-                          style={{
-                            gridTemplateRows: isActive ? "1fr" : "0fr",
-                            opacity: isActive ? 1 : 0,
-                            marginTop: isActive ? "0.75rem" : "0"
-                          }}
-                        >
-                          <span className="max-w-[28ch] overflow-hidden text-sm font-medium text-white/60">{item.body}</span>
-                        </span>
-                      </button>
+                      <div key={item.title} className="flex h-full w-screen shrink-0 items-center justify-start px-6 sm:px-10 lg:px-16">
+                        <div className="grid w-full max-w-[1600px] gap-10 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)] lg:items-center lg:gap-16">
+                          <div>
+                            <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/20 text-xs font-semibold text-white/70">
+                              {String(index + 1).padStart(2, "0")}
+                            </span>
+                            <p className="mt-4 text-3xl font-semibold leading-tight text-white sm:text-4xl">{item.title}</p>
+                            <p className="mt-3 max-w-sm text-sm leading-6 text-white/60">{item.body}</p>
+                          </div>
+                          <div className="w-full">
+                            <Mockup isActive />
+                          </div>
+                        </div>
+                      </div>
                     );
                   })}
                 </div>
-              </aside>
 
-              <div className="space-y-10 lg:space-y-16">
-                {localProgramBenefits.map((item, index) => {
-                  const Mockup = lokalprogramMockups[index];
-                  const isActive = index === activeProgramIndex;
-                  return (
-                    <article
-                      key={item.title}
-                      ref={(el) => {
-                        programStepRefs.current[index] = el;
-                      }}
-                      className="scroll-mt-32"
-                    >
-                      <Mockup isActive={isActive} />
-                      <div className="mt-4 lg:hidden">
-                        <p className="text-lg font-semibold text-white">{item.title}</p>
-                        <p className="mt-1 text-sm text-white/70">{item.body}</p>
+                <div className="absolute inset-x-0 bottom-10 z-10 flex items-center justify-center gap-8 sm:bottom-14">
+                  {localProgramBenefits.map((item, index) => {
+                    const isActive = index === filmstripActiveIndex;
+                    return (
+                      <div key={item.title} className="flex items-center gap-2.5">
+                        <span className={`h-1.5 w-1.5 rounded-full transition-colors duration-300 ${isActive ? "bg-white" : "bg-white/25"}`} />
+                        <span className={`text-xs font-medium transition-colors duration-300 ${isActive ? "text-white" : "text-white/35"}`}>
+                          {item.title}
+                        </span>
                       </div>
-                    </article>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="flex flex-col gap-10 px-6 pb-16 pt-14 sm:px-10 sm:pb-20 lg:px-16">
+              {localProgramBenefits.map((item, index) => {
+                const Mockup = lokalprogramMockups[index];
+                return (
+                  <div key={item.title}>
+                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/20 text-xs font-semibold text-white/70">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <p className="mt-4 text-2xl font-semibold leading-tight text-white">{item.title}</p>
+                    <p className="mt-2 max-w-sm text-sm leading-6 text-white/60">{item.body}</p>
+                    <div className="mt-6">
+                      <Mockup isActive />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </section>
 
@@ -1922,6 +1643,41 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
               </div>
             </div>
           </article>
+        </div>
+      </section>
+
+      <section id="lokaler-just-nu" className="relative scroll-mt-28 px-6 py-20 sm:px-10 sm:py-24 lg:px-16">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-8 flex items-end justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Utvalda objekt</p>
+              <h2 className="font-display-serif mt-3 text-3xl font-semibold leading-[0.95] text-[#0b0a0e] sm:text-4xl">
+                Lediga lokaler just nu
+              </h2>
+            </div>
+            <button
+              type="button"
+              className="inline-flex min-h-[40px] shrink-0 items-center gap-1.5 text-xs font-semibold text-ink-700 hover:text-black"
+              onClick={() => navigateTo("/app/rent?view=available")}
+            >
+              Se alla lediga objekt
+              <ArrowRightIcon className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {featuredGridListings.map((listing) => (
+              <ListingVisualCard
+                key={listing.id}
+                listing={listing}
+                compact
+                shortlisted={favoriteIds.has(String(listing.id))}
+                onOpenListing={(selected) => navigateTo(`/app/listings/${encodeURIComponent(selected.id)}`)}
+                onBookViewing={handlePopularBookViewing}
+                onToggleShortlist={() => handleTogglePopularShortlist(listing.id)}
+              />
+            ))}
+          </div>
         </div>
       </section>
 

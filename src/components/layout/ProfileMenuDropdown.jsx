@@ -33,7 +33,7 @@ function ProfileMenuDropdown({
 
   return (
     <>
-      <div ref={profileMenuPanelRef} className="fixed right-4 top-[72px] z-[60] w-[min(320px,calc(100vw-2rem))] rounded-2xl border border-black/10 bg-[#fffffe] p-3 shadow-[0_10px_28px_rgba(15,25,48,0.10)]">
+      <div ref={profileMenuPanelRef} className="fixed right-4 top-[72px] z-[60] w-[min(320px,calc(100vw-2rem))] rounded-2xl border border-black/10 bg-[#ffffff] p-3 shadow-[0_10px_28px_rgba(15,25,48,0.10)]">
         <div className="space-y-2 text-sm">
           {hasBrokerAccess ? (
             <>

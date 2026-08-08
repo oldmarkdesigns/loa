@@ -10,6 +10,8 @@ function ViewingRequestModal({ listing, onClose, onSubmit }) {
     preferredDate: "",
     message: ""
   });
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
   const preferredDateInputRef = useRef(null);
   const calendarPopoverRef = useRef(null);
   const [calendarOpen, setCalendarOpen] = useState(false);
@@ -23,6 +25,8 @@ function ViewingRequestModal({ listing, onClose, onSubmit }) {
     if (!listing) return;
     setForm((prev) => ({ ...prev, inquiryType: "viewing" }));
     setCalendarOpen(false);
+    setSubmitting(false);
+    setError("");
     const id = window.setTimeout(() => setOpen(true), 16);
     return () => window.clearTimeout(id);
   }, [listing?.id]);
@@ -48,13 +52,13 @@ function ViewingRequestModal({ listing, onClose, onSubmit }) {
 
   return (
     <div
-      className={`fixed inset-0 z-[96] flex items-center justify-center bg-[#fffffe]/0 p-4 backdrop-blur-[2px] transition-all duration-200 sm:p-5 ${
+      className={`fixed inset-0 z-[96] flex items-center justify-center bg-[#ffffff]/0 p-4 backdrop-blur-[2px] transition-all duration-200 sm:p-5 ${
         open ? "opacity-100" : "opacity-0"
       }`}
       onClick={closeWithAnimation}
     >
       <div
-        className={`w-full max-w-xl rounded-3xl border border-black/10 bg-[#fffffe] p-5 shadow-[0_16px_40px_rgba(15,25,48,0.12)] transition-all duration-200 sm:p-6 ${
+        className={`w-full max-w-xl rounded-3xl border border-black/10 bg-[#ffffff] p-5 shadow-[0_16px_40px_rgba(15,25,48,0.12)] transition-all duration-200 sm:p-6 ${
           open ? "translate-y-0 scale-100" : "translate-y-2 scale-[0.985]"
         }`}
         onClick={(event) => event.stopPropagation()}
@@ -65,6 +69,12 @@ function ViewingRequestModal({ listing, onClose, onSubmit }) {
             <p className="mt-1 text-[1.05rem] text-ink-700">{listing.title}</p>
           </div>
         </div>
+
+        {error ? (
+          <p className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+            {error}
+          </p>
+        ) : null}
 
         <div className="mt-6 space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
@@ -140,23 +150,30 @@ function ViewingRequestModal({ listing, onClose, onSubmit }) {
         </div>
 
         <div className="mt-6 flex items-center justify-end gap-3">
-          <button type="button" className="rounded-full border border-black/10 bg-[#fffffe] px-7 py-2.5 text-sm font-semibold text-ink-700 hover:bg-[#fffffe]" onClick={closeWithAnimation}>
+          <button type="button" className="rounded-full border border-black/10 bg-[#ffffff] px-7 py-2.5 text-sm font-semibold text-ink-700 hover:bg-[#ffffff]" onClick={closeWithAnimation}>
             Avbryt
           </button>
           <button
             type="button"
-            className="rounded-full border border-[#0f1930] bg-[#0f1930] px-8 py-2.5 text-sm font-semibold text-white hover:bg-[#16233f] disabled:cursor-not-allowed disabled:opacity-60"
-            disabled={!canSubmit}
-            onClick={() => {
-              onSubmit({
-                listingId: listing.id,
-                preferredSlots: form.preferredDate ? [new Date(form.preferredDate).toISOString()] : [],
-                message: form.message,
-                inquiryType: form.inquiryType
-              });
+            className="rounded-full border border-[#0b0a0e] bg-[#0b0a0e] px-8 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={!canSubmit || submitting}
+            onClick={async () => {
+              if (submitting) return;
+              setSubmitting(true);
+              setError("");
+              try {
+                await onSubmit({
+                  listingId: listing.id,
+                  preferredSlots: form.preferredDate ? [new Date(form.preferredDate).toISOString()] : [],
+                  message: form.message
+                });
+              } catch (submitError) {
+                setError(submitError?.message || "Kunde inte skicka förfrågan.");
+                setSubmitting(false);
+              }
             }}
           >
-            Skicka
+            {submitting ? "Skickar..." : "Skicka"}
           </button>
         </div>
       </div>

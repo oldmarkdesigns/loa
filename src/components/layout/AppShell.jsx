@@ -1,23 +1,46 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { navigateTo, routeMatches } from "../../lib/router";
 import { deriveNavbarRoleState } from "../../lib/navbarRoles";
-import { ArrowLeftIcon, ArrowUpIcon, BellIcon, MouseScrollIcon, SwitchHorizontalIcon } from "../icons/UiIcons";
+import { ArrowUpIcon, BellIcon, MouseScrollIcon, SwitchHorizontalIcon } from "../icons/UiIcons";
 import AppFooter from "./AppFooter";
 import MarketingHeader from "./MarketingHeader";
 import ProfileMenuDropdown from "./ProfileMenuDropdown";
 
 const publisherWorkspaceItems = [
-  { label: "Publicera annons", path: "/app/publish" },
   { label: "Dina objekt", path: "/app/my-listings" },
   { label: "Intresse och visningar", path: "/app/leads" }
 ];
-const adminCompanies = [
-  { id: "nordic-estate", name: "Nordic Estate", initials: "NE" },
-  { id: "stockholm-kontor", name: "Stockholm Kontor AB", initials: "SK" },
-  { id: "vasa-property", name: "Vasa Property Group", initials: "VP" }
-];
 
-function AppShell({ pathname, user, onSwitchRole, onLogout, onRequireAuth, isGuest = false, children }) {
+function initialsForName(name = "") {
+  const parts = String(name || "")
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2);
+  return (parts.map((part) => part[0]).join("") || "B").toUpperCase();
+}
+
+function companyNameForUser(user) {
+  return (
+    user?.profile?.legalEntity ||
+    user?.profile?.companyName ||
+    user?.profile?.company ||
+    user?.profile?.organizationName ||
+    "Ditt bolag"
+  );
+}
+
+function AppShell({
+  pathname,
+  user,
+  listings = [],
+  notifications = [],
+  companyBrokers = [],
+  onSwitchRole,
+  onLogout,
+  onRequireAuth,
+  isGuest = false,
+  children
+}) {
   const isAdminContext = routeMatches(pathname, "/app/admin");
   const { activeRole, hasCompanyAdminRole, hasBrokerAccess: hasPublisherAccess } = deriveNavbarRoleState(user, { isGuest });
   const isPublisherWorkspacePath = (
@@ -47,8 +70,8 @@ function AppShell({ pathname, user, onSwitchRole, onLogout, onRequireAuth, isGue
   const [showScrollToTopButton, setShowScrollToTopButton] = useState(false);
   const [showLeaveSearchConfirm, setShowLeaveSearchConfirm] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
+  const [seenNotificationIds, setSeenNotificationIds] = useState([]);
   const [adminCompanyOpen, setAdminCompanyOpen] = useState(false);
-  const [activeAdminCompanyId, setActiveAdminCompanyId] = useState(adminCompanies[0].id);
   const profileMenuPanelRef = useRef(null);
   const notificationButtonRef = useRef(null);
   const notificationPanelRef = useRef(null);
@@ -56,22 +79,53 @@ function AppShell({ pathname, user, onSwitchRole, onLogout, onRequireAuth, isGue
   const adminCompanyPanelRef = useRef(null);
   const contentRef = useRef(null);
 
-  const companyName = useMemo(
-    () => String(user?.profile?.legalEntity || user?.profile?.companyName || "Företagsnamn"),
-    [user?.profile?.companyName, user?.profile?.legalEntity]
+  const notificationItems = useMemo(() => {
+    const backendItems = (Array.isArray(notifications) ? notifications : [])
+      .filter((item) => item.status !== "handled")
+      .map((item) => ({
+        id: item.id,
+        dedupeKey: item.type === "broker_verification_requested" && item.metadata?.brokerUserId
+          ? `broker-request-${item.metadata.brokerUserId}-${item.metadata.companyId || ""}`
+          : `notification-${item.id}`,
+        title: item.type === "broker_verification_requested" ? "Mäklarförfrågan" : item.title,
+        body: item.type === "broker_verification_requested"
+          ? String(item.body || "").replace(/^(.+?) vill bli verifierad.*$/, "$1").trim()
+          : item.body,
+        time: item.createdAt ? new Date(item.createdAt).toLocaleString("sv-SE", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "Nyss",
+        actionPath: item.type === "broker_verification_requested" ? "/app/admin/maklare" : isAdminContext ? "/app/admin/notifikationer" : "/app/profile"
+    }));
+    const pendingBrokerItems = isAdminContext
+      ? (Array.isArray(companyBrokers) ? companyBrokers : [])
+        .filter((broker) => broker.status === "pending")
+        .map((broker) => ({
+          id: `broker-request-${broker.userId}`,
+          dedupeKey: `broker-request-${broker.userId}-${broker.companyId || ""}`,
+          title: "Mäklarförfrågan",
+          body: broker.name || broker.email,
+          time: broker.requestedAt ? new Date(broker.requestedAt).toLocaleString("sv-SE", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "Nyss",
+          actionPath: "/app/admin/maklare",
+          unread: true
+        }))
+      : [];
+    const combinedItems = [...pendingBrokerItems, ...backendItems]
+      .filter((item, index, list) => (
+        list.findIndex((candidate) => candidate.dedupeKey === item.dedupeKey) === index
+      ));
+
+    return combinedItems;
+  }, [companyBrokers, isAdminContext, notifications]);
+  const unreadNotificationItems = useMemo(
+    () => notificationItems.filter((item) => !seenNotificationIds.includes(item.id)),
+    [notificationItems, seenNotificationIds]
   );
-  const notificationItems = useMemo(
-    () => [
-      { id: "n1", title: "Ny förfrågan på Kontorslokal Södermalm", time: "12 min sedan" },
-      { id: "n2", title: "Showroom Vasastan publicerad", time: "58 min sedan" },
-      { id: "n3", title: "Anna Lind svarade på 6 förfrågningar", time: "3h sedan" }
-    ],
-    []
-  );
-  const activeAdminCompany = useMemo(
-    () => adminCompanies.find((item) => item.id === activeAdminCompanyId) || adminCompanies[0],
-    [activeAdminCompanyId]
-  );
+  const activeAdminCompany = useMemo(() => {
+    const name = companyNameForUser(user);
+    return {
+      id: user?.profile?.companyId || user?.id || "company",
+      name,
+      initials: initialsForName(name)
+    };
+  }, [user]);
 
   useEffect(() => {
     function onPointerDown(event) {
@@ -102,6 +156,13 @@ function AppShell({ pathname, user, onSwitchRole, onLogout, onRequireAuth, isGue
     setNotificationOpen(false);
     setAdminCompanyOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    if (!notificationOpen || notificationItems.length === 0) return;
+    setSeenNotificationIds((current) => (
+      Array.from(new Set([...current, ...notificationItems.map((item) => item.id)]))
+    ));
+  }, [notificationOpen, notificationItems]);
 
   useEffect(() => {
     const scrollContainer = contentRef.current;
@@ -155,11 +216,11 @@ function AppShell({ pathname, user, onSwitchRole, onLogout, onRequireAuth, isGue
   }
 
   return (
-    <main className="flex h-screen flex-col overflow-hidden bg-[#fffffe] text-black">
+    <main className="flex h-screen flex-col overflow-hidden bg-[#ffffff] text-black">
       {isAdminContext ? (
         <header
           className={`navbar-enter sticky top-0 z-40 shrink-0 border-b px-4 py-3 will-change-[background-color,border-color,backdrop-filter] transition-[background-color,border-color,backdrop-filter] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] sm:px-6 ${
-            isNavScrolled || shouldShowStaticNavBorder ? "border-black/10 bg-[#fffffe]/95 backdrop-blur-md" : "border-black/10 bg-[#fffffe]/0 backdrop-blur-0"
+            isNavScrolled || shouldShowStaticNavBorder ? "border-black/10 bg-[#ffffff]/95 backdrop-blur-md" : "border-black/10 bg-[#ffffff]/0 backdrop-blur-0"
           }`}
         >
           <div className="grid w-full grid-cols-[1fr_auto] items-center gap-4">
@@ -167,10 +228,10 @@ function AppShell({ pathname, user, onSwitchRole, onLogout, onRequireAuth, isGue
               <div ref={adminCompanyButtonRef} className="relative inline-block max-w-full">
                 <button
                   type="button"
-                  className="inline-flex h-11 w-auto max-w-full items-center gap-2 rounded-full border border-black/10 bg-[#fffffe] pl-1.5 pr-3 text-left transition hover:border-[#0f1930]/25"
+                  className="inline-flex h-11 w-auto max-w-full items-center gap-2 rounded-full border border-black/10 bg-[#ffffff] pl-1.5 pr-3 text-left transition hover:border-[#0b0a0e]/25"
                   onClick={() => setAdminCompanyOpen((value) => !value)}
                 >
-                  <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0f1930] text-sm font-semibold text-white">
+                  <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0b0a0e] text-sm font-semibold text-white">
                     {activeAdminCompany.initials}
                   </span>
                   <span className="min-w-0 flex-1">
@@ -183,26 +244,15 @@ function AppShell({ pathname, user, onSwitchRole, onLogout, onRequireAuth, isGue
                 </button>
 
                 {adminCompanyOpen ? (
-                  <div ref={adminCompanyPanelRef} className="absolute left-0 top-[calc(100%+0.4rem)] z-[62] w-[280px] rounded-2xl border border-black/10 bg-[#fffffe] p-2 shadow-[0_10px_28px_rgba(15,25,48,0.12)]">
+                  <div ref={adminCompanyPanelRef} className="absolute left-0 top-[calc(100%+0.4rem)] z-[62] w-[280px] rounded-2xl border border-black/10 bg-[#ffffff] p-2 shadow-[0_10px_28px_rgba(15,25,48,0.12)]">
                     <div className="space-y-1">
-                      {adminCompanies.map((company) => {
-                        const selected = company.id === activeAdminCompanyId;
-                        return (
-                          <button
-                            key={company.id}
-                            type="button"
-                            className={`menu-hover-row w-full px-2.5 py-2 text-left text-sm transition ${
-                              selected ? "bg-[#eef2f8] font-semibold text-[#0f1930]" : "text-ink-700 hover:bg-black/5"
-                            }`}
-                            onClick={() => {
-                              setActiveAdminCompanyId(company.id);
-                              setAdminCompanyOpen(false);
-                            }}
-                          >
-                            {company.name}
-                          </button>
-                        );
-                      })}
+                      <button
+                        type="button"
+                        className="menu-hover-row w-full bg-[#eef2f8] px-2.5 py-2 text-left text-sm font-semibold text-[#0b0a0e]"
+                        onClick={() => setAdminCompanyOpen(false)}
+                      >
+                        {activeAdminCompany.name}
+                      </button>
                     </div>
                   </div>
                 ) : null}
@@ -232,13 +282,15 @@ function AppShell({ pathname, user, onSwitchRole, onLogout, onRequireAuth, isGue
                 <button
                   type="button"
                   aria-label="Notiser"
-                  className="relative inline-flex h-full w-11 items-center justify-center rounded-full border border-black/20 bg-[#fffffe] text-ink-700"
+                  className="relative inline-flex h-full w-11 items-center justify-center rounded-full border border-black/20 bg-[#ffffff] text-ink-700"
                   onClick={() => setNotificationOpen((value) => !value)}
                 >
                   <BellIcon className="h-4 w-4" />
-                  <span className="absolute -right-0.5 -top-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-[#0f1930] px-1 text-[10px] font-semibold text-white">
-                    {notificationItems.length}
-                  </span>
+                  {!notificationOpen && unreadNotificationItems.length > 0 ? (
+                    <span className="absolute -right-0.5 -top-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-[#0b0a0e] px-1 text-[10px] font-semibold text-white">
+                      {unreadNotificationItems.length}
+                    </span>
+                  ) : null}
                 </button>
               </div>
             </div>
@@ -251,7 +303,6 @@ function AppShell({ pathname, user, onSwitchRole, onLogout, onRequireAuth, isGue
           isGuest={isGuest}
           isNavScrolled={isNavScrolled}
           showStaticBorder={shouldShowStaticNavBorder}
-          companyName={companyName}
           onBrandClick={() => navigateTo("/")}
           onPrimaryNavClick={handlePrimaryNavClick}
           onSwitchRole={onSwitchRole}
@@ -272,7 +323,7 @@ function AppShell({ pathname, user, onSwitchRole, onLogout, onRequireAuth, isGue
       ) : null}
 
       {notificationOpen && !isGuest ? (
-        <div ref={notificationPanelRef} className="fixed right-4 top-[72px] z-[60] w-[min(360px,calc(100vw-2rem))] rounded-2xl border border-black/10 bg-[#fffffe] p-3 shadow-[0_10px_28px_rgba(15,25,48,0.10)]">
+        <div ref={notificationPanelRef} className="fixed right-4 top-[72px] z-[60] w-[min(360px,calc(100vw-2rem))] rounded-2xl border border-black/10 bg-[#ffffff] p-3 shadow-[0_10px_28px_rgba(15,25,48,0.10)]">
           <div className="mb-2 flex items-center justify-between">
             <p className="text-sm font-semibold text-ink-900">Notiser</p>
             <span className="rounded-full border border-black/10 bg-[#f7f7f7] px-2 py-0.5 text-xs font-semibold text-ink-700">
@@ -281,10 +332,23 @@ function AppShell({ pathname, user, onSwitchRole, onLogout, onRequireAuth, isGue
           </div>
           <div className="space-y-2">
             {notificationItems.map((item) => (
-              <div key={item.id} className="rounded-xl border border-black/10 bg-[#fffffe] px-3 py-2">
-                <p className="text-sm font-semibold text-ink-800">{item.title}</p>
-                <p className="mt-1 text-xs text-ink-500">{item.time}</p>
-              </div>
+              <button
+                key={item.id}
+                type="button"
+                className="notification-card-button block w-full rounded-[10px] border border-black/10 bg-[#ffffff] px-3 py-2 text-left transition hover:border-[#0b0a0e]/25 hover:bg-[#f8fafc]"
+                onClick={() => {
+                  setNotificationOpen(false);
+                  navigateTo(item.actionPath || (isAdminContext ? "/app/admin/notifikationer" : "/app/profile"));
+                }}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-ink-800">{item.title}</p>
+                    {item.body ? <p className="mt-0.5 truncate text-xs leading-snug text-ink-600">{item.body}</p> : null}
+                  </div>
+                  <p className="shrink-0 whitespace-nowrap text-[11px] font-medium text-ink-500">{item.time}</p>
+                </div>
+              </button>
             ))}
           </div>
           {isAdminContext ? (
@@ -304,21 +368,7 @@ function AppShell({ pathname, user, onSwitchRole, onLogout, onRequireAuth, isGue
 
       {showPublisherWorkspaceNav && !deferPublisherWorkspaceNavToProfile ? (
         <>
-          {hasProfileSource ? (
-            <div className="shrink-0 border-b border-black/10 bg-[#fffffe] px-4 py-2 sm:px-6">
-              <div className="mx-auto flex w-full max-w-[1240px] items-center justify-start">
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-1.5 rounded-full border border-black/20 bg-[#fffffe] px-3 py-2 text-xs font-semibold text-ink-800 hover:bg-[#f8fafc]"
-                  onClick={() => navigateTo("/app/profile")}
-                >
-                  <ArrowLeftIcon className="h-3.5 w-3.5" />
-                  Tillbaka till profil
-                </button>
-              </div>
-            </div>
-          ) : null}
-          <div className="shrink-0 border-b border-black/10 bg-[#fffffe] px-4 py-2 sm:px-6">
+          <div className="shrink-0 border-b border-black/10 bg-[#ffffff] px-4 py-2 sm:px-6">
             <nav className="mx-auto flex w-full max-w-[1240px] flex-wrap items-center justify-start gap-5">
               {publisherWorkspaceItems.map((item) => {
                 const active = routeMatches(pathname, item.path);
@@ -328,8 +378,8 @@ function AppShell({ pathname, user, onSwitchRole, onLogout, onRequireAuth, isGue
                     type="button"
                     className={`tab-underline-button border-b-2 pb-0.5 text-sm font-semibold transition ${
                       active
-                        ? "border-[#0f1930] text-[#0f1930]"
-                        : "border-transparent text-[#0f1930]/85 hover:text-[#0f1930]"
+                        ? "border-[#0b0a0e] text-[#0b0a0e]"
+                        : "border-transparent text-[#0b0a0e]/85 hover:text-[#0b0a0e]"
                     }`}
                     onClick={() => navigateTo(withProfileSource(item.path))}
                   >
@@ -349,11 +399,11 @@ function AppShell({ pathname, user, onSwitchRole, onLogout, onRequireAuth, isGue
         type="button"
         aria-label="Scrolla till toppen"
         onClick={handleScrollToTop}
-        className={`fixed bottom-6 z-30 inline-flex min-h-0 flex-col items-center justify-center gap-0.5 rounded-full border border-black/20 bg-[#fffffe]/25 p-3 text-[#0f1930] shadow-[0_8px_24px_rgba(15,25,48,0.18)] backdrop-blur-md transition-all duration-250 ${
+        className={`fixed bottom-6 z-30 inline-flex min-h-0 flex-col items-center justify-center gap-0.5 rounded-full border border-black/20 bg-[#ffffff]/25 p-3 text-[#0b0a0e] shadow-[0_8px_24px_rgba(15,25,48,0.18)] backdrop-blur-md transition-all duration-250 ${
           showScrollToTopButton
             ? "pointer-events-auto translate-y-0 opacity-100"
             : "pointer-events-none translate-y-3 opacity-0"
-        } ${isAdminStatisticsPage ? "right-6 xl:right-[max(1.5rem,calc((100vw-296px-1600px)/2+1.5rem))]" : "right-6"} hover:bg-[#fffffe]/35`}
+        } ${isAdminStatisticsPage ? "right-6 xl:right-[max(1.5rem,calc((100vw-296px-1600px)/2+1.5rem))]" : "right-6"} hover:bg-[#ffffff]/35`}
       >
         <ArrowUpIcon className="h-4 w-4" />
         <MouseScrollIcon className="h-4 w-4" />
@@ -365,7 +415,7 @@ function AppShell({ pathname, user, onSwitchRole, onLogout, onRequireAuth, isGue
           onClick={() => setShowLeaveSearchConfirm(false)}
         >
           <article
-            className="w-full max-w-lg rounded-2xl border border-black/10 bg-[#fffffe] p-5 shadow-[0_24px_64px_rgba(15,25,48,0.28)]"
+            className="w-full max-w-lg rounded-2xl border border-black/10 bg-[#ffffff] p-5 shadow-[0_24px_64px_rgba(15,25,48,0.28)]"
             onClick={(event) => event.stopPropagation()}
           >
             <h3 className="text-lg font-semibold text-ink-900">Byt till Lediga lokaler?</h3>
@@ -375,14 +425,14 @@ function AppShell({ pathname, user, onSwitchRole, onLogout, onRequireAuth, isGue
             <div className="mt-5 flex items-center justify-end gap-2">
               <button
                 type="button"
-                className="rounded-xl border border-black/10 bg-[#fffffe] px-4 py-2 text-sm font-semibold text-ink-700 hover:bg-[#fffffe]"
+                className="rounded-xl border border-black/10 bg-[#ffffff] px-4 py-2 text-sm font-semibold text-ink-700 hover:bg-[#ffffff]"
                 onClick={() => setShowLeaveSearchConfirm(false)}
               >
                 Avbryt
               </button>
               <button
                 type="button"
-                className="rounded-xl border border-[#0f1930] bg-[#0f1930] px-4 py-2 text-sm font-semibold text-white hover:bg-[#16233f]"
+                className="rounded-xl border border-[#0b0a0e] bg-[#0b0a0e] px-4 py-2 text-sm font-semibold text-white"
                 onClick={() => {
                   setShowLeaveSearchConfirm(false);
                   navigateTo("/app/rent?view=available");

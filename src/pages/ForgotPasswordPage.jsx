@@ -10,8 +10,8 @@ function ForgotPasswordPage() {
     <main className="grid min-h-screen place-items-center bg-[#f6f7f8] px-4 pb-8 pt-28">
       <AuthFlowNav />
       <div className="w-full max-w-[460px]">
-        <div className="rounded-[30px] border border-black/10 bg-[#fffffe] px-6 py-7 sm:px-7 sm:py-8">
-          <h1 className="text-[1.95rem] font-semibold leading-tight text-[#0f1930]">Glömt lösenord</h1>
+        <div className="rounded-[30px] border border-black/10 bg-[#ffffff] px-6 py-7 sm:px-7 sm:py-8">
+          <h1 className="text-[1.95rem] font-semibold leading-tight text-[#0b0a0e]">Glömt lösenord</h1>
           <p className="mt-1 text-sm text-ink-600">
             Ange din e-postadress så skickar vi en återställningslänk.
           </p>
@@ -34,7 +34,7 @@ function ForgotPasswordPage() {
               />
             </label>
 
-            <button type="submit" className="inline-flex w-full items-center justify-center rounded-full bg-[#0f1930] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#16233f]">
+            <button type="submit" className="inline-flex w-full items-center justify-center rounded-full bg-[#0b0a0e] px-4 py-3 text-sm font-semibold text-white transition">
               Skicka återställningslänk
             </button>
 
@@ -45,10 +45,10 @@ function ForgotPasswordPage() {
             <p className="text-xs text-ink-700">Minns du lösenordet?</p>
             <button
               type="button"
-              className="mt-2 inline-flex items-center justify-center rounded-full border border-black/20 bg-[#fffffe] px-4 py-2 text-xs font-semibold text-ink-700 hover:bg-[#f8fafc]"
+              className="mt-2 inline-flex items-center justify-center rounded-full border border-black/20 bg-[#ffffff] px-4 py-2 text-xs font-semibold text-ink-700 hover:bg-[#f8fafc]"
               onClick={() => navigateTo("/login")}
             >
-              Tillbaka till inloggning
+              Logga in
             </button>
           </div>
         </div>

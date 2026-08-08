@@ -45,7 +45,7 @@ function ListingVisualCard({
 
   if (compact) {
     return (
-      <article className="overflow-hidden rounded-3xl border border-black/10 bg-[#fffffe]">
+      <article className="property-card-hover-accent overflow-hidden rounded-3xl border border-black/10 bg-[#ffffff]">
         <div
           role="button"
           tabIndex={0}
@@ -58,28 +58,41 @@ function ListingVisualCard({
           }}
           className="block w-full cursor-pointer text-left"
         >
-          <div className="relative h-32 overflow-hidden rounded-2xl">
+          <div className="relative h-44 overflow-hidden rounded-2xl">
             <img src={listing.image} alt={listing.title} className="h-full w-full rounded-2xl object-cover" />
+            <span className="absolute left-3 top-3 inline-flex min-h-[30px] items-center gap-1.5 rounded-full bg-[#ffffff] px-3 text-xs font-medium text-ink-900">
+              <BuildingIcon className="h-3.5 w-3.5 text-ink-700" />
+              {listing.type || "Lokal"}
+            </span>
             <button
               type="button"
               aria-label={shortlisted ? "Ta bort sparad" : "Spara"}
-              className="absolute right-3 top-3 inline-flex h-9 w-9 min-h-9 min-w-9 aspect-square shrink-0 items-center justify-center rounded-full border border-black/10 bg-[#fffffe] p-0 text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
+              className="absolute right-3 top-3 inline-flex h-9 w-9 min-h-9 min-w-9 aspect-square shrink-0 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] p-0 text-ink-700 transition hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
               onClick={(event) => {
                 event.stopPropagation();
                 onToggleShortlist(listing.id);
               }}
             >
-              <StarIcon className={`h-4 w-4 ${shortlisted ? "fill-current text-[#0f1930]" : ""}`} />
+              <StarIcon className={`h-4 w-4 ${shortlisted ? "fill-current text-[#0b0a0e]" : ""}`} />
             </button>
           </div>
-          <div className="px-3 pb-3 pt-2.5">
-            <h3 className="text-sm leading-tight font-medium text-black">{listing.title}</h3>
-            <p className="mt-1 text-xs text-ink-600">{buildAddress(listing)}</p>
-            <p className="mt-1 text-sm font-medium text-ink-800">
-              <span>{listing.type || "Lokal"}</span>
-              <span aria-hidden="true" className="mx-1">•</span>
-              <span>{listing.sizeSqm} kvm</span>
+          <div className="px-4 pb-4 pt-3.5">
+            <h3 className="text-base leading-tight font-medium text-black">{listing.title}</h3>
+            <p className="mt-1.5 inline-flex items-center gap-1.5 text-xs text-ink-600">
+              <PinIcon className="h-3.5 w-3.5 shrink-0 text-ink-500" />
+              <span>{buildAddress(listing)}</span>
             </p>
+            <div className="mt-2.5 flex items-center gap-2.5 text-xs font-medium text-ink-800">
+              <span className="inline-flex items-center gap-1.5">
+                <RulerIcon className="h-4 w-4 text-ink-700" />
+                {listing.sizeSqm} kvm
+              </span>
+              <span className="h-3.5 w-px bg-black/15" />
+              <span className="inline-flex items-center gap-1.5">
+                <UsersGroupIcon className="h-4 w-4 text-ink-700" />
+                {formatCapacity(listing.capacity)}
+              </span>
+            </div>
           </div>
         </div>
       </article>
@@ -88,7 +101,7 @@ function ListingVisualCard({
 
   if (horizontal) {
     return (
-      <article className="group property-card-hover h-full overflow-hidden rounded-3xl border border-[#d9d9d9] bg-[#fffffe]">
+      <article className="group property-card-hover h-full overflow-hidden rounded-3xl border border-[#d9d9d9] bg-[#ffffff]">
         <div
           role="button"
           tabIndex={0}
@@ -112,13 +125,13 @@ function ListingVisualCard({
                 <div className="absolute inset-0 overflow-hidden">
                   <img src={listing.image} alt={listing.title} className="h-full w-full rounded-none object-cover" />
                 </div>
-                <span className="absolute left-4 top-4 z-20 inline-flex min-h-[38px] items-center gap-1.5 rounded-full bg-[#fffffe] px-4 text-sm font-medium text-ink-900">
+                <span className="absolute left-4 top-4 z-20 inline-flex min-h-[38px] items-center gap-1.5 rounded-full bg-[#ffffff] px-4 text-sm font-medium text-ink-900">
                   <BuildingIcon className="h-4 w-4 text-ink-700" />
                   {listing.type || "Kontor"}
                 </span>
                 <div className="absolute right-4 top-4 z-20 flex items-center gap-2">
                   {showMatchChip ? (
-                    <div className="inline-flex h-10 items-center gap-1.5 rounded-full border border-black/5 bg-[#fffffe] px-3.5 text-sm font-semibold text-[#0f1930]">
+                    <div className="inline-flex h-10 items-center gap-1.5 rounded-full border border-black/5 bg-[#ffffff] px-3.5 text-sm font-semibold text-[#0b0a0e]">
                       <Icon name="gauge" className="h-4 w-4 text-[#4f46e5]" />
                       <span>{listing.score || 0}% match</span>
                     </div>
@@ -126,13 +139,13 @@ function ListingVisualCard({
                   <button
                     type="button"
                     aria-label={shortlisted ? "Ta bort sparad" : "Spara"}
-                    className="inline-flex h-10 w-10 min-h-10 min-w-10 items-center justify-center rounded-full border border-black/10 bg-[#fffffe] p-0 text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
+                    className="inline-flex h-10 w-10 min-h-10 min-w-10 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] p-0 text-ink-700 transition hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
                     onClick={(event) => {
                       event.stopPropagation();
                       onToggleShortlist(listing.id);
                     }}
                   >
-                    <StarIcon className={`h-4 w-4 ${shortlisted ? "fill-current text-[#0f1930]" : ""}`} />
+                    <StarIcon className={`h-4 w-4 ${shortlisted ? "fill-current text-[#0b0a0e]" : ""}`} />
                   </button>
                 </div>
               </div>
@@ -147,11 +160,11 @@ function ListingVisualCard({
             </div>
           </div>
 
-          <div className="relative z-10 col-span-1 min-w-0 flex flex-1 flex-col gap-3 bg-[#fffffe] p-5">
+          <div className="relative z-10 col-span-1 min-w-0 flex flex-1 flex-col gap-3 bg-[#ffffff] p-5">
             <div className="space-y-1">
               <div className="flex items-center justify-between gap-3">
-                <h3 className="text-lg font-semibold leading-tight text-[#0f1930]">{listing.title}</h3>
-                <p className="inline-flex shrink-0 items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-[#0f1930]">
+                <h3 className="text-lg font-semibold leading-tight text-[#0b0a0e]">{listing.title}</h3>
+                <p className="inline-flex shrink-0 items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-[#0b0a0e]">
                   <Icon name="crown" className="h-3.5 w-3.5" />
                   <span>UTVALD</span>
                 </p>
@@ -160,14 +173,14 @@ function ListingVisualCard({
                 <PinIcon className="h-4 w-4 text-ink-600" />
                 <span>{buildAddress(listing)}</span>
               </p>
-              <div className="mt-1 flex items-center gap-4 text-sm text-[#0f1930]">
+              <div className="mt-1 flex items-center gap-4 text-sm text-[#0b0a0e]">
                 <p className="flex items-center gap-2 font-medium">
-                  <RulerIcon className="h-5 w-5 text-[#0f1930]" />
+                  <RulerIcon className="h-5 w-5 text-[#0b0a0e]" />
                   <span>{listing.sizeSqm} kvm</span>
                 </p>
                 <span className="h-5 w-px bg-black/20" />
                 <p className="flex items-center gap-2 font-medium">
-                  <UsersGroupIcon className="h-5 w-5 text-[#0f1930]" />
+                  <UsersGroupIcon className="h-5 w-5 text-[#0b0a0e]" />
                   <span>{formatCapacity(listing.capacity)}</span>
                 </p>
               </div>
@@ -177,7 +190,7 @@ function ListingVisualCard({
             </div>
 
             <div className="mt-1 flex items-end gap-1.5">
-              <p className="text-2xl font-semibold leading-none text-[#0f1930]">
+              <p className="text-2xl font-semibold leading-none text-[#0b0a0e]">
                 från {pricePerSqm ? `${pricePerSqm} kr` : "Pris saknas"}
               </p>
               {pricePerSqm ? <p className="text-sm leading-none text-[#737373]">/ kvm</p> : null}
@@ -195,7 +208,7 @@ function ListingVisualCard({
             <div className="mt-2 flex items-center justify-between gap-3">
               <button
                 type="button"
-                className="inline-flex min-h-[38px] items-center gap-1.5 rounded-full border border-[#0f1930]/15 px-6 text-sm font-medium text-ink-900 transition hover:border-[#0f1930] hover:text-[#0f1930]"
+                className="inline-flex min-h-[38px] items-center gap-1.5 rounded-full border border-[#0b0a0e]/15 px-6 text-sm font-medium text-ink-900 transition hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
                 onClick={(event) => {
                   event.stopPropagation();
                   onBookViewing?.(listing);
@@ -215,7 +228,7 @@ function ListingVisualCard({
   }
 
   return (
-    <article className="group property-card-hover h-full overflow-hidden rounded-3xl border border-[#d9d9d9] bg-[#fffffe]">
+    <article className="group property-card-hover h-full overflow-hidden rounded-3xl border border-[#d9d9d9] bg-[#ffffff]">
       <div
         role="button"
         tabIndex={0}
@@ -235,14 +248,14 @@ function ListingVisualCard({
       >
         <div className="relative">
           <img src={listing.image} alt={listing.title} className="h-44 w-full object-cover" />
-          <span className="absolute left-4 top-4 inline-flex min-h-[38px] items-center gap-1.5 rounded-full bg-[#fffffe] px-4 text-sm font-medium text-ink-900">
+          <span className="absolute left-4 top-4 inline-flex min-h-[38px] items-center gap-1.5 rounded-full bg-[#ffffff] px-4 text-sm font-medium text-ink-900">
             <BuildingIcon className="h-4 w-4 text-ink-700" />
             {listing.type || "Kontor"}
           </span>
         </div>
         <div className="absolute right-4 top-4 flex items-center gap-2">
           {showMatchChip ? (
-            <div className="inline-flex h-10 items-center gap-1.5 rounded-full border border-black/5 bg-[#fffffe] px-3.5 text-sm font-semibold text-[#0f1930]">
+            <div className="inline-flex h-10 items-center gap-1.5 rounded-full border border-black/5 bg-[#ffffff] px-3.5 text-sm font-semibold text-[#0b0a0e]">
               <Icon name="gauge" className="h-4 w-4 text-[#4f46e5]" />
               <span>{listing.score || 0}% match</span>
             </div>
@@ -250,38 +263,38 @@ function ListingVisualCard({
           <button
             type="button"
             aria-label={shortlisted ? "Ta bort sparad" : "Spara"}
-            className="inline-flex h-10 w-10 min-h-10 min-w-10 items-center justify-center rounded-full border border-black/10 bg-[#fffffe] p-0 text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
+            className="inline-flex h-10 w-10 min-h-10 min-w-10 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] p-0 text-ink-700 transition hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
             onClick={(event) => {
               event.stopPropagation();
               onToggleShortlist(listing.id);
             }}
           >
-            <StarIcon className={`h-4 w-4 ${shortlisted ? "fill-current text-[#0f1930]" : ""}`} />
+            <StarIcon className={`h-4 w-4 ${shortlisted ? "fill-current text-[#0b0a0e]" : ""}`} />
           </button>
         </div>
 
         <div className="flex flex-1 flex-col gap-3 p-5">
           <div className="space-y-1">
-            <h3 className="text-lg font-semibold leading-tight text-[#0f1930]">{listing.title}</h3>
+            <h3 className="text-lg font-semibold leading-tight text-[#0b0a0e]">{listing.title}</h3>
             <p className="inline-flex items-center gap-1.5 text-sm text-ink-600">
               <PinIcon className="h-4 w-4 text-ink-600" />
               <span>{buildAddress(listing)}</span>
             </p>
-            <div className="mt-1 flex items-center gap-4 text-sm text-[#0f1930]">
+            <div className="mt-1 flex items-center gap-4 text-sm text-[#0b0a0e]">
               <p className="flex items-center gap-2 font-medium">
-                <RulerIcon className="h-5 w-5 text-[#0f1930]" />
+                <RulerIcon className="h-5 w-5 text-[#0b0a0e]" />
                 <span>{listing.sizeSqm} kvm</span>
               </p>
               <span className="h-5 w-px bg-black/20" />
               <p className="flex items-center gap-2 font-medium">
-                <UsersGroupIcon className="h-5 w-5 text-[#0f1930]" />
+                <UsersGroupIcon className="h-5 w-5 text-[#0b0a0e]" />
                 <span>{formatCapacity(listing.capacity)}</span>
               </p>
             </div>
           </div>
 
           <div className="mt-1 flex items-end gap-1.5">
-            <p className="text-2xl font-semibold leading-none text-[#0f1930]">
+            <p className="text-2xl font-semibold leading-none text-[#0b0a0e]">
               från {pricePerSqm ? `${pricePerSqm} kr` : "Pris saknas"}
             </p>
             {pricePerSqm ? <p className="text-sm leading-none text-[#737373]">/ kvm</p> : null}
@@ -295,7 +308,7 @@ function ListingVisualCard({
           <div className="mt-2 flex items-center justify-between gap-3">
             <button
               type="button"
-              className="inline-flex min-h-[38px] items-center gap-1.5 rounded-full border border-[#0f1930]/15 px-6 text-sm font-medium text-ink-900 transition hover:border-[#0f1930] hover:text-[#0f1930]"
+              className="inline-flex min-h-[38px] items-center gap-1.5 rounded-full border border-[#0b0a0e]/15 px-6 text-sm font-medium text-ink-900 transition hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
               onClick={(event) => {
                 event.stopPropagation();
                 onBookViewing?.(listing);

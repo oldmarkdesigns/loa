@@ -20,8 +20,51 @@ import {
 } from "../components/icons/UiIcons";
 
 const RENTER_STEPS = ["program-core", "review"];
+const BROKER_WITH_PROGRAM_STEPS = ["program-core", "publisher-profile", "review"];
 const PUBLISHER_STEPS = ["publisher-profile", "review"];
 const COMPANY_ADMIN_STEPS = ["company-admin-profile"];
+const MAX_INLINE_LOGO_BYTES = 300_000;
+
+function isOversizedDataUrl(value, maxBytes = MAX_INLINE_LOGO_BYTES) {
+  return typeof value === "string" && value.startsWith("data:") && value.length > maxBytes;
+}
+
+function sanitizeCompanyAdminProfile(profile = {}) {
+  return {
+    ...profile,
+    ...(isOversizedDataUrl(profile.logoUrl) ? { logoUrl: "" } : {})
+  };
+}
+
+function normalizeOrganizationNumber(value) {
+  return String(value || "").replace(/\D/g, "").slice(0, 10);
+}
+
+function formatOrganizationNumber(value) {
+  const digits = normalizeOrganizationNumber(value);
+  if (digits.length <= 6) return digits;
+  return `${digits.slice(0, 6)}-${digits.slice(6)}`;
+}
+
+function companyProfileFromLookup(company, fallbackOrganizationNumber) {
+  if (!company) return {};
+  return {
+    companyId: company.id || "",
+    companyName: company.name,
+    legalEntity: company.name,
+    organizationNumber: company.organizationNumber || fallbackOrganizationNumber,
+    companyOrganizationNumber: company.organizationNumber || fallbackOrganizationNumber,
+    companyProfileLocked: true,
+    companyProfileSource: "registered_company",
+    companyType: company.companyType || "",
+    companyPhone: company.phone || "",
+    streetAddress: company.streetAddress || "",
+    postalCode: company.postalCode || "",
+    city: company.city || "",
+    parentCompany: company.parentCompany || "",
+    websiteUrl: company.websiteUrl || ""
+  };
+}
 
 const districtOptions = ["Alla", "Norrmalm", "Södermalm", "Vasastan", "Östermalm", "Kungsholmen", "Solna", "Sundbyberg"];
 const typeOptions = [
@@ -71,7 +114,7 @@ const publisherCompanyOptions = [
   "Genesta",
   "Hufvudstaden",
   "Slussgården",
-  "Vasakronan",
+  "Vasakronan Fastigheter AB",
   "Einar Mattsson",
   "Gyllenforsen Fastigheter",
   "Holmström Gruppen",
@@ -310,7 +353,7 @@ function parseInitialTypes(rawTypes) {
   return [];
 }
 
-const inputWithUnitClass = "flex w-full items-center rounded-2xl border border-ink-200 bg-[#fffffe] px-3.5 text-[15px] text-ink-900 transition focus-within:border-brand-400";
+const inputWithUnitClass = "flex w-full items-center rounded-2xl border border-ink-200 bg-[#ffffff] px-3.5 text-[15px] text-ink-900 transition focus-within:border-brand-400";
 
 function roundToNearestFive(value) {
   return Math.max(0, Math.round(value / 5) * 5);
@@ -344,14 +387,19 @@ function buildInviteCode(companyName = "") {
   return `${normalized}-2026-XK9`;
 }
 
-function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "/onboarding" }) {
+function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, onSwitchRole, onLogout, pathname = "/onboarding" }) {
   const search = typeof window !== "undefined" ? window.location.search : "";
   const searchParams = new URLSearchParams(search);
   const requestedRole = searchParams.get("role");
+  const requestedOnboardingFlow = searchParams.get("onboardingFlow");
   const hasExplicitRoleRequest = requestedRole === "broker" || requestedRole === "company_admin" || requestedRole === "renter";
+  const profileRoleIntent = user?.profile?.signupRoleIntent || user?.profile?.requestedRole;
+  const isBrokerWithProgramFlow = requestedOnboardingFlow === "broker-with-program";
   const isAddRoleIntent = searchParams.get("intent") === "add-role";
   const normalizedInitialRole = requestedRole === "broker" || requestedRole === "company_admin" || requestedRole === "renter"
     ? requestedRole
+    : profileRoleIntent === "broker" || profileRoleIntent === "company_admin" || profileRoleIntent === "renter"
+      ? profileRoleIntent
     : user?.role === "publisher" ? "broker" : user?.role;
   const [primaryRole, setPrimaryRole] = useState(
     normalizedInitialRole === "broker" || normalizedInitialRole === "company_admin" ? normalizedInitialRole : "renter"
@@ -385,6 +433,7 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
   const [publisherProfile, setPublisherProfile] = useState({
     propertyType: user?.profile?.propertyType || "",
     legalEntity: user?.profile?.legalEntity || "",
+    organizationNumber: user?.profile?.organizationNumber || user?.profile?.companyOrganizationNumber || "",
     contactRole: user?.profile?.contactRole || "",
     portfolioSize: user?.profile?.portfolioSize || "",
     fmiNumber: user?.profile?.fmiNumber || "",
@@ -396,15 +445,24 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
     termsSuspensionAware: Boolean(user?.profile?.termsSuspensionAware)
   });
   const [publisherFlowStep, setPublisherFlowStep] = useState(0);
+  const [brokerVerificationSubmitted, setBrokerVerificationSubmitted] = useState(false);
   const [companyAdminProfile, setCompanyAdminProfile] = useState({
     legalEntity: user?.profile?.legalEntity || "",
     organizationNumber: user?.profile?.organizationNumber || "",
+    contactFirstName: user?.profile?.contactFirstName || user?.profile?.firstName || "",
+    contactLastName: user?.profile?.contactLastName || user?.profile?.lastName || "",
+    contactPhone: user?.profile?.contactPhone || user?.phone || "",
+    streetAddress: user?.profile?.streetAddress || "",
+    postalCode: user?.profile?.postalCode || "",
+    city: user?.profile?.city || "",
     companyType: user?.profile?.companyType || "",
     portfolioSize: user?.profile?.portfolioSize || "",
     logoUrl: user?.profile?.logoUrl || "",
     companyDescription: user?.profile?.companyDescription || "",
     websiteUrl: user?.profile?.websiteUrl || "",
     contactEmail: user?.profile?.contactEmail || user?.email || "",
+    hasSeparateBillingAddress: Boolean(user?.profile?.hasSeparateBillingAddress),
+    wantsNewsletter: Boolean(user?.profile?.wantsNewsletter),
     approvedEmailDomain: user?.profile?.approvedEmailDomain || "",
     inviteCode: user?.profile?.inviteCode || buildInviteCode(user?.profile?.legalEntity || ""),
     inviteEmail: "",
@@ -422,10 +480,14 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
   const [companyAdminActivationComplete, setCompanyAdminActivationComplete] = useState(false);
   const [companyAdminInviteCodeCopied, setCompanyAdminInviteCodeCopied] = useState(false);
   const [publisherCompanyQuery, setPublisherCompanyQuery] = useState(user?.profile?.legalEntity || "");
+  const [resolvedCompanyProfile, setResolvedCompanyProfile] = useState(null);
   const [showPublisherCompanyMenu, setShowPublisherCompanyMenu] = useState(false);
   const [isPublisherCompanyEditing, setIsPublisherCompanyEditing] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
+  const [logoUploadError, setLogoUploadError] = useState("");
+  const [companySetupOfferOpen, setCompanySetupOfferOpen] = useState(false);
+  const [pendingPostOnboardingRoute, setPendingPostOnboardingRoute] = useState(null);
   const [showProgramInfoCard, setShowProgramInfoCard] = useState(true);
   const [showSizeRecommendationCard, setShowSizeRecommendationCard] = useState(true);
   const selectedProgramAmenities = useMemo(() => listFromDelimitedValue(renterProgram.amenities), [renterProgram.amenities]);
@@ -442,15 +504,21 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
       const raw = window.localStorage.getItem(draftStorageKey);
       if (!raw) return;
       const draft = JSON.parse(raw);
-      if (draft?.primaryRole && !hasExplicitRoleRequest) setPrimaryRole(draft.primaryRole);
+      if (draft?.primaryRole && !hasExplicitRoleRequest && !profileRoleIntent) setPrimaryRole(draft.primaryRole);
       if (draft?.account) setAccount((previous) => ({ ...previous, ...draft.account }));
       if (draft?.renterProgram) setRenterProgram((previous) => ({ ...previous, ...draft.renterProgram }));
       if (draft?.publisherProfile) setPublisherProfile((previous) => ({ ...previous, ...draft.publisherProfile }));
-      if (draft?.companyAdminProfile) setCompanyAdminProfile((previous) => ({ ...previous, ...draft.companyAdminProfile }));
+      if (draft?.companyAdminProfile) {
+        const nextCompanyAdminProfile = sanitizeCompanyAdminProfile(draft.companyAdminProfile);
+        if (draft.companyAdminProfile.logoUrl && !nextCompanyAdminProfile.logoUrl) {
+          setLogoUploadError("En tidigare uppladdad logotyp var för stor och har tagits bort. Ladda upp en bild under 300 KB.");
+        }
+        setCompanyAdminProfile((previous) => ({ ...previous, ...nextCompanyAdminProfile }));
+      }
     } catch (_error) {
       // ignore invalid local draft
     }
-  }, [draftStorageKey, hasExplicitRoleRequest]);
+  }, [draftStorageKey, hasExplicitRoleRequest, profileRoleIntent]);
 
   useEffect(() => {
     const payload = {
@@ -458,7 +526,7 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
       account,
       renterProgram,
       publisherProfile,
-      companyAdminProfile
+      companyAdminProfile: sanitizeCompanyAdminProfile(companyAdminProfile)
     };
     window.localStorage.setItem(draftStorageKey, JSON.stringify(payload));
   }, [draftStorageKey, primaryRole, account, renterProgram, publisherProfile, companyAdminProfile]);
@@ -472,18 +540,120 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
   }, [user?.profile?.legalEntity]);
 
   useEffect(() => {
+    const organizationNumber = String(user?.profile?.organizationNumber || user?.profile?.companyOrganizationNumber || "").trim();
+    if (!organizationNumber || user?.profile?.companyProfileLocked || !onCheckCompanyByOrganizationNumber) return undefined;
+    if (primaryRole !== "broker" && primaryRole !== "company_admin") return undefined;
+
+    let cancelled = false;
+    onCheckCompanyByOrganizationNumber(organizationNumber, user?.id)
+      .then((lookup) => {
+        if (cancelled || !lookup?.exists || !lookup?.company) return;
+
+        const companyProfile = {
+          companyId: lookup.company.id || "",
+          companyName: lookup.company.name,
+          legalEntity: lookup.company.name,
+          organizationNumber: lookup.company.organizationNumber || organizationNumber,
+          companyOrganizationNumber: lookup.company.organizationNumber || organizationNumber,
+          companyProfileLocked: true,
+          companyProfileSource: "registered_company",
+          companyType: lookup.company.companyType || "",
+          companyPhone: lookup.company.phone || "",
+          streetAddress: lookup.company.streetAddress || "",
+          postalCode: lookup.company.postalCode || "",
+          city: lookup.company.city || "",
+          parentCompany: lookup.company.parentCompany || "",
+          websiteUrl: lookup.company.websiteUrl || ""
+        };
+
+        setResolvedCompanyProfile(companyProfile);
+        setPublisherCompanyQuery(companyProfile.legalEntity);
+        setPublisherProfile((previous) => ({
+          ...previous,
+          legalEntity: companyProfile.legalEntity,
+          organizationNumber: companyProfile.organizationNumber
+        }));
+        setCompanyAdminProfile((previous) => ({
+          ...previous,
+          legalEntity: companyProfile.legalEntity,
+          organizationNumber: companyProfile.organizationNumber,
+          companyType: companyProfile.companyType,
+          streetAddress: companyProfile.streetAddress,
+          postalCode: companyProfile.postalCode,
+          city: companyProfile.city,
+          websiteUrl: companyProfile.websiteUrl
+        }));
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    onCheckCompanyByOrganizationNumber,
+    primaryRole,
+    user?.id,
+    user?.profile?.companyOrganizationNumber,
+    user?.profile?.companyProfileLocked,
+    user?.profile?.organizationNumber
+  ]);
+
+  useEffect(() => {
+    if (!user?.profile?.companyProfileLocked) return;
+
+    setPublisherProfile((previous) => ({
+      ...previous,
+      legalEntity: user?.profile?.legalEntity || previous.legalEntity
+    }));
+    setCompanyAdminProfile((previous) => ({
+      ...previous,
+      legalEntity: user?.profile?.legalEntity || previous.legalEntity,
+      organizationNumber: user?.profile?.organizationNumber || previous.organizationNumber,
+      companyType: user?.profile?.companyType || previous.companyType,
+      streetAddress: user?.profile?.streetAddress || previous.streetAddress,
+      postalCode: user?.profile?.postalCode || previous.postalCode,
+      city: user?.profile?.city || previous.city,
+      websiteUrl: user?.profile?.websiteUrl || previous.websiteUrl
+    }));
+  }, [
+    user?.profile?.city,
+    user?.profile?.companyProfileLocked,
+    user?.profile?.companyType,
+    user?.profile?.legalEntity,
+    user?.profile?.organizationNumber,
+    user?.profile?.postalCode,
+    user?.profile?.streetAddress,
+    user?.profile?.websiteUrl
+  ]);
+
+  useEffect(() => {
+    setCompanyAdminProfile((previous) => ({
+      ...previous,
+      contactFirstName: previous.contactFirstName || user?.profile?.contactFirstName || user?.profile?.firstName || account.name.split(" ")[0] || "",
+      contactLastName: previous.contactLastName || user?.profile?.contactLastName || user?.profile?.lastName || account.name.split(" ").slice(1).join(" ") || "",
+      contactPhone: previous.contactPhone || user?.profile?.contactPhone || account.phone || ""
+    }));
+  }, [account.name, account.phone, user?.profile?.contactFirstName, user?.profile?.contactLastName, user?.profile?.contactPhone, user?.profile?.firstName, user?.profile?.lastName]);
+
+  useEffect(() => {
     if (pathname === "/onboarding") {
-      const firstStep = primaryRole === "broker" ? "publisher-profile" : primaryRole === "company_admin" ? "company-admin-profile" : "program-core";
+      const firstStep = primaryRole === "broker"
+        ? isBrokerWithProgramFlow ? "program-core" : "publisher-profile"
+        : primaryRole === "company_admin" ? "company-admin-profile" : "program-core";
       gotoStep(firstStep, { replace: true });
     }
-  }, [pathname, primaryRole]);
+  }, [isBrokerWithProgramFlow, pathname, primaryRole]);
 
   const routeStep = useMemo(() => {
     const parts = String(pathname || "").split("/").filter(Boolean);
-    return parts[1] || (primaryRole === "broker" ? "publisher-profile" : primaryRole === "company_admin" ? "company-admin-profile" : "program-core");
-  }, [pathname, primaryRole]);
+    return parts[1] || (primaryRole === "broker"
+      ? isBrokerWithProgramFlow ? "program-core" : "publisher-profile"
+      : primaryRole === "company_admin" ? "company-admin-profile" : "program-core");
+  }, [isBrokerWithProgramFlow, pathname, primaryRole]);
 
-  const activeSteps = primaryRole === "broker" ? PUBLISHER_STEPS : primaryRole === "company_admin" ? COMPANY_ADMIN_STEPS : RENTER_STEPS;
+  const activeSteps = primaryRole === "broker"
+    ? isBrokerWithProgramFlow ? BROKER_WITH_PROGRAM_STEPS : PUBLISHER_STEPS
+    : primaryRole === "company_admin" ? COMPANY_ADMIN_STEPS : RENTER_STEPS;
   const stepIndex = Math.max(0, activeSteps.indexOf(routeStep));
   const currentStep = activeSteps[stepIndex] || activeSteps[0];
 
@@ -495,11 +665,18 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
 
   function onboardingStepUrl(step) {
     const base = `/onboarding/${step}`;
-    if (!isAddRoleIntent) return base;
-
     const params = new URLSearchParams(searchParams);
-    params.set("intent", "add-role");
+    if (isAddRoleIntent) {
+      params.set("intent", "add-role");
+    } else {
+      params.delete("intent");
+    }
     params.set("role", primaryRole === "company_admin" ? "company_admin" : primaryRole === "broker" ? "broker" : "renter");
+    if (primaryRole === "broker" && isBrokerWithProgramFlow) {
+      params.set("onboardingFlow", "broker-with-program");
+    } else {
+      params.delete("onboardingFlow");
+    }
     const nextQuery = params.toString();
     return nextQuery ? `${base}?${nextQuery}` : base;
   }
@@ -601,6 +778,37 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
     setError("");
 
     try {
+      const brokerOrganizationNumber = formatOrganizationNumber(publisherProfile.organizationNumber);
+      const currentResolvedBrokerCompanyProfile =
+        normalizeOrganizationNumber(resolvedCompanyProfile?.organizationNumber || resolvedCompanyProfile?.companyOrganizationNumber) === normalizeOrganizationNumber(brokerOrganizationNumber)
+          ? resolvedCompanyProfile
+          : {};
+      let brokerCompanyProfile = {};
+
+      if (primaryRole === "broker") {
+        if (normalizeOrganizationNumber(brokerOrganizationNumber).length !== 10) {
+          setError("Ange ett giltigt organisationsnummer.");
+          return;
+        }
+        if (!onCheckCompanyByOrganizationNumber) {
+          setError("Kunde inte kontrollera organisationsnumret. Försök igen.");
+          return;
+        }
+        const lookup = await onCheckCompanyByOrganizationNumber(brokerOrganizationNumber, user?.id);
+        if (!lookup?.exists || !lookup?.company) {
+          setPendingPostOnboardingRoute("/app/profile");
+          setCompanySetupOfferOpen(true);
+          return;
+        }
+        brokerCompanyProfile = companyProfileFromLookup(lookup.company, brokerOrganizationNumber);
+        setResolvedCompanyProfile(brokerCompanyProfile);
+        setPublisherProfile((previous) => ({
+          ...previous,
+          legalEntity: brokerCompanyProfile.legalEntity,
+          organizationNumber: brokerCompanyProfile.organizationNumber
+        }));
+      }
+
       const profilePayload =
         primaryRole === "renter"
           ? {
@@ -630,13 +838,45 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
             }
           : primaryRole === "company_admin"
             ? {
-                ...companyAdminProfile,
+                ...sanitizeCompanyAdminProfile(companyAdminProfile),
+                ...(resolvedCompanyProfile || {}),
                 inviteEmail: "",
                 inviteRole: "Mäklare"
               }
           : {
-              ...publisherProfile
+              ...publisherProfile,
+              ...(brokerOrganizationNumber ? { organizationNumber: brokerOrganizationNumber } : {}),
+              verificationMethod: "company_admin_approval",
+              ...(currentResolvedBrokerCompanyProfile || {}),
+              ...brokerCompanyProfile,
+              ...(isBrokerWithProgramFlow
+                ? {
+                    renterProgram: {
+                      ...renterProgram,
+                      district: renterProgram.district || "Alla",
+                      type: renterProgram.type,
+                      teamSize: String(renterProgram.teamSize || "").trim(),
+                      minSize: String(renterProgram.minSize || "").trim(),
+                      maxSize: String(renterProgram.maxSize || "").trim(),
+                      minBudget: String(renterProgram.minBudget || "").trim(),
+                      maxBudget: String(renterProgram.maxBudget || "").trim(),
+                      maxBudgetPerSqm: String(renterProgram.maxBudgetPerSqm || "").trim(),
+                      moveInDate: renterProgram.moveInDate || "",
+                      moveWithinMonths: String(renterProgram.moveWithinMonths || "").trim(),
+                      contractFlex: renterProgram.contractFlex || "",
+                      transitDistance: renterProgram.transitDistance || "",
+                      accessHours: renterProgram.accessHours || "",
+                      parkingType: renterProgram.parkingType || "",
+                      layoutType: renterProgram.layoutType || "",
+                      amenities: renterProgram.amenities || ""
+                    }
+                  }
+                : {})
             };
+
+      if (primaryRole === "company_admin" || primaryRole === "broker") {
+        window.sessionStorage.setItem("office_onboarding_completion_screen", primaryRole);
+      }
 
       const nextUser = await onComplete({
         primaryRole,
@@ -644,15 +884,38 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
         profile: profilePayload
       });
 
+      const organizationNumberToCheck = String(nextUser?.profile?.organizationNumber || companyAdminProfile.organizationNumber || "").trim();
+      const shouldOfferCompanySetup =
+        !isAddRoleIntent
+        && primaryRole !== "company_admin"
+        && Boolean(organizationNumberToCheck)
+        && !userGrantedCompanyAdminAccess(nextUser)
+        && !(nextUser?.profile?.requestedRole === "company_admin");
+
+      if (shouldOfferCompanySetup && onCheckCompanyByOrganizationNumber) {
+        const lookup = await onCheckCompanyByOrganizationNumber(organizationNumberToCheck, nextUser?.id);
+        if (!lookup?.exists) {
+          window.localStorage.removeItem(draftStorageKey);
+          setPendingPostOnboardingRoute(primaryRole === "broker" ? "/app/my-listings" : "/app/profile");
+          setCompanySetupOfferOpen(true);
+          return;
+        }
+      }
+
       window.localStorage.removeItem(draftStorageKey);
       if (primaryRole === "company_admin") {
-        setCompanyAdminActivationComplete(true);
+        window.sessionStorage.removeItem("office_onboarding_completion_screen");
+        navigateTo("/app/admin");
       } else if (primaryRole === "broker") {
-        navigateTo("/app/my-listings");
+        setBrokerVerificationSubmitted(true);
+        gotoStep("publisher-profile", { replace: true });
       } else {
         navigateTo("/app/profile");
       }
     } catch (submitError) {
+      if (primaryRole === "company_admin" || primaryRole === "broker") {
+        window.sessionStorage.removeItem("office_onboarding_completion_screen");
+      }
       setError(submitError.message || "Kunde inte slutföra introduktionen.");
     } finally {
       setPending(false);
@@ -712,15 +975,9 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
   ];
   const canAdvancePublisherFlow =
     publisherFlowStep === 0
-      ? Boolean(publisherProfile.propertyType && publisherProfile.legalEntity && publisherProfile.portfolioSize)
+      ? Boolean(publisherProfile.propertyType && normalizeOrganizationNumber(publisherProfile.organizationNumber).length === 10 && publisherProfile.portfolioSize)
       : publisherFlowStep === 1
-        ? Boolean(
-          publisherProfile.verificationMethod === "invite_code"
-            ? publisherProfile.inviteCode
-            : publisherProfile.verificationMethod === "email_domain"
-              ? publisherProfile.workEmailDomain
-              : true
-        )
+        ? true
         : Boolean(
           publisherProfile.termsEmployerAuthority &&
           publisherProfile.termsPublishingRules &&
@@ -728,9 +985,19 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
         );
   const canAdvanceCompanyAdminFlow =
     companyAdminFlowStep === 0
-      ? Boolean(companyAdminProfile.legalEntity && companyAdminProfile.organizationNumber && companyAdminProfile.companyType && companyAdminProfile.portfolioSize)
+      ? Boolean(
+        companyAdminProfile.legalEntity
+        && companyAdminProfile.organizationNumber
+        && companyAdminProfile.contactFirstName
+        && companyAdminProfile.contactLastName
+        && companyAdminProfile.contactPhone
+        && companyAdminProfile.streetAddress
+        && companyAdminProfile.postalCode
+        && companyAdminProfile.city
+        && companyAdminProfile.contactEmail
+      )
       : companyAdminFlowStep === 1
-        ? Boolean(companyAdminProfile.companyDescription && companyAdminProfile.websiteUrl && companyAdminProfile.contactEmail)
+        ? Boolean(companyAdminProfile.companyDescription && companyAdminProfile.termsPlatformRules)
         : companyAdminFlowStep === 2
           ? Boolean(companyAdminProfile.inviteCode)
           : Boolean(
@@ -744,18 +1011,76 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
     publisherCompanyQuery &&
     publisherProfile.legalEntity === publisherCompanyQuery
   );
-  const lockPublisherCompanyField = hasSelectedPublisherCompany && !isPublisherCompanyEditing;
+  const companyProfileLocked = Boolean(user?.profile?.companyProfileLocked || resolvedCompanyProfile?.companyProfileLocked);
+  const lockPublisherCompanyField = companyProfileLocked || (hasSelectedPublisherCompany && !isPublisherCompanyEditing);
   const companyAdminStepDots = [0, 1, 2, 3];
 
+  function userGrantedCompanyAdminAccess(nextUser) {
+    const roles = Array.isArray(nextUser?.roles) ? nextUser.roles : [nextUser?.role || "renter"];
+    return roles.includes("company_admin");
+  }
+
+  function startCompanyProfileSetup() {
+    setCompanySetupOfferOpen(false);
+    navigateTo("/onboarding/company-admin-profile?role=company_admin&intent=add-role");
+  }
+
+  function skipCompanyProfileSetup() {
+    setCompanySetupOfferOpen(false);
+    navigateTo(pendingPostOnboardingRoute || "/app/profile");
+  }
+
+  const isBrokerVerificationStep = currentStep === "publisher-profile" && primaryRole === "broker";
+  const hasPendingBrokerVerification =
+    brokerVerificationSubmitted ||
+    (isBrokerVerificationStep && user?.profile?.requestedRole === "broker" && user?.profile?.roleRequestStatus === "pending");
+  const brokerVerificationCompanyName =
+    resolvedCompanyProfile?.legalEntity ||
+    publisherProfile.legalEntity ||
+    user?.profile?.companyName ||
+    user?.profile?.legalEntity ||
+    "";
+  const brokerVerificationOrganizationNumber =
+    publisherProfile.organizationNumber ||
+    user?.profile?.organizationNumber ||
+    user?.profile?.companyOrganizationNumber ||
+    "";
+
   return (
-    <main className="grid min-h-screen content-start justify-items-center bg-[#fffffe] px-4 pb-8 pt-28">
+    <main className="grid min-h-screen content-start justify-items-center bg-[#ffffff] px-4 pb-8 pt-28">
       <AuthFlowNav user={user} onSwitchRole={onSwitchRole} onLogout={onLogout} />
       <div className="w-full max-w-[760px]">
-        <section className="rounded-[30px] border border-black/10 bg-[#fffffe] px-6 py-7 sm:px-7 sm:py-8">
+        <section className="rounded-[30px] border border-black/10 bg-[#ffffff] px-6 py-7 sm:px-7 sm:py-8">
+          {companySetupOfferOpen ? (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0b0a0e]/50 px-4">
+              <div className="w-full max-w-[560px] rounded-[28px] border border-black/10 bg-[#ffffff] p-6 shadow-[0_24px_60px_rgba(15,25,48,0.24)]">
+                <h2 className="text-[1.6rem] font-semibold leading-tight text-[#0b0a0e]">Organisationsnumret finns inte på plattformen</h2>
+                <p className="mt-2 text-sm leading-relaxed text-ink-600">
+                  Vill du sätta upp en ny företagsprofil nu? Då öppnar vi bolagsadmin-onboardingen direkt.
+                </p>
+                <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-end">
+                  <button
+                    type="button"
+                    className="inline-flex min-h-0 items-center justify-center rounded-full border border-black/15 bg-[#ffffff] px-5 py-3 text-sm font-semibold text-ink-800"
+                    onClick={skipCompanyProfileSetup}
+                  >
+                    Inte nu
+                  </button>
+                  <button
+                    type="button"
+                    className="inline-flex min-h-0 items-center justify-center rounded-full border border-[#0b0a0e] bg-[#0b0a0e] px-5 py-3 text-sm font-semibold text-white"
+                    onClick={startCompanyProfileSetup}
+                  >
+                    Sätt upp företagsprofil
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : null}
           {!(currentStep === "publisher-profile" || currentStep === "company-admin-profile") ? (
             <>
               <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Steg {stepIndex + 1} av {activeSteps.length}</p>
-              <h1 className="mt-2 text-[1.95rem] font-semibold leading-tight text-[#0f1930]">{currentMeta.title}</h1>
+              <h1 className="mt-2 text-[1.95rem] font-semibold leading-tight text-[#0b0a0e]">{currentMeta.title}</h1>
               <p className="mt-1 text-sm text-ink-600">{currentMeta.subtitle}</p>
             </>
           ) : null}
@@ -765,28 +1090,28 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
               <div>
                 <section className="space-y-8 pb-1">
                   {showProgramInfoCard ? (
-                    <div className="relative rounded-2xl border border-[#0f1930]/15 bg-[#f8fafc] px-4 py-4 sm:px-5">
+                    <div className="relative rounded-2xl border border-[#0b0a0e]/15 bg-[#f8fafc] px-4 py-4 sm:px-5">
                       <button
                         type="button"
                         aria-label="Stäng information om lokalprogram"
-                        className="absolute right-3 top-3 inline-flex min-h-0 min-w-0 h-8 w-8 items-center justify-center rounded-full border border-black/15 bg-[#fffffe] p-0 text-lg leading-none text-ink-700"
+                        className="absolute right-3 top-3 inline-flex min-h-0 min-w-0 h-8 w-8 items-center justify-center rounded-full border border-black/15 bg-[#ffffff] p-0 text-lg leading-none text-ink-700"
                         onClick={() => setShowProgramInfoCard(false)}
                       >
                         ×
                       </button>
                       <div className="pr-10">
-                        <p className="text-[1.65rem] font-semibold leading-tight text-[#0f1930]">Hitta rätt lokal snabbare</p>
+                        <p className="text-[1.65rem] font-semibold leading-tight text-[#0b0a0e]">Hitta rätt lokal snabbare</p>
                       </div>
                       <p className="mt-1.5 text-sm leading-relaxed text-ink-600">Fyll i era behov så matchar vi lokaler med högre precision.</p>
                       <ul className="mt-3 space-y-1.5 text-sm text-ink-700">
-                        <li className="flex items-start gap-2"><span className="mt-1 inline-block h-2 w-2 rounded-full bg-[#0f1930]" />Ni får relevanta förslag baserat på era krav.</li>
-                        <li className="flex items-start gap-2"><span className="mt-1 inline-block h-2 w-2 rounded-full bg-[#0f1930]" />Matchningar prioriterar läge, storlek och budget.</li>
-                        <li className="flex items-start gap-2"><span className="mt-1 inline-block h-2 w-2 rounded-full bg-[#0f1930]" />Ni kan alltid ändra lokalprogrammet senare i Profil.</li>
+                        <li className="flex items-start gap-2"><span className="mt-1 inline-block h-2 w-2 rounded-full bg-[#0b0a0e]" />Ni får relevanta förslag baserat på era krav.</li>
+                        <li className="flex items-start gap-2"><span className="mt-1 inline-block h-2 w-2 rounded-full bg-[#0b0a0e]" />Matchningar prioriterar läge, storlek och budget.</li>
+                        <li className="flex items-start gap-2"><span className="mt-1 inline-block h-2 w-2 rounded-full bg-[#0b0a0e]" />Ni kan alltid ändra lokalprogrammet senare i Profil.</li>
                       </ul>
                       <div className="mt-4">
                         <button
                           type="button"
-                          className="inline-flex min-h-0 items-center justify-center rounded-full border border-black/20 bg-[#fffffe] px-4 py-2 text-xs font-semibold text-ink-700"
+                          className="inline-flex min-h-0 items-center justify-center rounded-full border border-black/20 bg-[#ffffff] px-4 py-2 text-xs font-semibold text-ink-700"
                           onClick={goNext}
                         >
                           Hoppa över lokalprogram
@@ -796,7 +1121,7 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
                   ) : null}
 
                   <section>
-                    <h3 className="text-[1.4rem] font-semibold text-[#0f1930]">Vad söker ni för lokaltyp?</h3>
+                    <h3 className="text-[1.4rem] font-semibold text-[#0b0a0e]">Vad söker ni för lokaltyp?</h3>
                     <p className="mt-1 text-sm text-ink-600">Välj en eller flera typer som passar ert behov.</p>
                     <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                       {typeOptions.map((type) => {
@@ -806,7 +1131,7 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
                             key={type}
                             type="button"
                             className={`inline-flex items-center justify-center gap-2 !rounded-2xl border px-3 py-3 text-sm font-semibold transition ${
-                              active ? "border-[#0f1930] bg-[#0f1930] text-white" : "border-black/15 bg-[#fffffe] text-ink-700 hover:bg-black/5"
+                              active ? "border-[#0b0a0e] bg-[#0b0a0e] text-white" : "border-black/15 bg-[#ffffff] text-ink-700 hover:bg-black/5"
                             }`}
                             onClick={() => toggleProgramType(type)}
                           >
@@ -818,7 +1143,7 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
                   </section>
 
                   <section className="border-t border-black/10 pt-6">
-                    <h3 className="text-[1.4rem] font-semibold text-[#0f1930]">Var söker ni lokal?</h3>
+                    <h3 className="text-[1.4rem] font-semibold text-[#0b0a0e]">Var söker ni lokal?</h3>
                     <p className="mt-1 text-sm text-ink-600">Välj område och använd snabba förslag.</p>
                     <div className="mt-3 flex flex-wrap gap-2">
                       {districtOptions.map((district) => {
@@ -831,7 +1156,7 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
                             key={district}
                             type="button"
                             className={`inline-flex items-center !rounded-2xl border px-3 py-1.5 text-xs font-semibold transition ${
-                              active ? "border-[#0f1930] bg-[#0f1930] text-white" : "border-black/10 bg-[#fffffe] text-ink-700 hover:bg-black/5"
+                              active ? "border-[#0b0a0e] bg-[#0b0a0e] text-white" : "border-black/10 bg-[#ffffff] text-ink-700 hover:bg-black/5"
                             }`}
                             onClick={() => toggleProgramDistrict(district)}
                           >
@@ -843,7 +1168,7 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
                   </section>
 
                   <section className="border-t border-black/10 pt-6">
-                    <h3 className="text-[1.4rem] font-semibold text-[#0f1930]">Hur stor lokal söker ni?</h3>
+                    <h3 className="text-[1.4rem] font-semibold text-[#0b0a0e]">Hur stor lokal söker ni?</h3>
                     <p className="mt-1 text-sm text-ink-600">Ange storlek och antal arbetsplatser.</p>
                     <div className="mt-3 grid gap-3 sm:grid-cols-3">
                       <label className="grid gap-1">
@@ -896,7 +1221,7 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
                       style={{ gridTemplateRows: showSizeRecommendationCard ? "1fr" : "0fr" }}
                     >
                       <div className="min-h-0">
-                        <div className="rounded-2xl border border-[#4f46e5]/35 bg-[#fffffe] px-3 py-2.5">
+                        <div className="rounded-2xl border border-[#4f46e5]/35 bg-[#ffffff] px-3 py-2.5">
                           {recommendedSizeRange ? (
                             <div className="flex flex-wrap items-center justify-between gap-2">
                               <p className="text-sm text-ink-700">
@@ -905,7 +1230,7 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
                               </p>
                               <button
                                 type="button"
-                                className="inline-flex items-center gap-1.5 !rounded-2xl border border-[#4f46e5]/35 bg-[#fffffe] px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-black/5"
+                                className="inline-flex items-center gap-1.5 !rounded-2xl border border-[#4f46e5]/35 bg-[#ffffff] px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-black/5"
                                 onClick={() => {
                                   setRenterProgram((prev) => ({
                                     ...prev,
@@ -931,7 +1256,7 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
                   </section>
 
                   <section className="border-t border-black/10 pt-6">
-                    <h3 className="text-[1.4rem] font-semibold text-[#0f1930]">Vad är er flyttstatus?</h3>
+                    <h3 className="text-[1.4rem] font-semibold text-[#0b0a0e]">Vad är er flyttstatus?</h3>
                     <p className="mt-1 text-sm text-ink-600">Inflyttning, avtalstid och budgetnivå.</p>
                     <div className="mt-3 grid gap-3 sm:grid-cols-3">
                       <label className="grid gap-1">
@@ -993,7 +1318,7 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
                   </section>
 
                   <section className="border-t border-black/10 pt-6">
-                    <h3 className="text-[1.4rem] font-semibold text-[#0f1930]">Övriga krav och preferenser</h3>
+                    <h3 className="text-[1.4rem] font-semibold text-[#0b0a0e]">Övriga krav och preferenser</h3>
                     <p className="mt-1 text-sm text-ink-600">Fyll i tillgänglighet, parkering, planlösning och bekvämligheter.</p>
                     <div className="mt-3 grid gap-3 sm:grid-cols-3">
                       <label className="grid gap-1">
@@ -1022,7 +1347,7 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
                       </label>
                     </div>
 
-                    <div className="mt-4 rounded-2xl border border-black/10 bg-[#fffffe] p-3">
+                    <div className="mt-4 rounded-2xl border border-black/10 bg-[#ffffff] p-3">
                       <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-700">Särskilda krav</p>
                       <div className="mt-2 grid grid-cols-1 gap-2">
                         <label className="inline-flex items-center gap-2 text-sm text-ink-700">
@@ -1066,7 +1391,7 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
                             key={option.value}
                             type="button"
                             className={`inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border px-3.5 py-2.5 text-sm font-semibold transition ${
-                              active ? "border-[#0f1930] bg-[#0f1930] text-white" : "border-black/10 bg-[#fffffe] text-ink-700 hover:bg-[#fffffe]"
+                              active ? "border-[#0b0a0e] bg-[#0b0a0e] text-white" : "border-black/10 bg-[#ffffff] text-ink-700 hover:bg-[#ffffff]"
                             }`}
                             onClick={() => toggleProgramAmenity(option.value)}
                           >
@@ -1084,9 +1409,43 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
 
             {currentStep === "publisher-profile" ? (
               <div className="space-y-6">
+                {hasPendingBrokerVerification ? (
+                  <div className="space-y-6 py-6 text-center">
+                    <div className="mx-auto inline-flex h-16 w-16 items-center justify-center rounded-full bg-[#0b0a0e] text-white">
+                      <ShieldIcon className="h-7 w-7" />
+                    </div>
+                    <div>
+                      <h1 className="text-[2.2rem] font-semibold leading-tight text-[#0b0a0e]">
+                        Verifieringsförfrågan skickad
+                      </h1>
+                      <p className="mx-auto mt-3 max-w-[640px] text-[1.05rem] leading-relaxed text-ink-600">
+                        Din förfrågan om att bli verifierad som mäklare har skickats till bolagsadmin för{" "}
+                        <span className="font-semibold text-[#0b0a0e]">
+                          {brokerVerificationCompanyName || "det angivna bolaget"}
+                          {brokerVerificationOrganizationNumber ? ` (${brokerVerificationOrganizationNumber})` : ""}
+                        </span>
+                        .
+                      </p>
+                      <p className="mx-auto mt-2 max-w-[640px] text-sm leading-relaxed text-ink-600">
+                        När bolagsadmin godkänner dig får du behörighet att arbeta som mäklare för bolaget. Du kan fortsätta använda plattformen som hyresgäst medan förfrågan väntar på godkännande.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      className="inline-flex min-h-0 items-center justify-center rounded-full border border-[#0b0a0e] bg-[#0b0a0e] px-6 py-3 text-sm font-semibold text-white"
+                      onClick={() => {
+                        window.sessionStorage.removeItem("office_onboarding_completion_screen");
+                        navigateTo("/app/profile");
+                      }}
+                    >
+                      Gå till profil
+                    </button>
+                  </div>
+                ) : (
+                <>
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Steg {publisherFlowStep + 1} av 3</p>
-                  <h1 className="mt-2 text-[1.95rem] font-semibold leading-tight text-[#0f1930]">
+                  <h1 className="mt-2 text-[1.95rem] font-semibold leading-tight text-[#0b0a0e]">
                     {publisherFlowStep === 0 ? "Profil" : publisherFlowStep === 1 ? "Verifiering" : "Villkor"}
                   </h1>
                   <p className="mt-1 text-sm text-ink-600">
@@ -1101,80 +1460,18 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
                 {publisherFlowStep === 0 ? (
                   <div className="grid gap-4">
                     <div className="grid max-w-[75%] gap-1.5">
-                      <span className="text-sm font-semibold text-ink-700">Fastighetsbolag</span>
-                      <div className="relative">
-                        <input
-                          className={`field ${lockPublisherCompanyField ? "cursor-pointer text-transparent caret-transparent" : ""}`}
-                          value={publisherCompanyQuery}
-                          placeholder="Sök bland registrerade bolag"
-                          readOnly={lockPublisherCompanyField}
-                          onFocus={() => {
-                            if (!lockPublisherCompanyField) {
-                              setIsPublisherCompanyEditing(true);
-                              setShowPublisherCompanyMenu(true);
-                            }
-                          }}
-                          onClick={() => {
-                            if (lockPublisherCompanyField) {
-                              setIsPublisherCompanyEditing(true);
-                              setShowPublisherCompanyMenu(true);
-                            }
-                          }}
-                          onChange={(event) => {
-                            const value = event.target.value;
-                            setIsPublisherCompanyEditing(true);
-                            setPublisherCompanyQuery(value);
-                            setPublisherProfile((prev) => ({ ...prev, legalEntity: value }));
-                            setShowPublisherCompanyMenu(true);
-                          }}
-                          onBlur={() => {
-                            setIsPublisherCompanyEditing(false);
-                            window.setTimeout(() => setShowPublisherCompanyMenu(false), 120);
-                          }}
-                        />
-                        {lockPublisherCompanyField ? (
-                          <div className="absolute inset-y-0 left-4 flex items-center">
-                            <button
-                              type="button"
-                              aria-label="Rensa valt fastighetsbolag"
-                              className="inline-flex items-center gap-2 text-left"
-                              onMouseDown={(event) => {
-                                event.preventDefault();
-                                setPublisherCompanyQuery("");
-                                setPublisherProfile((prev) => ({ ...prev, legalEntity: "" }));
-                                setIsPublisherCompanyEditing(true);
-                                setShowPublisherCompanyMenu(true);
-                              }}
-                            >
-                              <span className="text-[15px] font-medium text-ink-900">{publisherCompanyQuery}</span>
-                              <span className="inline-flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full bg-[#f3f4f6] p-0 text-[14px] font-medium leading-none text-[#8f949b] transition hover:bg-[#eceef1]">
-                                ×
-                              </span>
-                            </button>
-                          </div>
-                        ) : null}
-                        {showPublisherCompanyMenu && publisherCompanySuggestions.length ? (
-                          <div className="absolute z-10 mt-2 max-h-[320px] w-full overflow-y-auto rounded-2xl border border-black/10 bg-[#fffffe] p-3 shadow-[0_16px_40px_rgba(15,25,48,0.12)]">
-                            {publisherCompanySuggestions.map((company) => (
-                              <button
-                                key={company}
-                                type="button"
-                                className="menu-hover-row flex w-full items-center px-4 py-3 text-left text-sm font-semibold text-ink-700 transition hover:bg-black/5"
-                                onMouseDown={(event) => {
-                                  event.preventDefault();
-                                  setPublisherCompanyQuery(company);
-                                  setPublisherProfile((prev) => ({ ...prev, legalEntity: company }));
-                                  setIsPublisherCompanyEditing(false);
-                                  setShowPublisherCompanyMenu(false);
-                                }}
-                              >
-                                {company}
-                              </button>
-                            ))}
-                          </div>
-                        ) : null}
-                      </div>
-                      <p className="text-sm text-ink-500">Hittar du inte ditt bolag? <button type="button" className="font-semibold text-[#0f1930] underline underline-offset-2">Kontakta oss</button> så lägger vi till det.</p>
+                      <span className="text-sm font-semibold text-ink-700">Organisationsnummer</span>
+                      <input
+                        className="field"
+                        inputMode="numeric"
+                        value={publisherProfile.organizationNumber}
+                        placeholder="556123-4567"
+                        onChange={(event) => {
+                          const formatted = formatOrganizationNumber(event.target.value);
+                          setPublisherProfile((prev) => ({ ...prev, organizationNumber: formatted }));
+                        }}
+                      />
+                      <p className="text-sm text-ink-500">Vi skickar din verifieringsförfrågan till bolagsadmin för företaget.</p>
                     </div>
 
                     <div className="grid gap-4 md:grid-cols-2 md:items-start">
@@ -1219,52 +1516,11 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
                     </div>
 
                     <div className="border-t border-black/10 pt-5">
-                      <p className="text-sm font-semibold text-ink-700">Hur vill du verifiera din anknytning till bolaget?</p>
-                      <div className="mt-3 space-y-3">
-                        {publisherVerificationMethodCards.map(({ key, title, description, badge, Icon }) => {
-                          const active = publisherProfile.verificationMethod === key;
-                          return (
-                            <div
-                              key={key}
-                              className={`rounded-2xl border p-4 transition ${active ? "border-[#0f1930] bg-[#f8fafc]" : "border-black/10 bg-[#fffffe]"}`}
-                            >
-                              <button
-                                type="button"
-                                className="flex w-full items-start gap-3 text-left"
-                                onClick={() => setPublisherProfile((prev) => ({ ...prev, verificationMethod: key }))}
-                              >
-                                <span className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border ${active ? "border-[#0f1930] bg-[#fffffe] text-[#0f1930]" : "border-black/10 bg-[#fffffe] text-ink-700"}`}>
-                                  <Icon className="h-4 w-4" />
-                                </span>
-                                <span className="min-w-0 flex-1">
-                                  <span className="flex flex-wrap items-center gap-2">
-                                    <span className="text-base font-semibold text-[#0f1930]">{title}</span>
-                                    {badge ? <span className="rounded-full bg-[#dff4d8] px-2 py-0.5 text-[11px] font-semibold text-[#3f7f2d]">{badge}</span> : null}
-                                  </span>
-                                  <span className="mt-0.5 block text-sm text-ink-600">{description}</span>
-                                </span>
-                              </button>
-
-                              {active && key === "invite_code" ? (
-                                <input
-                                  className="field mt-3"
-                                  value={publisherProfile.inviteCode}
-                                  onChange={(event) => setPublisherProfile((prev) => ({ ...prev, inviteCode: event.target.value }))}
-                                  placeholder="t.ex. RIKSHEM-2024-XK9"
-                                />
-                              ) : null}
-
-                              {active && key === "email_domain" ? (
-                                <input
-                                  className="field mt-3"
-                                  value={publisherProfile.workEmailDomain}
-                                  onChange={(event) => setPublisherProfile((prev) => ({ ...prev, workEmailDomain: event.target.value }))}
-                                  placeholder="t.ex. @rikshem.se"
-                                />
-                              ) : null}
-                            </div>
-                          );
-                        })}
+                      <div className="rounded-2xl border border-[#0b0a0e]/15 bg-[#f8fafc] p-4">
+                        <p className="text-sm font-semibold text-[#0b0a0e]">Verifiering via bolagsadmin</p>
+                        <p className="mt-1 text-sm leading-relaxed text-ink-600">
+                          När du skickar in förfrågan går den till admin-kontot för bolaget med organisationsnummer {publisherProfile.organizationNumber || "du angav"}. Du får mäklarbehörighet först när bolagsadmin godkänner dig.
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -1279,7 +1535,7 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
                         checked={publisherProfile.termsEmployerAuthority}
                         onChange={(event) => setPublisherProfile((prev) => ({ ...prev, termsEmployerAuthority: event.target.checked }))}
                       />
-                      <span className="text-[0.88rem] leading-snug text-ink-700">Jag intygar att jag är anställd på det valda fastighetsbolaget och har rätt att publicera annonser för bolagets räkning.</span>
+                      <span className="text-[0.88rem] leading-snug text-ink-700">Jag intygar att jag arbetar för bolaget jag angivit och att min förfrågan får skickas till bolagsadmin för godkännande.</span>
                     </label>
                     <label className="flex items-center gap-3">
                       <input
@@ -1288,7 +1544,7 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
                         checked={publisherProfile.termsPublishingRules}
                         onChange={(event) => setPublisherProfile((prev) => ({ ...prev, termsPublishingRules: event.target.checked }))}
                       />
-                      <span className="flex-1 text-[0.88rem] leading-snug text-ink-700">Jag har läst och godkänner plattformens <button type="button" className="font-semibold text-[#0f1930] underline underline-offset-2">publiceringsregler</button> och <button type="button" className="font-semibold text-[#0f1930] underline underline-offset-2">användarvillkor</button>.</span>
+                      <span className="flex-1 text-[0.88rem] leading-snug text-ink-700">Jag har läst och godkänner plattformens <button type="button" className="font-semibold text-[#0b0a0e] underline underline-offset-2">publiceringsregler</button> och <button type="button" className="font-semibold text-[#0b0a0e] underline underline-offset-2">användarvillkor</button>.</span>
                     </label>
                     <label className="flex items-center gap-3">
                       <input
@@ -1305,7 +1561,7 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
                 <div className="flex items-center justify-between border-t border-black/10 pt-5">
                   <button
                     type="button"
-                    className="inline-flex min-h-0 min-w-[132px] items-center justify-center rounded-full border border-black/20 bg-[#fffffe] px-4 py-2 text-xs font-semibold text-ink-700 disabled:opacity-50"
+                    className="inline-flex min-h-0 min-w-[132px] items-center justify-center rounded-full border border-black/20 bg-[#ffffff] px-4 py-2 text-xs font-semibold text-ink-700 disabled:opacity-50"
                     onClick={goBack}
                     disabled={pending}
                   >
@@ -1314,19 +1570,21 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
 
                   <div className="flex items-center gap-2">
                     {publisherStepDots.map((dot) => (
-                      <span key={dot} className={`h-2.5 rounded-full transition-all ${dot === publisherFlowStep ? "w-7 bg-[#0f1930]" : "w-2.5 bg-black/15"}`} />
+                      <span key={dot} className={`h-2.5 rounded-full transition-all ${dot === publisherFlowStep ? "w-7 bg-[#0b0a0e]" : "w-2.5 bg-black/15"}`} />
                     ))}
                   </div>
 
                   <button
                     type="button"
-                    className="inline-flex min-h-0 min-w-[132px] items-center justify-center rounded-full border border-[#0f1930] bg-[#0f1930] px-4 py-2 text-xs font-semibold text-white disabled:opacity-50"
+                    className="inline-flex min-h-0 min-w-[132px] items-center justify-center rounded-full border border-[#0b0a0e] bg-[#0b0a0e] px-4 py-2 text-xs font-semibold text-white disabled:opacity-50"
                     onClick={publisherFlowStep === 2 ? () => gotoStep("review") : goNext}
                     disabled={pending || !canAdvancePublisherFlow}
                   >
                     Nästa
                   </button>
                 </div>
+                </>
+                )}
               </div>
             ) : null}
 
@@ -1340,7 +1598,7 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
                       </svg>
                     </div>
                     <div>
-                      <h1 className="text-[2.2rem] font-semibold leading-tight text-[#0f1930]">
+                      <h1 className="text-[2.2rem] font-semibold leading-tight text-[#0b0a0e]">
                         {companyAdminProfile.legalEntity || "Bolaget"} är aktivt
                       </h1>
                       <p className="mx-auto mt-3 max-w-[640px] text-[1.1rem] leading-relaxed text-ink-600">
@@ -1351,70 +1609,168 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
                       <button
                         type="button"
                         className="btn-primary w-full py-3 text-base"
-                        onClick={() => navigateTo("/app/my-listings")}
+                        onClick={() => {
+                          window.sessionStorage.removeItem("office_onboarding_completion_screen");
+                          navigateTo("/app/profile");
+                        }}
                       >
-                        Gå till admin-panelen
+                        Slutför profil
                       </button>
                       <button
                         type="button"
                         className="btn-secondary w-full py-3 text-base"
-                        onClick={() => navigateTo("/app/profile")}
+                        onClick={() => {
+                          window.sessionStorage.removeItem("office_onboarding_completion_screen");
+                          navigateTo("/app/admin");
+                        }}
                       >
-                        Visa admin-panelen
+                        Gå till admin-panelen
                       </button>
                     </div>
                   </div>
                 ) : (
                   <>
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Steg {companyAdminFlowStep + 1} av 4</p>
-                      <h1 className="mt-2 text-[1.95rem] font-semibold leading-tight text-[#0f1930]">
-                        {companyAdminFlowStep === 0
-                          ? "Bolagsprofil"
-                          : companyAdminFlowStep === 1
-                            ? "Profil och varumärke"
-                            : companyAdminFlowStep === 2
-                              ? "Bjud in mäklare"
-                              : "Publiceringsinställningar"}
-                      </h1>
-                      <p className="mt-1 text-sm text-ink-600">
-                        {companyAdminFlowStep === 0
-                          ? "Grundläggande information om er organisation."
-                          : companyAdminFlowStep === 1
-                            ? "Hur ert bolag visas på plattformen."
-                            : companyAdminFlowStep === 2
-                              ? "Sätt upp hur era mäklare kommer in på plattformen."
-                              : "Bestäm hur mäklare publicerar under ert bolag."}
-                      </p>
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Steg {companyAdminFlowStep + 1} av 4</p>
+                          <h1 className="mt-2 text-[1.95rem] font-semibold leading-tight text-[#0b0a0e]">
+                            {companyAdminFlowStep === 0
+                              ? "Bolagsprofil"
+                              : companyAdminFlowStep === 1
+                                ? "Profil och varumärke"
+                                : companyAdminFlowStep === 2
+                                  ? "Bjud in mäklare"
+                                  : "Publiceringsinställningar"}
+                          </h1>
+                          <p className="mt-1 text-sm text-ink-600">
+                            {companyAdminFlowStep === 0
+                              ? "Grundläggande information om er organisation."
+                              : companyAdminFlowStep === 1
+                                ? "Hur ert bolag visas på plattformen."
+                                : companyAdminFlowStep === 2
+                                  ? "Sätt upp hur era mäklare kommer in på plattformen."
+                                  : "Bestäm hur mäklare publicerar under ert bolag."}
+                          </p>
+                        </div>
+                        {companyAdminFlowStep === 2 ? (
+                          <button
+                            type="button"
+                            className="inline-flex min-h-0 shrink-0 items-center justify-center rounded-full border border-black/15 bg-[#ffffff] px-4 py-2 text-xs font-semibold text-ink-700 hover:bg-[#f8fafc]"
+                            onClick={() => setCompanyAdminFlowStep(3)}
+                          >
+                            Hoppa över nu
+                          </button>
+                        ) : null}
+                      </div>
                     </div>
 
                     {companyAdminFlowStep === 0 ? (
                       <div className="grid gap-4">
+                        <label className="grid gap-1.5">
+                          <span className="text-sm font-semibold text-ink-700">Företagsnamn</span>
+                          <input
+                            className={`field ${companyProfileLocked ? "cursor-not-allowed bg-[#f3f4f6] text-ink-700" : ""}`}
+                            value={companyAdminProfile.legalEntity}
+                            readOnly={companyProfileLocked}
+                            onChange={(event) => setCompanyAdminProfile((prev) => ({
+                              ...prev,
+                              legalEntity: event.target.value,
+                              inviteCode: buildInviteCode(event.target.value)
+                            }))}
+                            placeholder="t.ex. Rikshem AB"
+                          />
+                        </label>
+
+                        <label className="grid gap-1.5">
+                          <span className="text-sm font-semibold text-ink-700">Organisations-/personnummer (10 siffror)</span>
+                          <input
+                            className={`field ${companyProfileLocked ? "cursor-not-allowed bg-[#f3f4f6] text-ink-700" : ""}`}
+                            value={companyAdminProfile.organizationNumber}
+                            readOnly={companyProfileLocked}
+                            onChange={(event) => setCompanyAdminProfile((prev) => ({ ...prev, organizationNumber: event.target.value }))}
+                            placeholder="556xxx-xxxx"
+                          />
+                        </label>
+
                         <div className="grid gap-4 md:grid-cols-2">
                           <label className="grid gap-1.5">
-                            <span className="text-sm font-semibold text-ink-700">Organisationsnummer</span>
+                            <span className="text-sm font-semibold text-ink-700">Kontaktperson förnamn</span>
                             <input
                               className="field"
-                              value={companyAdminProfile.organizationNumber}
-                              onChange={(event) => setCompanyAdminProfile((prev) => ({ ...prev, organizationNumber: event.target.value }))}
-                              placeholder="556xxx-xxxx"
+                              value={companyAdminProfile.contactFirstName}
+                              onChange={(event) => setCompanyAdminProfile((prev) => ({ ...prev, contactFirstName: event.target.value }))}
                             />
                           </label>
 
                           <label className="grid gap-1.5">
-                            <span className="text-sm font-semibold text-ink-700">Bolagets namn</span>
+                            <span className="text-sm font-semibold text-ink-700">Kontaktperson efternamn</span>
                             <input
                               className="field"
-                              value={companyAdminProfile.legalEntity}
-                              onChange={(event) => setCompanyAdminProfile((prev) => ({
-                                ...prev,
-                                legalEntity: event.target.value,
-                                inviteCode: buildInviteCode(event.target.value)
-                              }))}
-                              placeholder="t.ex. Rikshem AB"
+                              value={companyAdminProfile.contactLastName}
+                              onChange={(event) => setCompanyAdminProfile((prev) => ({ ...prev, contactLastName: event.target.value }))}
                             />
                           </label>
                         </div>
+
+                        <label className="grid gap-1.5">
+                          <span className="text-sm font-semibold text-ink-700">Telefonnummer</span>
+                          <input
+                            className="field"
+                            value={companyAdminProfile.contactPhone}
+                            onChange={(event) => setCompanyAdminProfile((prev) => ({ ...prev, contactPhone: event.target.value }))}
+                          />
+                        </label>
+
+                        <label className="grid gap-1.5">
+                          <span className="text-sm font-semibold text-ink-700">Gatuadress</span>
+                          <input
+                            className="field"
+                            value={companyAdminProfile.streetAddress}
+                            onChange={(event) => setCompanyAdminProfile((prev) => ({ ...prev, streetAddress: event.target.value }))}
+                          />
+                        </label>
+
+                        <div className="grid gap-4 md:grid-cols-[180px_1fr]">
+                          <label className="grid gap-1.5">
+                            <span className="text-sm font-semibold text-ink-700">Postnummer</span>
+                            <input
+                              className="field"
+                              value={companyAdminProfile.postalCode}
+                              onChange={(event) => setCompanyAdminProfile((prev) => ({ ...prev, postalCode: event.target.value }))}
+                            />
+                          </label>
+
+                          <label className="grid gap-1.5">
+                            <span className="text-sm font-semibold text-ink-700">Postort</span>
+                            <input
+                              className="field"
+                              value={companyAdminProfile.city}
+                              onChange={(event) => setCompanyAdminProfile((prev) => ({ ...prev, city: event.target.value }))}
+                            />
+                          </label>
+                        </div>
+
+                        <label className="grid gap-1.5">
+                          <span className="text-sm font-semibold text-ink-700">E-post</span>
+                          <input
+                            className="field"
+                            type="email"
+                            value={companyAdminProfile.contactEmail}
+                            onChange={(event) => setCompanyAdminProfile((prev) => ({ ...prev, contactEmail: event.target.value }))}
+                            placeholder="kontakt@foretag.se"
+                          />
+                        </label>
+
+                        <label className="grid gap-1.5">
+                          <span className="text-sm font-semibold text-ink-700">Webbplats</span>
+                          <input
+                            className="field"
+                            value={companyAdminProfile.websiteUrl}
+                            onChange={(event) => setCompanyAdminProfile((prev) => ({ ...prev, websiteUrl: event.target.value }))}
+                            placeholder="https://foretag.se"
+                          />
+                        </label>
 
                         <p className="-mt-1 text-sm text-ink-500">Verifieras mot Bolagsverket för att bekräfta att bolaget existerar.</p>
 
@@ -1450,27 +1806,66 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
                       <div className="grid gap-4">
                         <div className="grid gap-1.5">
                           <span className="text-sm font-semibold text-ink-700">Logotyp</span>
-                          <label className="flex min-h-[132px] cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-black/15 bg-[#fafafa] px-5 py-6 text-center transition hover:bg-black/5">
-                            <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-black/10 bg-[#fffffe] text-ink-700">
-                              <ArrowUpIcon className="h-4 w-4" />
-                            </span>
-                            <span className="mt-3 text-base font-semibold text-ink-700">Dra och släpp eller klicka för att ladda upp</span>
-                            <span className="mt-1 text-sm text-ink-500">PNG eller SVG · max 2 MB · rekommenderat 400 × 400 px</span>
+	                          <label className={`flex min-h-[132px] cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed px-5 py-6 text-center transition hover:bg-black/5 ${
+	                            logoUploadError ? "border-rose-300 bg-rose-50" : "border-black/15 bg-[#fafafa]"
+	                          }`}>
+	                            {companyAdminProfile.logoUrl ? (
+	                              <img src={companyAdminProfile.logoUrl} alt="Uppladdad logotyp" className="max-h-20 max-w-[180px] object-contain" />
+	                            ) : (
+	                              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] text-ink-700">
+	                                <ArrowUpIcon className="h-4 w-4" />
+	                              </span>
+	                            )}
+	                            <span className="mt-3 text-base font-semibold text-ink-700">
+	                              {companyAdminProfile.logoUrl ? "Logotyp uppladdad" : "Dra och släpp eller klicka för att ladda upp"}
+	                            </span>
+	                            <span className="mt-1 text-sm text-ink-500">PNG, SVG, JPEG eller WebP · max 300 KB · rekommenderat 400 × 400 px</span>
                             <input
                               type="file"
                               accept="image/png,image/svg+xml,image/jpeg,image/webp"
                               className="hidden"
-                              onChange={async (event) => {
-                                const file = event.target.files?.[0];
-                                if (!file) return;
-                                const reader = new FileReader();
-                                reader.onload = () => {
-                                  setCompanyAdminProfile((prev) => ({ ...prev, logoUrl: String(reader.result || "") }));
-                                };
+	                              onChange={async (event) => {
+	                                const file = event.target.files?.[0];
+	                                if (!file) return;
+	                                if (file.size > MAX_INLINE_LOGO_BYTES) {
+	                                  setLogoUploadError("Bilden är för stor och sparades inte. Ladda upp en logotyp under 300 KB.");
+	                                  setCompanyAdminProfile((prev) => ({ ...prev, logoUrl: "" }));
+	                                  event.target.value = "";
+	                                  return;
+	                                }
+	                                const reader = new FileReader();
+	                                reader.onload = () => {
+	                                  const result = String(reader.result || "");
+	                                  if (isOversizedDataUrl(result)) {
+	                                    setLogoUploadError("Bilden är för stor och sparades inte. Ladda upp en logotyp under 300 KB.");
+	                                    setCompanyAdminProfile((prev) => ({ ...prev, logoUrl: "" }));
+	                                    event.target.value = "";
+	                                    return;
+	                                  }
+	                                  setLogoUploadError("");
+	                                  setCompanyAdminProfile((prev) => ({ ...prev, logoUrl: result }));
+	                                };
                                 reader.readAsDataURL(file);
                               }}
-                            />
-                          </label>
+	                            />
+	                          </label>
+	                          {logoUploadError ? (
+	                            <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+	                              {logoUploadError}
+	                            </p>
+	                          ) : null}
+	                          {companyAdminProfile.logoUrl ? (
+	                            <button
+	                              type="button"
+	                              className="justify-self-start text-sm font-semibold text-ink-700 underline decoration-black/20 underline-offset-4"
+	                              onClick={() => {
+	                                setLogoUploadError("");
+	                                setCompanyAdminProfile((prev) => ({ ...prev, logoUrl: "" }));
+	                              }}
+	                            >
+	                              Ta bort logotyp
+	                            </button>
+	                          ) : null}
                         </div>
 
                         <label className="grid gap-1.5">
@@ -1484,26 +1879,35 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
                           <p className="text-sm text-ink-500">Visas på er bolagssida för hyresgäster och mäklare.</p>
                         </label>
 
-                        <div className="grid gap-4 md:grid-cols-2">
-                          <label className="grid gap-1.5">
-                            <span className="text-sm font-semibold text-ink-700">Webbplats</span>
+                        <div className="space-y-4 rounded-2xl border border-black/10 bg-[#f8fafc] p-4">
+                          <label className="flex items-center gap-3">
                             <input
-                              className="field"
-                              value={companyAdminProfile.websiteUrl}
-                              onChange={(event) => setCompanyAdminProfile((prev) => ({ ...prev, websiteUrl: event.target.value }))}
-                              placeholder="https://rikshem.se"
+                              type="checkbox"
+                              className="h-5 w-5 shrink-0 rounded border-black/20"
+                              checked={companyAdminProfile.hasSeparateBillingAddress}
+                              onChange={(event) => setCompanyAdminProfile((prev) => ({ ...prev, hasSeparateBillingAddress: event.target.checked }))}
                             />
+                            <span className="text-[0.95rem] leading-snug text-ink-700">Annan fakturaadress</span>
                           </label>
 
-                          <label className="grid gap-1.5">
-                            <span className="text-sm font-semibold text-ink-700">Kontakt-e-post (synlig på plattformen)</span>
+                          <label className="flex items-center gap-3">
                             <input
-                              className="field"
-                              type="email"
-                              value={companyAdminProfile.contactEmail}
-                              onChange={(event) => setCompanyAdminProfile((prev) => ({ ...prev, contactEmail: event.target.value }))}
-                              placeholder="kontakt@rikshem.se"
+                              type="checkbox"
+                              className="h-5 w-5 shrink-0 rounded border-black/20"
+                              checked={companyAdminProfile.wantsNewsletter}
+                              onChange={(event) => setCompanyAdminProfile((prev) => ({ ...prev, wantsNewsletter: event.target.checked }))}
                             />
+                            <span className="text-[0.95rem] leading-snug text-ink-700">Jag vill ha nyhetsbrev</span>
+                          </label>
+
+                          <label className="flex items-center gap-3">
+                            <input
+                              type="checkbox"
+                              className="h-5 w-5 shrink-0 rounded border-black/20"
+                              checked={companyAdminProfile.termsPlatformRules}
+                              onChange={(event) => setCompanyAdminProfile((prev) => ({ ...prev, termsPlatformRules: event.target.checked }))}
+                            />
+                            <span className="text-[0.95rem] leading-snug text-ink-700">Jag godkänner personuppgiftspolicy och allmänna villkor.</span>
                           </label>
                         </div>
                       </div>
@@ -1530,7 +1934,7 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
                           <div className="flex items-start justify-between gap-4">
                             <div className="min-w-0">
                               <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Inbjudningskod · giltig i 30 dagar</p>
-                              <p className="mt-2 text-[1.35rem] font-semibold text-[#0f1930]">{companyAdminProfile.inviteCode}</p>
+                              <p className="mt-2 text-[1.35rem] font-semibold text-[#0b0a0e]">{companyAdminProfile.inviteCode}</p>
                               <p className="mt-1 text-sm text-ink-500">Dela med era mäklare via e-post eller internt system.</p>
                             </div>
                             <div className="flex shrink-0 items-center gap-2">
@@ -1673,14 +2077,14 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
                                 <button
                                   key={option.key}
                                   type="button"
-                                  className={`flex w-full items-center gap-3 !rounded-2xl border px-4 py-3 text-left transition ${active ? "border-[#0f1930] bg-[#f8fafc]" : "border-black/10 bg-[#fffffe] hover:bg-black/5"}`}
+                                  className={`flex w-full items-center gap-3 !rounded-2xl border px-4 py-3 text-left transition ${active ? "border-[#0b0a0e] bg-[#f8fafc]" : "border-black/10 bg-[#ffffff] hover:bg-black/5"}`}
                                   onClick={() => setCompanyAdminProfile((prev) => ({ ...prev, approvalFlow: option.key }))}
                                 >
-                                  <span className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${active ? "border-[#0f1930]" : "border-black/20"}`}>
-                                    <span className={`h-2.5 w-2.5 rounded-full ${active ? "bg-[#0f1930]" : "bg-transparent"}`} />
+                                  <span className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${active ? "border-[#0b0a0e]" : "border-black/20"}`}>
+                                    <span className={`h-2.5 w-2.5 rounded-full ${active ? "bg-[#0b0a0e]" : "bg-transparent"}`} />
                                   </span>
                                   <span>
-                                    <span className="block text-[0.92rem] font-semibold leading-tight text-[#0f1930]">{option.title}</span>
+                                    <span className="block text-[0.92rem] font-semibold leading-tight text-[#0b0a0e]">{option.title}</span>
                                     <span className="mt-1 block text-[0.8rem] leading-snug text-ink-600">{option.description}</span>
                                   </span>
                                 </button>
@@ -1709,14 +2113,14 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
                                 <button
                                   key={option.key}
                                   type="button"
-                                  className={`flex w-full items-center gap-3 !rounded-2xl border px-4 py-3 text-left transition ${active ? "border-[#0f1930] bg-[#f8fafc]" : "border-black/10 bg-[#fffffe] hover:bg-black/5"}`}
+                                  className={`flex w-full items-center gap-3 !rounded-2xl border px-4 py-3 text-left transition ${active ? "border-[#0b0a0e] bg-[#f8fafc]" : "border-black/10 bg-[#ffffff] hover:bg-black/5"}`}
                                   onClick={() => setCompanyAdminProfile((prev) => ({ ...prev, listingModeration: option.key }))}
                                 >
-                                  <span className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${active ? "border-[#0f1930]" : "border-black/20"}`}>
-                                    <span className={`h-2.5 w-2.5 rounded-full ${active ? "bg-[#0f1930]" : "bg-transparent"}`} />
+                                  <span className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${active ? "border-[#0b0a0e]" : "border-black/20"}`}>
+                                    <span className={`h-2.5 w-2.5 rounded-full ${active ? "bg-[#0b0a0e]" : "bg-transparent"}`} />
                                   </span>
                                   <span>
-                                    <span className="block text-[0.92rem] font-semibold leading-tight text-[#0f1930]">{option.title}</span>
+                                    <span className="block text-[0.92rem] font-semibold leading-tight text-[#0b0a0e]">{option.title}</span>
                                     <span className="mt-1 block text-[0.8rem] leading-snug text-ink-600">{option.description}</span>
                                   </span>
                                 </button>
@@ -1743,7 +2147,7 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
                                 checked={companyAdminProfile.termsPlatformRules}
                                 onChange={(event) => setCompanyAdminProfile((prev) => ({ ...prev, termsPlatformRules: event.target.checked }))}
                               />
-                              <span className="flex-1 text-[0.88rem] leading-snug text-ink-700">Jag har läst och godkänner <button type="button" className="font-semibold text-[#0f1930] underline underline-offset-2">användarvillkoren</button> och <button type="button" className="font-semibold text-[#0f1930] underline underline-offset-2">publiceringsreglerna</button>.</span>
+                              <span className="flex-1 text-[0.88rem] leading-snug text-ink-700">Jag har läst och godkänner <button type="button" className="font-semibold text-[#0b0a0e] underline underline-offset-2">användarvillkoren</button> och <button type="button" className="font-semibold text-[#0b0a0e] underline underline-offset-2">publiceringsreglerna</button>.</span>
                             </label>
                           </div>
                         </div>
@@ -1753,7 +2157,7 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
                     <div className="flex items-center justify-between border-t border-black/10 pt-5">
                       <button
                         type="button"
-                        className="inline-flex min-h-0 min-w-[132px] items-center justify-center rounded-full border border-black/20 bg-[#fffffe] px-4 py-2 text-xs font-semibold text-ink-700 disabled:opacity-50"
+                        className="inline-flex min-h-0 min-w-[132px] items-center justify-center rounded-full border border-black/20 bg-[#ffffff] px-4 py-2 text-xs font-semibold text-ink-700 disabled:opacity-50"
                         onClick={goBack}
                         disabled={pending}
                       >
@@ -1762,13 +2166,13 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
 
                       <div className="flex items-center gap-2">
                         {companyAdminStepDots.map((dot) => (
-                          <span key={dot} className={`h-2.5 rounded-full transition-all ${dot === companyAdminFlowStep ? "w-7 bg-[#0f1930]" : "w-2.5 bg-black/15"}`} />
+                          <span key={dot} className={`h-2.5 rounded-full transition-all ${dot === companyAdminFlowStep ? "w-7 bg-[#0b0a0e]" : "w-2.5 bg-black/15"}`} />
                         ))}
                       </div>
 
                       <button
                         type="button"
-                        className="inline-flex min-h-0 min-w-[132px] items-center justify-center rounded-full border border-[#0f1930] bg-[#0f1930] px-4 py-2 text-xs font-semibold text-white disabled:opacity-50"
+                        className="inline-flex min-h-0 min-w-[132px] items-center justify-center rounded-full border border-[#0b0a0e] bg-[#0b0a0e] px-4 py-2 text-xs font-semibold text-white disabled:opacity-50"
                         onClick={companyAdminFlowStep === 3 ? finish : goNext}
                         disabled={pending || !canAdvanceCompanyAdminFlow}
                       >
@@ -1784,21 +2188,21 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
               <div className="space-y-4">
                 <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Personlig information</p>
                 <div className="flex flex-wrap items-center gap-4 px-1 pb-4">
-                  <div className="inline-flex h-20 w-20 shrink-0 items-center justify-center rounded-full border border-black/10 bg-[#0f1930] text-2xl font-semibold text-white">
+                  <div className="inline-flex h-20 w-20 shrink-0 items-center justify-center rounded-full border border-black/10 bg-[#0b0a0e] text-2xl font-semibold text-white">
                     {accountInitial || "A"}
                   </div>
                   <div className="min-w-[220px] flex-1">
-                    <p className="text-[1.35rem] font-semibold leading-tight text-[#0f1930]">{account.name || "Namn saknas"}</p>
+                    <p className="text-[1.35rem] font-semibold leading-tight text-[#0b0a0e]">{account.name || "Namn saknas"}</p>
                     <p className="mt-1 text-sm text-ink-600">{account.email || "-"}</p>
                     <p className="mt-0.5 text-sm text-ink-600">{account.phone || "Telefon ej angivet"}</p>
                   </div>
-                  <span className="inline-flex items-center rounded-full border border-black/10 bg-[#fffffe] px-3 py-1.5 text-xs font-semibold text-ink-700">
+                  <span className="inline-flex items-center rounded-full border border-black/10 bg-[#ffffff] px-3 py-1.5 text-xs font-semibold text-ink-700">
                     {primaryRole === "broker" ? "Mäklare" : primaryRole === "company_admin" ? "Bolagsadmin" : "Hyresgäst"}
                   </span>
                 </div>
                 <div className="my-0 border-t border-black/10" />
 
-                {primaryRole === "renter" ? (
+                {primaryRole === "renter" || (primaryRole === "broker" && isBrokerWithProgramFlow) ? (
                   <div className="px-1 pt-5">
                     <div className="flex items-start justify-between gap-3">
                       <div>
@@ -1809,7 +2213,7 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
                     <div className="mt-5 grid gap-4 sm:grid-cols-2">
                       {reviewProgramStats.map(({ label, value, Icon }) => (
                         <div key={label} className="flex items-start gap-3">
-                          <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-black/10 bg-[#fffffe] text-ink-700">
+                          <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] text-ink-700">
                             <Icon className="h-4 w-4" />
                           </span>
                           <div className="min-w-0">
@@ -1828,7 +2232,7 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
                             const amenityMatch = amenityOptions.find((option) => normalizeAmenity(option.value) === normalizeAmenity(amenity));
                             const Icon = amenityMatch?.icon || BuildingIcon;
                             return (
-                              <span key={amenity} className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-[#fffffe] px-3 py-1.5 text-sm font-semibold text-ink-700">
+                              <span key={amenity} className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-[#ffffff] px-3 py-1.5 text-sm font-semibold text-ink-700">
                                 <Icon className="h-4 w-4" />
                                 {amenity}
                               </span>
@@ -1846,13 +2250,13 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
                     <div className="mt-5 grid gap-4 sm:grid-cols-2">
                       {[
                         { label: "Fastighetstyp", value: publisherProfile.propertyType || "-" },
-                        { label: "Fastighetsbolag", value: publisherProfile.legalEntity || "-" },
+                        { label: "Organisationsnummer", value: publisherProfile.organizationNumber || "-" },
                         { label: "Portföljstorlek", value: publisherProfile.portfolioSize || "-" },
-                        { label: "Verifiering", value: publisherProfile.verificationMethod === "invite_code" ? "Inbjudningskod" : publisherProfile.verificationMethod === "email_domain" ? "E-postdomän" : "Manuell granskning" },
+                        { label: "Verifiering", value: "Skickas till bolagsadmin" },
                         { label: "FMI", value: publisherProfile.fmiNumber || "Ej angivet" },
                         { label: "Godkända villkor", value: publisherProfile.termsEmployerAuthority && publisherProfile.termsPublishingRules && publisherProfile.termsSuspensionAware ? "Ja" : "Nej" }
                       ].map(({ label, value }) => (
-                        <div key={label} className="rounded-2xl border border-black/10 bg-[#fffffe] px-4 py-3">
+                        <div key={label} className="rounded-2xl border border-black/10 bg-[#ffffff] px-4 py-3">
                           <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">{label}</p>
                           <p className="mt-1 text-[1rem] font-semibold text-ink-800">{value}</p>
                         </div>
@@ -1870,7 +2274,7 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
           <div className={`mt-6 flex items-center justify-between ${currentStep === "publisher-profile" || currentStep === "company-admin-profile" ? "hidden" : ""}`}>
             <button
               type="button"
-              className="inline-flex min-h-0 items-center justify-center rounded-full border border-black/20 bg-[#fffffe] px-4 py-2 text-xs font-semibold text-ink-700 disabled:opacity-50"
+              className="inline-flex min-h-0 items-center justify-center rounded-full border border-black/20 bg-[#ffffff] px-4 py-2 text-xs font-semibold text-ink-700 disabled:opacity-50"
               onClick={goBack}
               disabled={pending}
             >
@@ -1880,16 +2284,16 @@ function OnboardingPage({ user, onComplete, onSwitchRole, onLogout, pathname = "
             {currentStep === "review" ? (
               <button
                 type="button"
-                className="inline-flex min-h-0 items-center justify-center rounded-full border border-[#0f1930] bg-[#0f1930] px-4 py-2 text-xs font-semibold text-white"
+                className="inline-flex min-h-0 items-center justify-center rounded-full border border-[#0b0a0e] bg-[#0b0a0e] px-4 py-2 text-xs font-semibold text-white"
                 onClick={finish}
                 disabled={pending}
               >
-                {pending ? "Sparar..." : "Gå till din profil"}
+                {pending ? "Sparar..." : "Slutför profil"}
               </button>
             ) : (
               <button
                 type="button"
-                className="inline-flex min-h-0 items-center justify-center rounded-full border border-[#0f1930] bg-[#0f1930] px-4 py-2 text-xs font-semibold text-white"
+                className="inline-flex min-h-0 items-center justify-center rounded-full border border-[#0b0a0e] bg-[#0b0a0e] px-4 py-2 text-xs font-semibold text-white"
                 onClick={goNext}
                 disabled={pending}
               >

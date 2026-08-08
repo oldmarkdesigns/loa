@@ -14,7 +14,7 @@ function FilterPresetCard({ item, onApply, onDelete }) {
   const filters = item.filters || {};
 
   return (
-    <article className="rounded-2xl border border-black/10 bg-[#fffffe] p-3">
+    <article className="rounded-2xl border border-black/10 bg-[#ffffff] p-3">
       <p className="text-sm font-semibold text-black">{item.title || "Sparat filter"}</p>
       <p className="mt-1 text-[11px] text-ink-500">Sparat {formatDate(item.updatedAt || item.createdAt)}</p>
 
@@ -28,10 +28,10 @@ function FilterPresetCard({ item, onApply, onDelete }) {
       </div>
 
       <div className="mt-3 flex gap-2">
-        <button type="button" className="rounded-xl border border-[#0f1930] bg-[#0f1930] px-3 py-2 text-xs font-semibold text-white hover:bg-[#16233f]" onClick={() => onApply(item)}>
+        <button type="button" className="rounded-xl border border-[#0b0a0e] bg-[#0b0a0e] px-3 py-2 text-xs font-semibold text-white" onClick={() => onApply(item)}>
           Använd filter
         </button>
-        <button type="button" className="rounded-xl border border-black/20 bg-[#fffffe] px-3 py-2 text-xs font-semibold" onClick={() => onDelete(item.id)}>
+        <button type="button" className="rounded-xl border border-black/20 bg-[#ffffff] px-3 py-2 text-xs font-semibold" onClick={() => onDelete(item.id)}>
           Ta bort
         </button>
       </div>
@@ -41,7 +41,7 @@ function FilterPresetCard({ item, onApply, onDelete }) {
 
 function SavedAiSearchCard({ item, onRun, onDelete }) {
   return (
-    <article className="rounded-2xl border border-black/10 bg-[#fffffe] p-3">
+    <article className="rounded-2xl border border-black/10 bg-[#ffffff] p-3">
       <p className="text-sm font-semibold text-black">{item.prompt}</p>
       <p className="mt-1 text-[11px] text-ink-500">Sparat {formatDate(item.updatedAt || item.createdAt)}</p>
 
@@ -52,10 +52,10 @@ function SavedAiSearchCard({ item, onRun, onDelete }) {
       </div>
 
       <div className="mt-3 flex gap-2">
-        <button type="button" className="rounded-xl border border-[#0f1930] bg-[#0f1930] px-3 py-2 text-xs font-semibold text-white hover:bg-[#16233f]" onClick={() => onRun(item)}>
+        <button type="button" className="rounded-xl border border-[#0b0a0e] bg-[#0b0a0e] px-3 py-2 text-xs font-semibold text-white" onClick={() => onRun(item)}>
           Kör AI-sök
         </button>
-        <button type="button" className="rounded-xl border border-black/20 bg-[#fffffe] px-3 py-2 text-xs font-semibold" onClick={() => onDelete(item.id)}>
+        <button type="button" className="rounded-xl border border-black/20 bg-[#ffffff] px-3 py-2 text-xs font-semibold" onClick={() => onDelete(item.id)}>
           Ta bort
         </button>
       </div>
@@ -78,7 +78,7 @@ function SavedSearchesPanel({
           <p className="font-display text-lg font-semibold text-ink-900">Sökhistorik</p>
           <p className="text-xs text-ink-600">Snabb åtkomst till sparade filter och AI-sökningar.</p>
         </div>
-        <div className="rounded-xl border border-black/10 bg-[#fffffe] px-2 py-1 text-xs font-semibold text-ink-700">
+        <div className="rounded-xl border border-black/10 bg-[#ffffff] px-2 py-1 text-xs font-semibold text-ink-700">
           {filterPresets.length + savedAiSearches.length} totalt
         </div>
       </div>
@@ -89,7 +89,7 @@ function SavedSearchesPanel({
             <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Sparade filter</p>
             <span className="text-xs text-ink-500">{filterPresets.length}</span>
           </div>
-          {filterPresets.length === 0 ? <p className="rounded-2xl border border-black/10 bg-[#fffffe] p-3 text-xs text-ink-500">Inga sparade filter ännu.</p> : null}
+          {filterPresets.length === 0 ? <p className="rounded-2xl border border-black/10 bg-[#ffffff] p-3 text-xs text-ink-500">Inga sparade filter ännu.</p> : null}
           {filterPresets.map((item) => (
             <FilterPresetCard key={item.id} item={item} onApply={onApplyFilterPreset} onDelete={onDeleteFilterPreset} />
           ))}
@@ -100,7 +100,7 @@ function SavedSearchesPanel({
             <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Sparade AI-sökningar</p>
             <span className="text-xs text-ink-500">{savedAiSearches.length}</span>
           </div>
-          {savedAiSearches.length === 0 ? <p className="rounded-2xl border border-black/10 bg-[#fffffe] p-3 text-xs text-ink-500">Inga sparade AI-sökningar ännu.</p> : null}
+          {savedAiSearches.length === 0 ? <p className="rounded-2xl border border-black/10 bg-[#ffffff] p-3 text-xs text-ink-500">Inga sparade AI-sökningar ännu.</p> : null}
           {savedAiSearches.map((item) => (
             <SavedAiSearchCard key={item.id} item={item} onRun={onRunSavedAiSearch} onDelete={onDeleteSavedAiSearch} />
           ))}

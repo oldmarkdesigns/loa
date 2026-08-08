@@ -27,6 +27,59 @@ export default defineSchema({
     .index("by_token_identifier", ["tokenIdentifier"])
     .index("by_email", ["email"])
     .index("by_test_session_token", ["testSessionToken"]),
+  companies: defineTable({
+    id: v.string(),
+    name: v.string(),
+    organizationNumber: v.string(),
+    normalizedOrganizationNumber: v.string(),
+    ownerUserId: v.optional(v.string()),
+    companyType: v.string(),
+    phone: v.optional(v.string()),
+    streetAddress: v.string(),
+    postalCode: v.string(),
+    city: v.string(),
+    parentCompany: v.optional(v.string()),
+    websiteUrl: v.optional(v.string()),
+    source: v.string(),
+    status: v.optional(v.string()),
+    createdAt: v.string(),
+    updatedAt: v.string()
+  })
+    .index("by_public_id", ["id"])
+    .index("by_owner_user_id", ["ownerUserId"])
+    .index("by_normalized_organization_number", ["normalizedOrganizationNumber"]),
+  companyMemberships: defineTable({
+    id: v.string(),
+    companyId: v.string(),
+    userId: v.string(),
+    role: v.string(),
+    status: v.string(),
+    requestedAt: v.optional(v.string()),
+    approvedAt: v.optional(v.string()),
+    approvedByUserId: v.optional(v.string()),
+    createdAt: v.string(),
+    updatedAt: v.string()
+  })
+    .index("by_public_id", ["id"])
+    .index("by_company_id", ["companyId"])
+    .index("by_user_id", ["userId"])
+    .index("by_user_company", ["userId", "companyId"]),
+  notifications: defineTable({
+    id: v.string(),
+    userId: v.string(),
+    companyId: v.optional(v.string()),
+    type: v.string(),
+    title: v.string(),
+    body: v.string(),
+    status: v.string(),
+    createdAt: v.string(),
+    readAt: v.optional(v.string()),
+    metadata: v.optional(v.any())
+  })
+    .index("by_public_id", ["id"])
+    .index("by_user_id", ["userId"])
+    .index("by_company_id", ["companyId"])
+    .index("by_user_status", ["userId", "status"]),
   listings: defineTable({
     id: v.string(),
     title: v.string(),
@@ -47,6 +100,7 @@ export default defineSchema({
     amenities: v.array(v.string()),
     tags: v.array(v.string()),
     ownerId: v.string(),
+    companyId: v.optional(v.string()),
     status: v.string(),
     qualityScore: v.number(),
     isBostadsratt: v.boolean(),
@@ -58,6 +112,16 @@ export default defineSchema({
     .index("by_public_id", ["id"])
     .index("by_owner_id", ["ownerId"])
     .index("by_status", ["status"]),
+  listingViews: defineTable({
+    id: v.string(),
+    listingId: v.string(),
+    viewerId: v.optional(v.string()),
+    source: v.optional(v.string()),
+    createdAt: v.string()
+  })
+    .index("by_public_id", ["id"])
+    .index("by_listing_id", ["listingId"])
+    .index("by_viewer_id", ["viewerId"]),
   favorites: defineTable({
     id: v.string(),
     userId: v.string(),

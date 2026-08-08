@@ -28,9 +28,13 @@ assert(!appState.includes("setupApi.ensureSeeded"), "client bootstrap must not c
 assert(users.includes("role: \"renter\"") && users.includes("roles: [\"renter\"]"), "new WorkOS users must default to renter.");
 assert(users.includes("Rollen är inte beviljad"), "switchActiveRole must reject ungranted roles.");
 assert(users.includes("requestedRole") && users.includes("roleRequestStatus"), "onboarding must record elevated role requests.");
-assert(users.includes("ENABLE_TEST_AUTH"), "test auth functions must be env-gated.");
+assert(!users.includes("createTestUser"), "public test signup mutation must not exist.");
+assert(!users.includes("getTestSession"), "public test session query must not exist.");
+assert(!users.includes("updateTestUser"), "public test profile mutation must not exist.");
+assert(!users.includes("completeTestOnboarding"), "public test onboarding mutation must not exist.");
+assert(!convexRefs.includes("Test"), "frontend must not reference test auth functions.");
+assert(!appState.includes("testSession"), "AppState must not use test sessions.");
 assert(setup.includes("ENABLE_SEED_DATA"), "seeding must be env-gated.");
-assert(schema.includes("by_test_session_token"), "test session lookup must use an index.");
 
 const sanitizeUserBlock = lib.slice(lib.indexOf("export function sanitizeUser"), lib.indexOf("export function stripSystemFields"));
 assert(sanitizeUserBlock.includes("tokenIdentifier"), "sanitizeUser must strip tokenIdentifier.");

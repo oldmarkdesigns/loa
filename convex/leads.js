@@ -2,13 +2,15 @@ import { mutationGeneric, queryGeneric } from "convex/server";
 import { v } from "convex/values";
 import {
   assertViewerHasRole,
+  companyBrokerUserIds,
   findListingByPublicId,
   findUserByPublicId,
   getViewerOrThrow,
   listingWithOwner,
   nowIso,
   sanitizeUser,
-  stripSystemFields
+  stripSystemFields,
+  userCompanyId
 } from "./lib.js";
 
 async function hydrateLead(ctx, lead) {
@@ -27,10 +29,33 @@ export const list = queryGeneric({
   handler: async (ctx) => {
     const viewer = await getViewerOrThrow(ctx);
     assertViewerHasRole(viewer, "publisher");
-    const leads = await ctx.db
+    const directLeads = await ctx.db
       .query("leads")
       .withIndex("by_publisher_id", (query) => query.eq("publisherId", viewer.id))
       .collect();
+    const companyId = userCompanyId(viewer);
+    const brokerUserIds = await companyBrokerUserIds(ctx, viewer);
+    const canSeeCompanyLeads = Boolean(companyId || brokerUserIds.size > 0);
+    const companyLeads = canSeeCompanyLeads
+      ? await ctx.db.query("leads").collect()
+      : [];
+    const visibleCompanyLeads = [];
+
+    for (const lead of companyLeads) {
+      const listing = await findListingByPublicId(ctx, lead.listingId);
+      if (
+        listing
+        && (
+          (companyId && listing.companyId === companyId)
+          || brokerUserIds.has(listing.ownerId)
+        )
+      ) {
+        visibleCompanyLeads.push(lead);
+      }
+    }
+
+    const leads = [...directLeads, ...visibleCompanyLeads]
+      .filter((lead, index, list) => list.findIndex((item) => item.id === lead.id) === index);
 
     return {
       leads: await Promise.all(leads.map((lead) => hydrateLead(ctx, lead)))

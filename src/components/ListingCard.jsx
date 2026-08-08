@@ -8,7 +8,7 @@ function ListingCard({ listing, shortlisted, onOpen, onToggleShortlist }) {
           className="h-44 w-full object-cover transition duration-300 group-hover:scale-[1.03]"
         />
         <div className="absolute left-3 top-3 flex items-center gap-2">
-          <span className="chip border-0 bg-[#fffffe]/90 text-ink-800">{listing.type}</span>
+          <span className="chip border-0 bg-[#ffffff]/90 text-ink-800">{listing.type}</span>
           {listing.verified ? (
             <span className="chip border-0 bg-brand-600 text-white">Verifierad</span>
           ) : (
@@ -29,9 +29,9 @@ function ListingCard({ listing, shortlisted, onOpen, onToggleShortlist }) {
         </div>
 
         <div className="grid grid-cols-2 gap-2 text-xs text-ink-700">
-          <div className="rounded-xl bg-[#fffffe] px-2 py-2">{listing.sizeSqm} kvm</div>
-          <div className="rounded-xl bg-[#fffffe] px-2 py-2">{listing.capacity} platser</div>
-          <div className="rounded-xl bg-[#fffffe] px-2 py-2">Svar inom {listing.responseHours}h</div>
+          <div className="rounded-xl bg-[#ffffff] px-2 py-2">{listing.sizeSqm} kvm</div>
+          <div className="rounded-xl bg-[#ffffff] px-2 py-2">{listing.capacity} platser</div>
+          <div className="rounded-xl bg-[#ffffff] px-2 py-2">Svar inom {listing.responseHours}h</div>
         </div>
 
         <div className="flex flex-wrap gap-2">
@@ -52,7 +52,7 @@ function ListingCard({ listing, shortlisted, onOpen, onToggleShortlist }) {
             className={`flex-1 rounded-xl border px-4 py-2 text-sm font-semibold transition ${
               shortlisted
                 ? "border-brand-200 bg-brand-100 text-brand-800"
-                : "border-ink-200 bg-[#fffffe] text-ink-800 hover:border-brand-300"
+                : "border-ink-200 bg-[#ffffff] text-ink-800 hover:border-brand-300"
             }`}
           >
             {shortlisted ? "Sparad" : "Spara"}

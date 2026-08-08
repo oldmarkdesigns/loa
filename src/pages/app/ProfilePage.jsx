@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import ListingVisualCard from "../../components/app/ListingVisualCard";
+import LocalProgramModule from "../../components/app/LocalProgramModule";
 import ViewingRequestModal from "../../components/app/ViewingRequestModal";
 import { propertyAmenityOptions } from "../../lib/propertyAmenityIcons";
 import {
-  ArrowLeftIcon,
   BuildingIcon,
   LoungeIcon,
   CalendarIcon,
@@ -217,6 +217,75 @@ function formatMoney(value) {
   return `${amount.toLocaleString("sv-SE")} kr`;
 }
 
+function hasProgramInput(program = {}) {
+  return [
+    program.title,
+    program.district,
+    program.type,
+    program.teamSize,
+    program.minSize,
+    program.maxSize,
+    program.minBudget,
+    program.maxBudget,
+    program.moveInDate,
+    program.contractFlex,
+    program.transitDistance,
+    program.accessHours,
+    program.parkingType,
+    program.layoutType,
+    program.amenities,
+    program.includeOperatingCosts,
+    program.accessibilityAdapted,
+    program.ecoCertified
+  ].some((value) => {
+    if (Array.isArray(value)) return value.length > 0;
+    return Boolean(String(value || "").trim() || value === true);
+  });
+}
+
+function normalizeProgram(program = {}, fallbackIndex = 0) {
+  const type = Array.isArray(program.type) ? program.type.filter(Boolean) : listFromDelimitedValue(program.type);
+  return {
+    id: String(program.id || `program-${fallbackIndex + 1}`),
+    title: String(program.title || "").trim() || `Lokalprogram ${fallbackIndex + 1}`,
+    district: program.district || "Alla",
+    type,
+    teamSize: program.teamSize || "",
+    minSize: program.minSize || "",
+    maxSize: program.maxSize || "",
+    minBudget: program.minBudget || "",
+    maxBudget: program.maxBudget || "",
+    moveInDate: program.moveInDate || "",
+    contractFlex: program.contractFlex || "",
+    transitDistance: program.transitDistance || "",
+    accessHours: program.accessHours || "",
+    parkingType: program.parkingType || "",
+    layoutType: program.layoutType || "",
+    includeOperatingCosts: Boolean(program.includeOperatingCosts),
+    accessibilityAdapted: Boolean(program.accessibilityAdapted),
+    ecoCertified: Boolean(program.ecoCertified),
+    amenities: program.amenities || ""
+  };
+}
+
+function normalizeProgramList(profile = {}) {
+  if (Array.isArray(profile.renterPrograms) && profile.renterPrograms.length > 0) {
+    return profile.renterPrograms.map((program, index) => normalizeProgram(program, index));
+  }
+  if (profile.renterProgram && hasProgramInput(profile.renterProgram)) {
+    return [normalizeProgram(profile.renterProgram, 0)];
+  }
+  return [];
+}
+
+function createBlankProgram(index = 0) {
+  return normalizeProgram({
+    id: `program-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    title: `Lokalprogram ${index + 1}`,
+    district: "Alla"
+  }, index);
+}
+
 function readFileAsDataUrl(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -389,6 +458,7 @@ function ProfilePage({ app }) {
   const [pendingRole, setPendingRole] = useState(false);
   const [activeTab, setActiveTab] = useState("profile");
   const [showProgramOverlay, setShowProgramOverlay] = useState(false);
+  const [editingProgramId, setEditingProgramId] = useState(null);
   const [showTeamOverlay, setShowTeamOverlay] = useState(false);
   const [showProfileOverlay, setShowProfileOverlay] = useState(false);
   const [isProfileSetupCollapsed, setIsProfileSetupCollapsed] = useState(false);
@@ -452,11 +522,14 @@ function ProfilePage({ app }) {
     activeRole === "broker" ? "Mäklare" : activeRole === "company_admin" ? "Bolagsadmin" : "Hyresgäst"
   ), [activeRole]);
 
-  const renterProgram = useMemo(() => user?.profile?.renterProgram || {}, [user?.profile?.renterProgram]);
+  const renterPrograms = useMemo(() => normalizeProgramList(user?.profile || {}), [user?.profile]);
+  const renterProgram = useMemo(() => renterPrograms[0] || user?.profile?.renterProgram || {}, [renterPrograms, user?.profile?.renterProgram]);
   const preferredTypes = useMemo(() => listFromDelimitedValue(renterProgram.type), [renterProgram.type]);
   const desiredAmenities = useMemo(() => listFromDelimitedValue(renterProgram.amenities), [renterProgram.amenities]);
 
   const [programDraft, setProgramDraft] = useState(() => ({
+    id: renterProgram.id || "",
+    title: renterProgram.title || "Lokalprogram 1",
     district: renterProgram.district || "Alla",
     type: preferredTypes,
     teamSize: renterProgram.teamSize || "",
@@ -498,26 +571,29 @@ function ProfilePage({ app }) {
 
   useEffect(() => {
     if (!showProgramOverlay) return;
+    const selectedProgram = renterPrograms.find((program) => program.id === editingProgramId) || createBlankProgram(renterPrograms.length);
     setProgramDraft({
-      district: renterProgram.district || "Alla",
-      type: preferredTypes,
-      teamSize: renterProgram.teamSize || "",
-      minSize: renterProgram.minSize || "",
-      maxSize: renterProgram.maxSize || "",
-      minBudget: renterProgram.minBudget || "",
-      maxBudget: renterProgram.maxBudget || "",
-      moveInDate: renterProgram.moveInDate || "",
-      contractFlex: renterProgram.contractFlex || "",
-      transitDistance: renterProgram.transitDistance || "",
-      accessHours: renterProgram.accessHours || "",
-      parkingType: renterProgram.parkingType || "",
-      layoutType: renterProgram.layoutType || "",
-      includeOperatingCosts: Boolean(renterProgram.includeOperatingCosts),
-      accessibilityAdapted: Boolean(renterProgram.accessibilityAdapted),
-      ecoCertified: Boolean(renterProgram.ecoCertified),
-      amenities: renterProgram.amenities || ""
+      id: selectedProgram.id || "",
+      title: selectedProgram.title || `Lokalprogram ${renterPrograms.length + 1}`,
+      district: selectedProgram.district || "Alla",
+      type: listFromDelimitedValue(selectedProgram.type),
+      teamSize: selectedProgram.teamSize || "",
+      minSize: selectedProgram.minSize || "",
+      maxSize: selectedProgram.maxSize || "",
+      minBudget: selectedProgram.minBudget || "",
+      maxBudget: selectedProgram.maxBudget || "",
+      moveInDate: selectedProgram.moveInDate || "",
+      contractFlex: selectedProgram.contractFlex || "",
+      transitDistance: selectedProgram.transitDistance || "",
+      accessHours: selectedProgram.accessHours || "",
+      parkingType: selectedProgram.parkingType || "",
+      layoutType: selectedProgram.layoutType || "",
+      includeOperatingCosts: Boolean(selectedProgram.includeOperatingCosts),
+      accessibilityAdapted: Boolean(selectedProgram.accessibilityAdapted),
+      ecoCertified: Boolean(selectedProgram.ecoCertified),
+      amenities: selectedProgram.amenities || ""
     });
-  }, [showProgramOverlay, renterProgram, preferredTypes]);
+  }, [editingProgramId, renterPrograms, showProgramOverlay]);
 
   useEffect(() => {
     if (!showProfileOverlay) return;
@@ -658,10 +734,21 @@ function ProfilePage({ app }) {
 
   function openTaskEditor(target) {
     if (target === "program") {
+      setEditingProgramId(renterPrograms[0]?.id || null);
       setShowProgramOverlay(true);
       return;
     }
     setShowTeamOverlay(true);
+  }
+
+  function openNewProgramEditor() {
+    setEditingProgramId(null);
+    setShowProgramOverlay(true);
+  }
+
+  function openExistingProgramEditor(programId) {
+    setEditingProgramId(programId);
+    setShowProgramOverlay(true);
   }
 
   async function saveProfileChanges() {
@@ -713,6 +800,8 @@ function ProfilePage({ app }) {
     try {
       const nextProgram = {
         ...programDraft,
+        id: programDraft.id || `program-${Date.now()}`,
+        title: String(programDraft.title || "").trim() || `Lokalprogram ${renterPrograms.length + 1}`,
         type: Array.isArray(programDraft.type) ? programDraft.type.filter(Boolean) : [],
         teamSize: String(programDraft.teamSize || "").trim(),
         minSize: String(programDraft.minSize || "").trim(),
@@ -727,21 +816,53 @@ function ProfilePage({ app }) {
         layoutType: programDraft.layoutType || "",
         amenities: programDraft.amenities || ""
       };
+      const nextPrograms = editingProgramId
+        ? renterPrograms.map((program) => program.id === editingProgramId ? nextProgram : program)
+        : [...renterPrograms, nextProgram];
+      const syncedPrograms = nextPrograms.length > 0 ? nextPrograms : [nextProgram];
+      const activeProgram = syncedPrograms[0] || nextProgram;
 
       await updateProfile({
         profile: {
           ...user?.profile,
-          renterProgram: nextProgram,
-          companySize: nextProgram.teamSize,
-          budgetRange: `${nextProgram.minBudget || 0}-${nextProgram.maxBudget || ""}`,
-          preferredAreas: nextProgram.district || "Alla",
-          moveInTimeline: nextProgram.moveInDate || ""
+          renterPrograms: syncedPrograms,
+          renterProgram: activeProgram,
+          companySize: activeProgram.teamSize,
+          budgetRange: `${activeProgram.minBudget || 0}-${activeProgram.maxBudget || ""}`,
+          preferredAreas: activeProgram.district || "Alla",
+          moveInTimeline: activeProgram.moveInDate || ""
         }
       });
       app.pushToast?.("Lokalprogram uppdaterat.", "success");
       setShowProgramOverlay(false);
+      setEditingProgramId(null);
     } catch (error) {
       app.pushToast?.(error.message || "Kunde inte spara lokalprogrammet.", "error");
+    } finally {
+      setSavingProgram(false);
+    }
+  }
+
+  async function deleteProgram(programId) {
+    if (!updateProfile || renterPrograms.length <= 1) return;
+    setSavingProgram(true);
+    try {
+      const nextPrograms = renterPrograms.filter((program) => program.id !== programId);
+      const activeProgram = nextPrograms[0] || {};
+      await updateProfile({
+        profile: {
+          ...user?.profile,
+          renterPrograms: nextPrograms,
+          renterProgram: activeProgram,
+          companySize: activeProgram.teamSize || "",
+          budgetRange: `${activeProgram.minBudget || 0}-${activeProgram.maxBudget || ""}`,
+          preferredAreas: activeProgram.district || "Alla",
+          moveInTimeline: activeProgram.moveInDate || ""
+        }
+      });
+      app.pushToast?.("Lokalprogram raderat.", "success");
+    } catch (error) {
+      app.pushToast?.(error.message || "Kunde inte radera lokalprogrammet.", "error");
     } finally {
       setSavingProgram(false);
     }
@@ -765,7 +886,7 @@ function ProfilePage({ app }) {
   return (
     <section className="relative flex h-full min-h-0 flex-col">
       {activeTab === "favorites" || activeTab === "history" ? (
-        <div className="shrink-0 border-b border-black/10 bg-[#fffffe] px-4 py-2 sm:px-6">
+        <div className="shrink-0 border-b border-black/10 bg-[#ffffff] px-4 py-2 sm:px-6">
           <nav className="mx-auto flex w-full max-w-[1240px] flex-wrap items-center justify-start gap-5">
             {[
               { key: "favorites", label: "Sparade objekt" },
@@ -777,7 +898,7 @@ function ProfilePage({ app }) {
                   key={tab.key}
                   type="button"
                   className={`tab-underline-button border-b-2 pb-0.5 text-sm font-semibold transition ${
-                    active ? "border-[#0f1930] text-[#0f1930]" : "border-transparent text-[#0f1930]/85 hover:text-[#0f1930]"
+                    active ? "border-[#0b0a0e] text-[#0b0a0e]" : "border-transparent text-[#0b0a0e]/85 hover:text-[#0b0a0e]"
                   }`}
                   onClick={() => activateTab(tab.key)}
                 >
@@ -815,7 +936,7 @@ function ProfilePage({ app }) {
                         )}
                         <button
                           type="button"
-                          className="absolute right-1 top-1 inline-flex h-9 w-9 min-h-9 min-w-9 items-center justify-center rounded-full border border-black/20 bg-[#fffffe] p-0 text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
+                          className="absolute right-1 top-1 inline-flex h-9 w-9 min-h-9 min-w-9 items-center justify-center rounded-full border border-black/20 bg-[#ffffff] p-0 text-ink-700 transition hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
                           aria-label="Redigera profilbild"
                           onClick={() => setShowTeamOverlay(true)}
                         >
@@ -824,11 +945,11 @@ function ProfilePage({ app }) {
                       </div>
                       <div>
                         <div className="flex flex-wrap items-center gap-2">
-                          <p className="text-2xl font-semibold text-[#0f1930]">{user?.name || "Användare"}</p>
+                          <p className="text-2xl font-semibold text-[#0b0a0e]">{user?.name || "Användare"}</p>
                         </div>
-                        <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-black/10 bg-[#fffffe] px-4 py-2 text-sm font-semibold text-[#241d1a]">
+                        <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-black/10 bg-[#ffffff] px-4 py-2 text-sm font-semibold text-[#241d1a]">
                           <span
-                            className="inline-flex h-5 w-5 items-center justify-center bg-[#0f1930] text-white"
+                            className="inline-flex h-5 w-5 items-center justify-center bg-[#0b0a0e] text-white"
                             style={{ clipPath: "polygon(50% 1%,58% 4%,66% 2%,73% 8%,81% 8%,88% 15%,96% 19%,99% 28%,97% 36%,99% 44%,94% 51%,95% 59%,89% 66%,86% 75%,78% 79%,71% 86%,62% 87%,55% 94%,47% 92%,39% 97%,32% 91%,23% 91%,18% 83%,9% 81%,6% 72%,1% 65%,3% 56%,0% 48%,6% 41%,4% 33%,10% 26%,11% 17%,20% 13%,25% 5%,34% 5%,42% 1%)" }}
                           >
                             <svg aria-hidden="true" viewBox="0 0 24 24" className="h-3.5 w-3.5">
@@ -844,7 +965,7 @@ function ProfilePage({ app }) {
                       {canSwitchToCompany && activeRole === "renter" ? (
                         <button
                           type="button"
-                          className="inline-flex items-center gap-1.5 rounded-full border border-black/20 bg-[#fffffe] px-3 py-2 text-xs font-semibold text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
+                          className="inline-flex items-center gap-1.5 rounded-full border border-black/20 bg-[#ffffff] px-3 py-2 text-xs font-semibold text-ink-700 transition hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
                           disabled={pendingRole}
                           onClick={async () => {
                             setPendingRole(true);
@@ -863,7 +984,7 @@ function ProfilePage({ app }) {
                       {canSwitchToBroker && activeRole === "renter" ? (
                         <button
                           type="button"
-                          className="inline-flex items-center gap-1.5 rounded-full border border-black/20 bg-[#fffffe] px-3 py-2 text-xs font-semibold text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
+                          className="inline-flex items-center gap-1.5 rounded-full border border-black/20 bg-[#ffffff] px-3 py-2 text-xs font-semibold text-ink-700 transition hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
                           disabled={pendingRole}
                           onClick={async () => {
                             setPendingRole(true);
@@ -880,7 +1001,7 @@ function ProfilePage({ app }) {
                       ) : null}
                       <button
                         type="button"
-                        className="inline-flex items-center gap-1.5 rounded-full border border-black/20 bg-[#fffffe] px-4 py-2 text-xs font-semibold text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
+                        className="inline-flex items-center gap-1.5 rounded-full border border-black/20 bg-[#ffffff] px-4 py-2 text-xs font-semibold text-ink-700 transition hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
                         onClick={() => setShowTeamOverlay(true)}
                       >
                         <PencilIcon className="h-4 w-4" />
@@ -896,18 +1017,18 @@ function ProfilePage({ app }) {
               <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
                 <div className="space-y-5">
                   {showProfileSetupCard ? (
-                  <article className="rounded-3xl border border-black/10 bg-[#fffffe] p-5 sm:p-6">
+                  <article className="rounded-3xl border border-black/10 bg-[#ffffff] p-5 sm:p-6">
                     <button
                       type="button"
                       className="flex w-full items-center justify-between gap-3 text-left"
                       onClick={() => setIsProfileSetupCollapsed((prev) => !prev)}
                       aria-expanded={!isProfileSetupCollapsed}
                     >
-                      <h2 className="text-2xl font-semibold text-[#0f1930]">Slutför din profil</h2>
+                      <h2 className="text-2xl font-semibold text-[#0b0a0e]">Slutför din profil</h2>
                       {isProfileSetupCollapsed ? (
                         <span className="text-2xl leading-none text-ink-700 transition-transform duration-300">›</span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 rounded-full border border-black/20 bg-[#fffffe] px-4 py-2 text-xs font-semibold text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]">
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-black/20 bg-[#ffffff] px-4 py-2 text-xs font-semibold text-ink-700 transition hover:border-[#0b0a0e] hover:text-[#0b0a0e]">
                           <EyeIcon className="h-4 w-4" />
                           Dölj
                         </span>
@@ -925,7 +1046,7 @@ function ProfilePage({ app }) {
                         <p className="text-sm font-semibold text-ink-700">{profileSetupProgress.percent}% klart</p>
                         <div className="mt-2 h-3 overflow-hidden rounded-full border border-black/10 bg-[#eef2f8]">
                           <div
-                            className="h-full rounded-full bg-[#0f1930] transition-all"
+                            className="h-full rounded-full bg-[#0b0a0e] transition-all"
                             style={{ width: `${profileSetupProgress.percent}%` }}
                           />
                         </div>
@@ -947,8 +1068,8 @@ function ProfilePage({ app }) {
                             >
                               <span className={`inline-flex h-6 w-6 items-center justify-center rounded-full border ${
                                 task.done
-                                  ? "border-transparent bg-[#0f1930] text-white"
-                                  : "border-black/20 bg-[#fffffe] text-ink-500"
+                                  ? "border-transparent bg-[#0b0a0e] text-white"
+                                  : "border-black/20 bg-[#ffffff] text-ink-500"
                               }`}>
                                 {task.done ? (
                                   <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4">
@@ -966,176 +1087,49 @@ function ProfilePage({ app }) {
                   ) : null}
 
                   {!hideLocalProgramInProfile ? (
-                  <article className="rounded-3xl border border-black/10 bg-[#fffffe] p-5 sm:p-6">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <h2 className="text-2xl font-semibold text-[#0f1930]">Lokalprogram</h2>
-                        <p className="mt-1 text-sm text-ink-600">Det här används för bättre matchning i sök och rekommendationer.</p>
-                      </div>
-                      {hasRenter ? (
-                        <button
-                          type="button"
-                          className="inline-flex h-10 w-10 min-h-10 min-w-10 items-center justify-center rounded-full border border-black/20 bg-[#fffffe] p-0 text-xs font-semibold text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
-                          onClick={() => setShowProgramOverlay(true)}
-                          aria-label="Ändra lokalprogram"
-                        >
-                          <PencilIcon className="h-4 w-4" />
-                        </button>
-                      ) : null}
-                    </div>
-
-                    {hasRenter ? (
-                      <div className="mt-6 space-y-6">
-                        <div className="rounded-2xl border border-black/10 bg-[#fffffe] p-4 sm:p-5">
-                          <div className="flex items-center justify-between gap-3">
-                            <p className="text-sm font-semibold text-ink-700">{localProgramProgress.percent}% klart</p>
-                          </div>
-                          <div className="mt-2 h-3 overflow-hidden rounded-full border border-black/10 bg-[#eef2f8]">
-                            <div
-                              className="h-full rounded-full bg-[#0f1930] transition-all"
-                              style={{ width: `${localProgramProgress.percent}%` }}
-                            />
-                          </div>
-                        </div>
-
-                        <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2">
-                          {localProgramSummary.map(({ key, label, value, Icon }) => (
-                            <div key={key} className="flex items-start gap-2.5">
-                              <span className="mt-0.5 inline-flex h-9 w-9 items-center justify-center rounded-full border border-black/10 bg-[#fffffe] text-[#0f1930]">
-                                <Icon className="h-3.5 w-3.5" />
-                              </span>
-                              <div className="min-w-0">
-                                <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">{label}</p>
-                                <p className="mt-0.5 truncate text-[15px] font-semibold text-ink-900">{value}</p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-
-                        {desiredAmenities.length > 0 ? (
-                          <div className="border-t border-black/10 py-5">
-                            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-ink-700">Bekvämligheter</p>
-                            <div className="flex flex-wrap gap-2">
-                              {desiredAmenities.map((amenity) => {
-                                const amenityMatch = amenityOptions.find((option) => normalizeAmenity(option.value) === normalizeAmenity(amenity));
-                                const AmenityIcon = amenityMatch?.icon || BuildingIcon;
-                                return (
-                                  <span
-                                    key={amenity}
-                                    className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border border-black/10 bg-[#fffffe] px-3.5 py-2.5 text-sm font-semibold text-ink-700"
-                                  >
-                                    <AmenityIcon className="h-[18px] w-[18px] shrink-0 text-ink-700" />
-                                    {amenity}
-                                  </span>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        ) : null}
-                      </div>
-                    ) : (
-                      <p className="mt-4 rounded-2xl border border-black/10 bg-[#fffffe] px-3 py-3 text-sm text-ink-600">Ingen lokalprogramsdata ännu.</p>
-                    )}
-                  </article>
+                  <LocalProgramModule
+                    programs={renterPrograms}
+                    canEdit={hasRenter}
+                    onAddProgram={openNewProgramEditor}
+                    onEditProgram={openExistingProgramEditor}
+                    onDeleteProgram={deleteProgram}
+                  />
                   ) : null}
 
                   {hideLocalProgramInProfile ? (
                     <section className="pt-3">
                       {hasBrokerRole ? (
-                        hasLocalProgramInput ? (
-                          <article className="mb-4 rounded-3xl border border-black/10 bg-[#fffffe] p-4 sm:p-5">
-                            <div className="flex items-start justify-between gap-3">
-                              <div>
-                                <h2 className="text-xl font-semibold text-[#0f1930]">Lokalprogram</h2>
-                                <p className="mt-1 text-sm text-ink-600">Preferenser som används för matchning.</p>
-                              </div>
-                              <button
-                                type="button"
-                                className="inline-flex h-10 w-10 min-h-10 min-w-10 items-center justify-center rounded-full border border-black/20 bg-[#fffffe] p-0 text-xs font-semibold text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
-                                onClick={() => setShowProgramOverlay(true)}
-                                aria-label="Ändra lokalprogram"
-                              >
-                                <PencilIcon className="h-4 w-4" />
-                              </button>
-                            </div>
-                            <div className="mt-4 rounded-2xl border border-black/10 bg-[#fffffe] p-4">
-                              <div className="flex items-center justify-between gap-3">
-                                <p className="text-sm font-semibold text-ink-700">{localProgramProgress.percent}% klart</p>
-                                <p className="text-xs font-semibold text-ink-500">{localProgramProgress.done} av {localProgramProgress.total}</p>
-                              </div>
-                              <div className="mt-2 h-3 overflow-hidden rounded-full border border-black/10 bg-[#eef2f8]">
-                                <div
-                                  className="h-full rounded-full bg-[#0f1930] transition-all"
-                                  style={{ width: `${localProgramProgress.percent}%` }}
-                                />
-                              </div>
-                            </div>
-                            <div className="mt-4 grid gap-x-6 gap-y-4 sm:grid-cols-2">
-                              {enteredLocalProgramSummary.map(({ key, label, value, Icon }) => (
-                                <div key={key} className="flex items-start gap-2.5">
-                                  <span className="mt-0.5 inline-flex h-9 w-9 items-center justify-center rounded-full border border-black/10 bg-[#fffffe] text-[#0f1930]">
-                                    <Icon className="h-3.5 w-3.5" />
-                                  </span>
-                                  <div className="min-w-0">
-                                    <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">{label}</p>
-                                    <p className="mt-0.5 truncate text-[15px] font-semibold text-ink-900">{value}</p>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                            {desiredAmenities.length > 0 ? (
-                              <div className="mt-4 border-t border-black/10 pt-4">
-                                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-ink-700">Bekvämligheter</p>
-                                <div className="flex flex-wrap gap-2">
-                                  {desiredAmenities.map((amenity) => (
-                                    <span
-                                      key={amenity}
-                                      className="inline-flex shrink-0 items-center whitespace-nowrap rounded-full border border-black/10 bg-[#fffffe] px-3 py-1.5 text-xs font-semibold text-ink-700"
-                                    >
-                                      {amenity}
-                                    </span>
-                                  ))}
-                                </div>
-                              </div>
-                            ) : null}
-                          </article>
-                        ) : (
-                          <button
-                            type="button"
-                            className="profile-card-button mb-4 flex w-full items-center justify-between gap-4 rounded-3xl border border-black/10 bg-[#fffffe] p-4 text-left transition hover:border-[#0f1930]/35 hover:bg-[#f8fafc] sm:p-5"
-                            onClick={() => setShowProgramOverlay(true)}
-                          >
-                            <span className="min-w-0">
-                              <span className="block text-lg font-semibold text-[#0f1930]">Bygg lokalprogram</span>
-                              <span className="mt-0.5 block text-sm text-ink-600">Skapa preferenser för bättre matchning mot hyresgäster.</span>
-                            </span>
-                            <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center text-[#0f1930]">
-                              <PlusIcon className="h-6 w-6" />
-                            </span>
-                          </button>
-                        )
+                        <div className="mb-4">
+                          <LocalProgramModule
+                            programs={renterPrograms}
+                            canEdit
+                            onAddProgram={openNewProgramEditor}
+                            onEditProgram={openExistingProgramEditor}
+                            onDeleteProgram={deleteProgram}
+                          />
+                        </div>
                       ) : null}
                       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                         <div>
-                          <h2 className="text-2xl font-semibold text-[#0f1930]">Hyresgäster som matchar dina lokaler</h2>
+                          <h2 className="text-2xl font-semibold text-[#0b0a0e]">Hyresgäster som matchar dina lokaler</h2>
                           <p className="mt-1 text-sm text-ink-600">Kuraterade profiler med tydlig matchning mot ditt utbud.</p>
                         </div>
                       </div>
                       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                         {mockRenterMatches.map((renter) => (
-                          <article key={renter.id} className="relative rounded-3xl border border-black/10 bg-[#fffffe] p-4 sm:p-5">
-                            <span className="absolute right-3.5 top-3.5 rounded-full border border-[#0f1930]/20 bg-[#f8fafc] px-3 py-1 text-sm font-semibold text-[#0f1930]">
+                          <article key={renter.id} className="relative rounded-3xl border border-black/10 bg-[#ffffff] p-4 sm:p-5">
+                            <span className="absolute right-3.5 top-3.5 rounded-full border border-[#0b0a0e]/20 bg-[#f8fafc] px-3 py-1 text-sm font-semibold text-[#0b0a0e]">
                               {renter.matchPercent}%
                             </span>
                             <div className="h-5" />
-                            <div className="mx-auto mt-3 flex h-28 w-28 items-center justify-center rounded-2xl border border-[#0f1930]/15 bg-[#f8fafc] text-3xl font-semibold tracking-wide text-[#0f1930]">
+                            <div className="mx-auto mt-3 flex h-28 w-28 items-center justify-center rounded-2xl border border-[#0b0a0e]/15 bg-[#f8fafc] text-3xl font-semibold tracking-wide text-[#0b0a0e]">
                               {renter.logo}
                             </div>
                             <div className="mt-3 text-center">
                               <p className="text-[20px] font-semibold leading-[1.15] text-[#241d1a]">{renter.name}</p>
                               {renter.verified ? (
                                 <p className="mt-1 inline-flex items-center gap-1.5 text-sm font-semibold text-ink-700">
-                                  <span className="inline-flex h-4 w-4 items-center justify-center bg-[#0f1930] text-white" style={{ clipPath: "polygon(50% 1%,58% 4%,66% 2%,73% 8%,81% 8%,88% 15%,96% 19%,99% 28%,97% 36%,99% 44%,94% 51%,95% 59%,89% 66%,86% 75%,78% 79%,71% 86%,62% 87%,55% 94%,47% 92%,39% 97%,32% 91%,23% 91%,18% 83%,9% 81%,6% 72%,1% 65%,3% 56%,0% 48%,6% 41%,4% 33%,10% 26%,11% 17%,20% 13%,25% 5%,34% 5%,42% 1%)" }}>
+                                  <span className="inline-flex h-4 w-4 items-center justify-center bg-[#0b0a0e] text-white" style={{ clipPath: "polygon(50% 1%,58% 4%,66% 2%,73% 8%,81% 8%,88% 15%,96% 19%,99% 28%,97% 36%,99% 44%,94% 51%,95% 59%,89% 66%,86% 75%,78% 79%,71% 86%,62% 87%,55% 94%,47% 92%,39% 97%,32% 91%,23% 91%,18% 83%,9% 81%,6% 72%,1% 65%,3% 56%,0% 48%,6% 41%,4% 33%,10% 26%,11% 17%,20% 13%,25% 5%,34% 5%,42% 1%)" }}>
                                     <svg aria-hidden="true" viewBox="0 0 24 24" className="h-3 w-3">
                                       <path d="M5.5 12.5l4 4 9-9" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                     </svg>
@@ -1160,12 +1154,12 @@ function ProfilePage({ app }) {
                     <section className="pt-3">
                       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                         <div>
-                          <h2 className="text-2xl font-semibold text-[#0f1930]">Lokaler som matchar dina preferenser</h2>
+                          <h2 className="text-2xl font-semibold text-[#0b0a0e]">Lokaler som matchar dina preferenser</h2>
                           <p className="mt-1 text-sm text-ink-600">Matchningar med tydlig motivering utifrån ditt lokalprogram.</p>
                         </div>
                       </div>
                       {preferenceMatches.length === 0 ? (
-                        <p className="rounded-2xl border border-black/10 bg-[#fffffe] px-4 py-4 text-sm text-ink-600">
+                        <p className="rounded-2xl border border-black/10 bg-[#ffffff] px-4 py-4 text-sm text-ink-600">
                           Inga matchningar ännu. Fyll i fler preferenser i lokalprogrammet.
                         </p>
                       ) : (
@@ -1193,16 +1187,16 @@ function ProfilePage({ app }) {
                 <aside className="space-y-6 lg:sticky lg:top-0 lg:self-start">
                   <div className="space-y-6">
                     {hasPendingBrokerVerification ? (
-                      <article className="rounded-3xl border border-[#0f1930]/15 bg-[#f8fafc] p-5">
+                      <article className="rounded-3xl border border-[#0b0a0e]/15 bg-[#f8fafc] p-5">
                         <div className="flex items-start gap-3">
-                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#0f1930] text-white">
+                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#0b0a0e] text-white">
                             <ShieldIcon className="h-5 w-5" />
                           </span>
                           <div>
-                            <p className="text-lg font-semibold text-[#0f1930]">Verifiering skickad</p>
+                            <p className="text-lg font-semibold text-[#0b0a0e]">Verifiering skickad</p>
                             <p className="mt-1 text-sm leading-relaxed text-ink-600">
                               Din förfrågan om att bli mäklare hos{" "}
-                              <span className="font-semibold text-[#0f1930]">
+                              <span className="font-semibold text-[#0b0a0e]">
                                 {brokerVerificationCompanyName}
                                 {brokerVerificationOrganizationNumber ? ` (${brokerVerificationOrganizationNumber})` : ""}
                               </span>{" "}
@@ -1212,7 +1206,7 @@ function ProfilePage({ app }) {
                         </div>
                         <button
                           type="button"
-                          className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full border border-black/10 bg-[#fffffe] px-4 py-2.5 text-sm font-semibold text-[#0f1930] shadow-[0_1px_0_rgba(15,25,48,0.04)]"
+                          className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full border border-black/10 bg-[#ffffff] px-4 py-2.5 text-sm font-semibold text-[#0b0a0e] shadow-[0_1px_0_rgba(15,25,48,0.04)]"
                           onClick={() => navigateTo("/onboarding/publisher-profile?role=broker&intent=add-role")}
                         >
                           <ShieldIcon className="h-4 w-4" />
@@ -1222,10 +1216,10 @@ function ProfilePage({ app }) {
                     ) : null}
 
                     {!hasPendingBrokerVerification && brokerVerificationApproved && !dismissedBrokerApprovalCard ? (
-                      <article className="relative rounded-3xl border border-black/10 bg-[#fffffe] p-5 pr-12">
+                      <article className="relative rounded-3xl border border-black/10 bg-[#ffffff] p-5 pr-12">
                         <button
                           type="button"
-                          className="absolute right-4 top-4 inline-flex h-8 w-8 min-h-0 items-center justify-center rounded-full border border-black/10 bg-[#fffffe] text-ink-600 transition hover:border-[#0f1930] hover:text-[#0f1930]"
+                          className="absolute right-4 top-4 inline-flex h-8 w-8 min-h-0 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] text-ink-600 transition hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
                           aria-label="Dölj verifieringskort"
                           onClick={() => setDismissedBrokerApprovalCard(true)}
                         >
@@ -1236,10 +1230,10 @@ function ProfilePage({ app }) {
                             <CheckBadgeIcon className="h-5 w-5" />
                           </span>
                           <div>
-                            <p className="text-lg font-semibold text-[#0f1930]">Verifiering godkänd</p>
+                            <p className="text-lg font-semibold text-[#0b0a0e]">Verifiering godkänd</p>
                             <p className="mt-1 text-sm leading-relaxed text-ink-700">
                               Du är verifierad som mäklare för{" "}
-                              <span className="font-semibold text-[#0f1930]">
+                              <span className="font-semibold text-[#0b0a0e]">
                                 {brokerVerificationCompanyName}
                                 {brokerVerificationOrganizationNumber ? ` (${brokerVerificationOrganizationNumber})` : ""}
                               </span>.
@@ -1255,16 +1249,16 @@ function ProfilePage({ app }) {
                     ) : null}
 
                     {brokerVerificationRejected ? (
-                      <article className="rounded-3xl border border-black/10 bg-[#fffffe] p-5">
+                      <article className="rounded-3xl border border-black/10 bg-[#ffffff] p-5">
                         <div className="flex items-start gap-3">
                           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-rose-100 bg-rose-50 text-rose-700">
                             <ShieldIcon className="h-5 w-5" />
                           </span>
                           <div>
-                            <p className="text-lg font-semibold text-[#0f1930]">Verifiering nekad</p>
+                            <p className="text-lg font-semibold text-[#0b0a0e]">Verifiering nekad</p>
                             <p className="mt-1 text-sm leading-relaxed text-ink-700">
                               Bolagsadmin för{" "}
-                              <span className="font-semibold text-[#0f1930]">
+                              <span className="font-semibold text-[#0b0a0e]">
                                 {brokerVerificationCompanyName}
                                 {brokerVerificationOrganizationNumber ? ` (${brokerVerificationOrganizationNumber})` : ""}
                               </span>{" "}
@@ -1274,7 +1268,7 @@ function ProfilePage({ app }) {
                         </div>
                         <button
                           type="button"
-                          className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full border border-[#0f1930] bg-[#0f1930] px-4 py-2.5 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60"
+                          className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full border border-[#0b0a0e] bg-[#0b0a0e] px-4 py-2.5 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60"
                           disabled={resendingBrokerVerification}
                           onClick={resendRejectedBrokerVerification}
                         >
@@ -1282,7 +1276,7 @@ function ProfilePage({ app }) {
                         </button>
                         <button
                           type="button"
-                          className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-full border border-black/15 bg-[#fffffe] px-4 py-2.5 text-sm font-semibold text-[#0f1930] transition hover:border-[#0f1930]"
+                          className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-full border border-black/15 bg-[#ffffff] px-4 py-2.5 text-sm font-semibold text-[#0b0a0e] transition hover:border-[#0b0a0e]"
                           onClick={() => navigateTo("/onboarding/publisher-profile?role=broker&intent=add-role")}
                         >
                           Ändra organisationsnummer
@@ -1304,7 +1298,7 @@ function ProfilePage({ app }) {
                   <h2 className="text-xl font-semibold">Sparade objekt</h2>
                   <p className="mt-1 text-sm text-ink-600">Objekt du har sparat för uppföljning.</p>
                 </div>
-                <span className="rounded-full border border-black/10 bg-[#fffffe] px-3 py-1 text-xs font-semibold text-ink-700">
+                <span className="rounded-full border border-black/10 bg-[#ffffff] px-3 py-1 text-xs font-semibold text-ink-700">
                   {favoriteListings.length} sparade
                 </span>
               </div>
@@ -1334,7 +1328,7 @@ function ProfilePage({ app }) {
                   <h2 className="text-xl font-semibold">Sparade sökningar</h2>
                   <p className="mt-1 text-sm text-ink-600">Sökningar du har sparat för uppföljning.</p>
                 </div>
-                <span className="rounded-full border border-black/10 bg-[#fffffe] px-3 py-1 text-xs font-semibold text-ink-700">
+                <span className="rounded-full border border-black/10 bg-[#ffffff] px-3 py-1 text-xs font-semibold text-ink-700">
                   {filterPresets.length} sparade
                 </span>
               </div>
@@ -1349,7 +1343,7 @@ function ProfilePage({ app }) {
                     return (
                       <article
                         key={preset.id}
-                        className="cursor-pointer rounded-2xl border border-black/10 bg-[#fffffe] p-3 transition hover:border-[#0f1930]/35"
+                        className="cursor-pointer rounded-2xl border border-black/10 bg-[#ffffff] p-3 transition hover:border-[#0b0a0e]/35"
                         onClick={() => navigateTo(targetUrl)}
                         onKeyDown={(event) => {
                           if (event.key === "Enter" || event.key === " ") {
@@ -1368,7 +1362,7 @@ function ProfilePage({ app }) {
                           <div className="flex items-center gap-2">
                             <button
                               type="button"
-                              className="rounded-xl border border-black/20 bg-[#fffffe] px-3 py-1.5 text-xs font-semibold text-ink-700 hover:bg-[#fffffe]"
+                              className="rounded-xl border border-black/20 bg-[#ffffff] px-3 py-1.5 text-xs font-semibold text-ink-700 hover:bg-[#ffffff]"
                               onClick={(event) => {
                                 event.stopPropagation();
                                 navigateTo(targetUrl);
@@ -1378,7 +1372,7 @@ function ProfilePage({ app }) {
                             </button>
                             <button
                               type="button"
-                              className="rounded-xl border border-rose-200 bg-[#fffffe] px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-50"
+                              className="rounded-xl border border-rose-200 bg-[#ffffff] px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-50"
                               onClick={(event) => {
                                 event.stopPropagation();
                                 deleteSavedFilter?.(preset.id);
@@ -1391,7 +1385,7 @@ function ProfilePage({ app }) {
                         {details.length > 0 ? (
                           <dl className="mt-3 grid gap-2 sm:grid-cols-2">
                             {details.map((item) => (
-                              <div key={`${preset.id}-${item.label}-${item.value}`} className="rounded-xl border border-black/10 bg-[#fffffe] px-2.5 py-2">
+                              <div key={`${preset.id}-${item.label}-${item.value}`} className="rounded-xl border border-black/10 bg-[#ffffff] px-2.5 py-2">
                                 <dt className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">{item.label}</dt>
                                 <dd className="mt-0.5 text-xs font-medium text-ink-800">{item.value}</dd>
                               </div>
@@ -1401,7 +1395,7 @@ function ProfilePage({ app }) {
                         {chips.length > 0 ? (
                           <div className="mt-2 flex flex-wrap gap-1.5">
                             {chips.map((chip) => (
-                              <span key={`${preset.id}-${chip}`} className="rounded-full border border-black/10 bg-[#fffffe] px-2.5 py-1 text-[11px] font-semibold text-ink-700">
+                              <span key={`${preset.id}-${chip}`} className="rounded-full border border-black/10 bg-[#ffffff] px-2.5 py-1 text-[11px] font-semibold text-ink-700">
                                 {chip}
                               </span>
                             ))}
@@ -1418,16 +1412,17 @@ function ProfilePage({ app }) {
       </div>
 
       {showProfileOverlay ? (
-        <div className="absolute inset-0 z-[90] overflow-y-auto bg-[#fffffe] p-4 sm:p-6" onClick={() => setShowProfileOverlay(false)}>
-          <div className="mx-auto w-full max-w-[1240px] rounded-3xl border border-black/10 bg-[#fffffe] p-5 sm:p-6" onClick={(event) => event.stopPropagation()}>
+        <div className="fixed inset-0 z-[90] h-dvh overflow-hidden bg-[#ffffff]">
+        <div className="h-full overflow-y-auto overscroll-none bg-[#ffffff] p-4 sm:p-6" onClick={() => setShowProfileOverlay(false)}>
+          <div className="mx-auto w-full max-w-[1240px] rounded-3xl border border-black/10 bg-[#ffffff] p-5 sm:p-6" onClick={(event) => event.stopPropagation()}>
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h3 className="text-2xl font-semibold text-[#0f1930]">Redigera profil</h3>
+                <h3 className="text-2xl font-semibold text-[#0b0a0e]">Redigera profil</h3>
                 <p className="mt-1 text-sm text-ink-600">Uppdatera profilbild och kontaktuppgifter.</p>
               </div>
               <button
                 type="button"
-                className="close-circle-button inline-flex items-center justify-center rounded-full border border-black/15 bg-[#fffffe] text-xl leading-none text-ink-700"
+                className="close-circle-button inline-flex items-center justify-center rounded-full border border-black/15 bg-[#ffffff] text-xl leading-none text-ink-700"
                 onClick={() => setShowProfileOverlay(false)}
                 aria-label="Stäng"
               >
@@ -1446,7 +1441,7 @@ function ProfilePage({ app }) {
                 )}
                 <button
                   type="button"
-                  className="inline-flex items-center gap-1.5 rounded-full border border-black/15 bg-[#fffffe] px-3.5 py-2 text-xs font-semibold text-ink-800"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-black/15 bg-[#ffffff] px-3.5 py-2 text-xs font-semibold text-ink-800"
                   onClick={() => profileAvatarInputRef.current?.click()}
                 >
                   <CameraIcon className="h-4 w-4" />
@@ -1498,14 +1493,14 @@ function ProfilePage({ app }) {
             <div className="mt-5 flex items-center justify-end gap-2">
               <button
                 type="button"
-                className="rounded-full border border-black/20 bg-[#fffffe] px-5 py-2.5 text-sm font-semibold text-ink-700"
+                className="rounded-full border border-black/20 bg-[#ffffff] px-5 py-2.5 text-sm font-semibold text-ink-700"
                 onClick={() => setShowProfileOverlay(false)}
               >
                 Avbryt
               </button>
               <button
                 type="button"
-                className="rounded-full border border-[#0f1930] bg-[#0f1930] px-5 py-2.5 text-sm font-semibold text-white"
+                className="rounded-full border border-[#0b0a0e] bg-[#0b0a0e] px-5 py-2.5 text-sm font-semibold text-white"
                 onClick={saveProfileChanges}
                 disabled={savingProfile}
               >
@@ -1514,20 +1509,28 @@ function ProfilePage({ app }) {
             </div>
           </div>
         </div>
+        </div>
       ) : null}
 
       {showProgramOverlay ? (
-        <div className="absolute inset-0 z-[90] overflow-y-auto bg-[#fffffe] p-4 sm:p-6" onClick={() => setShowProgramOverlay(false)}>
-          <div className="mx-auto w-full max-w-[1240px] rounded-3xl border border-black/10 bg-[#fffffe] p-5 sm:p-6" onClick={(event) => event.stopPropagation()}>
+        <div className="fixed inset-0 z-[90] h-dvh overflow-hidden bg-[#ffffff]">
+        <div className="h-full overflow-y-auto overscroll-none bg-[#ffffff] p-4 sm:p-6" onClick={() => {
+          setShowProgramOverlay(false);
+          setEditingProgramId(null);
+        }}>
+          <div className="mx-auto w-full max-w-[1240px] rounded-3xl border border-black/10 bg-[#ffffff] p-5 sm:p-6" onClick={(event) => event.stopPropagation()}>
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h3 className="text-2xl font-semibold text-[#0f1930]">Redigera lokalprogram</h3>
+                <h3 className="text-2xl font-semibold text-[#0b0a0e]">Redigera lokalprogram</h3>
                 <p className="mt-1 text-sm text-ink-600">Justera preferenser som används i matchning och sök.</p>
               </div>
               <button
                 type="button"
-                className="close-circle-button inline-flex items-center justify-center rounded-full border border-black/15 bg-[#fffffe] text-xl leading-none text-ink-700"
-                onClick={() => setShowProgramOverlay(false)}
+                className="close-circle-button inline-flex items-center justify-center rounded-full border border-black/15 bg-[#ffffff] text-xl leading-none text-ink-700"
+                onClick={() => {
+                  setShowProgramOverlay(false);
+                  setEditingProgramId(null);
+                }}
                 aria-label="Stäng"
               >
                 ×
@@ -1535,6 +1538,16 @@ function ProfilePage({ app }) {
             </div>
 
             <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <label className="grid gap-1 sm:col-span-2 lg:col-span-3">
+                <span className="text-xs font-semibold text-ink-600">Namn på lokalprogram</span>
+                <input
+                  className="field"
+                  value={programDraft.title}
+                  onChange={(event) => setProgramDraft((prev) => ({ ...prev, title: event.target.value }))}
+                  placeholder="Ex. Stockholm huvudkontor"
+                />
+              </label>
+
               <label className="grid gap-1">
                 <span className="text-xs font-semibold text-ink-600">Område</span>
                 <select className="field select-chevron" value={programDraft.district} onChange={(event) => setProgramDraft((prev) => ({ ...prev, district: event.target.value }))}>
@@ -1616,7 +1629,7 @@ function ProfilePage({ app }) {
             </div>
 
             <div className="mt-4 border-b border-black/10 pb-4">
-              <div className="rounded-2xl border border-black/10 bg-[#fffffe] p-3">
+              <div className="rounded-2xl border border-black/10 bg-[#ffffff] p-3">
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-700">Särskilda krav</p>
                 <div className="mt-2 grid grid-cols-1 gap-2">
                   <label className="inline-flex items-center gap-2 text-sm text-ink-700">
@@ -1661,7 +1674,7 @@ function ProfilePage({ app }) {
                       key={option.value}
                       type="button"
                       className={`inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border px-3.5 py-2.5 text-sm font-semibold transition ${
-                        active ? "border-[#0f1930] bg-[#0f1930] text-white" : "border-black/10 bg-[#fffffe] text-ink-700 hover:bg-[#fffffe]"
+                        active ? "border-[#0b0a0e] bg-[#0b0a0e] text-white" : "border-black/10 bg-[#ffffff] text-ink-700 hover:bg-[#ffffff]"
                       }`}
                       onClick={() => toggleProgramAmenity(option.value)}
                     >
@@ -1676,14 +1689,17 @@ function ProfilePage({ app }) {
             <div className="mt-5 flex items-center justify-end gap-2">
               <button
                 type="button"
-                className="rounded-full border border-black/20 bg-[#fffffe] px-5 py-2.5 text-sm font-semibold text-ink-700"
-                onClick={() => setShowProgramOverlay(false)}
+                className="rounded-full border border-black/20 bg-[#ffffff] px-5 py-2.5 text-sm font-semibold text-ink-700"
+                onClick={() => {
+                  setShowProgramOverlay(false);
+                  setEditingProgramId(null);
+                }}
               >
                 Avbryt
               </button>
               <button
                 type="button"
-                className="rounded-full border border-[#0f1930] bg-[#0f1930] px-5 py-2.5 text-sm font-semibold text-white"
+                className="rounded-full border border-[#0b0a0e] bg-[#0b0a0e] px-5 py-2.5 text-sm font-semibold text-white"
                 onClick={saveProgramChanges}
                 disabled={savingProgram}
               >
@@ -1692,30 +1708,22 @@ function ProfilePage({ app }) {
             </div>
           </div>
         </div>
+        </div>
       ) : null}
 
       {showTeamOverlay ? (
-        <div className="absolute inset-0 z-[90] overflow-y-auto bg-[#fffffe] p-4 sm:p-6">
-          <div className="mx-auto w-full max-w-[1240px]">
-            <button
-              type="button"
-              className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-black/20 bg-[#fffffe] px-3 py-2 text-xs font-semibold text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
-              onClick={() => setShowTeamOverlay(false)}
-            >
-              <ArrowLeftIcon className="h-3.5 w-3.5" />
-              Tillbaka till profil
-            </button>
-          </div>
-          <div className="mx-auto w-full max-w-[1240px] rounded-3xl border border-black/10 bg-[#fffffe] p-5 sm:p-6">
+        <div className="fixed inset-0 z-[90] h-dvh overflow-hidden bg-[#ffffff]">
+        <div className="h-full overflow-y-auto overscroll-none bg-[#ffffff] p-4 sm:p-6">
+          <div className="mx-auto w-full max-w-[1240px] rounded-3xl border border-black/10 bg-[#ffffff] p-5 sm:p-6">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h3 className="text-2xl font-semibold text-[#0f1930]">Hantera profil</h3>
+                <h3 className="text-2xl font-semibold text-[#0b0a0e]">Hantera profil</h3>
                 <p className="mt-1 text-sm text-ink-600">Redigera administratörsprofil och hantera teamets uppgifter.</p>
               </div>
             </div>
 
             <div className="mt-4 p-1">
-              <p className="text-sm font-semibold text-[#0f1930]">Administratör</p>
+              <p className="text-sm font-semibold text-[#0b0a0e]">Administratör</p>
               <div className="mt-4 grid gap-5 lg:grid-cols-[220px_minmax(0,680px)] lg:items-start">
                 <div className="flex items-start justify-center">
                   <div className="relative flex flex-col items-center gap-2">
@@ -1728,7 +1736,7 @@ function ProfilePage({ app }) {
                     )}
                     <button
                       type="button"
-                      className="absolute right-2 top-2 inline-flex h-10 w-10 min-h-10 min-w-10 items-center justify-center rounded-full border border-black/20 bg-[#fffffe] p-0 text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
+                      className="absolute right-2 top-2 inline-flex h-10 w-10 min-h-10 min-w-10 items-center justify-center rounded-full border border-black/20 bg-[#ffffff] p-0 text-ink-700 transition hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
                       onClick={() => profileAvatarInputRef.current?.click()}
                       aria-label="Byt foto"
                     >
@@ -1753,7 +1761,7 @@ function ProfilePage({ app }) {
                     {profileDraft.avatarUrl ? (
                       <button
                         type="button"
-                        className="inline-flex items-center gap-1.5 rounded-full border border-black/20 bg-[#fffffe] px-3 py-1.5 text-xs font-semibold text-ink-700 transition hover:border-[#0f1930] hover:text-[#0f1930]"
+                        className="inline-flex items-center gap-1.5 rounded-full border border-black/20 bg-[#ffffff] px-3 py-1.5 text-xs font-semibold text-ink-700 transition hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
                         onClick={() => setProfileDraft((prev) => ({ ...prev, avatarUrl: "" }))}
                       >
                         <TrashIcon className="h-3.5 w-3.5" />
@@ -1778,7 +1786,7 @@ function ProfilePage({ app }) {
                   <div className="sm:col-span-2">
                     <button
                       type="button"
-                      className="rounded-full border border-[#0f1930] bg-[#0f1930] px-4 py-2 text-xs font-semibold text-white"
+                      className="rounded-full border border-[#0b0a0e] bg-[#0b0a0e] px-4 py-2 text-xs font-semibold text-white"
                       onClick={saveProfileChanges}
                       disabled={savingProfile}
                     >
@@ -1792,13 +1800,14 @@ function ProfilePage({ app }) {
             <div className="mt-5 flex justify-end">
               <button
                 type="button"
-                className="rounded-full border border-black/20 bg-[#fffffe] px-5 py-2.5 text-sm font-semibold text-ink-700"
+                className="rounded-full border border-black/20 bg-[#ffffff] px-5 py-2.5 text-sm font-semibold text-ink-700"
                 onClick={() => setShowTeamOverlay(false)}
               >
                 Avbryt
               </button>
             </div>
           </div>
+        </div>
         </div>
       ) : null}
 

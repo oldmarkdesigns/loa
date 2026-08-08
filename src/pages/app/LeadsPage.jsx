@@ -56,7 +56,7 @@ function LeadsPage({ app }) {
               { label: "Intresse och visningar" }
             ]}
           />
-          <div className="rounded-3xl border border-black/10 bg-[#fffffe] p-6 text-sm text-ink-600">
+          <div className="rounded-3xl border border-black/10 bg-[#ffffff] p-6 text-sm text-ink-600">
             Intressehantering är tillgänglig i hyresvärdsläge.
           </div>
         </div>
@@ -81,7 +81,7 @@ function LeadsPage({ app }) {
 
         <div className="grid gap-4 xl:grid-cols-2">
           <div className="space-y-4">
-            <div className="rounded-2xl border border-black/10 bg-[#fffffe] p-4 text-sm text-ink-700">
+            <div className="rounded-2xl border border-black/10 bg-[#ffffff] p-4 text-sm text-ink-700">
               <p className="font-semibold">Vad är en intresseanmälan?</p>
               <p className="mt-1 text-ink-600">En intresseanmälan är en kvalificerad intressepost kopplad till ett specifikt objekt.</p>
               <p className="mt-2 text-ink-600">
@@ -93,7 +93,7 @@ function LeadsPage({ app }) {
               </p>
             </div>
 
-            <section className="rounded-3xl border border-black/10 bg-[#fffffe] p-4">
+            <section className="rounded-3xl border border-black/10 bg-[#ffffff] p-4">
               <div className="mb-3 flex items-center justify-between gap-2">
                 <h2 className="text-xl font-semibold">Intresseanmälningar</h2>
                 <span className="rounded-full border border-black/10 bg-[#f7f7f7] px-2 py-1 text-xs font-semibold">{leads.length}</span>
@@ -122,7 +122,7 @@ function LeadsPage({ app }) {
             </section>
           </div>
 
-          <section className="rounded-3xl border border-black/10 bg-[#fffffe] p-4">
+          <section className="rounded-3xl border border-black/10 bg-[#ffffff] p-4">
             <div className="mb-3 flex items-center justify-between gap-2">
               <h2 className="text-xl font-semibold">Visningar</h2>
               <span className="rounded-full border border-black/10 bg-[#f7f7f7] px-2 py-1 text-xs font-semibold">{viewingItems.length}</span>
@@ -130,12 +130,12 @@ function LeadsPage({ app }) {
             <div className="space-y-2">
               {viewingItems.length === 0 ? <p className="rounded-2xl border border-black/10 bg-[#fafafa] p-3 text-sm text-ink-500">Du har inga visningsförfrågningar ännu.</p> : null}
               {viewingItems.map((viewing) => (
-                <article key={viewing.id} className="overflow-hidden rounded-3xl border border-black/10 bg-[#fffffe]">
+                <article key={viewing.id} className="overflow-hidden rounded-3xl border border-black/10 bg-[#ffffff]">
                   <div className="relative">
                     <img src={viewing.listing?.image || "/object-images/object-1.jpeg"} alt={viewing.listing?.title || "Objekt"} className="h-44 w-full object-cover" />
                     <div className="absolute left-3 top-3 flex items-center gap-2">
                       <span className="rounded-xl border border-white/40 bg-black/55 px-2 py-1 text-[11px] font-semibold text-white">{viewing.listing?.type || "Lokal"}</span>
-                      {viewing.listing?.verified ? <span className="rounded-xl border border-white/40 bg-[#fffffe]/90 px-2 py-1 text-[11px] font-semibold text-black">Verifierad</span> : null}
+                      {viewing.listing?.verified ? <span className="rounded-xl border border-white/40 bg-[#ffffff]/90 px-2 py-1 text-[11px] font-semibold text-black">Verifierad</span> : null}
                     </div>
                   </div>
 

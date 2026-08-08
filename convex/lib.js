@@ -16,6 +16,16 @@ export function defaultPublisherPlan() {
   };
 }
 
+export function normalizeOrganizationNumber(value) {
+  return String(value || "").replace(/\D/g, "").slice(0, 10);
+}
+
+export function formatOrganizationNumber(value) {
+  const digits = normalizeOrganizationNumber(value);
+  if (digits.length <= 6) return digits;
+  return `${digits.slice(0, 6)}-${digits.slice(6)}`;
+}
+
 export function sanitizeUser(user) {
   if (!user) {
     return null;
@@ -92,6 +102,28 @@ export async function findUserByPublicId(ctx, userId) {
     .unique();
 }
 
+export function userCompanyId(user) {
+  return typeof user?.profile?.companyId === "string" ? user.profile.companyId : "";
+}
+
+export async function companyBrokerUserIds(ctx, viewer) {
+  const companyId = userCompanyId(viewer);
+  if (!companyId || !userGrantedRoles(viewer).includes("company_admin")) {
+    return new Set();
+  }
+
+  const memberships = await ctx.db
+    .query("companyMemberships")
+    .withIndex("by_company_id", (query) => query.eq("companyId", companyId))
+    .take(200);
+
+  return new Set(
+    memberships
+      .filter((membership) => membership.role === "broker" && membership.status === "active")
+      .map((membership) => membership.userId)
+  );
+}
+
 export async function getViewer(ctx) {
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) {
@@ -149,9 +181,23 @@ export async function listingWithOwner(ctx, listing) {
   }
 
   const owner = await findUserByPublicId(ctx, listing.ownerId);
+  const companyId = listing.companyId || userCompanyId(owner);
+  const [views, leads] = await Promise.all([
+    ctx.db
+      .query("listingViews")
+      .withIndex("by_listing_id", (query) => query.eq("listingId", listing.id))
+      .collect(),
+    ctx.db
+      .query("leads")
+      .withIndex("by_listing_id", (query) => query.eq("listingId", listing.id))
+      .collect()
+  ]);
   return {
     ...stripSystemFields(listing),
-    advertiserName: owner?.name || "Hyresvärd"
+    ...(companyId ? { companyId } : {}),
+    advertiserName: owner?.name || "Hyresvärd",
+    views: views.length,
+    inquiries: leads.length
   };
 }
 
@@ -217,13 +263,22 @@ export function qualifyLead(listing, viewingRequest) {
 
 export async function listVisibleListings(ctx, filters = {}) {
   const viewer = await getViewer(ctx);
+  const viewerCompanyId = userCompanyId(viewer);
+  const brokerUserIds = await companyBrokerUserIds(ctx, viewer);
   const listings = await ctx.db.query("listings").collect();
   const visibleListings = listings.filter((listing) => {
     if (listing.status === "active") {
       return true;
     }
 
-    return Boolean(viewer && viewer.id === listing.ownerId);
+    return Boolean(
+      viewer
+      && (
+        viewer.id === listing.ownerId
+        || (viewerCompanyId && listing.companyId === viewerCompanyId)
+        || brokerUserIds.has(listing.ownerId)
+      )
+    );
   });
 
   const enrichedListings = await Promise.all(visibleListings.map((listing) => listingWithOwner(ctx, listing)));
@@ -232,9 +287,20 @@ export async function listVisibleListings(ctx, filters = {}) {
 
 export async function getVisibleListingOrThrow(ctx, listingId) {
   const viewer = await getViewer(ctx);
+  const viewerCompanyId = userCompanyId(viewer);
+  const brokerUserIds = await companyBrokerUserIds(ctx, viewer);
   const listing = await findListingByPublicId(ctx, listingId);
 
-  if (!listing || (listing.status !== "active" && viewer?.id !== listing.ownerId)) {
+  const canViewDraft = Boolean(
+    viewer
+    && (
+      viewer.id === listing?.ownerId
+      || (viewerCompanyId && listing?.companyId === viewerCompanyId)
+      || brokerUserIds.has(listing?.ownerId)
+    )
+  );
+
+  if (!listing || (listing.status !== "active" && !canViewDraft)) {
     throw new Error("Objektet hittades inte.");
   }
 
@@ -303,6 +369,53 @@ function seedUsers() {
   ];
 }
 
+export function seedCompanies() {
+  const vasakronanOrganizationNumber = "556474-0123";
+
+  return [
+    {
+      id: "company-vasakronan-fastigheter",
+      name: "Vasakronan Fastigheter AB",
+      organizationNumber: vasakronanOrganizationNumber,
+      normalizedOrganizationNumber: normalizeOrganizationNumber(vasakronanOrganizationNumber),
+      companyType: "Fastighetsbolag",
+      phone: "08-783 21 00",
+      streetAddress: "Mäster Samuelsgatan 56",
+      postalCode: "111 21",
+      city: "Stockholm",
+      parentCompany: "Civitas Holding Aktiebolag",
+      websiteUrl: "https://vasakronan.se",
+      source: "seed"
+    }
+  ];
+}
+
+export async function ensureSeedCompanies(ctx) {
+  const createdAt = nowIso();
+
+  for (const company of seedCompanies()) {
+    const existing = await ctx.db
+      .query("companies")
+      .withIndex("by_normalized_organization_number", (query) =>
+        query.eq("normalizedOrganizationNumber", company.normalizedOrganizationNumber)
+      )
+      .unique();
+
+    if (existing) {
+      await ctx.db.patch(existing._id, {
+        ...company,
+        updatedAt: createdAt
+      });
+    } else {
+      await ctx.db.insert("companies", {
+        ...company,
+        createdAt,
+        updatedAt: createdAt
+      });
+    }
+  }
+}
+
 function normalizeSeedListings() {
   const dayMs = 1000 * 60 * 60 * 24;
 
@@ -359,6 +472,8 @@ function seedLeads() {
 }
 
 export async function ensureSeedData(ctx) {
+  await ensureSeedCompanies(ctx);
+
   const seedMarker = await ctx.db
     .query("appMeta")
     .withIndex("by_key", (query) => query.eq("key", "seedVersion"))
