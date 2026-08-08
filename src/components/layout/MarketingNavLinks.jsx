@@ -8,13 +8,12 @@ export const marketingSectionItems = [
   { label: "Så fungerar det", hash: "#sa-fungerar-det" },
   { label: "Lokalprogram", hash: "#lokalprogram" },
   { label: "Priser", hash: "#priser" },
-  { label: "FAQ", hash: "#faq" },
-  { label: "Kontakt", hash: "#kontakt" }
+  { label: "FAQ", hash: "#faq" }
 ];
 
 function baseNavClass(active = false) {
-  return `nav-underline-anim text-sm font-semibold transition hover:text-[#0f1930] ${
-    active ? "nav-underline-anim-active text-[#0f1930]" : "text-[#0f1930]"
+  return `nav-underline-anim text-sm font-semibold transition hover:text-[#0b0a0e] ${
+    active ? "nav-underline-anim-active text-[#0b0a0e]" : "text-[#0b0a0e]"
   }`;
 }
 
@@ -55,7 +54,7 @@ function MarketingNavLinks({ hrefPrefix = "", onSectionLinkClick, onPublish, onP
       {showPublish ? (
         <button
           type="button"
-          className="inline-flex items-center gap-1.5 rounded-xl border border-[#0f1930] px-2.5 py-1.5 text-xs font-semibold text-[#0f1930] transition hover:bg-[#0f1930] hover:text-white"
+          className="inline-flex items-center gap-1.5 rounded-xl border border-[#0b0a0e] px-2.5 py-1.5 text-xs font-semibold text-[#0b0a0e] transition hover:bg-[#0b0a0e] hover:text-white"
           onClick={onPublish}
         >
           <span aria-hidden="true" className="text-sm leading-none">+</span>

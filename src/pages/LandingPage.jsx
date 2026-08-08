@@ -7,6 +7,7 @@ import MapListingPreviewCard from "../components/app/MapListingPreviewCard";
 import ViewingRequestModal from "../components/app/ViewingRequestModal";
 import { popularListingFallbackKey } from "../lib/popularListingFallback";
 import { PLATFORM_GOOGLE_MAP_STYLE } from "../lib/googleMapStyles";
+import heroOwnerPanelImage from "../../Assets/Hero Images/How To Design A Moody Navy Blue Study Room.jpeg";
 import {
   BalconyIcon,
   ArrowRightIcon,
@@ -15,29 +16,32 @@ import {
   BuildingIcon,
   CalendarIcon,
   CarIcon,
+  CheckBadgeIcon,
+  ChevronRightIcon,
   CoinsIcon,
-  FilterIcon,
+  CrownIcon,
   DumbbellIcon,
+  FilterIcon,
   HistoryIcon,
   LockerIcon,
+  LockIcon,
   LoungeIcon,
   MouseScrollIcon,
+  PencilIcon,
   PenthouseIcon,
   PinIcon,
+  PlusIcon,
   RooftopIcon,
+  RulerIcon,
   SearchIcon,
   ShieldIcon,
   SnowflakeIcon,
-  SparklesIcon,
   StarIcon,
   UserIcon,
   UtensilsIcon,
   WifiIcon
 } from "../components/icons/UiIcons";
 import { districtOptions, listingTypes, listings as baseListingDataset } from "../data/mockData";
-import heroImage from "../../Assets/Hero Images/stockholm-landing.jpg";
-import processImage from "../../Assets/Object Images/_ (2).jpeg";
-import faqImage from "../../Assets/Object Images/_ (3).jpeg";
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 const HERO_GOOGLE_MAPS_SCRIPT_ID = "google-maps-hero-sdk-script";
@@ -53,38 +57,523 @@ const heroDistrictGeo = {
 const processSteps = [
   {
     title: "Skapa konto och välj roll",
-    body: "Starta som hyresgäst, hyresvärd eller båda roller i samma konto.",
-    icon: UserIcon
+    body: "Starta som hyresgäst, hyresvärd eller båda roller i samma konto."
   },
   {
     title: "Sök eller publicera",
-    body: "Använd filter och AI-sök, eller publicera nya objekt steg för steg.",
-    icon: SearchIcon
+    body: "Använd filter och AI-sök, eller publicera nya objekt steg för steg."
   },
   {
     title: "Boka och följ upp",
-    body: "Visningsförfrågan, intressestatus och snabb dialog samlas i en vy.",
-    icon: CalendarIcon
+    body: "Visningsförfrågan, intressestatus och snabb dialog samlas i en vy."
   }
 ];
 
-const localProgramBenefits = [
+const heroOwnerTestimonials = [
   {
-    title: "Beskriv behov tidigt",
-    body: "Samla krav för läge, storlek, budget och lokaltyp innan sök eller dialog startar.",
-    icon: BuildingIcon
+    quote: "Vi fick rätt typ av förfrågningar direkt, utan att lägga tid på fel matchningar.",
+    company: "Nordic Workspace Group"
   },
   {
-    title: "Få mer relevanta matchningar",
-    body: "Sök och rekommendationer prioriterar lokaler som ligger närmare era faktiska preferenser.",
-    icon: SparklesIcon
+    quote: "Lokalprogrammen gör dialogen skarpare. Teamen vet vad de söker innan första visningen.",
+    company: "Sthlm Fastighetspartner"
   },
   {
-    title: "Spara tid i urvalet",
-    body: "Mindre brus, färre irrelevanta objekt och tydligare underlag inför nästa steg.",
-    icon: FilterIcon
+    quote: "Publiceringen går snabbt och objekten känns bättre presenterade än i våra gamla flöden.",
+    company: "Atrium Offices"
   }
 ];
+
+const heroSpaceTypes = ["kontor", "coworking", "studio", "butik", "klinik", "lager"];
+
+function ProcessStepAccountMockup() {
+  return (
+    <div className="relative h-36 w-36">
+      <div className="absolute inset-x-3 top-2 h-28 -rotate-2 rounded-2xl border border-black/10 bg-white shadow-sm" />
+      <div className="absolute inset-x-1 top-0 flex h-28 rotate-1 flex-col items-center justify-center gap-2.5 rounded-2xl border border-black/10 bg-white shadow-md">
+        <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">Välj roll</span>
+        <div className="flex items-center gap-2.5">
+          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#0b0a0e] text-white ring-4 ring-[#0b0a0e]/10">
+            <UserIcon className="h-4 w-4" />
+          </span>
+          <span className="flex h-9 w-9 items-center justify-center rounded-full border border-black/15 text-ink-400">
+            <BuildingIcon className="h-4 w-4" />
+          </span>
+        </div>
+      </div>
+      <span className="absolute -right-2 -top-2 flex h-8 w-8 items-center justify-center rounded-full bg-[#4f46e5] text-white shadow-md">
+        <CheckBadgeIcon className="h-4 w-4" />
+      </span>
+    </div>
+  );
+}
+
+function ProcessStepSearchMockup() {
+  return (
+    <div className="relative w-full max-w-[190px]">
+      <div className="space-y-2 rounded-2xl border border-black/10 bg-white p-3.5 shadow-sm">
+        <div className="h-2 w-3/4 rounded-full bg-black/10" />
+        <div className="h-2 w-1/2 rounded-full bg-black/10" />
+      </div>
+      <div className="mt-2.5 space-y-2 rounded-2xl border border-black/10 bg-white p-3.5 shadow-sm">
+        <div className="h-2 w-full rounded-full bg-black/10" />
+        <div className="h-2 w-2/3 rounded-full bg-black/10" />
+      </div>
+      <span className="absolute -top-3 right-1 inline-flex items-center gap-1.5 rounded-full border border-[#4f46e5]/25 bg-white px-3 py-1.5 text-xs font-semibold text-[#4f46e5] shadow-md">
+        <SearchIcon className="h-3 w-3" /> AI-sök
+      </span>
+    </div>
+  );
+}
+
+function ProcessStepBookingMockup() {
+  return (
+    <div className="relative flex w-full max-w-[210px] items-end gap-2 pt-6">
+      <div className="flex-1 space-y-2 rounded-2xl border border-black/10 bg-white p-3 shadow-sm">
+        <div className="h-2 w-full rounded-full bg-black/10" />
+        <div className="h-2 w-2/3 rounded-full bg-black/10" />
+        <div className="h-2 w-1/2 rounded-full bg-black/10" />
+      </div>
+      <div className="flex-1 space-y-2 rounded-2xl border border-black/10 bg-white p-3 shadow-sm">
+        <div className="h-2 w-full rounded-full bg-black/10" />
+        <div className="h-2 w-1/2 rounded-full bg-black/10" />
+      </div>
+      <div className="absolute -top-1 left-1/2 w-[92%] -translate-x-1/2 -rotate-1 rounded-2xl border border-[#4f46e5]/20 bg-white p-3 text-left shadow-lg">
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-[#4f46e5]">Nästa steg</p>
+        <p className="mt-1 text-xs font-medium text-ink-800">Visning bokad – svar inom 2h.</p>
+      </div>
+    </div>
+  );
+}
+
+const processStepMockups = [ProcessStepAccountMockup, ProcessStepSearchMockup, ProcessStepBookingMockup];
+
+const localProgramBenefits = [
+  {
+    title: "Skapa ert lokalprogram",
+    body: "Fyll i lokaltyp, storlek, budget och läge – vi använder det direkt i matchningen."
+  },
+  {
+    title: "Sparat i er profil",
+    body: "Programmet finns alltid kvar i profilen och går att uppdatera när behoven ändras."
+  },
+  {
+    title: "Sök direkt med programmet",
+    body: "Aktivera lokalprogrammet på Lediga lokaler och se matchningar i ett klick."
+  }
+];
+
+const mockupSlideClass = (isActive) =>
+  `transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+    isActive ? "scale-100 opacity-100" : "scale-[0.985] opacity-60"
+  }`;
+
+function LokalprogramCreateMockup({ isActive }) {
+  const primaryListing = baseListingDataset[0];
+  const numberFields = [
+    { label: "Min yta", value: `${primaryListing.sizeSqm - 40} kvm` },
+    { label: "Max yta", value: `${primaryListing.sizeSqm + 40} kvm` },
+    { label: "Max budget / mån", value: `${primaryListing.priceMonthly.toLocaleString("sv-SE")} kr` }
+  ];
+  const selectFields = [
+    { label: "Område", value: primaryListing.district },
+    { label: "Lokaltyp", value: primaryListing.type },
+    { label: "Avtal", value: primaryListing.term }
+  ];
+  const amenityIcons = [BuildingIcon, WifiIcon, UtensilsIcon, BikeIcon];
+  const amenities = primaryListing.amenities.map((label, index) => ({
+    icon: amenityIcons[index] ?? BuildingIcon,
+    label
+  }));
+  const pricePerSqm = Math.round(primaryListing.priceMonthly / primaryListing.sizeSqm);
+  const summaryItems = [
+    `${primaryListing.capacity} platser`,
+    `${primaryListing.availability}`,
+    `${pricePerSqm} kr/kvm`
+  ];
+  return (
+    <div className={`overflow-hidden rounded-2xl border border-white/10 bg-[#141417] p-4 sm:p-6 ${mockupSlideClass(isActive)}`}>
+      <div className="rounded-xl bg-white p-4 sm:p-6">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">Lokalprogram</p>
+            <p className="mt-1 text-sm font-semibold text-ink-900">{primaryListing.title}</p>
+            <p className="mt-1 text-xs font-medium text-ink-500">{primaryListing.address}, {primaryListing.district}</p>
+          </div>
+          <div className="h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-black/10">
+            <img src={primaryListing.image} alt="" className="h-full w-full object-cover" />
+          </div>
+        </div>
+
+        <div className="mt-4 grid grid-cols-3 gap-2.5">
+          {numberFields.map((field) => (
+            <div key={field.label}>
+              <span className="block text-[9px] font-semibold uppercase tracking-wide text-ink-400">{field.label}</span>
+              <div className="mt-1 flex h-8 items-center rounded-xl border border-black/10 bg-white px-2.5 text-[10px] font-semibold text-ink-800">
+                {field.value}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-3 grid grid-cols-3 gap-2.5">
+          {selectFields.map((field) => (
+            <div key={field.label}>
+              <span className="block text-[9px] font-semibold uppercase tracking-wide text-ink-400">{field.label}</span>
+              <div className="mt-1 flex h-8 items-center justify-between rounded-xl border border-black/10 bg-white px-2.5">
+                <span className="truncate text-[10px] font-semibold text-ink-800">{field.value}</span>
+                <ChevronRightIcon className="h-3 w-3 rotate-90 text-ink-300" />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-4 grid grid-cols-3 gap-2">
+          {summaryItems.map((item) => (
+            <span key={item} className="rounded-xl border border-black/10 bg-[#f8fafc] px-2.5 py-2 text-[10px] font-semibold text-ink-600">
+              {item}
+            </span>
+          ))}
+        </div>
+
+        <div className="mt-4 flex flex-wrap gap-1.5 border-t border-black/10 pt-3.5">
+          {amenities.map((amenity) => (
+            <span
+              key={amenity.label}
+              className="inline-flex items-center gap-1.5 rounded-full border border-black/10 px-2.5 py-1.5 text-[10px] font-semibold text-ink-600"
+            >
+              <amenity.icon className="h-3 w-3" /> {amenity.label}
+            </span>
+          ))}
+        </div>
+
+        <div className="mt-4 flex justify-end gap-2 border-t border-black/10 pt-3.5">
+          <span className="rounded-full border border-black/10 px-3 py-1.5 text-[10px] font-semibold text-ink-600">Avbryt</span>
+          <span className="rounded-full bg-[#0b0a0e] px-3 py-1.5 text-[10px] font-semibold text-white">Spara ändringar</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LokalprogramProfileMockup({ isActive }) {
+  const primaryListing = baseListingDataset[0];
+  const secondaryListing = baseListingDataset[1];
+  const elevateClass = `transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+    isActive
+      ? "relative z-10 scale-[1.07] shadow-[0_18px_40px_-12px_rgba(79,70,229,0.52)] ring-2 ring-[#4f46e5]/20"
+      : "scale-100 shadow-none ring-0"
+  }`;
+  return (
+    <div className={`h-[342px] overflow-hidden rounded-2xl border border-white/10 bg-[#141417] p-3 pb-8 sm:p-4 sm:pb-10 ${mockupSlideClass(isActive)}`}>
+      <div className="w-[178.57%] origin-top-left scale-[0.56] rounded-xl bg-white p-6">
+        <div className="flex items-start justify-between gap-6">
+          <div className="flex items-center gap-5">
+            <div className="relative h-28 w-28 shrink-0 overflow-hidden rounded-full border border-black/10 bg-ink-100">
+              <img src="/object-images/object-6.jpeg" alt="" className="h-full w-full object-cover" />
+              <span className="absolute right-0 top-1 flex h-9 w-9 items-center justify-center rounded-full border border-black/10 bg-white text-ink-400">
+                <PencilIcon className="h-4 w-4" />
+              </span>
+            </div>
+            <div>
+              <span className="block h-8 w-64 rounded-full bg-[#edf1f1]" aria-label="Namn maskerat" />
+              <span className="mt-5 inline-flex items-center gap-2 rounded-full border border-black/10 px-4 py-2 text-sm font-semibold text-ink-500">
+                <CheckBadgeIcon className="h-4 w-4 text-ink-400" />
+                ID verifierad
+              </span>
+            </div>
+          </div>
+          <span className="inline-flex shrink-0 items-center gap-2 rounded-full border border-black/10 px-5 py-3 text-sm font-semibold text-ink-500">
+            <PencilIcon className="h-4 w-4" />
+            Hantera profil
+          </span>
+        </div>
+
+        <div className="mt-8 grid grid-cols-[minmax(0,1fr)_0.38fr] gap-6">
+          <div>
+            <div className="rounded-3xl border border-black/10 bg-white p-7">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-2xl font-semibold text-[#0b0a0e]">Lokalprogram</p>
+                  <p className="mt-2 text-sm font-medium text-ink-500">
+                    Flera behov kan sparas separat för olika team, lägen eller tidslinjer.
+                  </p>
+                </div>
+                <span className="inline-flex items-center gap-2 rounded-full bg-[#0b0a0e] px-5 py-3 text-sm font-semibold text-white">
+                  <PlusIcon className="h-4 w-4" />
+                  Lägg till
+                </span>
+              </div>
+
+              <div className={`mt-6 origin-left rounded-2xl border border-[#4f46e5]/20 bg-white p-5 ${elevateClass}`}>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-3">
+                      <p className="text-base font-semibold text-ink-900">Lokalprogram 1</p>
+                      <span className="rounded-full border border-black/10 px-3 py-1 text-xs font-semibold text-ink-500">
+                        Aktivt i sök
+                      </span>
+                    </div>
+                    <p className="mt-3 text-sm font-medium text-ink-500">
+                      {primaryListing.district} · {primaryListing.type} · max {primaryListing.priceMonthly.toLocaleString("sv-SE")} kr
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span className="text-sm font-semibold text-ink-500">{primaryListing.score - 8}%</span>
+                    <ChevronRightIcon className="h-5 w-5 text-ink-300" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 rounded-2xl border border-black/10 p-5">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="text-base font-semibold text-ink-900">Lokalprogram 2</p>
+                    <p className="mt-3 text-sm font-medium text-ink-500">
+                      {secondaryListing.district} · {secondaryListing.type} · {secondaryListing.term}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span className="text-sm font-semibold text-ink-500">43%</span>
+                    <ChevronRightIcon className="h-5 w-5 text-ink-300" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <div className="space-y-5">
+            <div className="rounded-3xl border border-black/10 bg-white p-6">
+              <div className="flex items-start justify-between gap-4">
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-500">
+                  <CheckBadgeIcon className="h-5 w-5" />
+                </span>
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-black/10 text-ink-400">
+                  <PlusIcon className="h-4 w-4 rotate-45" />
+                </span>
+              </div>
+              <p className="mt-5 text-xl font-semibold text-[#0b0a0e]">Verifiering godkänd</p>
+              <p className="mt-3 text-sm leading-6 text-ink-500">
+                Du är verifierad som mäklare för{" "}
+                <span className="inline-block h-3 w-28 rounded-full bg-[#edf1f1] align-middle" aria-label="Företag maskerat" />.
+              </p>
+              <p className="mt-5 text-sm font-medium text-ink-500">Godkänd 14 juli 12:02</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LokalprogramSearchMockup({ isActive }) {
+  const primaryListing = baseListingDataset[0];
+  const primaryPricePerSqm = Math.round(primaryListing.priceMonthly / primaryListing.sizeSqm);
+  const pins = [
+    { left: 26, top: 9 },
+    { left: 53, top: 12 },
+    { left: 77, top: 9 },
+    { left: 47, top: 22 },
+    { left: 55, top: 27 },
+    { left: 38, top: 34 },
+    { left: 50, top: 43 },
+    { left: 34, top: 52 },
+    { left: 48, top: 58 },
+    { left: 51, top: 62 },
+    { left: 45, top: 68 },
+    { left: 52, top: 75 },
+    { left: 74, top: 28 },
+    { left: 78, top: 27 }
+  ];
+  const elevateClass = `transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+    isActive
+      ? "relative z-10 -translate-y-0.5 scale-[1.14] text-[#4f46e5] shadow-[0_18px_34px_-10px_rgba(79,70,229,0.52)] ring-2 ring-[#4f46e5]/25"
+      : "translate-y-0 scale-100 shadow-none ring-0"
+  }`;
+  return (
+    <div className={`h-[442px] overflow-hidden rounded-2xl border border-white/10 bg-[#141417] p-3 pb-8 sm:p-4 sm:pb-10 ${mockupSlideClass(isActive)}`}>
+      <div className="w-[178.57%] origin-top-left scale-[0.56] rounded-xl bg-white p-6">
+        <div className="grid grid-cols-[1.02fr_0.98fr] items-stretch gap-6">
+          <div className="flex min-w-0 flex-col">
+            <p className="text-[13px] font-semibold text-ink-500">Startsida / Lediga lokaler</p>
+
+            <div className="mt-5 flex items-center justify-between gap-4">
+              <p className="text-2xl font-semibold text-[#0b0a0e]">Lediga lokaler</p>
+              <div className="flex items-center gap-3">
+                <span className={`inline-flex origin-center items-center gap-2 rounded-full border border-black/10 bg-white py-2 pl-2 pr-4 text-sm font-semibold text-ink-900 ${elevateClass}`}>
+                  <span className="h-7 w-7 overflow-hidden rounded-full">
+                    <img src="/object-images/object-6.jpeg" alt="" className="h-full w-full object-cover" />
+                  </span>
+                  Sök med lokalprogram
+                </span>
+                <span className="inline-flex items-center gap-2 rounded-full border border-[#4f46e5]/15 bg-[#f8fafc] px-3 py-2 text-sm font-semibold text-ink-700">
+                  <SearchIcon className="h-4 w-4 text-[#4f46e5]" />
+                  AI-guide
+                  <span className="relative h-8 w-12 rounded-full border border-black/10 bg-white shadow-inner">
+                    <span className="absolute left-1 top-1 h-6 w-6 rounded-full bg-white shadow-[0_2px_8px_rgba(15,25,48,0.2)]" />
+                  </span>
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-6 grid grid-cols-[1fr_1fr_0.52fr] gap-4">
+              <label>
+                <span className="block text-xs font-semibold uppercase tracking-wide text-ink-500">Antal platser</span>
+                <div className="mt-2 flex h-12 items-center justify-between rounded-2xl border border-black/10 px-4 text-sm font-medium text-ink-500">
+                  Platser
+                  <span className="text-ink-700">st</span>
+                </div>
+              </label>
+              <label>
+                <span className="block text-xs font-semibold uppercase tracking-wide text-ink-500">Område</span>
+                <div className="mt-2 flex h-12 items-center justify-between rounded-2xl border border-black/10 px-4 text-sm font-medium text-ink-700">
+                  Alla områden
+                  <ChevronRightIcon className="h-4 w-4 rotate-90 text-ink-400" />
+                </div>
+              </label>
+              <div className="flex items-end">
+                <div className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-black/10 text-sm font-semibold text-ink-700">
+                  <FilterIcon className="h-4 w-4" />
+                  Visa alla filter
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-5 flex items-center justify-between gap-4">
+              <span className="inline-flex h-11 items-center rounded-full border border-black/10 px-4 text-sm font-semibold text-ink-800">
+                26 lediga lokaler
+              </span>
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-semibold text-ink-600">Sortera</span>
+                <span className="inline-flex h-11 items-center gap-8 rounded-2xl border border-black/10 px-4 text-sm font-semibold text-ink-700">
+                  Relevans
+                  <ChevronRightIcon className="h-4 w-4 rotate-90 text-ink-400" />
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-4 grid grid-cols-[0.98fr_1fr] overflow-hidden rounded-3xl border border-black/10 bg-white">
+              <div className="min-w-0">
+                <div className="relative">
+                  <img src="/object-images/object-1.jpeg" alt="" className="aspect-[5/3] w-full object-cover" />
+                  <span className="absolute left-5 top-5 inline-flex items-center gap-2 rounded-full bg-white px-4 py-3 text-sm font-semibold text-ink-500 shadow-sm">
+                    <BuildingIcon className="h-4 w-4 text-ink-400" />
+                    {primaryListing.type}
+                  </span>
+                  <span className="absolute right-5 top-5 flex h-11 w-11 items-center justify-center rounded-full bg-white text-ink-500 shadow-sm">
+                    <StarIcon className="h-5 w-5" />
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-0.5">
+                  <img src="/object-images/object-1.jpeg" alt="" className="aspect-[5/3] w-full object-cover" />
+                  <img src="/object-images/object-1.jpeg" alt="" className="aspect-[5/3] w-full object-cover" />
+                </div>
+              </div>
+
+              <div className="flex min-w-0 flex-col p-5">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-base font-semibold leading-tight text-ink-900">{primaryListing.title}</p>
+                    <p className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-ink-500">
+                      <PinIcon className="h-4 w-4" />
+                      {primaryListing.address}, {primaryListing.district}
+                    </p>
+                  </div>
+                  <span className="inline-flex shrink-0 items-center gap-2 text-sm font-semibold text-ink-700">
+                    <CrownIcon className="h-4 w-4" />
+                    UTVALD
+                  </span>
+                </div>
+
+                <div className="mt-4 flex flex-wrap items-center gap-4 text-base font-semibold text-ink-900">
+                  <span className="inline-flex items-center gap-2">
+                    <RulerIcon className="h-5 w-5" />
+                    {primaryListing.sizeSqm} kvm
+                  </span>
+                  <span className="h-6 w-px bg-black/10" />
+                  <span className="inline-flex items-center gap-2">
+                    <UserIcon className="h-5 w-5" />
+                    {primaryListing.capacity} platser
+                  </span>
+                </div>
+
+                <p className="mt-3 max-w-[32ch] text-sm leading-6 text-ink-600">
+                  Flexibelt kontor i centralt läge, utformat för hybridarbete och med direkt närhet till kommunikationer.
+                </p>
+
+                <div className="mt-5 flex items-baseline gap-2">
+                  <span className="text-2xl font-semibold text-[#0b0a0e]">från {primaryPricePerSqm} kr</span>
+                  <span className="text-base text-ink-500">/ kvm</span>
+                </div>
+                <div className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-ink-600">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                  {primaryListing.availability}
+                </div>
+                <p className="mt-4 text-sm font-medium text-ink-600">Fastighetsägare: Demo Hyresvärd</p>
+
+                <div className="mt-5 flex items-center justify-between gap-4">
+                  <span className="inline-flex items-center gap-2 rounded-full border border-black/10 px-5 py-3 text-sm font-semibold text-ink-800">
+                    <CalendarIcon className="h-4 w-4" />
+                    Boka visning
+                  </span>
+                  <span className="rounded-full border border-black/10 px-5 py-3 text-sm font-semibold text-ink-500">
+                    HYRESVÄRD
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="relative h-full min-h-full self-stretch overflow-hidden rounded-[28px] border border-black/10 bg-[#eef0f2]">
+            <div className="absolute inset-0 bg-[#edf0f2]" />
+            <div className="absolute inset-x-0 top-[44%] h-[22%] -rotate-3 bg-[#d6dce1]/70" />
+            <div className="absolute left-[62%] top-0 h-full w-[18%] rotate-12 bg-[#cfd6dc]/60" />
+            <div className="absolute left-[8%] top-[12%] h-24 w-44 rotate-12 rounded-[40%] bg-[#d7dce1]/70" />
+            <div className="absolute right-[10%] top-[8%] h-28 w-56 -rotate-6 rounded-[40%] bg-[#d7dce1]/65" />
+            <div className="absolute bottom-[10%] left-[24%] h-28 w-72 rotate-3 rounded-[45%] bg-[#d7dce1]/60" />
+            <div className="absolute left-0 top-[30%] h-2 w-full rotate-6 bg-[#aeb7c0]/45" />
+            <div className="absolute left-0 top-[70%] h-2 w-full -rotate-2 bg-[#aeb7c0]/45" />
+            <div className="absolute left-[44%] top-0 h-full w-2 rotate-12 bg-[#8f9aa5]/45" />
+            <div className="absolute left-[68%] top-0 h-full w-2 -rotate-6 bg-[#8f9aa5]/45" />
+            <div className="absolute inset-0 bg-black/12" />
+
+            <span className="absolute left-[38%] top-[21%] text-3xl font-semibold text-black/65">Stockholm</span>
+            <span className="absolute left-[25%] top-[4%] text-base font-semibold uppercase tracking-wide text-black/55">Vasastan</span>
+            <span className="absolute right-[18%] top-[14%] text-base font-semibold uppercase tracking-wide text-black/55">Östermalm</span>
+            <span className="absolute left-[44%] top-[57%] text-base font-semibold text-black/55">Södermalm</span>
+            <span className="absolute bottom-3 left-4 rounded bg-white/80 px-2 py-1 text-sm font-semibold text-ink-600">Google</span>
+
+            {pins.map((pin, index) => (
+              <PinIcon
+                key={index}
+                className="absolute h-7 w-7 -translate-x-1/2 -translate-y-full text-[#ef3f36] drop-shadow-md"
+                style={{ left: `${pin.left}%`, top: `${pin.top}%` }}
+                fill="currentColor"
+                stroke="white"
+                strokeWidth={1.5}
+              />
+            ))}
+
+            <div className="absolute bottom-6 right-6 flex flex-col overflow-hidden rounded-xl bg-white text-ink-700 shadow-lg">
+              <span className="flex h-11 w-11 items-center justify-center border-b border-black/10 text-3xl leading-none">+</span>
+              <span className="flex h-11 w-11 items-center justify-center text-3xl leading-none">-</span>
+            </div>
+            <div className="absolute right-6 top-[58%] flex h-12 w-12 items-center justify-center rounded-full bg-white text-ink-500 shadow-lg">
+              <span className="relative h-5 w-5">
+                <span className="absolute left-0 top-0 h-2 w-2 border-l-2 border-t-2 border-current" />
+                <span className="absolute right-0 top-0 h-2 w-2 border-r-2 border-t-2 border-current" />
+                <span className="absolute bottom-0 left-0 h-2 w-2 border-b-2 border-l-2 border-current" />
+                <span className="absolute bottom-0 right-0 h-2 w-2 border-b-2 border-r-2 border-current" />
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+const lokalprogramMockups = [LokalprogramCreateMockup, LokalprogramProfileMockup, LokalprogramSearchMockup];
 
 const faqItems = [
   {
@@ -322,7 +811,7 @@ function HeroMapWidget({
     if (!window.google?.maps) return null;
     return {
       url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
-        `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="32" viewBox="0 0 24 32"><path fill="#0f1930" stroke="#0b1428" stroke-width="1.4" d="M12 1.75C6.34 1.75 1.75 6.34 1.75 12c0 7.71 8.58 16.56 9.57 17.55a.97.97 0 0 0 1.36 0c.99-.99 9.57-9.84 9.57-17.55 0-5.66-4.59-10.25-10.25-10.25Z"/><circle cx="12" cy="12" r="4.1" fill="#ffffff"/></svg>`
+        `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="32" viewBox="0 0 24 32"><path fill="#0b0a0e" stroke="#0b1428" stroke-width="1.4" d="M12 1.75C6.34 1.75 1.75 6.34 1.75 12c0 7.71 8.58 16.56 9.57 17.55a.97.97 0 0 0 1.36 0c.99-.99 9.57-9.84 9.57-17.55 0-5.66-4.59-10.25-10.25-10.25Z"/><circle cx="12" cy="12" r="4.1" fill="#ffffff"/></svg>`
       )}`,
       scaledSize: new window.google.maps.Size(30, 42),
       anchor: new window.google.maps.Point(15, 42)
@@ -488,8 +977,8 @@ function HeroMapWidget({
         <div
           className={
             compact
-              ? "flex h-full min-h-0 flex-col overflow-hidden rounded-[30px] border border-black/10 bg-[#fffffe] p-0"
-              : "flex h-full min-h-0 flex-col overflow-hidden rounded-[28px] border border-black/10 bg-[#fffffe] p-4"
+              ? "flex h-full min-h-0 flex-col overflow-hidden rounded-[30px] border border-black/10 bg-[#ffffff] p-0"
+              : "flex h-full min-h-0 flex-col overflow-hidden rounded-[28px] border border-white/45 bg-[#ffffff]/22 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_8px_24px_rgba(15,25,48,0.12)] backdrop-blur-md"
           }
         >
           <div className={mapShellClassName}>
@@ -497,22 +986,22 @@ function HeroMapWidget({
             <div ref={mapContainerRef} className="h-full w-full" />
 
             {mapStatus === "loading" ? (
-              <div className="absolute inset-0 grid place-items-center bg-[#fffffe]/55 text-xs font-semibold text-ink-700">Laddar karta...</div>
+              <div className="absolute inset-0 grid place-items-center bg-[#ffffff]/55 text-xs font-semibold text-ink-700">Laddar karta...</div>
             ) : null}
 
             {mapStatus === "missing_key" ? (
-              <div className="absolute inset-0 grid place-items-center bg-[#fffffe]/70 p-4 text-center text-xs font-semibold text-rose-700">
+              <div className="absolute inset-0 grid place-items-center bg-[#ffffff]/70 p-4 text-center text-xs font-semibold text-rose-700">
                 Google Maps API-nyckel saknas. Lägg till `VITE_GOOGLE_MAPS_API_KEY` i `.env` och starta om `npm run dev`.
               </div>
             ) : null}
 
             {mapStatus === "error" ? (
-              <div className="absolute inset-0 grid place-items-center bg-[#fffffe]/75 p-4 text-center text-xs font-semibold text-rose-700">
+              <div className="absolute inset-0 grid place-items-center bg-[#ffffff]/75 p-4 text-center text-xs font-semibold text-rose-700">
                 <div className="space-y-2">
                   <p>{errorMessage || "Google Maps kunde inte laddas."}</p>
                   <button
                     type="button"
-                    className="mx-auto rounded-lg border border-rose-300 bg-[#fffffe] px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-50"
+                    className="mx-auto rounded-lg border border-rose-300 bg-[#ffffff] px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-50"
                     onClick={() => setRetryToken((value) => value + 1)}
                   >
                     Försök igen
@@ -550,7 +1039,7 @@ function HeroMapWidget({
                   <button
                     type="button"
                     aria-label="Stäng objekt"
-                    className="close-circle-button inline-flex items-center justify-center rounded-full border border-black/10 bg-[#fffffe] text-lg font-semibold leading-none text-ink-700 hover:bg-[#eef3fa]"
+                    className="close-circle-button inline-flex items-center justify-center rounded-full border border-black/10 bg-[#ffffff] text-lg font-semibold leading-none text-ink-700 hover:bg-[#eef3fa]"
                     onClick={() => setSelectedListing(null)}
                   >
                     ×
@@ -558,7 +1047,7 @@ function HeroMapWidget({
                   <button
                     type="button"
                     aria-label="Föregående objekt"
-                    className="inline-flex h-9 w-9 min-h-9 min-w-9 aspect-square items-center justify-center rounded-full border border-black/10 bg-[#fffffe] p-0 text-base font-semibold leading-none text-ink-700 hover:bg-[#eef3fa]"
+                    className="inline-flex h-9 w-9 min-h-9 min-w-9 aspect-square items-center justify-center rounded-full border border-black/10 bg-[#ffffff] p-0 text-base font-semibold leading-none text-ink-700 hover:bg-[#eef3fa]"
                     onClick={() => handleCycleSelectedListing(-1)}
                   >
                     ‹
@@ -566,7 +1055,7 @@ function HeroMapWidget({
                   <button
                     type="button"
                     aria-label="Nästa objekt"
-                    className="inline-flex h-9 w-9 min-h-9 min-w-9 aspect-square items-center justify-center rounded-full border border-black/10 bg-[#fffffe] p-0 text-base font-semibold leading-none text-ink-700 hover:bg-[#eef3fa]"
+                    className="inline-flex h-9 w-9 min-h-9 min-w-9 aspect-square items-center justify-center rounded-full border border-black/10 bg-[#ffffff] p-0 text-base font-semibold leading-none text-ink-700 hover:bg-[#eef3fa]"
                     onClick={() => handleCycleSelectedListing(1)}
                   >
                     ›
@@ -597,8 +1086,8 @@ const parkingTypeOptions = ["Alla", "Ingen parkering", "Garage", "Gatuparkering"
 const layoutTypeOptions = ["Alla", "Öppet landskap", "Cellkontor", "Hybrid", "Showroom"];
 const advertiserOptions = ["Alla", "AMF Fastigheter", "Vasakronan", "Castellum", "Fabege", "Skandia Fastigheter"];
 
-const heroInputClass = "w-full rounded-2xl border border-black/10 bg-transparent px-3 py-3 text-sm text-ink-900 placeholder:text-ink-500 focus:border-[#0f1930] focus:outline-none";
-const heroSelectClass = "select-chevron w-full rounded-2xl border border-black/10 bg-transparent px-3 py-3 pr-10 text-sm text-ink-900 focus:border-[#0f1930] focus:outline-none";
+const heroInputClass = "w-full rounded-2xl border border-black/10 bg-transparent px-3 py-3 text-sm text-ink-900 placeholder:text-ink-500 focus:border-[#0b0a0e] focus:outline-none";
+const heroSelectClass = "select-chevron w-full rounded-2xl border border-black/10 bg-transparent px-3 py-3 pr-10 text-sm text-ink-900 focus:border-[#0b0a0e] focus:outline-none";
 
 function HeroPillToggle({ checked, onToggle, ariaLabel }) {
   return (
@@ -608,11 +1097,11 @@ function HeroPillToggle({ checked, onToggle, ariaLabel }) {
       aria-checked={checked}
       aria-label={ariaLabel}
       className={`relative inline-flex h-6 w-10 min-h-0 items-center rounded-full p-0.5 transition-colors ${
-        checked ? "justify-end bg-[#0f1930]" : "justify-start bg-[#a8adb3]"
+        checked ? "justify-end bg-[#0b0a0e]" : "justify-start bg-[#a8adb3]"
       }`}
       onClick={onToggle}
     >
-      <span aria-hidden="true" className="h-5 w-5 rounded-full bg-[#fffffe] shadow-[0_1px_2px_rgba(15,25,48,0.35)]" />
+      <span aria-hidden="true" className="h-5 w-5 rounded-full bg-[#ffffff] shadow-[0_1px_2px_rgba(15,25,48,0.35)]" />
     </button>
   );
 }
@@ -653,24 +1142,290 @@ function applyAmenityAndFurnishedFilters(listings, amenityQuery, furnishedFilter
 function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay, onLogout, onSwitchRole, listings = [] }) {
   const headerRef = useRef(null);
   const heroSectionRef = useRef(null);
-  const processLeftRef = useRef(null);
-  const processCardRef = useRef(null);
-  const faqQuestionsRef = useRef(null);
-  const faqCardRef = useRef(null);
   const [showScrollToTopButton, setShowScrollToTopButton] = useState(false);
   const [bookingListing, setBookingListing] = useState(null);
   const [isNavScrolled, setIsNavScrolled] = useState(false);
+  const [openFaqIndex, setOpenFaqIndex] = useState(null);
   const [heroFilters, setHeroFilters] = useState({
     district: "Alla",
     teamSize: ""
   });
+  const [heroShowcaseIndex, setHeroShowcaseIndex] = useState(0);
+  const [heroSpaceTypeIndex, setHeroSpaceTypeIndex] = useState(0);
+  const [heroTypedSpaceType, setHeroTypedSpaceType] = useState(heroSpaceTypes[0]);
+  const [activeOwnerTestimonialIndex, setActiveOwnerTestimonialIndex] = useState(0);
+  const [demoRequestOpen, setDemoRequestOpen] = useState(false);
+  const [demoRequestSubmitted, setDemoRequestSubmitted] = useState(false);
+  const [demoRequestForm, setDemoRequestForm] = useState({
+    name: "",
+    company: "",
+    email: "",
+    phone: "",
+    message: ""
+  });
+  const heroShowcaseListings = useMemo(() => baseListingDataset.slice(0, 4), []);
+  const currentHeroListing = heroShowcaseListings[heroShowcaseIndex] ?? heroShowcaseListings[0] ?? baseListingDataset[0];
+  const [activeProgramIndex, setActiveProgramIndex] = useState(0);
+  const programStepRefs = useRef([]);
+  const listingCarouselRef = useRef(null);
+  const listingCarouselDragRef = useRef({
+    isDragging: false,
+    pointerId: null,
+    startX: 0,
+    startScrollLeft: 0,
+    lastX: 0,
+    lastTimestamp: 0,
+    targetScrollLeft: 0,
+    velocity: 0,
+    moved: false,
+    tapListingId: null,
+    startedOnNativeButton: false
+  });
+  const listingCarouselMotionRef = useRef({
+    scrollLeft: 0,
+    velocity: 0
+  });
+  const listingCarouselSuppressClickRef = useRef(false);
+
+  useEffect(() => {
+    if (heroShowcaseListings.length < 2) return undefined;
+    const interval = setInterval(() => {
+      setHeroShowcaseIndex((index) => (index + 1) % heroShowcaseListings.length);
+    }, 3200);
+    return () => clearInterval(interval);
+  }, [heroShowcaseListings.length]);
+
+  useEffect(() => {
+    if (heroOwnerTestimonials.length < 2) return undefined;
+    const interval = setInterval(() => {
+      setActiveOwnerTestimonialIndex((index) => (index + 1) % heroOwnerTestimonials.length);
+    }, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const currentWord = `${heroSpaceTypes[heroSpaceTypeIndex] || heroSpaceTypes[0]}.`;
+    const nextIndex = (heroSpaceTypeIndex + 1) % heroSpaceTypes.length;
+    const timeouts = [];
+    setHeroTypedSpaceType("");
+    for (let index = 0; index < currentWord.length; index += 1) {
+      timeouts.push(
+        window.setTimeout(() => {
+          setHeroTypedSpaceType(currentWord.slice(0, index + 1));
+        }, 90 * (index + 1))
+      );
+    }
+
+    for (let index = currentWord.length - 1; index >= 0; index -= 1) {
+      timeouts.push(
+        window.setTimeout(() => {
+          setHeroTypedSpaceType(currentWord.slice(0, index));
+        }, 4000 + (currentWord.length - index) * 55)
+      );
+    }
+
+    timeouts.push(
+      window.setTimeout(() => {
+        setHeroSpaceTypeIndex(nextIndex);
+      }, 4000 + currentWord.length * 55 + 140)
+    );
+
+    return () => {
+      timeouts.forEach((timeoutId) => window.clearTimeout(timeoutId));
+    };
+  }, [heroSpaceTypeIndex]);
 
   const openAuth = (mode, preferredRole = "renter") => {
     onOpenAuthOverlay?.(mode, preferredRole);
   };
 
+  function updateDemoRequestField(field, value) {
+    setDemoRequestForm((prev) => ({
+      ...prev,
+      [field]: value
+    }));
+  }
+
+  function closeDemoRequestOverlay() {
+    setDemoRequestOpen(false);
+    setDemoRequestSubmitted(false);
+  }
+
+  function submitDemoRequest(event) {
+    event.preventDefault();
+    setDemoRequestSubmitted(true);
+  }
+
+  useEffect(() => {
+    function updateActiveProgramStep() {
+      const referenceLine = window.innerHeight * 0.35;
+      let nextIndex = 0;
+      programStepRefs.current.forEach((el, index) => {
+        if (el && el.getBoundingClientRect().top <= referenceLine) {
+          nextIndex = index;
+        }
+      });
+      setActiveProgramIndex(nextIndex);
+    }
+
+    updateActiveProgramStep();
+    window.addEventListener("scroll", updateActiveProgramStep, { passive: true });
+    window.addEventListener("resize", updateActiveProgramStep);
+    return () => {
+      window.removeEventListener("scroll", updateActiveProgramStep);
+      window.removeEventListener("resize", updateActiveProgramStep);
+    };
+  }, []);
+
+  function scrollToProgramStep(index) {
+    programStepRefs.current[index]?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
   function handlePopularBookViewing(listing) {
     setBookingListing(listing);
+  }
+
+  useEffect(() => {
+    const carousel = listingCarouselRef.current;
+    if (!carousel) return undefined;
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) return undefined;
+
+    let frameId;
+    let lastTimestamp = 0;
+    const autoVelocity = 10;
+    const dragEase = 0.42;
+    const friction = 6.2;
+
+    function normalizeScrollPosition() {
+      const loopWidth = carousel.scrollWidth / 2;
+      if (!loopWidth) return;
+      while (listingCarouselMotionRef.current.scrollLeft >= loopWidth) {
+        listingCarouselMotionRef.current.scrollLeft -= loopWidth;
+        listingCarouselDragRef.current.targetScrollLeft -= loopWidth;
+      }
+      while (listingCarouselMotionRef.current.scrollLeft < 0) {
+        listingCarouselMotionRef.current.scrollLeft += loopWidth;
+        listingCarouselDragRef.current.targetScrollLeft += loopWidth;
+      }
+      carousel.scrollLeft = listingCarouselMotionRef.current.scrollLeft;
+    }
+
+    listingCarouselMotionRef.current.scrollLeft = carousel.scrollLeft;
+
+    function tick(timestamp) {
+      if (!lastTimestamp) lastTimestamp = timestamp;
+      const deltaSeconds = Math.min((timestamp - lastTimestamp) / 1000, 0.05);
+      lastTimestamp = timestamp;
+
+      const dragState = listingCarouselDragRef.current;
+      const motionState = listingCarouselMotionRef.current;
+
+      if (dragState.isDragging) {
+        const distance = dragState.targetScrollLeft - motionState.scrollLeft;
+        motionState.scrollLeft += distance * dragEase;
+        motionState.velocity = distance * 9;
+      } else {
+        motionState.velocity += (autoVelocity - motionState.velocity) * Math.min(deltaSeconds * friction, 1);
+        motionState.scrollLeft += motionState.velocity * deltaSeconds;
+        normalizeScrollPosition();
+      }
+
+      if (dragState.isDragging) {
+        normalizeScrollPosition();
+      }
+
+      frameId = requestAnimationFrame(tick);
+    }
+
+    frameId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frameId);
+  }, []);
+
+  function handleListingCarouselPointerDown(event) {
+    if (event.button !== undefined && event.button !== 0) return;
+    const carousel = listingCarouselRef.current;
+    if (!carousel) return;
+    listingCarouselSuppressClickRef.current = false;
+
+    listingCarouselDragRef.current = {
+      isDragging: true,
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startScrollLeft: carousel.scrollLeft,
+      lastX: event.clientX,
+      lastTimestamp: event.timeStamp,
+      targetScrollLeft: carousel.scrollLeft,
+      velocity: listingCarouselMotionRef.current.velocity,
+      moved: false,
+      tapListingId: event.target?.closest?.("[data-carousel-listing-id]")?.dataset?.carouselListingId || null,
+      startedOnNativeButton: Boolean(event.target?.closest?.("button"))
+    };
+    listingCarouselMotionRef.current.scrollLeft = carousel.scrollLeft;
+    carousel.setPointerCapture?.(event.pointerId);
+  }
+
+  function handleListingCarouselPointerMove(event) {
+    const carousel = listingCarouselRef.current;
+    const dragState = listingCarouselDragRef.current;
+    if (!carousel || !dragState.isDragging || dragState.pointerId !== event.pointerId) return;
+    event.preventDefault();
+
+    const deltaX = event.clientX - dragState.startX;
+    if (Math.abs(deltaX) > 4) {
+      dragState.moved = true;
+      listingCarouselSuppressClickRef.current = true;
+    }
+    const nextTarget = dragState.startScrollLeft - deltaX;
+    const deltaTime = Math.max((event.timeStamp - dragState.lastTimestamp) / 1000, 0.016);
+    dragState.velocity = ((dragState.lastX - event.clientX) / deltaTime) * 0.65;
+    dragState.targetScrollLeft = nextTarget;
+    dragState.lastX = event.clientX;
+    dragState.lastTimestamp = event.timeStamp;
+
+    const loopWidth = carousel.scrollWidth / 2;
+    if (loopWidth && dragState.targetScrollLeft >= loopWidth) {
+      listingCarouselMotionRef.current.scrollLeft -= loopWidth;
+      dragState.startScrollLeft -= loopWidth;
+      dragState.targetScrollLeft -= loopWidth;
+    } else if (loopWidth && dragState.targetScrollLeft < 0) {
+      listingCarouselMotionRef.current.scrollLeft += loopWidth;
+      dragState.startScrollLeft += loopWidth;
+      dragState.targetScrollLeft += loopWidth;
+    }
+  }
+
+  function handleListingCarouselPointerUp(event) {
+    const carousel = listingCarouselRef.current;
+    const dragState = listingCarouselDragRef.current;
+    if (carousel && dragState.pointerId === event.pointerId) {
+      carousel.releasePointerCapture?.(event.pointerId);
+    }
+    if (!dragState.moved && dragState.tapListingId && !dragState.startedOnNativeButton) {
+      navigateTo(`/app/listings/${encodeURIComponent(dragState.tapListingId)}`);
+    }
+    listingCarouselMotionRef.current.velocity = dragState.velocity || listingCarouselMotionRef.current.velocity;
+    listingCarouselDragRef.current = {
+      isDragging: false,
+      pointerId: null,
+      startX: 0,
+      startScrollLeft: 0,
+      lastX: 0,
+      lastTimestamp: 0,
+      targetScrollLeft: listingCarouselMotionRef.current.scrollLeft,
+      velocity: 0,
+      moved: false,
+      tapListingId: null,
+      startedOnNativeButton: false
+    };
+  }
+
+  function handleListingCarouselClickCapture(event) {
+    if (!listingCarouselSuppressClickRef.current) return;
+    event.preventDefault();
+    event.stopPropagation();
+    window.setTimeout(() => {
+      listingCarouselSuppressClickRef.current = false;
+    }, 0);
   }
 
   const favoriteIds = useMemo(
@@ -678,46 +1433,6 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
     [favorites]
   );
   const totalAvailableListings = Array.isArray(listings) && listings.length > 0 ? listings.length : baseListingDataset.length;
-
-  useEffect(() => {
-    if (typeof window === "undefined") return undefined;
-
-    const syncSectionCardHeights = () => {
-      const isDesktop = window.innerWidth >= 1024;
-
-      if (processCardRef.current) {
-        if (isDesktop && processLeftRef.current) {
-          processCardRef.current.style.height = `${processLeftRef.current.offsetHeight}px`;
-        } else {
-          processCardRef.current.style.height = "";
-        }
-      }
-
-      if (faqCardRef.current) {
-        if (isDesktop && faqQuestionsRef.current) {
-          faqCardRef.current.style.height = `${faqQuestionsRef.current.offsetHeight}px`;
-        } else {
-          faqCardRef.current.style.height = "";
-        }
-      }
-    };
-
-    syncSectionCardHeights();
-
-    const resizeObserver = new ResizeObserver(() => {
-      syncSectionCardHeights();
-    });
-
-    if (processLeftRef.current) resizeObserver.observe(processLeftRef.current);
-    if (faqQuestionsRef.current) resizeObserver.observe(faqQuestionsRef.current);
-
-    window.addEventListener("resize", syncSectionCardHeights);
-
-    return () => {
-      resizeObserver.disconnect();
-      window.removeEventListener("resize", syncSectionCardHeights);
-    };
-  }, []);
 
   function scrollToHashSection(hash, smooth = true) {
     if (!hash?.startsWith("#")) return false;
@@ -868,7 +1583,7 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
   }
 
   return (
-    <main className="min-h-screen bg-[#fffffe] text-black">
+    <main className="min-h-screen bg-[#ffffff] text-black">
       <div ref={headerRef} className="sticky top-0 z-50">
         <MarketingHeader
           pathname="/"
@@ -885,371 +1600,529 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
         />
       </div>
 
-      <section ref={heroSectionRef} className="relative overflow-visible px-4 pt-0 pb-4 sm:px-6 sm:pb-6 xl:pb-0">
-        <div className="pointer-events-none absolute inset-x-4 top-0 bottom-0 z-0 overflow-hidden rounded-[34px] sm:inset-x-6">
-          <img
-            src={heroImage}
-            alt="Stockholm kontorsmarknad"
-            className="h-full w-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-white/62 via-white/34 to-white/18" />
-        </div>
-
-        <div className="relative z-20 w-full px-2 pt-4 sm:px-3 sm:pt-4 xl:px-0 xl:pt-0">
-          <div className="relative min-h-[620px] xl:h-[620px]">
-            <div className="flex h-full flex-col items-center justify-center text-center xl:min-h-[560px] xl:w-[58%] xl:max-w-none xl:-translate-y-8">
-              <p className="inline-flex w-fit items-center gap-1.5 rounded-full border border-white/45 bg-[#fffffe]/22 px-3 py-1.5 text-xs font-semibold text-ink-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_8px_24px_rgba(15,25,48,0.12)] backdrop-blur-md">
-                <BuildingIcon className="h-3.5 w-3.5" />
-                {totalAvailableListings} lediga lokaler
-              </p>
-              <h2 className="mt-4 whitespace-nowrap text-[2.05rem] font-semibold leading-tight text-ink-900 sm:text-[2.45rem]">
-                Hitta ert nästa kontor i Stockholm
-              </h2>
-              <p className="mt-3 max-w-[48ch] text-sm text-ink-700 sm:text-base">
-                Vi matchar ert behov med rätt lokaler från verifierade fastighetsägare i Stockholm
+      <section ref={heroSectionRef} className="relative px-8 pb-2 pt-6 sm:px-12 sm:pb-4 sm:pt-10 lg:px-16" data-no-reveal>
+        <div className="mx-auto w-full max-w-[86rem]">
+          <div className="grid items-stretch gap-6 lg:grid-cols-[minmax(0,1.08fr)_minmax(360px,0.72fr)] lg:gap-10">
+            <div className="flex flex-col justify-center py-2 lg:py-4">
+              <h1 className="hero-load-title font-display-serif max-w-[11ch] text-[3.4rem] font-semibold leading-[0.9] text-[#0b0a0e] sm:text-[5.2rem] lg:text-[6.1rem]">
+                Hitta rätt{" "}
+                <span className="inline-block min-w-[4.8ch]">
+                  {heroTypedSpaceType}
+                </span>
+              </h1>
+              <p className="hero-load-copy mt-4 max-w-xl text-base font-medium leading-7 text-ink-600">
+                Matcha teamstorlek, område och budget mot aktuella kontor, studios och coworkingytor i Stockholm.
               </p>
 
-              <form className="mt-7 w-full max-w-[25rem] sm:max-w-[26rem] md:max-w-[28rem]" onSubmit={submitHeroSearch}>
-                <div className="grid w-full grid-cols-[140px_1fr_44px] items-stretch rounded-full border border-black/10 bg-[#fffffe] p-1 sm:grid-cols-[152px_1fr_44px]">
-                  <label className="flex min-w-0 items-center border-r border-black/10 px-3">
-                    <input
-                      type="number"
-                      min="1"
-                      value={heroFilters.teamSize}
-                      onChange={(event) => setHeroFilters((prev) => ({ ...prev, teamSize: event.target.value }))}
-                      className="min-w-0 flex-1 bg-transparent text-sm text-ink-900 placeholder:text-ink-500 focus:outline-none"
-                      placeholder="Antal platser"
-                    />
-                    <span className="ml-2 text-sm font-medium text-ink-700">st</span>
-                  </label>
+              <form className="hero-load-search mt-6 w-full" onSubmit={submitHeroSearch}>
+                <div className="grid w-full gap-3 sm:inline-grid sm:w-auto sm:grid-cols-[170px_220px_56px] sm:gap-0 sm:overflow-hidden sm:rounded-full sm:border sm:border-black/10 sm:bg-white sm:p-1 sm:shadow-[0_18px_50px_-30px_rgba(11,10,14,0.35)]">
+                  <div className="grid grid-cols-2 overflow-hidden rounded-full border border-black/10 bg-white shadow-[0_18px_50px_-30px_rgba(11,10,14,0.35)] sm:contents">
+                    <label className="flex min-w-0 items-center border-r border-black/10 px-4 py-3 sm:border-b-0 sm:py-0">
+                      <input
+                        type="number"
+                        min="1"
+                        value={heroFilters.teamSize}
+                        onChange={(event) => setHeroFilters((prev) => ({ ...prev, teamSize: event.target.value }))}
+                        className="min-w-0 flex-1 bg-transparent text-sm text-ink-900 placeholder:text-ink-500 focus:outline-none"
+                        placeholder="Antal platser"
+                      />
+                      <span className="ml-2 text-sm font-medium text-ink-700">st</span>
+                    </label>
 
-                  <label className="min-w-0 px-3">
-                    <select
-                      value={heroFilters.district}
-                      onChange={(event) => setHeroFilters((prev) => ({ ...prev, district: event.target.value }))}
-                      className="select-chevron h-full w-full min-w-0 bg-transparent text-[13px] text-ink-900 focus:outline-none sm:text-sm"
-                      style={{ paddingRight: "28px", backgroundPosition: "right 0.5rem center" }}
-                    >
-                      <option value="Alla" className="text-black">Alla områden i Stockholm</option>
-                      {districtOptions.map((district) => (
-                        <option key={district} value={district} className="text-black">
-                          {district}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
+                    <label className="min-w-0 px-4 py-3 sm:border-b-0 sm:py-0">
+                      <select
+                        value={heroFilters.district}
+                        onChange={(event) => setHeroFilters((prev) => ({ ...prev, district: event.target.value }))}
+                        className="select-chevron h-full w-full min-w-0 bg-transparent text-sm text-ink-900 focus:outline-none"
+                        style={{ paddingRight: "28px", backgroundPosition: "right 0.5rem center" }}
+                      >
+                        <option value="Alla" className="text-black">Alla områden</option>
+                        {districtOptions.map((district) => (
+                          <option key={district} value={district} className="text-black">
+                            {district}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
 
                   <button
                     type="submit"
                     aria-label="Sök lokaler"
-                    className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#0f1930] bg-[#0f1930] text-white hover:bg-[#16233f]"
+                    className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#0b0a0e] text-sm font-semibold text-white sm:h-[48px] sm:w-[48px] sm:place-self-center"
                   >
                     <SearchIcon className="h-5 w-5" />
+                    <span className="sm:hidden">Sök lokaler</span>
                   </button>
                 </div>
               </form>
 
+              <div className="hero-load-actions mt-5 flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={() => setDemoRequestOpen(true)}
+                  className="rounded-full bg-[#0b0a0e] px-7 py-4 text-sm font-semibold text-white hover:bg-[#191919]"
+                >
+                  Boka en demo
+                </button>
+                <button
+                  type="button"
+                  onClick={() => scrollToHashSection("#lokaler-just-nu", true)}
+                  className="rounded-full border border-black/10 bg-white px-7 py-4 text-sm font-semibold text-ink-900 hover:border-black/25"
+                >
+                  Utforska lokaler
+                </button>
+              </div>
             </div>
-            <div className="mt-8 h-[340px] w-full px-2 sm:h-[380px] sm:px-3 lg:h-[430px] lg:px-4 xl:absolute xl:top-6 xl:right-6 xl:bottom-6 xl:mt-0 xl:flex xl:h-auto xl:w-[42%] xl:px-0 xl:items-stretch">
-              <HeroMapWidget
-                className="h-full w-full"
-                large
-                shortlistedIds={favoriteIds}
-                onToggleShortlist={handleTogglePopularShortlist}
-                requireAuthForShortlist={() => openAuth("login", "renter")}
+
+            <aside className="hero-load-panel relative min-h-[310px] overflow-hidden rounded-3xl border border-black/10 bg-[#0b0a0e] p-5 text-white shadow-[0_24px_70px_-45px_rgba(11,10,14,0.8)] sm:min-h-[340px] sm:p-6">
+              <img
+                src={heroOwnerPanelImage}
+                alt=""
+                className="absolute inset-0 h-full w-full object-cover"
               />
+              <div className="absolute inset-0 bg-black/48" />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/18 via-black/28 to-black/88" />
+              <div className="absolute inset-0 bg-gradient-to-r from-black/72 via-black/34 to-transparent" />
+              <div className="absolute inset-x-0 bottom-0 h-[68%] bg-gradient-to-t from-black via-black/80 to-transparent" />
+
+              <div className="relative flex h-full min-h-[270px] flex-col justify-between sm:min-h-[292px]">
+                <p className="text-xs font-semibold uppercase tracking-wide text-white/70">Hyresvärdar om LOA</p>
+
+                <div className="relative mt-8 min-h-[180px]">
+                  {heroOwnerTestimonials.map((testimonial) => (
+                    <figure
+                      key={testimonial.company}
+                      className={`absolute inset-x-0 bottom-0 transition-all duration-1000 ease-out ${
+                        testimonial === heroOwnerTestimonials[activeOwnerTestimonialIndex]
+                          ? "translate-y-0 opacity-100"
+                          : "translate-y-2 opacity-0"
+                      }`}
+                      aria-hidden={testimonial !== heroOwnerTestimonials[activeOwnerTestimonialIndex]}
+                    >
+                      <blockquote className="font-display-serif text-[1.38rem] font-semibold leading-[1.08] text-white [text-shadow:0_2px_18px_rgba(0,0,0,0.95)] sm:text-[1.75rem]">
+                        "{testimonial.quote}"
+                      </blockquote>
+                      <figcaption className="mt-4 text-xs font-semibold uppercase tracking-wide text-white/70 [text-shadow:0_2px_12px_rgba(0,0,0,0.9)]">
+                        - {testimonial.company}
+                      </figcaption>
+                    </figure>
+                  ))}
+                </div>
+              </div>
+            </aside>
+          </div>
+
+          <div id="lokaler-just-nu" className="hero-load-featured relative mt-6 overflow-hidden py-2">
+            <div className="hero-load-featured-header mb-4 flex items-center justify-between gap-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Utvalda objekt</p>
+              <button
+                type="button"
+                className="inline-flex min-h-[40px] items-center gap-1.5 text-xs font-semibold text-ink-700 hover:text-black"
+                onClick={() => navigateTo("/app/rent?view=available")}
+              >
+                Se alla lediga objekt
+                <ArrowRightIcon className="h-4 w-4" />
+              </button>
             </div>
-          </div>
 
-        </div>
-      </section>
-
-      <section id="lokaler-just-nu" className="relative z-10 mx-auto w-full max-w-[86rem] px-4 py-16 sm:px-6">
-        <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Lokaler just nu</p>
-            <h2 className="mt-2 text-3xl font-semibold">Populäraste lediga lokaler</h2>
-          </div>
-          <button
-            type="button"
-            className="inline-flex min-h-[40px] items-center gap-1.5 text-xs font-semibold text-ink-700 hover:text-black"
-            onClick={() => navigateTo("/app/rent?view=available")}
-          >
-            Se alla lediga lokaler
-            <ArrowRightIcon className="h-4 w-4" />
-          </button>
-        </div>
-
-        <div className="space-y-6">
-          {popularGroups.map((group) => (
-            <article key={group.city}>
-              <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-                <h3 className="text-xl font-semibold text-[#0f1930]">{group.city}</h3>
-                <p className="rounded-full border border-black/10 bg-[#fffffe] px-3 py-1 text-xs font-semibold text-ink-600">
-                  {group.count} lediga lokaler
-                </p>
-              </div>
-
-              <div className="grid items-stretch gap-4 lg:grid-cols-3">
-                {(() => {
-                  const popularGridListings = group.listings.slice(1, 6);
-                  const canonicalPopularMapListings = popularGridListings
-                    .map((listing, listingIndex) => resolvePopularListing(listing, listingIndex + 1))
-                    .filter(Boolean);
-
-                  return (
-                    <HeroMapWidget
-                      compact
-                      listings={canonicalPopularMapListings}
-                      shortlistedIds={favoriteIds}
-                      onToggleShortlist={handleTogglePopularShortlist}
-                      requireAuthForShortlist={() => openAuth("login", "renter")}
-                    />
-                  );
-                })()}
-                {group.listings.slice(1, 6).map((listing, listingIndex) => {
-                  const favoriteListingId = resolvePopularListingId(listing, listingIndex + 1);
-                  const canonicalListing = resolvePopularListing(listing, listingIndex + 1);
-                  const cardListing = canonicalListing
-                    ? {
-                        ...canonicalListing,
-                        image: listing.image || canonicalListing.image
-                      }
-                    : listing;
-                  return (
-                    <ListingVisualCard
-                      key={listing.id}
-                      listing={cardListing}
-                      shortlisted={favoriteIds.has(String(favoriteListingId))}
-                      onOpenListing={openPopularListingDetail}
-                      onBookViewing={handlePopularBookViewing}
-                      onToggleShortlist={() => handleTogglePopularShortlist(favoriteListingId)}
-                    />
-                  );
-                })}
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section id="sa-fungerar-det" className="relative overflow-hidden border-y border-black/10 bg-[#fffffe]">
-        <div className="mx-auto w-full max-w-[86rem] px-4 py-16 sm:px-6">
-          <div className="mb-10">
-            <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Så fungerar det</p>
-            <h2 className="mt-2 text-3xl font-semibold">Tre steg till en snabbare uthyrningsprocess</h2>
-          </div>
-
-          <div className="grid items-stretch gap-6 lg:grid-cols-[1fr_0.95fr]">
-            <div ref={processLeftRef} className="self-start space-y-4">
-              {processSteps.map((step, index) => {
-                const Icon = step.icon;
-                return (
-                  <article key={step.title} className="rounded-2xl border border-black/10 bg-[#fffffe] p-5">
-                    <div className="flex items-start gap-4">
-                      <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#0f1930] text-white">
-                        <Icon className="h-5 w-5" />
-                      </span>
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Steg {index + 1}</p>
-                        <p className="mt-1 text-xl font-semibold">{step.title}</p>
-                        <p className="mt-1 text-sm text-ink-600">{step.body}</p>
+            <div className="-mx-4 overflow-hidden sm:-mx-6 lg:-mx-8" data-no-reveal>
+              <div
+                ref={listingCarouselRef}
+                className="listing-carousel-scroll min-h-[445px] cursor-grab select-none overflow-x-auto"
+                onPointerDown={handleListingCarouselPointerDown}
+                onPointerMove={handleListingCarouselPointerMove}
+                onPointerUp={handleListingCarouselPointerUp}
+                onPointerCancel={handleListingCarouselPointerUp}
+                onLostPointerCapture={handleListingCarouselPointerUp}
+                onClickCapture={handleListingCarouselClickCapture}
+                onDragStart={(event) => event.preventDefault()}
+              >
+                <div className="flex w-max gap-6 px-4 py-2 sm:px-6 lg:px-8">
+                  {[...popularGroups[0].listings.slice(1, 6), ...popularGroups[0].listings.slice(1, 6)].map((listing, index) => {
+                    const sourceIndex = index % 5;
+                    const favoriteListingId = resolvePopularListingId(listing, sourceIndex + 1);
+                    const canonicalListing = resolvePopularListing(listing, sourceIndex + 1);
+                    const cardListing = canonicalListing
+                      ? {
+                          ...canonicalListing,
+                          image: listing.image || canonicalListing.image
+                        }
+                      : listing;
+                    return (
+                      <div
+                        key={`${listing.id}-${index}`}
+                        data-carousel-listing-id={cardListing.id}
+                        className="hero-featured-card w-[420px] shrink-0 lg:w-[460px]"
+                        style={{ "--hero-card-delay": `${520 + sourceIndex * 85}ms` }}
+                      >
+                        <ListingVisualCard
+                          listing={cardListing}
+                          shortlisted={favoriteIds.has(String(favoriteListingId))}
+                          onOpenListing={(selected) => navigateTo(`/app/listings/${encodeURIComponent(selected.id)}`)}
+                          onBookViewing={handlePopularBookViewing}
+                          onToggleShortlist={() => handleTogglePopularShortlist(favoriteListingId)}
+                        />
                       </div>
+                    );
+                  })}
+                </div>
+              </div>
                     </div>
-                  </article>
-                );
-              })}
-
-              <div className="flex flex-wrap gap-2 pt-1">
-                <button
-                  type="button"
-                  className="rounded-xl border border-black/20 bg-[#fffffe] px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-[#fffffe]"
-                  onClick={() => navigateTo("/app/rent?view=available")}
-                >
-                  Jag vill hyra lokal
-                </button>
-                <button
-                  type="button"
-                  className="rounded-xl border border-[#0f1930] bg-[#0f1930] px-3 py-2 text-xs font-semibold text-white hover:bg-[#16233f]"
-                  onClick={() => navigateTo("/app/publish")}
-                >
-                  Jag vill publicera lokal
-                </button>
-              </div>
-            </div>
-
-            <article ref={processCardRef} className="self-start flex h-full flex-col overflow-hidden rounded-3xl border border-black/10 bg-[#fffffe]">
-              <img src={processImage} alt="Processöversikt" className="min-h-0 w-full flex-1 object-cover" />
-              <div className="space-y-2 p-5">
-                <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Resultat</p>
-                <p className="text-2xl font-semibold">Kortare väg från intresse till affär</p>
-                <p className="text-sm text-ink-600">Samlad process ger snabbare beslut och bättre uppföljning för båda parter.</p>
-              </div>
-            </article>
           </div>
         </div>
       </section>
 
-      <section id="lokalprogram" className="mx-auto w-full max-w-[86rem] scroll-mt-28 px-4 py-16 sm:px-6">
-        <div className="mb-10">
-          <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Lokalprogram</p>
-          <h2 className="mt-2 text-3xl font-semibold">Sätt upp ert lokalprogram innan ni börjar leta brett</h2>
-          <p className="mt-2 max-w-3xl text-sm text-ink-600">
-            Tydliga behov från start ger bättre matchningar, mer relevanta rekommendationer och snabbare väg till rätt lokal.
+      <section id="sa-fungerar-det" className="relative px-6 py-20 sm:px-14 sm:py-24 lg:px-20">
+        <div className="mx-auto max-w-3xl text-center">
+          <p className="text-xs font-semibold uppercase tracking-wide text-ink-600">Så fungerar det</p>
+          <h2 className="font-display-serif mt-4 text-4xl font-semibold leading-[0.95] text-[#0b0a0e] sm:text-5xl">
+            Tre steg till en snabbare uthyrningsprocess
+          </h2>
+          <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-ink-600">
+            Vi samlar hela flödet på ett ställe, från konto till bokad visning, så inget faller mellan stolarna.
           </p>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-          <article className="rounded-3xl border border-[#0f1930]/12 bg-[#f8fafc] p-6 sm:p-8">
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-ink-600">
-              Lokalprogrammet samlar det ni faktiskt söker i en lokal. När krav blir tydliga från start blir matchning, rekommendationer och dialog med hyresvärdar mer träffsäkra.
-            </p>
-
-            <div className="mt-6 grid gap-4 sm:grid-cols-3">
-              {localProgramBenefits.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <article key={item.title} className="rounded-2xl border border-black/10 bg-[#fffffe] p-4">
-                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#0f1930] text-white">
-                      <Icon className="h-4 w-4" />
-                    </span>
-                    <p className="mt-3 text-base font-semibold text-[#0f1930]">{item.title}</p>
-                    <p className="mt-1 text-sm text-ink-600">{item.body}</p>
-                  </article>
-                );
-              })}
-            </div>
-          </article>
-
-          <article className="rounded-3xl border border-black/10 bg-[#fffffe] p-6 sm:p-8">
-            <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">För hyresgäster</p>
-            <h3 className="mt-2 text-2xl font-semibold text-[#0f1930]">Bra första version räcker</h3>
-            <p className="mt-2 text-sm leading-6 text-ink-600">
-              Börja med grundkrav. Ni kan alltid uppdatera lokalprogrammet senare i profilen när behov ändras eller fler beslut landar.
-            </p>
-
-            <ul className="mt-5 space-y-3 text-sm text-ink-700">
-              <li className="flex items-start gap-3">
-                <span className="mt-1 inline-flex h-2.5 w-2.5 shrink-0 rounded-full bg-[#0f1930]" />
-                Tydligare kravbild för team och beslutsfattare.
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="mt-1 inline-flex h-2.5 w-2.5 shrink-0 rounded-full bg-[#0f1930]" />
-                Bättre utgångspunkt för matchningar på läge, storlek och budget.
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="mt-1 inline-flex h-2.5 w-2.5 shrink-0 rounded-full bg-[#0f1930]" />
-                Snabbare väg från första sökning till relevanta alternativ.
-              </li>
-            </ul>
-
-            <div className="mt-6 flex flex-wrap gap-3">
-              <button
-                type="button"
-                className="inline-flex items-center gap-2 rounded-xl border border-[#0f1930] bg-[#0f1930] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#16233f]"
-                onClick={() => {
-                  if (user) {
-                    navigateTo("/app/profile");
-                    return;
-                  }
-                  openAuth("signup", "renter");
-                }}
-              >
-                Skapa lokalprogram
-                <ArrowRightIcon className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                className="rounded-xl border border-black/20 bg-[#fffffe] px-4 py-2.5 text-sm font-semibold text-ink-700 hover:bg-black/5"
-                onClick={() => navigateTo("/app/rent?view=available")}
-              >
-                Se lediga lokaler
-              </button>
-            </div>
-          </article>
+        <div className="mx-auto mt-14 grid max-w-6xl gap-6 sm:grid-cols-3">
+          {processSteps.map((step, index) => {
+            const Mockup = processStepMockups[index];
+            return (
+              <div key={step.title} className="rounded-3xl bg-[#F3F7F7] p-8 text-center">
+                <div className="flex h-44 items-center justify-center">
+                  <Mockup />
+                </div>
+                <p className="mt-6 text-lg font-semibold text-ink-900">{step.title}</p>
+                <p className="mt-2 text-sm leading-6 text-ink-600">{step.body}</p>
+              </div>
+            );
+          })}
         </div>
       </section>
 
-      <section id="priser" className="mx-auto w-full max-w-[86rem] scroll-mt-28 px-4 py-16 sm:px-6">
-        <div className="mb-10 flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Priser</p>
-            <h2 className="mt-2 text-3xl font-semibold">Bygg volym med Gratis, skala med synlighetslyft</h2>
+      <section id="lokalprogram" className="relative scroll-mt-28 bg-[#0b0a0e] py-4 sm:py-6">
+        <div className="relative bg-[#0b0a0e]">
+          <div className="relative px-6 py-16 sm:px-10 sm:py-20 lg:px-16">
+            <p className="text-xs font-semibold uppercase tracking-wide text-white/60">Lokalprogram</p>
+            <h2 className="font-display-serif mt-4 max-w-xl text-4xl font-semibold leading-[0.95] text-white sm:text-5xl">
+              Sätt upp ert lokalprogram innan ni börjar leta brett
+            </h2>
+            <p className="mt-4 max-w-md text-sm leading-6 text-white/70">
+              Tydliga behov från start ger bättre matchningar och en snabbare väg till rätt lokal.
+            </p>
+
+            <div className="mt-12 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,2.2fr)] lg:gap-16">
+              <aside className="hidden lg:sticky lg:top-28 lg:block lg:self-start">
+                <div className="flex flex-col">
+                  {localProgramBenefits.map((item, index) => {
+                    const isActive = index === activeProgramIndex;
+                    return (
+                      <button
+                        key={item.title}
+                        type="button"
+                        onClick={() => scrollToProgramStep(index)}
+                        className={`!rounded-none border-b border-white/10 py-5 text-left transition-colors duration-300 ${
+                          isActive ? "text-white" : "text-white/40"
+                        }`}
+                      >
+                        <span className="block text-xl font-semibold leading-tight">{item.title}</span>
+                        <span
+                          className="grid overflow-hidden transition-[grid-template-rows,opacity,margin-top] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
+                          style={{
+                            gridTemplateRows: isActive ? "1fr" : "0fr",
+                            opacity: isActive ? 1 : 0,
+                            marginTop: isActive ? "0.75rem" : "0"
+                          }}
+                        >
+                          <span className="max-w-[28ch] overflow-hidden text-sm font-medium text-white/60">{item.body}</span>
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </aside>
+
+              <div className="space-y-10 lg:space-y-16">
+                {localProgramBenefits.map((item, index) => {
+                  const Mockup = lokalprogramMockups[index];
+                  const isActive = index === activeProgramIndex;
+                  return (
+                    <article
+                      key={item.title}
+                      ref={(el) => {
+                        programStepRefs.current[index] = el;
+                      }}
+                      className="scroll-mt-32"
+                    >
+                      <Mockup isActive={isActive} />
+                      <div className="mt-4 lg:hidden">
+                        <p className="text-lg font-semibold text-white">{item.title}</p>
+                        <p className="mt-1 text-sm text-white/70">{item.body}</p>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            </div>
           </div>
-          <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800">
-            Lanseringsperiod: Gratis publicering aktiv
+        </div>
+      </section>
+
+      <section id="priser" className="relative scroll-mt-28 px-6 py-20 sm:px-14 sm:py-24 lg:px-20">
+        <div className="mx-auto max-w-3xl text-center">
+          <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Priser</p>
+          <h2 className="font-display-serif mt-4 text-4xl font-semibold leading-[0.95] text-[#0b0a0e] sm:text-5xl">
+            Gratis att komma igång, betala bara för extra synlighet
+          </h2>
+          <span className="mx-auto mt-5 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs font-semibold text-emerald-800">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
+            Gratis under hela lanseringsperioden
           </span>
         </div>
-        <div className="grid gap-6 lg:grid-cols-[1.08fr_0.92fr]">
-          <article className="rounded-3xl border border-[#0f1930]/15 bg-gradient-to-br from-[#0f1930] via-[#132140] to-[#1b2f55] p-7 text-white">
-            <p className="text-xs font-semibold uppercase tracking-wide text-white/75">Gratis</p>
-            <p className="mt-2 text-5xl font-semibold">0 kr</p>
-            <p className="mt-2 text-white/85">Obegränsad publicering och alla grundfunktioner under lanseringsperioden.</p>
-            <ul className="mt-5 space-y-2 text-sm text-white/90">
-              <li className="inline-flex items-center gap-2">
-                <StarIcon className="h-4 w-4 text-white/75" />
-                Publicera obegränsat antal annonser
-              </li>
-              <li className="inline-flex items-center gap-2">
-                <SearchIcon className="h-4 w-4 text-white/75" />
-                Matchning mot hyresgäster i sökflödet
-              </li>
-              <li className="inline-flex items-center gap-2">
-                <CalendarIcon className="h-4 w-4 text-white/75" />
-                Intresseanmälningar och visningsförfrågningar i en vy
-              </li>
-            </ul>
+
+        <div className="mx-auto mt-14 grid max-w-5xl gap-6 sm:grid-cols-2">
+          <article className="rounded-3xl bg-[#080d18] p-6 text-white sm:p-7">
+            <p className="text-xs font-semibold uppercase tracking-wide text-white/60">Gratis</p>
+            <p className="mt-3 text-5xl font-semibold">0 kr</p>
+            <p className="mt-3 text-sm text-white/75">
+              Publicera obegränsat antal annonser och testa hela plattformen kostnadsfritt under lanseringsperioden.
+            </p>
+            <button
+              type="button"
+              onClick={() => openAuth("signup", "broker")}
+              className="mt-6 inline-flex items-center justify-center rounded-full border border-white px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-white hover:text-[#080d18]"
+            >
+              Börja publicera
+            </button>
           </article>
 
-          <div className="grid gap-6">
-            <article className="rounded-3xl border border-black/10 bg-[#fffffe] p-6">
-              <p className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-500">
-                <CoinsIcon className="h-3.5 w-3.5" />
-                Synlighetslyft
-              </p>
-              <p className="mt-2 text-2xl font-semibold">Topplacering</p>
-              <p className="mt-1 text-sm text-ink-600">Lyft utvalda annonser i listning och sökresultat för mer exponering.</p>
-            </article>
-            <article className="rounded-3xl border border-black/10 bg-[#fffffe] p-6">
-              <p className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-500">
-                <CoinsIcon className="h-3.5 w-3.5" />
-                Synlighetslyft
-              </p>
-              <p className="mt-2 text-2xl font-semibold">Förnya annons</p>
-              <p className="mt-1 text-sm text-ink-600">Pusha upp annonsen igen för ny synlighet när tempot sjunker.</p>
-            </article>
-          </div>
+          <article className="rounded-3xl border border-black/10 bg-[#ffffff] p-6 sm:p-7">
+            <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Synlighetslyft</p>
+            <p className="mt-1 text-sm text-ink-600">Lägg till extra räckvidd när ni vill sticka ut i sökresultaten.</p>
+
+            <div className="mt-6 space-y-5">
+              <div className="flex items-center gap-4">
+                <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#0b0a0e] text-white">
+                  <CoinsIcon className="h-5 w-5" />
+                </span>
+                <div>
+                  <p className="text-base font-semibold">Topplacering</p>
+                  <p className="text-sm text-ink-600">Lyft annonsen högst upp i listning och sökresultat.</p>
+                </div>
+              </div>
+              <div className="h-px bg-black/10" />
+              <div className="flex items-center gap-4">
+                <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#0b0a0e] text-white">
+                  <CoinsIcon className="h-5 w-5" />
+                </span>
+                <div>
+                  <p className="text-base font-semibold">Förnya annons</p>
+                  <p className="text-sm text-ink-600">Pusha upp den igen när tempot i intresset sjunker.</p>
+                </div>
+              </div>
+            </div>
+          </article>
         </div>
       </section>
 
-      <section id="faq" className="border-t border-black/10 bg-[#fffffe]">
-        <div className="mx-auto w-full max-w-[86rem] px-4 py-16 sm:px-6">
-          <div className="mb-10">
-            <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">FAQ</p>
-            <h2 className="mt-2 text-3xl font-semibold">Vanliga frågor</h2>
-          </div>
+      <section id="faq" className="mx-auto w-full max-w-[56rem] scroll-mt-28 px-8 pb-24 pt-16 sm:px-10 sm:pb-32 sm:pt-20">
+        <h2 className="font-display-serif text-[2.35rem] font-semibold leading-none text-[#0b0a0e] sm:text-[3rem]">
+          Vanliga frågor
+        </h2>
 
-          <div className="grid items-stretch gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-            <article ref={faqCardRef} className="self-start flex h-full flex-col overflow-hidden rounded-3xl border border-black/10 bg-[#fffffe]">
-              <img src={faqImage} alt="FAQ och support" className="min-h-0 w-full flex-1 object-cover" />
-              <div className="p-5">
-                <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Kundservice</p>
-                <p className="mt-1 text-2xl font-semibold">Tydliga svar för snabbare beslut</p>
-                <p className="mt-1 text-sm text-ink-600">Vanliga frågor samlade för att du ska komma igång utan friktion.</p>
+        <div className="mt-8 border-y border-black/10">
+          {faqItems.map((item, index) => {
+            const isOpen = openFaqIndex === index;
+            return (
+              <article key={item.q} className="border-b border-black/10 last:border-b-0">
+                <button
+                  type="button"
+                  className={`flex w-full items-center justify-between gap-6 pt-5 text-left sm:pt-6 ${
+                    isOpen ? "pb-2 sm:pb-2.5" : "pb-5 sm:pb-6"
+                  }`}
+                  aria-expanded={isOpen}
+                  onClick={() => setOpenFaqIndex(isOpen ? null : index)}
+                >
+                  <span className="text-base font-semibold leading-tight text-[#0b0a0e] sm:text-[1.08rem]">{item.q}</span>
+                  <span
+                    className={`inline-flex h-7 w-7 shrink-0 items-center justify-center text-ink-400 transition-transform duration-300 ${
+                      isOpen ? "rotate-180" : ""
+                    }`}
+                  >
+                    <ChevronRightIcon className="h-4 w-4 rotate-90" />
+                  </span>
+                </button>
+                <div
+                  className="grid overflow-hidden transition-[grid-template-rows,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
+                  style={{ gridTemplateRows: isOpen ? "1fr" : "0fr", opacity: isOpen ? 1 : 0 }}
+                >
+                  <p
+                    className={`max-w-3xl overflow-hidden text-sm leading-6 text-[#0b0a0e] ${
+                      isOpen ? "pb-4 sm:pb-5" : "pb-0"
+                    }`}
+                  >
+                    {item.a}
+                  </p>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+
+        <article className="mt-14 overflow-hidden rounded-2xl bg-[#F3F7F7]">
+          <div className="grid gap-8 px-8 py-9 sm:px-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+            <div>
+              <h3 className="text-xl font-semibold leading-tight text-[#0b0a0e] sm:text-2xl">
+                Vill du se hur LOA fungerar?
+              </h3>
+              <p className="mt-4 max-w-md text-sm leading-6 text-ink-600 sm:text-base sm:leading-7">
+                Boka en kort demo så visar vi hur ni kan publicera objekt, få bättre förfrågningar och följa upp intresse.
+              </p>
+            </div>
+
+            <div className="grid gap-3 justify-self-stretch sm:max-w-md lg:justify-self-end">
+              <div className="justify-self-end rounded-2xl bg-white px-5 py-4 text-sm font-semibold leading-5 text-[#0b0a0e]">
+                Vi vill se hur LOA kan hjälpa oss med uthyrningen.
               </div>
-            </article>
-
-            <div ref={faqQuestionsRef} className="self-start space-y-5">
-              {faqItems.map((item) => (
-                <article key={item.q} className="rounded-2xl border border-black/10 bg-[#fffffe] p-5">
-                  <p className="text-xl font-semibold">{item.q}</p>
-                  <p className="mt-2 text-sm text-ink-600">{item.a}</p>
-                </article>
-              ))}
+              <div className="flex items-end gap-3">
+                <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#0b0a0e] text-xs font-semibold text-white">
+                  L
+                </span>
+                <div className="rounded-2xl bg-white px-5 py-4 text-sm font-semibold leading-5 text-[#0b0a0e]">
+                  Absolut. Lämna dina uppgifter så bokar vi in 20 minuter.
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+
+          <button
+            type="button"
+            onClick={() => setDemoRequestOpen(true)}
+            className="flex w-full items-center justify-between !rounded-none border-t border-black/10 bg-transparent px-8 py-4 text-left text-base font-semibold text-[#080d18] transition hover:bg-white/35 sm:px-10"
+          >
+            Boka en demo
+            <ArrowRightIcon className="h-5 w-5" />
+          </button>
+        </article>
       </section>
+
+      {demoRequestOpen ? (
+        <div
+          className="fixed inset-0 z-[80] flex items-center justify-center bg-black/55 px-4 py-6"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="demo-request-title"
+        >
+          <button
+            type="button"
+            className="absolute inset-0 cursor-default"
+            aria-label="Stäng demoformulär"
+            onClick={closeDemoRequestOverlay}
+          />
+          <div className="relative w-full max-w-xl rounded-3xl bg-white p-6 shadow-[0_30px_90px_rgba(0,0,0,0.28)] sm:p-8">
+            <div className="flex items-start justify-between gap-5">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Boka en demo</p>
+                <h2
+                  id="demo-request-title"
+                  className="font-display-serif mt-2 text-[2.15rem] font-semibold leading-[0.95] text-[#0b0a0e] sm:text-[2.65rem]"
+                >
+                  Berätta hur vi når dig
+                </h2>
+              </div>
+              <button
+                type="button"
+                className="inline-flex h-10 w-10 min-h-10 min-w-10 aspect-square shrink-0 items-center justify-center !rounded-full border border-black/10 p-0 text-[#0b0a0e] hover:border-black/25"
+                aria-label="Stäng"
+                onClick={closeDemoRequestOverlay}
+              >
+                <PlusIcon className="h-4 w-4 rotate-45" />
+              </button>
+            </div>
+
+            {demoRequestSubmitted ? (
+              <div className="mt-7 rounded-2xl bg-[#F3F7F7] p-5">
+                <p className="text-lg font-semibold text-[#0b0a0e]">Tack, vi hör av oss.</p>
+                <p className="mt-2 text-sm leading-6 text-ink-600">
+                  Vi återkommer med en tid för en kort genomgång av hur LOA kan användas för era objekt.
+                </p>
+                <button
+                  type="button"
+                  className="mt-5 rounded-full bg-[#0b0a0e] px-6 py-3 text-sm font-semibold text-white"
+                  onClick={closeDemoRequestOverlay}
+                >
+                  Stäng
+                </button>
+              </div>
+            ) : (
+              <form className="mt-7 grid gap-4" onSubmit={submitDemoRequest}>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <label className="grid gap-2 text-xs font-semibold uppercase tracking-wide text-ink-500">
+                    Namn
+                    <input
+                      required
+                      type="text"
+                      value={demoRequestForm.name}
+                      onChange={(event) => updateDemoRequestField("name", event.target.value)}
+                      className={heroInputClass}
+                      placeholder="För- och efternamn"
+                    />
+                  </label>
+                  <label className="grid gap-2 text-xs font-semibold uppercase tracking-wide text-ink-500">
+                    Företag
+                    <input
+                      type="text"
+                      value={demoRequestForm.company}
+                      onChange={(event) => updateDemoRequestField("company", event.target.value)}
+                      className={heroInputClass}
+                      placeholder="Bolagsnamn"
+                    />
+                  </label>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <label className="grid gap-2 text-xs font-semibold uppercase tracking-wide text-ink-500">
+                    E-post
+                    <input
+                      required
+                      type="email"
+                      value={demoRequestForm.email}
+                      onChange={(event) => updateDemoRequestField("email", event.target.value)}
+                      className={heroInputClass}
+                      placeholder="namn@foretag.se"
+                    />
+                  </label>
+                  <label className="grid gap-2 text-xs font-semibold uppercase tracking-wide text-ink-500">
+                    Telefon
+                    <input
+                      type="tel"
+                      value={demoRequestForm.phone}
+                      onChange={(event) => updateDemoRequestField("phone", event.target.value)}
+                      className={heroInputClass}
+                      placeholder="+46 70 000 00 00"
+                    />
+                  </label>
+                </div>
+                <label className="grid gap-2 text-xs font-semibold uppercase tracking-wide text-ink-500">
+                  Vad vill ni se?
+                  <textarea
+                    rows={4}
+                    value={demoRequestForm.message}
+                    onChange={(event) => updateDemoRequestField("message", event.target.value)}
+                    className={`${heroInputClass} resize-none`}
+                    placeholder="Till exempel publicering, matchning eller lokalprogram."
+                  />
+                </label>
+                <button
+                  type="submit"
+                  className="mt-2 rounded-full bg-[#0b0a0e] px-7 py-4 text-sm font-semibold text-white hover:bg-[#191919]"
+                >
+                  Skicka förfrågan
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      ) : null}
 
       <ViewingRequestModal
         listing={bookingListing}
@@ -1263,78 +2136,88 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
       <button
         type="button"
         aria-label="Scrolla till toppen"
-        className={`fixed bottom-6 right-6 z-30 inline-flex min-h-0 flex-col items-center justify-center gap-0.5 rounded-full border border-black/20 bg-[#fffffe]/25 p-3 text-[#0f1930] shadow-[0_8px_24px_rgba(15,25,48,0.18)] backdrop-blur-md transition-all duration-250 ${
+        className={`fixed bottom-6 right-6 z-30 inline-flex min-h-0 flex-col items-center justify-center gap-0.5 rounded-full border border-black/20 bg-[#ffffff]/25 p-3 text-[#0b0a0e] shadow-[0_8px_24px_rgba(15,25,48,0.18)] backdrop-blur-md transition-all duration-250 ${
           showScrollToTopButton
             ? "translate-y-0 scale-100 opacity-100 pointer-events-auto"
             : "translate-y-2 scale-95 opacity-0 pointer-events-none"
-        } hover:bg-[#fffffe]/35`}
+        } hover:bg-[#ffffff]/35`}
         onClick={handleScrollToTop}
       >
         <ArrowUpIcon className="h-4 w-4" />
         <MouseScrollIcon className="h-4 w-4" />
       </button>
 
-      <footer id="kontakt" className="scroll-mt-24 border-t border-black/10 bg-[#fffffe]">
-        <div className="mx-auto w-full max-w-[86rem] px-4 py-10 sm:px-6">
-          <div className="grid gap-8 lg:grid-cols-[1.15fr_0.95fr_0.95fr_0.95fr]">
-            <div className="space-y-4">
-              <div className="inline-flex items-center gap-3 rounded-2xl border border-black/10 bg-[#fffffe] px-4 py-3">
-                <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-dashed border-black/30 bg-[#fffffe] text-[10px] font-semibold uppercase tracking-wide text-ink-500">
+      <footer id="kontakt" className="scroll-mt-24 bg-[#0b0a0e] pt-2">
+        <div className="overflow-hidden bg-[#0b0a0e] px-6 py-12 text-white sm:px-10 sm:py-16">
+          <div className="grid gap-10 lg:grid-cols-[1.15fr_0.95fr_0.95fr_0.95fr]">
+            <div className="space-y-5">
+              <div className="inline-flex items-center gap-3 rounded-2xl border border-white/15 bg-white/5 px-4 py-3">
+                <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-dashed border-white/30 bg-white/5 text-[10px] font-semibold uppercase tracking-wide text-white/60">
                   LOGGA
                 </span>
                 <div>
-                  <p className="text-sm font-semibold">Företagsnamn</p>
-                  <p className="text-xs text-ink-600">Plats för företagslogga</p>
+                  <p className="text-sm font-semibold text-white">LOA</p>
+                  <p className="text-xs text-white/60">Plats för företagslogga</p>
                 </div>
               </div>
-              <p className="max-w-sm text-sm text-ink-600">
-                Lokalflöde Stockholm samlar hyresgäst och hyresvärd i ett gemensamt flöde för snabbare matchning, visningar och affärer.
+              <p className="max-w-sm text-sm text-white/70">
+                LOA samlar hyresgäst och hyresvärd i ett gemensamt flöde för snabbare matchning, visningar och affärer.
               </p>
-              <div className="flex flex-wrap gap-2">
-                <button type="button" className="rounded-xl border border-black/20 bg-[#fffffe] px-3 py-2 text-xs font-semibold text-ink-700" onClick={() => navigateTo("/app/rent?view=available")}>
-                  Jag vill hyra lokal
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-xs font-semibold text-[#0b0a0e] transition hover:bg-white/90"
+                  onClick={() => navigateTo("/signup?step=role")}
+                >
+                  Skapa konto
+                  <UserIcon className="h-3.5 w-3.5" />
                 </button>
-                <button type="button" className="rounded-xl border border-[#0f1930] bg-[#0f1930] px-3 py-2 text-xs font-semibold text-white hover:bg-[#16233f]" onClick={() => navigateTo("/app/publish")}>
-                  Jag vill publicera lokal
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-5 py-2.5 text-xs font-semibold text-white transition hover:bg-white/10"
+                  onClick={() => openAuth("login", "renter")}
+                >
+                  Logga in
+                  <LockIcon className="h-3.5 w-3.5" />
                 </button>
               </div>
             </div>
 
             <div>
-              <p className="text-sm font-semibold">Utforska</p>
-              <div className="mt-3 grid gap-2">
-                <a className="text-sm text-ink-600 hover:text-black" href="#sa-fungerar-det" onClick={(event) => handleSectionLinkClick(event, "#sa-fungerar-det")}>Så fungerar det</a>
-                <a className="text-sm text-ink-600 hover:text-black" href="#priser" onClick={(event) => handleSectionLinkClick(event, "#priser")}>Priser</a>
-                <a className="text-sm text-ink-600 hover:text-black" href="#faq" onClick={(event) => handleSectionLinkClick(event, "#faq")}>FAQ</a>
+              <p className="text-sm font-semibold text-white">Utforska</p>
+              <div className="mt-4 grid gap-2.5">
+                <a className="text-sm text-white/65 hover:text-white" href="#sa-fungerar-det" onClick={(event) => handleSectionLinkClick(event, "#sa-fungerar-det")}>Så fungerar det</a>
+                <a className="text-sm text-white/65 hover:text-white" href="#priser" onClick={(event) => handleSectionLinkClick(event, "#priser")}>Priser</a>
+                <a className="text-sm text-white/65 hover:text-white" href="#faq" onClick={(event) => handleSectionLinkClick(event, "#faq")}>FAQ</a>
               </div>
             </div>
 
             <div>
-              <p className="text-sm font-semibold">Snabbnavigering</p>
-              <div className="mt-3 grid gap-2">
-                <a className="text-sm text-ink-600 hover:text-black" href="#" onClick={(event) => { event.preventDefault(); navigateTo("/app/rent"); }}>Hyr lokal</a>
-                <a className="text-sm text-ink-600 hover:text-black" href="#" onClick={(event) => { event.preventDefault(); navigateTo("/app/publish"); }}>Publicera lokal</a>
-                <a className="text-sm text-ink-600 hover:text-black" href="#" onClick={(event) => { event.preventDefault(); navigateTo("/app/my-listings"); }}>Dina objekt</a>
-                <a className="text-sm text-ink-600 hover:text-black" href="#" onClick={(event) => { event.preventDefault(); navigateTo("/app/profile"); }}>Profil</a>
+              <p className="text-sm font-semibold text-white">Snabbnavigering</p>
+              <div className="mt-4 grid gap-2.5">
+                <a className="text-sm text-white/65 hover:text-white" href="#" onClick={(event) => { event.preventDefault(); navigateTo("/app/rent"); }}>Hyr lokal</a>
+                <a className="text-sm text-white/65 hover:text-white" href="#" onClick={(event) => { event.preventDefault(); navigateTo("/app/publish"); }}>Publicera lokal</a>
+                <a className="text-sm text-white/65 hover:text-white" href="#" onClick={(event) => { event.preventDefault(); navigateTo("/app/my-listings"); }}>Dina objekt</a>
+                <a className="text-sm text-white/65 hover:text-white" href="#" onClick={(event) => { event.preventDefault(); navigateTo("/app/profile"); }}>Profil</a>
               </div>
             </div>
 
             <div>
-              <p className="text-sm font-semibold">Kundservice</p>
-              <div className="mt-3 grid gap-2 text-sm text-ink-600">
+              <p className="text-sm font-semibold text-white">Kundservice</p>
+              <div className="mt-4 grid gap-2.5 text-sm text-white/65">
                 <p>support@foretag.se</p>
                 <p>08-123 45 67</p>
                 <p>Vardagar 08:00-17:00</p>
-                <button type="button" className="text-left text-sm text-ink-600 hover:text-black" onClick={() => navigateTo("/forgot-password")}>
+                <button type="button" className="text-left text-sm text-white/65 hover:text-white" onClick={() => navigateTo("/forgot-password")}>
                   Glömt lösenord
                 </button>
               </div>
             </div>
           </div>
 
-          <div className="mt-8 flex flex-wrap items-center justify-between gap-3 pt-4">
-            <p className="text-xs text-ink-500">© {new Date().getFullYear()} Företagsnamn. Alla rättigheter förbehållna.</p>
-            <div className="flex items-center gap-3 text-xs text-ink-500">
+          <div className="mt-12 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-6">
+            <p className="text-xs text-white/50">© {new Date().getFullYear()} LOA. Alla rättigheter förbehållna.</p>
+            <div className="flex items-center gap-3 text-xs text-white/50">
               <span>Integritet</span>
               <span>Villkor</span>
               <span>Cookie-inställningar</span>

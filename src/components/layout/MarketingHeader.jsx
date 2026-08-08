@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { navigateTo, routeMatches } from "../../lib/router";
 import { deriveNavbarRoleState } from "../../lib/navbarRoles";
-import { BuildingIcon, MessageSquareIcon } from "../icons/UiIcons";
+import { BuildingIcon, LockIcon, MessageSquareIcon, UserIcon } from "../icons/UiIcons";
 import MarketingNavLinks, { marketingPrimaryItems, marketingSectionItems } from "./MarketingNavLinks";
 import ProfileMenuDropdown from "./ProfileMenuDropdown";
 
@@ -11,7 +11,6 @@ function MarketingHeader({
   isGuest = false,
   isNavScrolled = false,
   showStaticBorder = false,
-  companyName,
   onBrandClick,
   onPrimaryNavClick,
   onSectionLinkClick,
@@ -27,10 +26,6 @@ function MarketingHeader({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const menuRef = useRef(null);
   const profileMenuPanelRef = useRef(null);
-  const resolvedCompanyName = useMemo(
-    () => String(companyName || user?.profile?.legalEntity || user?.profile?.companyName || "Företagsnamn"),
-    [companyName, user?.profile?.companyName, user?.profile?.legalEntity]
-  );
   const initials = useMemo(() => {
     const source = (user?.name || (isGuest ? "Gäst" : "AA")).trim();
     const words = source.split(" ").filter(Boolean);
@@ -85,25 +80,25 @@ function MarketingHeader({
   return (
     <>
       <header
-        className={`navbar-enter sticky top-0 z-40 shrink-0 border-b px-4 py-3 will-change-[background-color,border-color,backdrop-filter] transition-[background-color,border-color,backdrop-filter] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] sm:px-6 ${
-          isNavScrolled || showStaticBorder ? "border-black/10 bg-[#fffffe]/95 backdrop-blur-md" : "border-black/0 bg-[#fffffe]/0 backdrop-blur-0"
+        className={`navbar-enter sticky top-0 z-40 shrink-0 px-4 py-3 will-change-[background-color,backdrop-filter] transition-[background-color,backdrop-filter] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+          isNavScrolled || showStaticBorder ? "bg-[#ffffff]/95 backdrop-blur-md" : "bg-[#ffffff]/0 backdrop-blur-0"
         }`}
       >
         <div className="grid w-full grid-cols-[auto_1fr_auto] items-center gap-4">
           <div className="flex min-w-0 items-center gap-4">
             <button type="button" className="justify-self-start text-left" onClick={onBrandClick || (() => navigateTo("/"))}>
-              <span className="inline-flex items-center gap-2 rounded-xl border border-black/10 bg-[#fffffe] px-2.5 py-1.5">
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-dashed border-black/30 bg-[#fffffe] text-[9px] font-semibold uppercase tracking-wide text-ink-500">
+              <span className="inline-flex items-center gap-2 rounded-xl border border-black/10 bg-[#ffffff] px-2.5 py-1.5">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-dashed border-black/30 bg-[#ffffff] text-[9px] font-semibold uppercase tracking-wide text-ink-500">
                   LOGGA
                 </span>
                 <span className="inline-flex items-center gap-1.5">
-                  <span className="text-sm font-semibold text-ink-800">{resolvedCompanyName}</span>
+                  <span className="text-sm font-semibold text-ink-800">LOA</span>
                 </span>
               </span>
             </button>
           </div>
 
-          <nav className="hidden items-center justify-self-start gap-7 lg:flex">
+          <nav className="hidden items-center justify-self-center gap-9 lg:flex">
             <MarketingNavLinks
               hrefPrefix="/"
               activeHref={activeHref}
@@ -146,7 +141,7 @@ function MarketingHeader({
                 <button
                   type="button"
                   aria-label="Meddelanden"
-                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-black/20 bg-[#fffffe] text-ink-700"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-black/20 bg-[#ffffff] text-ink-700"
                   onClick={onMessagesClick || (() => navigateTo("/app/messages"))}
                 >
                   <MessageSquareIcon className="h-4 w-4" />
@@ -156,7 +151,7 @@ function MarketingHeader({
                 <div ref={menuRef} className="relative inline-flex h-11 items-center self-center">
                   <button
                     type="button"
-                    className="inline-flex h-full w-11 items-center justify-center overflow-hidden rounded-full border border-black/20 bg-[#fffffe] text-sm font-semibold text-ink-700"
+                    className="inline-flex h-full w-11 items-center justify-center overflow-hidden rounded-full border border-black/20 bg-[#ffffff] text-sm font-semibold text-ink-700"
                     onClick={() => setMenuOpen((value) => !value)}
                     aria-label="Öppna profilmeny"
                     aria-expanded={menuOpen}
@@ -178,7 +173,7 @@ function MarketingHeader({
               <button
                 type="button"
                 aria-label="Öppna meny"
-                className="inline-flex h-11 items-center justify-center text-[#0f1930] lg:hidden"
+                className="inline-flex h-11 items-center justify-center text-[#0b0a0e] lg:hidden"
                 onClick={() => {
                   setMenuOpen(false);
                   setMobileMenuOpen((value) => !value);
@@ -192,25 +187,27 @@ function MarketingHeader({
               </button>
             </div>
           ) : (
-            <div className="flex items-center justify-self-end gap-4">
+            <div className="flex items-center justify-self-end gap-2">
               <button
                 type="button"
-                className="inline-flex items-center justify-center rounded-full border border-[#0f1930] bg-[#0f1930] px-4 py-2 text-xs font-semibold text-white hover:bg-[#16233f]"
+                className="inline-flex h-6 items-center gap-2 rounded-full bg-[#0b0a0e] px-5 text-sm font-semibold text-white transition"
                 onClick={() => onRequireAuth?.("signup", "renter")}
               >
                 Skapa konto
+                <UserIcon className="h-3.5 w-3.5" />
               </button>
               <button
                 type="button"
-                className="inline-flex items-center bg-transparent px-1 py-2 text-xs font-semibold text-ink-700"
+                className="inline-flex h-6 items-center gap-2 rounded-full bg-black/5 px-5 text-sm font-semibold text-ink-800 transition hover:bg-black/10"
                 onClick={() => onRequireAuth?.("login", "renter")}
               >
                 Logga in
+                <LockIcon className="h-3.5 w-3.5" />
               </button>
               <button
                 type="button"
                 aria-label="Öppna meny"
-                className="inline-flex h-11 items-center justify-center text-[#0f1930] lg:hidden"
+                className="inline-flex h-11 items-center justify-center text-[#0b0a0e] lg:hidden"
                 onClick={() => setMobileMenuOpen((value) => !value)}
               >
                 <span className="inline-flex flex-col items-end gap-1.5">
@@ -238,7 +235,7 @@ function MarketingHeader({
 
       {mobileMenuOpen ? (
         <div className="fixed inset-0 z-[60] bg-transparent lg:hidden" onClick={() => setMobileMenuOpen(false)}>
-          <div className="absolute right-4 top-[72px] w-[min(320px,calc(100vw-2rem))] rounded-2xl border border-black/10 bg-[#fffffe] p-3" onClick={(event) => event.stopPropagation()}>
+          <div className="absolute right-4 top-[72px] w-[min(320px,calc(100vw-2rem))] rounded-2xl border border-black/10 bg-[#ffffff] p-3" onClick={(event) => event.stopPropagation()}>
             <div className="space-y-1">
               {[...marketingPrimaryItems, ...marketingSectionItems].map((item) => (
                 <button
