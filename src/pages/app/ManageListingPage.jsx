@@ -92,7 +92,7 @@ function ManageListingPage({ app, listingId }) {
           className="mb-3"
           items={[
             { label: "Startsida", to: "/" },
-            { label: "Dina objekt", to: "/app/my-listings" },
+            { label: "Dina objekt", to: "/app/broker" },
             { label: `Hantera ${listing.title || "Objekt"}` }
           ]}
         />
@@ -125,7 +125,7 @@ function ManageListingPage({ app, listingId }) {
               onClick={async () => {
                 await deleteListing(listing.id);
                 app.pushToast("Objekt raderat.", "info");
-                navigateTo("/app/my-listings");
+                navigateTo("/app/broker");
               }}
             >
               Radera objekt

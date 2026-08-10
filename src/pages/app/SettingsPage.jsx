@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Icon } from "../../components/icons/Icon";
 import PremiumPromoCard from "../../components/shared/PremiumPromoCard";
-import { navigateTo } from "../../lib/router";
+import { navigateTo, normalizeAppRole } from "../../lib/router";
 
 const settingsSections = [
   { key: "personal", title: "Personligt", subtitle: "Din personliga information och hur vi kontaktar dig." },
@@ -51,13 +51,14 @@ function SettingsPage({ app }) {
     phone: ""
   });
 
-  const activeRoleLabel = useMemo(() => (
-    user?.role === "publisher" || user?.role === "broker" ? "Hyresvärd" : user?.role === "company_admin" ? "Bolagsadmin" : "Hyresgäst"
-  ), [user?.role]);
+  const activeRoleLabel = useMemo(() => {
+    const activeRole = normalizeAppRole(user?.role);
+    return activeRole === "broker" ? "Hyresvärd" : activeRole === "company_admin" ? "Bolagsadmin" : "Hyresgäst";
+  }, [user?.role]);
   const roleSet = useMemo(() => new Set(
     [...(Array.isArray(user?.roles) ? user.roles : []), user?.role]
       .filter(Boolean)
-      .map((role) => role === "publisher" ? "broker" : role)
+      .map(normalizeAppRole)
   ), [user?.role, user?.roles]);
   const hasCompanyAdminRole = roleSet.has("company_admin");
   const hasBrokerRole = roleSet.has("broker");
@@ -222,7 +223,7 @@ function SettingsPage({ app }) {
                     <div className="space-y-3">
                       <p className="text-sm text-ink-700">Aktiv roll: <span className="font-semibold">{activeRoleLabel}</span></p>
                       <div className="flex flex-wrap gap-2">
-                        {user?.role === "publisher" || user?.role === "broker" || user?.role === "company_admin" ? (
+                        {normalizeAppRole(user?.role) === "broker" || normalizeAppRole(user?.role) === "company_admin" ? (
                           <button
                             type="button"
                             className="btn-secondary px-4 py-2 text-xs"

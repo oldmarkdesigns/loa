@@ -376,7 +376,33 @@ async function upsertAuthenticatedUser(ctx, payload = {}, options = {}) {
     email.split("@")[0] ||
     "Ny användare";
 
-  let user = await findUserByTokenIdentifier(ctx, identity.tokenIdentifier);
+  const tokenUser = await findUserByTokenIdentifier(ctx, identity.tokenIdentifier);
+  const emailUsers = email
+    ? await ctx.db
+      .query("users")
+      .withIndex("by_email", (query) => query.eq("email", email))
+      .collect()
+    : [];
+  const emailUser = emailUsers.find((candidate) => candidate.tokenIdentifier === identity.tokenIdentifier)
+    || emailUsers.find((candidate) => userGrantedRoles(candidate).includes("company_admin"))
+    || emailUsers.find((candidate) => userGrantedRoles(candidate).includes("broker"))
+    || emailUsers[0]
+    || null;
+  let user = tokenUser || emailUser;
+
+  if (
+    tokenUser
+    && emailUser
+    && tokenUser._id !== emailUser._id
+    && userGrantedRoles(tokenUser).every((role) => role === "renter")
+    && userGrantedRoles(emailUser).some((role) => role === "company_admin" || role === "broker")
+  ) {
+    await ctx.db.patch(tokenUser._id, {
+      tokenIdentifier: `detached:${tokenUser.id}:${nowIso()}`,
+      updatedAt: nowIso()
+    });
+    user = emailUser;
+  }
 
   const baseProfile = {
     ...(user?.profile || {}),

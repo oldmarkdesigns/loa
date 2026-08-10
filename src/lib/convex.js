@@ -62,6 +62,10 @@ export const convexApiRefs = {
     list: queryRef("leads:list"),
     update: mutationRef("leads:update")
   },
+  leadActivities: {
+    list: queryRef("leadActivities:list"),
+    create: mutationRef("leadActivities:create")
+  },
   ai: {
     search: queryRef("ai:search")
   }

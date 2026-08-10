@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { navigateTo } from "../lib/router";
+import { navigateTo, normalizeAppRole } from "../lib/router";
 import { propertyAmenityOptions } from "../lib/propertyAmenityIcons";
 import MarketingHeader from "../components/layout/MarketingHeader";
 import ListingVisualCard from "../components/app/ListingVisualCard";
@@ -18,7 +18,6 @@ import {
   CarIcon,
   CheckBadgeIcon,
   ChevronRightIcon,
-  CoinsIcon,
   CrownIcon,
   DumbbellIcon,
   FilterIcon,
@@ -31,11 +30,13 @@ import {
   PenthouseIcon,
   PinIcon,
   PlusIcon,
+  ResetIcon,
   RooftopIcon,
   RulerIcon,
   SearchIcon,
   SnowflakeIcon,
   StarIcon,
+  TrophyIcon,
   UserIcon,
   UtensilsIcon,
   WifiIcon
@@ -1024,6 +1025,12 @@ function applyAmenityAndFurnishedFilters(listings, amenityQuery, furnishedFilter
 }
 
 function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay, onLogout, onSwitchRole, listings = [] }) {
+  const footerActiveRole = normalizeAppRole(user?.role);
+  const footerProfilePath = footerActiveRole === "company_admin"
+    ? "/app/admin/profil"
+    : footerActiveRole === "broker"
+      ? "/app/broker/profil"
+      : "/app/profile";
   const headerRef = useRef(null);
   const heroSectionRef = useRef(null);
   const [showScrollToTopButton, setShowScrollToTopButton] = useState(false);
@@ -1177,49 +1184,235 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
 
     const stepCount = localProgramBenefits.length;
     const smoothing = 0.055;
-    let frameId = null;
+    const entryPauseDuration = 550;
+    const settleEpsilon = 0.004;
+    const edgeEpsilon = 0.0005;
+    const distancePerPass = 2200;
+    const arrowKeyStep = 0.09;
+    const pageKeyStep = 1 / (stepCount - 1);
+    const forwardKeys = ["PageDown", "ArrowDown", " "];
+    const backwardKeys = ["PageUp", "ArrowUp"];
+
+    let engaged = false;
+    let frozenScrollY = 0;
+    let virtualProgress = 0;
     let currentProgress = 0;
     let initialized = false;
+    let frameId = null;
+    let entryPauseActive = false;
+    let entryPauseTimeoutId = null;
+    let lastTouchY = null;
+    let prevTop = null;
+    let lastUserInputAt = 0;
+    const userInputRecencyWindow = 150;
 
-    function readTargetProgress() {
-      const rect = wrapper.getBoundingClientRect();
-      const scrollableDistance = rect.height - window.innerHeight;
-      const raw = scrollableDistance > 0 ? -rect.top / scrollableDistance : 0;
-      return Math.min(Math.max(raw, 0), 1);
+    function markUserInput() {
+      lastUserInputAt = performance.now();
     }
 
-    function render() {
-      const targetProgress = readTargetProgress();
-      if (!initialized) {
-        currentProgress = targetProgress;
-        initialized = true;
-      } else {
-        currentProgress += (targetProgress - currentProgress) * smoothing;
-      }
-
+    function applyPan() {
       const maxTranslate = (stepCount - 1) * window.innerWidth;
       track.style.transform = `translateX(-${currentProgress * maxTranslate}px)`;
       setFilmstripActiveIndex(Math.min(stepCount - 1, Math.round(currentProgress * (stepCount - 1))));
+    }
 
-      if (Math.abs(targetProgress - currentProgress) > 0.0004) {
-        frameId = requestAnimationFrame(render);
+    function startEntryPause() {
+      entryPauseActive = true;
+      if (entryPauseTimeoutId) window.clearTimeout(entryPauseTimeoutId);
+      entryPauseTimeoutId = window.setTimeout(() => {
+        entryPauseActive = false;
+        entryPauseTimeoutId = null;
+      }, entryPauseDuration);
+    }
+
+    function tick() {
+      currentProgress += (virtualProgress - currentProgress) * smoothing;
+      applyPan();
+      if (Math.abs(virtualProgress - currentProgress) > 0.0004) {
+        frameId = requestAnimationFrame(tick);
       } else {
-        currentProgress = targetProgress;
+        currentProgress = virtualProgress;
         frameId = null;
       }
     }
 
-    function onScroll() {
-      if (!frameId) frameId = requestAnimationFrame(render);
+    function adjustVirtualProgress(delta) {
+      virtualProgress = Math.min(Math.max(virtualProgress + delta, 0), 1);
+      if (!frameId) frameId = requestAnimationFrame(tick);
     }
 
-    render();
+    // Freezes the real page scroll at the module's edge and switches to fully
+    // JS-driven panning: from here, no wheel/touch/key input reaches the browser's
+    // native scroll handling until the module is exited at either end.
+    function engageFrom(direction) {
+      const rect = wrapper.getBoundingClientRect();
+      const targetDocY = direction === "top"
+        ? window.scrollY + rect.top
+        : window.scrollY + rect.bottom - window.innerHeight;
+      frozenScrollY = Math.round(targetDocY);
+      window.scrollTo(0, frozenScrollY);
+      engaged = true;
+      virtualProgress = direction === "top" ? 0 : 1;
+      if (!initialized) {
+        currentProgress = virtualProgress;
+        initialized = true;
+        applyPan();
+      }
+      startEntryPause();
+      if (!frameId) frameId = requestAnimationFrame(tick);
+    }
+
+    function disengage() {
+      engaged = false;
+      prevTop = null;
+    }
+
+    function atForwardEdge() {
+      return virtualProgress >= 1 - edgeEpsilon && currentProgress >= 1 - settleEpsilon;
+    }
+
+    function atBackwardEdge() {
+      return virtualProgress <= edgeEpsilon && currentProgress <= settleEpsilon;
+    }
+
+    // While not engaged, watches ordinary page scroll for the module's top edge
+    // reaching the viewport top (approaching from above) or its bottom edge
+    // reaching the viewport bottom (approaching from below), and grabs control.
+    // Only engages for scroll that was actually caused by the user scrolling
+    // (wheel/touch/key just before this) — a programmatic scroll, like a navbar
+    // link doing window.scrollTo({behavior:'smooth'}) past or into the module,
+    // is left alone entirely so it can carry straight through to its target.
+    function checkEngageOnScroll() {
+      const rect = wrapper.getBoundingClientRect();
+      if (prevTop === null) {
+        prevTop = rect.top;
+        return;
+      }
+      const isFromUserInput = performance.now() - lastUserInputAt < userInputRecencyWindow;
+      if (isFromUserInput) {
+        const prevBottom = prevTop + rect.height;
+        if (prevTop > 0 && rect.top <= 0) {
+          engageFrom("top");
+        } else if (prevBottom < window.innerHeight && rect.bottom >= window.innerHeight) {
+          engageFrom("bottom");
+        }
+      }
+      prevTop = rect.top;
+    }
+
+    function onScroll() {
+      if (engaged) {
+        if (Math.abs(window.scrollY - frozenScrollY) > 1) {
+          window.scrollTo(0, frozenScrollY);
+        }
+        return;
+      }
+      checkEngageOnScroll();
+    }
+
+    function onWheel(event) {
+      markUserInput();
+      if (!engaged) return;
+      if (entryPauseActive) {
+        event.preventDefault();
+        return;
+      }
+      if (event.deltaY > 0 && atForwardEdge()) {
+        disengage();
+        return;
+      }
+      if (event.deltaY < 0 && atBackwardEdge()) {
+        disengage();
+        return;
+      }
+      event.preventDefault();
+      adjustVirtualProgress(event.deltaY / distancePerPass);
+    }
+
+    function onTouchStart(event) {
+      lastTouchY = event.touches[0]?.clientY ?? null;
+      markUserInput();
+    }
+
+    function onTouchMove(event) {
+      if (lastTouchY == null || !event.touches[0]) return;
+      const currentY = event.touches[0].clientY;
+      const deltaY = lastTouchY - currentY;
+      markUserInput();
+
+      if (!engaged) {
+        lastTouchY = currentY;
+        return;
+      }
+      if (entryPauseActive) {
+        event.preventDefault();
+        lastTouchY = currentY;
+        return;
+      }
+      if (deltaY > 0 && atForwardEdge()) {
+        disengage();
+        lastTouchY = currentY;
+        return;
+      }
+      if (deltaY < 0 && atBackwardEdge()) {
+        disengage();
+        lastTouchY = currentY;
+        return;
+      }
+      event.preventDefault();
+      adjustVirtualProgress(deltaY / distancePerPass);
+      lastTouchY = currentY;
+    }
+
+    function onKeyDown(event) {
+      const isForward = forwardKeys.includes(event.key) || event.key === "End";
+      const isBackward = backwardKeys.includes(event.key) || event.key === "Home";
+      if (!isForward && !isBackward) return;
+      markUserInput();
+      if (!engaged) return;
+
+      if (entryPauseActive) {
+        event.preventDefault();
+        return;
+      }
+      if (isForward) {
+        if (atForwardEdge()) {
+          disengage();
+          return;
+        }
+        event.preventDefault();
+        if (event.key === "End") adjustVirtualProgress(1);
+        else adjustVirtualProgress(event.key === "PageDown" || event.key === " " ? pageKeyStep : arrowKeyStep);
+      } else {
+        if (atBackwardEdge()) {
+          disengage();
+          return;
+        }
+        event.preventDefault();
+        if (event.key === "Home") adjustVirtualProgress(-1);
+        else adjustVirtualProgress(event.key === "PageUp" ? -pageKeyStep : -arrowKeyStep);
+      }
+    }
+
+    function onResize() {
+      if (engaged) disengage();
+    }
+
     window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
+    window.addEventListener("resize", onResize);
+    window.addEventListener("wheel", onWheel, { passive: false });
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: false });
+    window.addEventListener("keydown", onKeyDown);
     return () => {
       window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("wheel", onWheel);
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("keydown", onKeyDown);
       if (frameId) cancelAnimationFrame(frameId);
+      if (entryPauseTimeoutId) window.clearTimeout(entryPauseTimeoutId);
     };
   }, [filmstripEnabled]);
 
@@ -1430,7 +1623,7 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
               <div className="absolute inset-x-0 bottom-0 h-[68%] bg-gradient-to-t from-black via-black/80 to-transparent" />
 
               <div className="relative flex h-full min-h-[270px] flex-col justify-between sm:min-h-[292px]">
-                <p className="text-xs font-semibold uppercase tracking-wide text-white/70">Hyresvärdar om LOA</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-white/70">Användare om LOA</p>
 
                 <div className="relative mt-8 min-h-[180px]">
                   {heroOwnerTestimonials.map((testimonial) => (
@@ -1524,47 +1717,45 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
           </div>
 
           {filmstripEnabled ? (
-            <div ref={filmstripWrapperRef} style={{ height: `${localProgramBenefits.length * 100}vh` }}>
-              <div className="sticky top-0 h-screen overflow-hidden">
-                <div
-                  ref={filmstripTrackRef}
-                  className="absolute inset-0 flex will-change-transform"
-                  style={{ width: `${localProgramBenefits.length * 100}vw` }}
-                >
-                  {localProgramBenefits.map((item, index) => {
-                    const Mockup = lokalprogramMockups[index];
-                    return (
-                      <div key={item.title} className="flex h-full w-screen shrink-0 items-center justify-start px-6 sm:px-10 lg:px-16">
-                        <div className="grid w-full max-w-[1600px] gap-10 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)] lg:items-center lg:gap-16">
-                          <div>
-                            <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/20 text-xs font-semibold text-white/70">
-                              {String(index + 1).padStart(2, "0")}
-                            </span>
-                            <p className="mt-4 text-3xl font-semibold leading-tight text-white sm:text-4xl">{item.title}</p>
-                            <p className="mt-3 max-w-sm text-sm leading-6 text-white/60">{item.body}</p>
-                          </div>
-                          <div className="w-full">
-                            <Mockup isActive />
-                          </div>
+            <div ref={filmstripWrapperRef} className="relative h-screen overflow-hidden">
+              <div
+                ref={filmstripTrackRef}
+                className="absolute inset-0 flex will-change-transform"
+                style={{ width: `${localProgramBenefits.length * 100}vw` }}
+              >
+                {localProgramBenefits.map((item, index) => {
+                  const Mockup = lokalprogramMockups[index];
+                  return (
+                    <div key={item.title} className="flex h-full w-screen shrink-0 items-center justify-start px-6 sm:px-10 lg:px-16">
+                      <div className="grid w-full max-w-[1600px] gap-10 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)] lg:items-center lg:gap-16">
+                        <div>
+                          <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/20 text-xs font-semibold text-white/70">
+                            {String(index + 1).padStart(2, "0")}
+                          </span>
+                          <p className="mt-4 text-3xl font-semibold leading-tight text-white sm:text-4xl">{item.title}</p>
+                          <p className="mt-3 max-w-sm text-sm leading-6 text-white/60">{item.body}</p>
+                        </div>
+                        <div className="w-full">
+                          <Mockup isActive />
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
+                    </div>
+                  );
+                })}
+              </div>
 
-                <div className="absolute inset-x-0 bottom-10 z-10 flex items-center justify-center gap-8 sm:bottom-14">
-                  {localProgramBenefits.map((item, index) => {
-                    const isActive = index === filmstripActiveIndex;
-                    return (
-                      <div key={item.title} className="flex items-center gap-2.5">
-                        <span className={`h-1.5 w-1.5 rounded-full transition-colors duration-300 ${isActive ? "bg-white" : "bg-white/25"}`} />
-                        <span className={`text-xs font-medium transition-colors duration-300 ${isActive ? "text-white" : "text-white/35"}`}>
-                          {item.title}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
+              <div className="absolute inset-x-0 bottom-10 z-10 flex items-center justify-center gap-8 sm:bottom-14">
+                {localProgramBenefits.map((item, index) => {
+                  const isActive = index === filmstripActiveIndex;
+                  return (
+                    <div key={item.title} className="flex items-center gap-2.5">
+                      <span className={`h-1.5 w-1.5 rounded-full transition-colors duration-300 ${isActive ? "bg-white" : "bg-white/25"}`} />
+                      <span className={`text-xs font-medium transition-colors duration-300 ${isActive ? "text-white" : "text-white/35"}`}>
+                        {item.title}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           ) : (
@@ -1623,8 +1814,8 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
 
             <div className="mt-6 space-y-5">
               <div className="flex items-center gap-4">
-                <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#0b0a0e] text-white">
-                  <CoinsIcon className="h-5 w-5" />
+                <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#0b0a0e] text-white ring-4 ring-[#0b0a0e]/10">
+                  <TrophyIcon className="h-5 w-5" />
                 </span>
                 <div>
                   <p className="text-base font-semibold">Topplacering</p>
@@ -1633,8 +1824,8 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
               </div>
               <div className="h-px bg-black/10" />
               <div className="flex items-center gap-4">
-                <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#0b0a0e] text-white">
-                  <CoinsIcon className="h-5 w-5" />
+                <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#0b0a0e] text-white ring-4 ring-[#0b0a0e]/10">
+                  <ResetIcon className="h-5 w-5" />
                 </span>
                 <div>
                   <p className="text-base font-semibold">Förnya annons</p>
@@ -1953,8 +2144,8 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
               <div className="mt-4 grid gap-2.5">
                 <a className="text-sm text-white/65 hover:text-white" href="#" onClick={(event) => { event.preventDefault(); navigateTo("/app/rent"); }}>Hyr lokal</a>
                 <a className="text-sm text-white/65 hover:text-white" href="#" onClick={(event) => { event.preventDefault(); navigateTo("/app/publish"); }}>Publicera lokal</a>
-                <a className="text-sm text-white/65 hover:text-white" href="#" onClick={(event) => { event.preventDefault(); navigateTo("/app/my-listings"); }}>Dina objekt</a>
-                <a className="text-sm text-white/65 hover:text-white" href="#" onClick={(event) => { event.preventDefault(); navigateTo("/app/profile"); }}>Profil</a>
+                <a className="text-sm text-white/65 hover:text-white" href="#" onClick={(event) => { event.preventDefault(); navigateTo("/app/broker"); }}>Dina objekt</a>
+                <a className="text-sm text-white/65 hover:text-white" href="#" onClick={(event) => { event.preventDefault(); navigateTo(footerProfilePath); }}>Profil</a>
               </div>
             </div>
 

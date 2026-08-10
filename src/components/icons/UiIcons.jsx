@@ -58,6 +58,7 @@ export const BuildingIcon = createSemanticIcon("building", "BuildingIcon");
 export const CalendarIcon = createSemanticIcon("calendar", "CalendarIcon");
 export const StarIcon = createSemanticIcon("star", "StarIcon");
 export const CrownIcon = createSemanticIcon("crown", "CrownIcon");
+export const TrophyIcon = createSemanticIcon("trophy", "TrophyIcon");
 export const EyeIcon = createSemanticIcon("eye", "EyeIcon");
 export const UserIcon = createSemanticIcon("user", "UserIcon");
 export const LockIcon = createSemanticIcon("lock", "LockIcon");

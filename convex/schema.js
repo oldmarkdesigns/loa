@@ -96,7 +96,11 @@ export default defineSchema({
     verified: v.boolean(),
     score: v.number(),
     image: v.string(),
-    images: v.array(v.string()),
+    images: v.array(v.object({
+      url: v.string(),
+      order: v.number(),
+      tag: v.optional(v.string())
+    })),
     amenities: v.array(v.string()),
     tags: v.array(v.string()),
     ownerId: v.string(),
@@ -104,6 +108,7 @@ export default defineSchema({
     status: v.string(),
     qualityScore: v.number(),
     isBostadsratt: v.boolean(),
+    floorPlanFileId: v.optional(v.id("_storage")),
     createdAt: v.string(),
     updatedAt: v.string(),
     verifyRequestedAt: v.union(v.string(), v.null()),
@@ -153,10 +158,14 @@ export default defineSchema({
     listingId: v.string(),
     renterId: v.string(),
     publisherId: v.string(),
+    // Free string, matching the convention used by every other status field in this
+    // schema (listings.status, viewings.status, ...) — canonical values live in
+    // LEAD_STATUSES in convex/lib.js rather than a v.union() literal enum here.
     status: v.string(),
     fitScore: v.number(),
     tags: v.array(v.string()),
     notes: v.string(),
+    followUpDate: v.optional(v.string()),
     createdAt: v.string(),
     updatedAt: v.string()
   })
@@ -164,4 +173,16 @@ export default defineSchema({
     .index("by_publisher_id", ["publisherId"])
     .index("by_listing_id", ["listingId"])
     .index("by_listing_renter", ["listingId", "renterId"])
+    .index("by_publisher_status", ["publisherId", "status"])
+    .index("by_publisher_follow_up", ["publisherId", "followUpDate"]),
+  leadActivities: defineTable({
+    id: v.string(),
+    leadId: v.string(),
+    authorId: v.string(),
+    type: v.union(v.literal("note"), v.literal("call"), v.literal("email"), v.literal("viewing")),
+    body: v.string(),
+    createdAt: v.string()
+  })
+    .index("by_public_id", ["id"])
+    .index("by_lead_id", ["leadId"])
 });

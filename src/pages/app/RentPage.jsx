@@ -19,7 +19,7 @@ import {
 import { listingApi } from "../../api";
 import { districtOptions, listingTypes } from "../../data/mockData";
 import { PLATFORM_GOOGLE_MAP_STYLE } from "../../lib/googleMapStyles";
-import { navigateTo } from "../../lib/router";
+import { navigateTo, normalizeAppRole } from "../../lib/router";
 
 const districtMapLayout = {
   Solna: { x: 42, y: 18 },
@@ -1461,11 +1461,11 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
   }, [app.user?.profile?.renterPrograms, renterProgram]);
   const hasCompanyAdminRole = useMemo(() => {
     const roles = Array.isArray(user?.roles) ? user.roles : [user?.role].filter(Boolean);
-    return roles.map((role) => role === "publisher" ? "broker" : role).includes("company_admin");
+    return roles.map(normalizeAppRole).includes("company_admin");
   }, [user?.role, user?.roles]);
   const hasRenterRole = useMemo(() => {
     const roles = Array.isArray(user?.roles) ? user.roles : [user?.role].filter(Boolean);
-    return roles.map((role) => role === "publisher" ? "broker" : role).includes("renter");
+    return roles.map(normalizeAppRole).includes("renter");
   }, [user?.role, user?.roles]);
   const implicitMaxBudget = app.allListingsFilters?.maxBudget ?? app.defaultFilters?.maxBudget ?? "";
   const hasTeamSizeForMatchChip = useMemo(() => {

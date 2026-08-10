@@ -72,7 +72,13 @@ function stepFromSearch(search) {
 
 function SignupPage({ onCheckCompanyByOrganizationNumber, onCompleteSignup, currentUser }) {
   const { isLoading, user, signIn, signUp } = useAuth();
-  const signupUser = user || currentUser || null;
+  // `user` from useAuth() can be silently restored from a persisted WorkOS session on page
+  // load (devMode keeps tokens in localStorage), even though this app never confirmed the
+  // person as signed in this tab. Only trust it here if a real redirect just completed in
+  // this tab (set by onRedirectCallback in main.jsx) - otherwise a stale session would
+  // leak someone else's name/email into the signup form without any visible login step.
+  const authJustCompleted = typeof window !== "undefined" && window.sessionStorage.getItem("office_auth_just_completed") === "1";
+  const signupUser = currentUser || (authJustCompleted ? user : null);
   const isConfigured = hasConvexConfig && hasWorkosConfig;
   const countryCodeOptions = [
     { label: "Sverige (+46)", value: "+46" },
@@ -307,7 +313,7 @@ function SignupPage({ onCheckCompanyByOrganizationNumber, onCompleteSignup, curr
     writeSignupDraft(draft);
     const signupReturnTo = profileExtraPath(returnTo);
     signIn({ state: { returnTo: signupReturnTo, signupDraft: draft } }).catch(() => {
-      navigateTo(`/login?returnTo=${encodeURIComponent(signupReturnTo)}`);
+      navigateTo("/");
     });
   }
 

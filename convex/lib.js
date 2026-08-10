@@ -4,6 +4,14 @@ import { parseAmenities, slugId } from "../src/lib/formatters.js";
 
 export { applyListingFilters, parseAmenities, parseNeedsFromPrompt, slugId };
 
+// Canonical lead pipeline stages. Stored as plain strings on leads.status (matching
+// every other status field in this schema), not enforced via a v.union() literal —
+// this list is the single source of truth for the values the CRM UI should offer.
+export const LEAD_STATUSES = ["new", "contacted", "viewing_booked", "negotiating", "won", "lost"];
+
+// Canonical listing lifecycle stages, same convention as LEAD_STATUSES above.
+export const LISTING_STATUSES = ["draft", "active", "negotiating", "rented", "inactive"];
+
 export function nowIso() {
   return new Date().toISOString();
 }
@@ -44,6 +52,7 @@ export function sanitizeUser(user) {
 }
 
 export function normalizeRole(role, fallbackRole = "renter") {
+  if (role === "company-admin" || role === "companyAdmin" || role === "admin") return "company_admin";
   if (role === "publisher") return "broker";
   if (role === "company_admin" || role === "broker" || role === "renter") return role;
   return fallbackRole;
@@ -89,10 +98,15 @@ export async function findUserByTokenIdentifier(ctx, tokenIdentifier) {
 }
 
 export async function findUserByEmail(ctx, email) {
-  return await ctx.db
+  const users = await ctx.db
     .query("users")
     .withIndex("by_email", (query) => query.eq("email", String(email || "").trim().toLowerCase()))
-    .unique();
+    .collect();
+
+  return users.find((user) => userGrantedRoles(user).includes("company_admin"))
+    || users.find((user) => userGrantedRoles(user).includes("broker"))
+    || users[0]
+    || null;
 }
 
 export async function findUserByPublicId(ctx, userId) {
@@ -445,7 +459,7 @@ function seedViewings() {
       message: "Vi vill se lokalen nästa vecka.",
       budget: 70000,
       teamSize: 12,
-      status: "Kontaktad",
+      status: "contacted",
       createdAt: now,
       updatedAt: now
     }
@@ -461,7 +475,7 @@ function seedLeads() {
       listingId: "L-102",
       renterId: "u-renter-demo",
       publisherId: "u-publisher-2",
-      status: "Visning bokad",
+      status: "viewing_booked",
       fitScore: 88,
       tags: ["Budget-fit", "Timing-fit"],
       notes: "Hög prioritet",

@@ -34,7 +34,7 @@ export const create = mutationGeneric({
       message: String(args?.message || ""),
       budget: Number(args?.budget || 0),
       teamSize: Number(args?.teamSize || 0),
-      status: "Ny",
+      status: "new",
       createdAt,
       updatedAt: createdAt
     };
@@ -47,7 +47,7 @@ export const create = mutationGeneric({
       listingId: listing.id,
       renterId: viewer.id,
       publisherId: listing.ownerId,
-      status: "Ny",
+      status: "new",
       fitScore: Math.max(61, 70 + tags.length * 8),
       tags,
       notes: "Skapad från visningsförfrågan",

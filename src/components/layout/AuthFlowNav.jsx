@@ -86,7 +86,7 @@ function AuthFlowNav({ user, onSwitchRole, onLogout }) {
                   onClick={() => {
                     const returnTo = loginReturnTo();
                     signIn({ state: { returnTo } }).catch(() => {
-                      navigateTo(`/login?returnTo=${encodeURIComponent(returnTo)}`);
+                      navigateTo("/");
                     });
                   }}
                 >

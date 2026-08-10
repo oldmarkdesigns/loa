@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { formatSek } from "../../lib/formatters";
+import { normalizeAppRole } from "../../lib/router";
 import {
   ArchiveIcon,
   CalendarIcon,
@@ -238,7 +239,7 @@ function pipelineToneClass(tone) {
 }
 
 function MessagesPage({ app }) {
-  const activeRole = app?.user?.role === "publisher" ? "broker" : (app?.user?.role || "renter");
+  const activeRole = normalizeAppRole(app?.user?.role);
   const isBrokerView = activeRole === "broker";
   const [searchQuery, setSearchQuery] = useState("");
   const [activeConversationId, setActiveConversationId] = useState(isBrokerView ? brokerConversations[0].id : renterConversations[0].id);

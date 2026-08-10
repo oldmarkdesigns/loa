@@ -2,10 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import ListingVisualCard from "../../components/app/ListingVisualCard";
 import LocalProgramModule from "../../components/app/LocalProgramModule";
 import ViewingRequestModal from "../../components/app/ViewingRequestModal";
-import { propertyAmenityOptions } from "../../lib/propertyAmenityIcons";
 import {
   BuildingIcon,
-  LoungeIcon,
   CalendarIcon,
   CarIcon,
   CheckBadgeIcon,
@@ -16,328 +14,39 @@ import {
   MapIcon,
   PencilIcon,
   PinIcon,
-  PlusIcon,
   RulerIcon,
   ShieldIcon,
   SwitchHorizontalIcon,
-  TrashIcon,
   CameraIcon,
+  TrashIcon,
   UserIcon,
   XIcon,
 } from "../../components/icons/UiIcons";
 import PremiumPromoCard from "../../components/shared/PremiumPromoCard";
-import { navigateTo } from "../../lib/router";
-
-const DEFAULT_MAX_BUDGET = 250000;
-const mockRenterMatches = [
-  {
-    id: "renter-match-1",
-    matchPercent: 91,
-    name: "Nordic Growth AB",
-    verified: true,
-    title: "SCALEUP · MARKNAD",
-    summary: "Växande marknadsteam söker kontor nära tunnelbana.",
-    timeline: "Nu → 3 månader",
-    budget: "Max SEK 28,000/mån",
-    furnishing: "Möblerat eller flex",
-    people: "6 arbetsplatser",
-    logo: "NG"
-  },
-  {
-    id: "renter-match-2",
-    matchPercent: 87,
-    name: "BASIC Studio Group",
-    verified: true,
-    title: "TECH · KONSULT",
-    summary: "Två bolag som vill samlokalisera i Söderläge.",
-    timeline: "Nu → Tills vidare",
-    budget: "Max SEK 42,000/mån",
-    furnishing: "Omöblerat",
-    people: "12 arbetsplatser",
-    logo: "BS"
-  },
-  {
-    id: "renter-match-3",
-    matchPercent: 84,
-    name: "Lind & Partners",
-    verified: true,
-    title: "KREATIV BYRÅ",
-    summary: "Etablerad byrå med stabil ekonomi och lång horisont.",
-    timeline: "1-2 månader → 24 månader",
-    budget: "Max SEK 36,000/mån",
-    furnishing: "Flexibelt",
-    people: "8 arbetsplatser",
-    logo: "LP"
-  }
-];
-const typeOptions = ["Kontor", "Coworking", "Kontorshotell", "Butik", "Lager", "Showroom", "Ateljé", "Klinik", "Restaurang"];
-const districtOptions = ["Alla", "Norrmalm", "Södermalm", "Vasastan", "Östermalm", "Kungsholmen", "Solna", "Sundbyberg"];
-const contractOptions = ["Alla", "Kort (0-6 mån)", "Mellan (6-12 mån)", "Lång (12+ mån)"];
-const transitOptions = ["Alla", "0-300 meter", "0-600 meter", "0-1000 meter", "0-1100 meter"];
-const parkingOptions = ["Alla", "Ingen preferens", "Bilparkering", "Laddplats", "Garage"];
-const layoutOptions = ["Alla", "Öppet landskap", "Mixat", "Cellkontor", "Flexibelt"];
-const accessOptions = ["Alla", "Kontorstid", "Utökad access", "24/7"];
-const amenityOptions = propertyAmenityOptions;
-
-function formatTimestamp(value) {
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return "Nyss";
-  return parsed.toLocaleString("sv-SE", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit"
-  });
-}
-
-function buildHistoryChips(filters = {}, aiPrompt = "") {
-  const chips = [];
-  const query = String(filters.query || "").trim();
-  const keyword = String(filters.keyword || "").trim();
-  const district = String(filters.district || "").trim();
-  const typeArray = Array.isArray(filters.type) ? filters.type.filter(Boolean) : [];
-  const minSize = String(filters.minSize || "").trim();
-  const maxSize = String(filters.maxSize || "").trim();
-  const teamSize = String(filters.teamSize || "").trim();
-  const minBudget = String(filters.minBudget || "").trim();
-  const maxBudget = String(filters.maxBudget || "").trim();
-
-  if (aiPrompt) chips.push(`AI: ${aiPrompt}`);
-  if (query) chips.push(`Sök: ${query}`);
-  if (!query && keyword) chips.push(`Sökord: ${keyword}`);
-  if (district && district !== "Alla") chips.push(`Område: ${district}`);
-  if (typeArray.length > 0) chips.push(`Typ: ${typeArray.join(", ")}`);
-  if (teamSize) chips.push(`Platser: ${teamSize}+`);
-  if (minSize || maxSize) chips.push(`Yta: ${minSize || 0}-${maxSize || "∞"} kvm`);
-  if (minBudget || (maxBudget && Number(maxBudget) !== DEFAULT_MAX_BUDGET)) chips.push(`Budget: ${minBudget || 0}-${maxBudget || "∞"} kr`);
-  if (filters.transitDistance) chips.push(`Kommunaltrafik: ${filters.transitDistance}`);
-  if (filters.contractFlex) chips.push(`Avtal: ${filters.contractFlex}`);
-  if (filters.accessHours) chips.push(`Access: ${filters.accessHours}`);
-  if (filters.parkingType) chips.push(`Parkering: ${filters.parkingType}`);
-  if (filters.layoutType) chips.push(`Planlösning: ${filters.layoutType}`);
-  if (filters.advertiser && filters.advertiser !== "Alla") chips.push(`Hyresvärd: ${filters.advertiser}`);
-  if (filters.includeOperatingCosts) chips.push("Driftkostnader ingår");
-  if (filters.accessibilityAdapted) chips.push("Tillgänglighetsanpassad");
-  if (filters.ecoCertified) chips.push("Miljöcertifierad");
-  if (filters.verified) chips.push("Verifierade objekt");
-  if (filters.readyNow) chips.push("Ledig nu");
-
-  return chips.slice(0, 12);
-}
-
-function buildHistoryDetails(filters = {}, aiPrompt = "") {
-  const details = [];
-  const query = String(filters.query || "").trim();
-  const keyword = String(filters.keyword || "").trim();
-  const district = String(filters.district || "").trim();
-  const typeArray = Array.isArray(filters.type) ? filters.type.filter(Boolean) : [];
-  const minSize = String(filters.minSize || "").trim();
-  const maxSize = String(filters.maxSize || "").trim();
-  const teamSize = String(filters.teamSize || "").trim();
-  const minBudget = String(filters.minBudget || "").trim();
-  const maxBudget = String(filters.maxBudget || "").trim();
-
-  if (aiPrompt) details.push({ label: "AI-sök", value: aiPrompt });
-  if (query || keyword) details.push({ label: "Söktext", value: query || keyword });
-  if (district && district !== "Alla") details.push({ label: "Område", value: district });
-  if (typeArray.length > 0) details.push({ label: "Typ", value: typeArray.join(", ") });
-  if (teamSize) details.push({ label: "Team", value: `${teamSize} platser` });
-  if (minSize || maxSize) details.push({ label: "Yta", value: `${minSize || "0"}-${maxSize || "∞"} kvm` });
-  if (minBudget || (maxBudget && Number(maxBudget) !== DEFAULT_MAX_BUDGET)) details.push({ label: "Budget", value: `${minBudget || "0"}-${maxBudget || "∞"} kr` });
-  if (filters.moveInDate) details.push({ label: "Inflyttning", value: filters.moveInDate });
-  if (filters.transitDistance) details.push({ label: "Kommunaltrafik", value: filters.transitDistance });
-
-  return details.slice(0, 8);
-}
-
-function buildRentSearchUrl(filters = {}, { aiPrompt = "" } = {}) {
-  const params = new URLSearchParams();
-  const query = String(filters.query || "").trim();
-  const keyword = String(filters.keyword || "").trim();
-  const district = String(filters.district || "").trim();
-  const typeArray = Array.isArray(filters.type) ? filters.type.filter(Boolean) : [];
-  const minSize = String(filters.minSize || "").trim();
-  const maxSize = String(filters.maxSize || "").trim();
-  const teamSize = String(filters.teamSize || "").trim();
-  const minBudget = String(filters.minBudget || "").trim();
-  const maxBudget = String(filters.maxBudget || "").trim();
-
-  params.set("run", "1");
-  if (query) params.set("query", query);
-  else if (keyword) params.set("query", keyword);
-  if (district && district !== "Alla") params.set("district", district);
-  if (typeArray[0]) params.set("type", typeArray[0]);
-  if (minSize) params.set("minSize", minSize);
-  if (maxSize) params.set("maxSize", maxSize);
-  if (teamSize) params.set("teamSize", teamSize);
-  if (minBudget) params.set("minBudget", minBudget);
-  if (maxBudget && Number(maxBudget) !== DEFAULT_MAX_BUDGET) params.set("maxBudget", maxBudget);
-  if (filters.transitDistance) params.set("transitDistance", filters.transitDistance);
-  if (filters.moveInDate) params.set("moveInDate", filters.moveInDate);
-  if (filters.contractFlex) params.set("contractFlex", filters.contractFlex);
-  if (filters.accessHours) params.set("accessHours", filters.accessHours);
-  if (filters.parkingType) params.set("parkingType", filters.parkingType);
-  if (filters.layoutType) params.set("layoutType", filters.layoutType);
-  if (filters.advertiser && filters.advertiser !== "Alla") params.set("advertiser", filters.advertiser);
-  if (filters.includeOperatingCosts) params.set("includeOperatingCosts", "1");
-  if (filters.accessibilityAdapted) params.set("accessibilityAdapted", "1");
-  if (filters.ecoCertified) params.set("ecoCertified", "1");
-  if (filters.verified) params.set("verified", "1");
-  if (filters.readyNow) params.set("readyNow", "1");
-  if (aiPrompt) {
-    params.set("ai", "1");
-    params.set("aiPrompt", aiPrompt);
-  }
-  return `/app/rent?${params.toString()}`;
-}
-
-function listFromDelimitedValue(value) {
-  if (Array.isArray(value)) return value.map((item) => String(item || "").trim()).filter(Boolean);
-  return String(value || "")
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
-
-function parseDistrictSelection(value) {
-  return String(value || "")
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
-
-function normalizeAmenity(value) {
-  return String(value || "").trim().toLowerCase();
-}
-
-function formatMoney(value) {
-  const amount = Number(value);
-  if (!Number.isFinite(amount) || amount <= 0) return "-";
-  return `${amount.toLocaleString("sv-SE")} kr`;
-}
-
-function hasProgramInput(program = {}) {
-  return [
-    program.title,
-    program.district,
-    program.type,
-    program.teamSize,
-    program.minSize,
-    program.maxSize,
-    program.minBudget,
-    program.maxBudget,
-    program.moveInDate,
-    program.contractFlex,
-    program.transitDistance,
-    program.accessHours,
-    program.parkingType,
-    program.layoutType,
-    program.amenities,
-    program.includeOperatingCosts,
-    program.accessibilityAdapted,
-    program.ecoCertified
-  ].some((value) => {
-    if (Array.isArray(value)) return value.length > 0;
-    return Boolean(String(value || "").trim() || value === true);
-  });
-}
-
-function normalizeProgram(program = {}, fallbackIndex = 0) {
-  const type = Array.isArray(program.type) ? program.type.filter(Boolean) : listFromDelimitedValue(program.type);
-  return {
-    id: String(program.id || `program-${fallbackIndex + 1}`),
-    title: String(program.title || "").trim() || `Lokalprogram ${fallbackIndex + 1}`,
-    district: program.district || "Alla",
-    type,
-    teamSize: program.teamSize || "",
-    minSize: program.minSize || "",
-    maxSize: program.maxSize || "",
-    minBudget: program.minBudget || "",
-    maxBudget: program.maxBudget || "",
-    moveInDate: program.moveInDate || "",
-    contractFlex: program.contractFlex || "",
-    transitDistance: program.transitDistance || "",
-    accessHours: program.accessHours || "",
-    parkingType: program.parkingType || "",
-    layoutType: program.layoutType || "",
-    includeOperatingCosts: Boolean(program.includeOperatingCosts),
-    accessibilityAdapted: Boolean(program.accessibilityAdapted),
-    ecoCertified: Boolean(program.ecoCertified),
-    amenities: program.amenities || ""
-  };
-}
-
-function normalizeProgramList(profile = {}) {
-  if (Array.isArray(profile.renterPrograms) && profile.renterPrograms.length > 0) {
-    return profile.renterPrograms.map((program, index) => normalizeProgram(program, index));
-  }
-  if (profile.renterProgram && hasProgramInput(profile.renterProgram)) {
-    return [normalizeProgram(profile.renterProgram, 0)];
-  }
-  return [];
-}
-
-function createBlankProgram(index = 0) {
-  return normalizeProgram({
-    id: `program-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-    title: `Lokalprogram ${index + 1}`,
-    district: "Alla"
-  }, index);
-}
-
-function readFileAsDataUrl(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result || ""));
-    reader.onerror = () => reject(new Error("Kunde inte läsa filen."));
-    reader.readAsDataURL(file);
-  });
-}
-
-async function readOptimizedProfileImage(file) {
-  const rawDataUrl = await readFileAsDataUrl(file);
-  if (!rawDataUrl.startsWith("data:image/")) return rawDataUrl;
-
-  return new Promise((resolve) => {
-    const image = new Image();
-    image.onload = () => {
-      const maxDimension = 1200;
-      const sourceWidth = image.naturalWidth || image.width || maxDimension;
-      const sourceHeight = image.naturalHeight || image.height || maxDimension;
-      const scale = Math.min(1, maxDimension / Math.max(sourceWidth, sourceHeight));
-      const targetWidth = Math.max(1, Math.round(sourceWidth * scale));
-      const targetHeight = Math.max(1, Math.round(sourceHeight * scale));
-
-      const canvas = document.createElement("canvas");
-      canvas.width = targetWidth;
-      canvas.height = targetHeight;
-      const context = canvas.getContext("2d");
-      if (!context) {
-        resolve(rawDataUrl);
-        return;
-      }
-
-      context.drawImage(image, 0, 0, targetWidth, targetHeight);
-      const compressed = canvas.toDataURL("image/jpeg", 0.82);
-      resolve(compressed || rawDataUrl);
-    };
-    image.onerror = () => resolve(rawDataUrl);
-    image.src = rawDataUrl;
-  });
-}
-
-function isFilled(value, { disallowAll = false } = {}) {
-  if (Array.isArray(value)) {
-    const clean = value.map((item) => String(item || "").trim()).filter(Boolean);
-    if (clean.length === 0) return false;
-    return disallowAll ? !clean.every((item) => item.toLowerCase() === "alla") : true;
-  }
-  const text = String(value ?? "").trim();
-  if (!text) return false;
-  if (disallowAll && text.toLowerCase() === "alla") return false;
-  return true;
-}
+import { navigateTo, normalizeAppRole } from "../../lib/router";
+import {
+  DEFAULT_MAX_BUDGET,
+  typeOptions,
+  districtOptions,
+  contractOptions,
+  transitOptions,
+  parkingOptions,
+  layoutOptions,
+  accessOptions,
+  amenityOptions,
+  formatTimestamp,
+  buildHistoryChips,
+  buildHistoryDetails,
+  buildRentSearchUrl,
+  listFromDelimitedValue,
+  parseDistrictSelection,
+  normalizeAmenity,
+  formatMoney,
+  normalizeProgramList,
+  createBlankProgram,
+  readOptimizedProfileImage,
+  isFilled
+} from "../../lib/profileHelpers";
 
 function preferenceMatchScore(listing, renterProgram = {}) {
   const preferredTypes = listFromDelimitedValue(renterProgram.type);
@@ -460,7 +169,6 @@ function ProfilePage({ app }) {
   const [showProgramOverlay, setShowProgramOverlay] = useState(false);
   const [editingProgramId, setEditingProgramId] = useState(null);
   const [showTeamOverlay, setShowTeamOverlay] = useState(false);
-  const [showProfileOverlay, setShowProfileOverlay] = useState(false);
   const [isProfileSetupCollapsed, setIsProfileSetupCollapsed] = useState(false);
   const [dismissedBrokerApprovalCard, setDismissedBrokerApprovalCard] = useState(false);
   const [resendingBrokerVerification, setResendingBrokerVerification] = useState(false);
@@ -473,34 +181,17 @@ function ProfilePage({ app }) {
     avatarUrl: user?.profile?.avatarUrl || ""
   });
   const profileAvatarInputRef = useRef(null);
-  const [teamInvite, setTeamInvite] = useState({ email: "", firstName: "", lastName: "" });
-  const [teamMembers, setTeamMembers] = useState(() => {
-    const seeded = Array.isArray(user?.teamMembers) ? user.teamMembers : [];
-    if (seeded.length > 0) return seeded;
-    return [
-      {
-        id: "team-owner",
-        email: user?.email || "konto@foretag.se",
-        firstName: (user?.name || "").split(" ")[0] || "Kontoinnehavare",
-        lastName: (user?.name || "").split(" ").slice(1).join(" ") || "",
-        phone: user?.phone || "",
-        avatarUrl: user?.profile?.avatarUrl || "",
-        status: "Aktiv"
-      }
-    ];
-  });
 
   const roleSet = useMemo(() => {
     const merged = Array.from(new Set([...(Array.isArray(user?.roles) ? user.roles : []), user?.role].filter(Boolean)));
-    return new Set(merged.map((role) => role === "publisher" ? "broker" : role));
+    return new Set(merged.map(normalizeAppRole));
   }, [user?.role, user?.roles]);
   const hasRenter = roleSet.has("renter");
   const hasCompanyAdmin = roleSet.has("company_admin");
   const hasBrokerRole = roleSet.has("broker");
-  const hideLocalProgramInProfile = !hasRenter || hasBrokerRole;
   const canSwitchToCompany = hasRenter && hasCompanyAdmin;
   const canSwitchToBroker = hasRenter && hasBrokerRole && !hasCompanyAdmin;
-  const activeRole = user?.role === "publisher" ? "broker" : user?.role;
+  const activeRole = normalizeAppRole(user?.role);
   const hasPendingBrokerVerification =
     user?.profile?.requestedRole === "broker" &&
     user?.profile?.roleRequestStatus === "pending";
@@ -518,9 +209,6 @@ function ProfilePage({ app }) {
     user?.profile?.organizationNumber ||
     user?.profile?.companyOrganizationNumber ||
     "";
-  const currentRoleLabel = useMemo(() => (
-    activeRole === "broker" ? "Mäklare" : activeRole === "company_admin" ? "Bolagsadmin" : "Hyresgäst"
-  ), [activeRole]);
 
   const renterPrograms = useMemo(() => normalizeProgramList(user?.profile || {}), [user?.profile]);
   const renterProgram = useMemo(() => renterPrograms[0] || user?.profile?.renterProgram || {}, [renterPrograms, user?.profile?.renterProgram]);
@@ -594,15 +282,6 @@ function ProfilePage({ app }) {
       amenities: selectedProgram.amenities || ""
     });
   }, [editingProgramId, renterPrograms, showProgramOverlay]);
-
-  useEffect(() => {
-    if (!showProfileOverlay) return;
-    setProfileDraft({
-      name: user?.name || "",
-      phone: user?.phone || "",
-      avatarUrl: user?.profile?.avatarUrl || ""
-    });
-  }, [showProfileOverlay, user?.name, user?.phone, user?.profile?.avatarUrl]);
 
   const preferenceMatches = useMemo(() => {
     if (!hasRenter || listings.length === 0) return [];
@@ -699,39 +378,6 @@ function ProfilePage({ app }) {
     navigateTo(tabKey === "profile" ? "/app/profile" : `/app/profile?tab=${tabKey}`);
   }
 
-  function inviteTeamMember(event) {
-    event.preventDefault();
-    const email = teamInvite.email.trim().toLowerCase();
-    const firstName = teamInvite.firstName.trim();
-    const lastName = teamInvite.lastName.trim();
-    if (!email || !firstName) {
-      app.pushToast?.("Fyll i e-post och förnamn för att bjuda in en användare.", "error");
-      return;
-    }
-    const alreadyExists = teamMembers.some((member) => member.email.toLowerCase() === email);
-    if (alreadyExists) {
-      app.pushToast?.("Den här användaren finns redan i teamet.", "error");
-      return;
-    }
-    setTeamMembers((prev) => [
-      ...prev,
-      { id: `team-${Date.now()}`, email, firstName, lastName, phone: "", avatarUrl: "", status: "Inbjuden" }
-    ]);
-    setTeamInvite({ email: "", firstName: "", lastName: "" });
-    app.pushToast?.(`Inbjudan skickad till ${email}.`, "success");
-  }
-
-  function removeTeamMember(memberId) {
-    setTeamMembers((prev) => prev.filter((member) => member.id !== memberId));
-    app.pushToast?.("Användaren har tagits bort från teamet.", "success");
-  }
-
-  function updateTeamMember(memberId, patch) {
-    setTeamMembers((prev) => prev.map((member) => (
-      member.id === memberId ? { ...member, ...patch } : member
-    )));
-  }
-
   function openTaskEditor(target) {
     if (target === "program") {
       setEditingProgramId(renterPrograms[0]?.id || null);
@@ -767,7 +413,7 @@ function ProfilePage({ app }) {
         }
       });
       app.pushToast?.("Profilen är uppdaterad.", "success");
-      setShowProfileOverlay(false);
+      setShowTeamOverlay(false);
     } catch (error) {
       app.pushToast?.(error.message || "Kunde inte spara profilen.", "error");
     } finally {
@@ -1086,7 +732,6 @@ function ProfilePage({ app }) {
                   </article>
                   ) : null}
 
-                  {!hideLocalProgramInProfile ? (
                   <LocalProgramModule
                     programs={renterPrograms}
                     canEdit={hasRenter}
@@ -1094,94 +739,37 @@ function ProfilePage({ app }) {
                     onEditProgram={openExistingProgramEditor}
                     onDeleteProgram={deleteProgram}
                   />
-                  ) : null}
 
-                  {hideLocalProgramInProfile ? (
-                    <section className="pt-3">
-                      {hasBrokerRole ? (
-                        <div className="mb-4">
-                          <LocalProgramModule
-                            programs={renterPrograms}
-                            canEdit
-                            onAddProgram={openNewProgramEditor}
-                            onEditProgram={openExistingProgramEditor}
-                            onDeleteProgram={deleteProgram}
-                          />
-                        </div>
-                      ) : null}
-                      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                        <div>
-                          <h2 className="text-2xl font-semibold text-[#0b0a0e]">Hyresgäster som matchar dina lokaler</h2>
-                          <p className="mt-1 text-sm text-ink-600">Kuraterade profiler med tydlig matchning mot ditt utbud.</p>
-                        </div>
+                  <section className="pt-3">
+                    <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <h2 className="text-2xl font-semibold text-[#0b0a0e]">Lokaler som matchar dina preferenser</h2>
+                        <p className="mt-1 text-sm text-ink-600">Matchningar med tydlig motivering utifrån ditt lokalprogram.</p>
                       </div>
-                      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                        {mockRenterMatches.map((renter) => (
-                          <article key={renter.id} className="relative rounded-3xl border border-black/10 bg-[#ffffff] p-4 sm:p-5">
-                            <span className="absolute right-3.5 top-3.5 rounded-full border border-[#0b0a0e]/20 bg-[#f8fafc] px-3 py-1 text-sm font-semibold text-[#0b0a0e]">
-                              {renter.matchPercent}%
-                            </span>
-                            <div className="h-5" />
-                            <div className="mx-auto mt-3 flex h-28 w-28 items-center justify-center rounded-2xl border border-[#0b0a0e]/15 bg-[#f8fafc] text-3xl font-semibold tracking-wide text-[#0b0a0e]">
-                              {renter.logo}
-                            </div>
-                            <div className="mt-3 text-center">
-                              <p className="text-[20px] font-semibold leading-[1.15] text-[#241d1a]">{renter.name}</p>
-                              {renter.verified ? (
-                                <p className="mt-1 inline-flex items-center gap-1.5 text-sm font-semibold text-ink-700">
-                                  <span className="inline-flex h-4 w-4 items-center justify-center bg-[#0b0a0e] text-white" style={{ clipPath: "polygon(50% 1%,58% 4%,66% 2%,73% 8%,81% 8%,88% 15%,96% 19%,99% 28%,97% 36%,99% 44%,94% 51%,95% 59%,89% 66%,86% 75%,78% 79%,71% 86%,62% 87%,55% 94%,47% 92%,39% 97%,32% 91%,23% 91%,18% 83%,9% 81%,6% 72%,1% 65%,3% 56%,0% 48%,6% 41%,4% 33%,10% 26%,11% 17%,20% 13%,25% 5%,34% 5%,42% 1%)" }}>
-                                    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-3 w-3">
-                                      <path d="M5.5 12.5l4 4 9-9" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                    </svg>
-                                  </span>
-                                  Verifierad organisation
-                                </p>
-                              ) : null}
-                              <p className="mt-2 text-center text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-500">{renter.title}</p>
-                              <p className="mt-1.5 text-center text-base font-medium leading-snug text-[#241d1a]">{renter.summary}</p>
-                            </div>
-                            <ul className="mt-4 space-y-2.5 text-[#241d1a]">
-                              <li className="flex items-center gap-2.5 text-sm"><CalendarIcon className="h-4 w-4 text-ink-700" /><span>{renter.timeline}</span></li>
-                              <li className="flex items-center gap-2.5 text-sm"><CoinsIcon className="h-4 w-4 text-ink-700" /><span>{renter.budget}</span></li>
-                              <li className="flex items-center gap-2.5 text-sm"><LoungeIcon className="h-4 w-4 text-ink-700" /><span>{renter.furnishing}</span></li>
-                              <li className="flex items-center gap-2.5 text-sm"><UserIcon className="h-4 w-4 text-ink-700" /><span>{renter.people}</span></li>
-                            </ul>
-                          </article>
+                    </div>
+                    {preferenceMatches.length === 0 ? (
+                      <p className="rounded-2xl border border-black/10 bg-[#ffffff] px-4 py-4 text-sm text-ink-600">
+                        Inga matchningar ännu. Fyll i fler preferenser i lokalprogrammet.
+                      </p>
+                    ) : (
+                      <div className="grid gap-4 md:grid-cols-2">
+                        {preferenceMatches.map((item) => (
+                          <ListingVisualCard
+                            key={item.listing.id}
+                            listing={{ ...item.listing, score: item.matchPercent }}
+                            shortlisted={favoriteIds.has(String(item.listing.id))}
+                            onOpenListing={(selected) => navigateTo(`/app/listings/${encodeURIComponent(selected.id)}`)}
+                            onBookViewing={(selected) => setBookingListing(selected)}
+                            onToggleShortlist={(listingId) => toggleFavorite?.(listingId)}
+                            showMatchChip
+                            highlightAmenities={desiredAmenities}
+                            missingAmenities={item.missingAmenities}
+                            comparedAmenitiesOnly
+                          />
                         ))}
                       </div>
-                    </section>
-                  ) : (
-                    <section className="pt-3">
-                      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                        <div>
-                          <h2 className="text-2xl font-semibold text-[#0b0a0e]">Lokaler som matchar dina preferenser</h2>
-                          <p className="mt-1 text-sm text-ink-600">Matchningar med tydlig motivering utifrån ditt lokalprogram.</p>
-                        </div>
-                      </div>
-                      {preferenceMatches.length === 0 ? (
-                        <p className="rounded-2xl border border-black/10 bg-[#ffffff] px-4 py-4 text-sm text-ink-600">
-                          Inga matchningar ännu. Fyll i fler preferenser i lokalprogrammet.
-                        </p>
-                      ) : (
-                        <div className="grid gap-4 md:grid-cols-2">
-                          {preferenceMatches.map((item) => (
-                            <ListingVisualCard
-                              key={item.listing.id}
-                              listing={{ ...item.listing, score: item.matchPercent }}
-                              shortlisted={favoriteIds.has(String(item.listing.id))}
-                              onOpenListing={(selected) => navigateTo(`/app/listings/${encodeURIComponent(selected.id)}`)}
-                              onBookViewing={(selected) => setBookingListing(selected)}
-                              onToggleShortlist={(listingId) => toggleFavorite?.(listingId)}
-                              showMatchChip
-                              highlightAmenities={desiredAmenities}
-                              missingAmenities={item.missingAmenities}
-                              comparedAmenitiesOnly
-                            />
-                          ))}
-                        </div>
-                      )}
-                    </section>
-                  )}
+                    )}
+                  </section>
                 </div>
 
                 <aside className="space-y-6 lg:sticky lg:top-0 lg:self-start">
@@ -1410,107 +998,6 @@ function ProfilePage({ app }) {
           ) : null}
         </div>
       </div>
-
-      {showProfileOverlay ? (
-        <div className="fixed inset-0 z-[90] h-dvh overflow-hidden bg-[#ffffff]">
-        <div className="h-full overflow-y-auto overscroll-none bg-[#ffffff] p-4 sm:p-6" onClick={() => setShowProfileOverlay(false)}>
-          <div className="mx-auto w-full max-w-[1240px] rounded-3xl border border-black/10 bg-[#ffffff] p-5 sm:p-6" onClick={(event) => event.stopPropagation()}>
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h3 className="text-2xl font-semibold text-[#0b0a0e]">Redigera profil</h3>
-                <p className="mt-1 text-sm text-ink-600">Uppdatera profilbild och kontaktuppgifter.</p>
-              </div>
-              <button
-                type="button"
-                className="close-circle-button inline-flex items-center justify-center rounded-full border border-black/15 bg-[#ffffff] text-xl leading-none text-ink-700"
-                onClick={() => setShowProfileOverlay(false)}
-                aria-label="Stäng"
-              >
-                ×
-              </button>
-            </div>
-
-            <div className="mt-5 grid gap-5 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-start">
-              <div className="flex flex-col items-center gap-3">
-                {profileDraft.avatarUrl ? (
-                  <img src={profileDraft.avatarUrl} alt="Profilbild" className="h-28 w-28 rounded-full border border-black/10 object-cover" />
-                ) : (
-                  <div className="inline-flex h-28 w-28 items-center justify-center rounded-full border border-black/10 bg-[#eef2f8] text-3xl font-semibold text-ink-700">
-                    {(profileDraft.name || user?.email || "A").trim().charAt(0).toUpperCase()}
-                  </div>
-                )}
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-1.5 rounded-full border border-black/15 bg-[#ffffff] px-3.5 py-2 text-xs font-semibold text-ink-800"
-                  onClick={() => profileAvatarInputRef.current?.click()}
-                >
-                  <CameraIcon className="h-4 w-4" />
-                  Lägg till foto
-                </button>
-                <input
-                  ref={profileAvatarInputRef}
-                  className="hidden"
-                  type="file"
-                  accept="image/*"
-                  onChange={async (event) => {
-                    const file = event.target.files?.[0];
-                    if (!file) return;
-                    try {
-                      const dataUrl = await readOptimizedProfileImage(file);
-                      setProfileDraft((prev) => ({ ...prev, avatarUrl: dataUrl }));
-                    } catch (_error) {
-                      app.pushToast?.("Kunde inte läsa bilden.", "error");
-                    }
-                  }}
-                />
-              </div>
-
-              <div className="grid gap-3 sm:max-w-xl">
-                <label className="grid gap-1">
-                  <span className="text-xs font-semibold text-ink-600">Namn</span>
-                  <input
-                    className="field"
-                    value={profileDraft.name}
-                    onChange={(event) => setProfileDraft((prev) => ({ ...prev, name: event.target.value }))}
-                  />
-                </label>
-                <label className="grid gap-1">
-                  <span className="text-xs font-semibold text-ink-600">Telefon</span>
-                  <input
-                    className="field"
-                    value={profileDraft.phone}
-                    onChange={(event) => setProfileDraft((prev) => ({ ...prev, phone: event.target.value }))}
-                    placeholder="+46 70 123 45 67"
-                  />
-                </label>
-                <label className="grid gap-1">
-                  <span className="text-xs font-semibold text-ink-600">E-post</span>
-                  <input className="field" value={user?.email || ""} disabled />
-                </label>
-              </div>
-            </div>
-
-            <div className="mt-5 flex items-center justify-end gap-2">
-              <button
-                type="button"
-                className="rounded-full border border-black/20 bg-[#ffffff] px-5 py-2.5 text-sm font-semibold text-ink-700"
-                onClick={() => setShowProfileOverlay(false)}
-              >
-                Avbryt
-              </button>
-              <button
-                type="button"
-                className="rounded-full border border-[#0b0a0e] bg-[#0b0a0e] px-5 py-2.5 text-sm font-semibold text-white"
-                onClick={saveProfileChanges}
-                disabled={savingProfile}
-              >
-                {savingProfile ? "Sparar..." : "Spara ändringar"}
-              </button>
-            </div>
-          </div>
-        </div>
-        </div>
-      ) : null}
 
       {showProgramOverlay ? (
         <div className="fixed inset-0 z-[90] h-dvh overflow-hidden bg-[#ffffff]">

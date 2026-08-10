@@ -5,11 +5,7 @@ import { ArrowUpIcon, BellIcon, MouseScrollIcon, SwitchHorizontalIcon } from "..
 import AppFooter from "./AppFooter";
 import MarketingHeader from "./MarketingHeader";
 import ProfileMenuDropdown from "./ProfileMenuDropdown";
-
-const publisherWorkspaceItems = [
-  { label: "Dina objekt", path: "/app/my-listings" },
-  { label: "Intresse och visningar", path: "/app/leads" }
-];
+import companyLogo from "../../../Assets/Logo/LOA-Logo.png";
 
 function initialsForName(name = "") {
   const parts = String(name || "")
@@ -45,22 +41,10 @@ function AppShell({
   const { activeRole, hasCompanyAdminRole, hasBrokerAccess: hasPublisherAccess } = deriveNavbarRoleState(user, { isGuest });
   const isPublisherWorkspacePath = (
     routeMatches(pathname, "/app/publish")
-    || routeMatches(pathname, "/app/my-listings")
-    || routeMatches(pathname, "/app/leads")
+    || routeMatches(pathname, "/app/broker")
   );
-  const deferPublisherWorkspaceNavToProfile = routeMatches(pathname, "/app/profile");
-  const showPublisherWorkspaceNav = !isGuest && hasPublisherAccess && !isAdminContext && (isPublisherWorkspacePath || deferPublisherWorkspaceNavToProfile);
-  const currentSearch = typeof window !== "undefined" ? window.location.search : "";
-  const hasProfileSource = isPublisherWorkspacePath && new URLSearchParams(currentSearch).get("from") === "profile";
-
-  function withProfileSource(path) {
-    if (!hasProfileSource) return path;
-    const [basePath, rawQuery = ""] = path.split("?");
-    const params = new URLSearchParams(rawQuery);
-    params.set("from", "profile");
-    const nextQuery = params.toString();
-    return nextQuery ? `${basePath}?${nextQuery}` : basePath;
-  }
+  const isBrokerPanelContext = !isGuest && hasPublisherAccess && !isAdminContext && isPublisherWorkspacePath;
+  const isPanelContext = isAdminContext || isBrokerPanelContext;
   const shouldShowStaticNavBorder = routeMatches(pathname, "/app/rent")
     || routeMatches(pathname, "/app/messages")
     || (routeMatches(pathname, "/app/settings") && activeRole !== "company_admin");
@@ -92,7 +76,13 @@ function AppShell({
           ? String(item.body || "").replace(/^(.+?) vill bli verifierad.*$/, "$1").trim()
           : item.body,
         time: item.createdAt ? new Date(item.createdAt).toLocaleString("sv-SE", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "Nyss",
-        actionPath: item.type === "broker_verification_requested" ? "/app/admin/maklare" : isAdminContext ? "/app/admin/notifikationer" : "/app/profile"
+        actionPath: item.type === "broker_verification_requested"
+          ? "/app/admin/maklare"
+          : isAdminContext
+            ? "/app/admin/notifikationer"
+            : isBrokerPanelContext
+              ? "/app/broker/profil"
+              : "/app/profile"
     }));
     const pendingBrokerItems = isAdminContext
       ? (Array.isArray(companyBrokers) ? companyBrokers : [])
@@ -217,7 +207,7 @@ function AppShell({
 
   return (
     <main className="flex h-screen flex-col overflow-hidden bg-[#ffffff] text-black">
-      {isAdminContext ? (
+      {isPanelContext ? (
         <header
           className={`navbar-enter sticky top-0 z-40 shrink-0 border-b px-4 py-3 will-change-[background-color,border-color,backdrop-filter] transition-[background-color,border-color,backdrop-filter] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] sm:px-6 ${
             isNavScrolled || shouldShowStaticNavBorder ? "border-black/10 bg-[#ffffff]/95 backdrop-blur-md" : "border-black/10 bg-[#ffffff]/0 backdrop-blur-0"
@@ -225,48 +215,61 @@ function AppShell({
         >
           <div className="grid w-full grid-cols-[1fr_auto] items-center gap-4">
             <div className="flex min-w-0 items-center gap-3">
-              <div ref={adminCompanyButtonRef} className="relative inline-block max-w-full">
+              {isAdminContext ? (
+                <div ref={adminCompanyButtonRef} className="relative inline-block max-w-full">
+                  <button
+                    type="button"
+                    className="inline-flex h-11 w-auto max-w-full items-center gap-2 rounded-full border border-black/10 bg-[#ffffff] pl-1.5 pr-3 text-left transition hover:border-[#0b0a0e]/25"
+                    onClick={() => setAdminCompanyOpen((value) => !value)}
+                  >
+                    <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0b0a0e] text-sm font-semibold text-white">
+                      {activeAdminCompany.initials}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-base font-semibold text-ink-900">{activeAdminCompany.name}</span>
+                    </span>
+                    <span
+                      aria-hidden="true"
+                      className={`ui-chevron h-3.5 w-3.5 shrink-0 opacity-70 transition-transform ${adminCompanyOpen ? "rotate-180" : ""}`}
+                    />
+                  </button>
+
+                  {adminCompanyOpen ? (
+                    <div ref={adminCompanyPanelRef} className="absolute left-0 top-[calc(100%+0.4rem)] z-[62] w-[280px] rounded-2xl border border-black/10 bg-[#ffffff] p-2 shadow-[0_10px_28px_rgba(15,25,48,0.12)]">
+                      <div className="space-y-1">
+                        <button
+                          type="button"
+                          className="menu-hover-row w-full bg-[#eef2f8] px-2.5 py-2 text-left text-sm font-semibold text-[#0b0a0e]"
+                          onClick={() => setAdminCompanyOpen(false)}
+                        >
+                          {activeAdminCompany.name}
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              ) : (
                 <button
                   type="button"
-                  className="inline-flex h-11 w-auto max-w-full items-center gap-2 rounded-full border border-black/10 bg-[#ffffff] pl-1.5 pr-3 text-left transition hover:border-[#0b0a0e]/25"
-                  onClick={() => setAdminCompanyOpen((value) => !value)}
+                  className="inline-flex h-11 items-center gap-2 rounded-full border border-black/10 bg-[#ffffff] pl-2 pr-4 text-left transition hover:border-[#0b0a0e]/25"
+                  onClick={() => navigateTo("/")}
                 >
-                  <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0b0a0e] text-sm font-semibold text-white">
-                    {activeAdminCompany.initials}
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-base font-semibold text-ink-900">{activeAdminCompany.name}</span>
-                  </span>
-                  <span
-                    aria-hidden="true"
-                    className={`ui-chevron h-3.5 w-3.5 shrink-0 opacity-70 transition-transform ${adminCompanyOpen ? "rotate-180" : ""}`}
-                  />
+                  <img src={companyLogo} alt="LOA" className="h-7 w-7 rounded-full object-contain ring-4 ring-[#eef2f8]" />
+                  <span className="text-base font-semibold text-ink-900">LOA</span>
                 </button>
-
-                {adminCompanyOpen ? (
-                  <div ref={adminCompanyPanelRef} className="absolute left-0 top-[calc(100%+0.4rem)] z-[62] w-[280px] rounded-2xl border border-black/10 bg-[#ffffff] p-2 shadow-[0_10px_28px_rgba(15,25,48,0.12)]">
-                    <div className="space-y-1">
-                      <button
-                        type="button"
-                        className="menu-hover-row w-full bg-[#eef2f8] px-2.5 py-2 text-left text-sm font-semibold text-[#0b0a0e]"
-                        onClick={() => setAdminCompanyOpen(false)}
-                      >
-                        {activeAdminCompany.name}
-                      </button>
-                    </div>
-                  </div>
-                ) : null}
-              </div>
+              )}
             </div>
             <div className="flex items-center justify-self-end gap-4">
+              {isPanelContext ? (
                 <button
                   type="button"
                   className="btn-primary inline-flex h-11 items-center gap-1.5 px-4 text-xs"
-                  onClick={() => navigateTo("/app/admin/annonser")}
+                  onClick={() => navigateTo(isAdminContext ? "/app/admin/annonser" : "/app/broker")}
                 >
                   <span aria-hidden="true" className="text-sm leading-none">+</span>
                   <span>Publicera annons</span>
                 </button>
+              ) : null}
                 <button
                   type="button"
                   className="btn-secondary inline-flex h-11 items-center gap-1.5 px-4 text-xs"
@@ -293,6 +296,14 @@ function AppShell({
                   ) : null}
                 </button>
               </div>
+              <button
+                type="button"
+                aria-label="Profilmeny"
+                className="inline-flex h-11 w-11 min-h-0 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] text-sm font-semibold text-[#0b0a0e] transition hover:border-[#0b0a0e]/25"
+                onClick={() => setMenuOpen((value) => !value)}
+              >
+                {initialsForName(user?.name || user?.email || "Profil")}
+              </button>
             </div>
           </div>
         </header>
@@ -311,7 +322,7 @@ function AppShell({
         />
       )}
 
-      {menuOpen && isAdminContext ? (
+      {menuOpen && isPanelContext ? (
         <ProfileMenuDropdown
           menuOpen={menuOpen}
           setMenuOpen={setMenuOpen}
@@ -338,7 +349,7 @@ function AppShell({
                 className="notification-card-button block w-full rounded-[10px] border border-black/10 bg-[#ffffff] px-3 py-2 text-left transition hover:border-[#0b0a0e]/25 hover:bg-[#f8fafc]"
                 onClick={() => {
                   setNotificationOpen(false);
-                  navigateTo(item.actionPath || (isAdminContext ? "/app/admin/notifikationer" : "/app/profile"));
+                  navigateTo(item.actionPath || (isAdminContext ? "/app/admin/notifikationer" : isBrokerPanelContext ? "/app/broker/profil" : "/app/profile"));
                 }}
               >
                 <div className="flex items-start justify-between gap-3">
@@ -364,32 +375,6 @@ function AppShell({
             </button>
           ) : null}
         </div>
-      ) : null}
-
-      {showPublisherWorkspaceNav && !deferPublisherWorkspaceNavToProfile ? (
-        <>
-          <div className="shrink-0 border-b border-black/10 bg-[#ffffff] px-4 py-2 sm:px-6">
-            <nav className="mx-auto flex w-full max-w-[1240px] flex-wrap items-center justify-start gap-5">
-              {publisherWorkspaceItems.map((item) => {
-                const active = routeMatches(pathname, item.path);
-                return (
-                  <button
-                    key={item.path}
-                    type="button"
-                    className={`tab-underline-button border-b-2 pb-0.5 text-sm font-semibold transition ${
-                      active
-                        ? "border-[#0b0a0e] text-[#0b0a0e]"
-                        : "border-transparent text-[#0b0a0e]/85 hover:text-[#0b0a0e]"
-                    }`}
-                    onClick={() => navigateTo(withProfileSource(item.path))}
-                  >
-                    {item.label}
-                  </button>
-                );
-              })}
-            </nav>
-          </div>
-        </>
       ) : null}
 
       <section ref={contentRef} className="min-h-0 flex-1 overflow-hidden">{children}</section>

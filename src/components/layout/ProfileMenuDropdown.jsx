@@ -1,4 +1,4 @@
-import { navigateTo } from "../../lib/router";
+import { navigateTo, normalizeAppRole } from "../../lib/router";
 import { Icon } from "../icons/Icon";
 
 function ProfileMenuDropdown({
@@ -15,13 +15,19 @@ function ProfileMenuDropdown({
   const normalizedRoles = Array.from(new Set([
     ...(Array.isArray(user?.roles) ? user.roles : []),
     user?.role
-  ].filter(Boolean).map((role) => role === "publisher" ? "broker" : role)));
+  ].filter(Boolean).map(normalizeAppRole)));
   const roleSet = new Set(normalizedRoles);
   const hasBrokerAccess = roleSet.has("broker") || roleSet.has("company_admin");
   const hasCompanyAdminAccess = roleSet.has("company_admin");
-  const activeRoleRaw = user?.role === "publisher" ? "broker" : user?.role;
+  const activeRoleRaw = normalizeAppRole(user?.role);
   const activeRole = activeRoleRaw === "broker" || activeRoleRaw === "company_admin" ? activeRoleRaw : "renter";
   const isRenterMode = activeRole === "renter";
+  const willBeCompanyAdmin = activeRole === "company_admin" || (isRenterMode && hasCompanyAdminAccess);
+  const profileBasePath = activeRole === "company_admin"
+    ? "/app/admin/profil"
+    : activeRole === "broker"
+      ? "/app/broker/profil"
+      : "/app/profile";
 
   async function navigateToBrokerPath(path) {
     setMenuOpen(false);
@@ -40,7 +46,7 @@ function ProfileMenuDropdown({
               <button
                 type="button"
                 className="menu-hover-row inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5"
-                onClick={() => navigateToBrokerPath("/app/my-listings")}
+                onClick={() => navigateToBrokerPath(willBeCompanyAdmin ? "/app/admin/annonser" : "/app/broker")}
               >
                 <Icon name="building" className="h-4 w-4" />
                 <span>Dina objekt</span>
@@ -56,7 +62,7 @@ function ProfileMenuDropdown({
               <button
                 type="button"
                 className="menu-hover-row inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5"
-                onClick={() => navigateToBrokerPath("/app/leads")}
+                onClick={() => navigateToBrokerPath(willBeCompanyAdmin ? "/app/admin/leads" : "/app/broker/leads")}
               >
                 <Icon name="calendar" className="h-4 w-4" />
                 <span>Intresse och visningar</span>
@@ -69,7 +75,7 @@ function ProfileMenuDropdown({
             className="menu-hover-row inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5"
             onClick={() => {
               setMenuOpen(false);
-              navigateTo("/app/profile");
+              navigateTo(profileBasePath);
             }}
           >
             <Icon name="user" className="h-4 w-4" />
@@ -107,7 +113,7 @@ function ProfileMenuDropdown({
             className="menu-hover-row inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5"
             onClick={() => {
               setMenuOpen(false);
-              navigateTo("/app/profile?tab=favorites");
+              navigateTo(`${profileBasePath}?tab=favorites`);
             }}
           >
             <Icon name="star" className="h-4 w-4" />
@@ -118,7 +124,7 @@ function ProfileMenuDropdown({
             className="menu-hover-row inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5"
             onClick={() => {
               setMenuOpen(false);
-              navigateTo("/app/profile?tab=history");
+              navigateTo(`${profileBasePath}?tab=history`);
             }}
           >
             <Icon name="search" className="h-4 w-4" />

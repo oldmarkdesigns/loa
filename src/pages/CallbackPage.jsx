@@ -9,6 +9,25 @@ function signupFallbackPath() {
   return hasSignupDraft ? "/signup?step=profile-extra" : "/signup";
 }
 
+function CallbackLoadingMockup() {
+  return (
+    <div className="w-full max-w-[190px]" role="status" aria-live="polite" aria-label="Laddar">
+      <div className="callback-loading-card space-y-2 rounded-2xl border border-black/10 bg-white p-3.5 shadow-sm">
+        <div className="callback-loading-bar h-2 w-3/4 rounded-full" />
+        <div className="callback-loading-bar h-2 w-1/2 rounded-full" />
+      </div>
+      <div className="callback-loading-card mt-2.5 space-y-2 rounded-2xl border border-black/10 bg-white p-3.5 shadow-sm">
+        <div className="callback-loading-bar h-2 w-full rounded-full" />
+        <div className="callback-loading-bar h-2 w-2/3 rounded-full" />
+      </div>
+      <div className="callback-loading-card mt-2.5 space-y-2 rounded-2xl border border-black/10 bg-white p-3.5 shadow-sm">
+        <div className="callback-loading-bar h-2 w-1/2 rounded-full" />
+        <div className="callback-loading-bar h-2 w-2/3 rounded-full" />
+      </div>
+    </div>
+  );
+}
+
 function CallbackPage() {
   const app = useAppState();
   const { user: authUser, isLoading: isAuthLoading } = useAuth();
@@ -29,7 +48,7 @@ function CallbackPage() {
     }
 
     const timeoutId = window.setTimeout(() => {
-      navigateTo("/login", { replace: true });
+      navigateTo(signupFallbackPath(), { replace: true });
     }, 2500);
 
     return () => window.clearTimeout(timeoutId);
@@ -38,18 +57,8 @@ function CallbackPage() {
   return (
     <main className="grid min-h-screen place-items-center bg-[#ffffff] px-4 pb-8 pt-20">
       <AuthFlowNav />
-      <div className="w-full max-w-[460px] rounded-[30px] border border-black/10 bg-[#ffffff] px-6 py-7 text-center sm:px-7 sm:py-8">
-        <h1 className="text-[1.95rem] font-semibold leading-tight text-[#0b0a0e]">Slutför inloggning</h1>
-        <p className="mt-2 text-sm text-ink-600">Bygger sessionen mot Convex och WorkOS.</p>
-        <div className="mt-5 rounded-2xl border border-black/10 bg-[#f8fafc] p-4 text-sm text-ink-700">
-          {app.isBootstrapping || app.isAuthPending
-            ? "Väntar på att autentisering och session ska bli klara..."
-            : app.user
-              ? "Inloggning klar. Skickar dig vidare..."
-              : authUser
-                ? "Kontot saknas i appen. Skickar dig till registrering..."
-              : "Ingen aktiv session hittades. Skickar tillbaka till inloggning..."}
-        </div>
+      <div className="flex w-full max-w-[460px] items-center justify-center rounded-[30px] border border-black/10 bg-[#ffffff] px-6 py-14 sm:px-7">
+        <CallbackLoadingMockup />
       </div>
     </main>
   );

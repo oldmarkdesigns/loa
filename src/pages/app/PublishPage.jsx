@@ -1,12 +1,15 @@
 import { useMemo, useState } from "react";
 import FurnishingToggle from "../../components/app/FurnishingToggle";
 import Breadcrumbs from "../../components/layout/Breadcrumbs";
+import AdminPanelShell from "../../components/layout/AdminPanelShell";
 import FieldLabel from "../../components/app/FieldLabel";
 import ListingPreview from "../../components/app/ListingPreview";
 import { formatSek, parseAmenities } from "../../lib/formatters";
 import { amenityIconFor, propertyAmenityOptions } from "../../lib/propertyAmenityIcons";
-import { navigateTo } from "../../lib/router";
+import { navigateTo, normalizeAppRole } from "../../lib/router";
 import { districtOptions, listingTypes } from "../../data/mockData";
+import { ADMIN_NAV_ITEMS, ADMIN_BOTTOM_NAV_ITEMS } from "./AdminPanelPage";
+import { BROKER_NAV_ITEMS, BROKER_BOTTOM_NAV_ITEMS } from "./BrokerPanelPage";
 import {
   BuildingIcon,
   CheckBadgeIcon,
@@ -282,8 +285,12 @@ function StepPills({ currentIndex, onSelect }) {
   );
 }
 
-function PublishPage({ app }) {
+function PublishPage({ app, pathname = "/app/publish" }) {
   const { createListing, updateListing, publishListing, pushToast } = app;
+  const activeRole = normalizeAppRole(app.user?.role);
+  const isCompanyAdmin = activeRole === "company_admin";
+  const panelNavItems = isCompanyAdmin ? ADMIN_NAV_ITEMS : BROKER_NAV_ITEMS;
+  const panelBottomNavItems = isCompanyAdmin ? ADMIN_BOTTOM_NAV_ITEMS : BROKER_BOTTOM_NAV_ITEMS;
 
   const [stepIndex, setStepIndex] = useState(0);
   const [draft, setDraft] = useState(initialDraft);
@@ -504,8 +511,14 @@ function PublishPage({ app }) {
   }
 
   return (
-    <section className="h-full overflow-y-auto p-4 pb-8 sm:p-6">
-      <div className="mx-auto w-full max-w-[1240px] space-y-5">
+    <AdminPanelShell
+      pathname={pathname}
+      navItems={panelNavItems}
+      bottomNavItems={panelBottomNavItems}
+      sectionTitle="Publicera annons"
+      onLogout={app?.logout}
+    >
+      <div className="space-y-5">
         <header className="px-1 py-1">
           <Breadcrumbs
             className="mb-2"
@@ -913,7 +926,7 @@ function PublishPage({ app }) {
                       >
                         Visa annons live
                       </button>
-                      <button type="button" className="btn-secondary w-full px-4" onClick={() => navigateTo("/app/my-listings")}>
+                      <button type="button" className="btn-secondary w-full px-4" onClick={() => navigateTo(isCompanyAdmin ? "/app/admin/annonser" : "/app/broker")}>
                         Gå till mina objekt
                       </button>
                       <button type="button" className="btn-secondary w-full px-4" onClick={resetFlow}>
@@ -1002,7 +1015,7 @@ function PublishPage({ app }) {
           ) : null}
         </div>
       </div>
-    </section>
+    </AdminPanelShell>
   );
 }
 

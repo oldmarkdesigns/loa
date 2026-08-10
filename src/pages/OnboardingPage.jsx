@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { navigateTo } from "../lib/router";
+import { navigateTo, normalizeAppRole } from "../lib/router";
 import AuthFlowNav from "../components/layout/AuthFlowNav";
 import infoPictogram from "../../Assets/Pictograms/info.png";
 import { propertyAmenityOptions } from "../lib/propertyAmenityIcons";
@@ -400,7 +400,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
     ? requestedRole
     : profileRoleIntent === "broker" || profileRoleIntent === "company_admin" || profileRoleIntent === "renter"
       ? profileRoleIntent
-    : user?.role === "publisher" ? "broker" : user?.role;
+    : normalizeAppRole(user?.role);
   const [primaryRole, setPrimaryRole] = useState(
     normalizedInitialRole === "broker" || normalizedInitialRole === "company_admin" ? normalizedInitialRole : "renter"
   );
@@ -896,7 +896,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
         const lookup = await onCheckCompanyByOrganizationNumber(organizationNumberToCheck, nextUser?.id);
         if (!lookup?.exists) {
           window.localStorage.removeItem(draftStorageKey);
-          setPendingPostOnboardingRoute(primaryRole === "broker" ? "/app/my-listings" : "/app/profile");
+          setPendingPostOnboardingRoute(primaryRole === "broker" ? "/app/broker" : "/app/profile");
           setCompanySetupOfferOpen(true);
           return;
         }
@@ -1611,7 +1611,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                         className="btn-primary w-full py-3 text-base"
                         onClick={() => {
                           window.sessionStorage.removeItem("office_onboarding_completion_screen");
-                          navigateTo("/app/profile");
+                          navigateTo("/app/admin/profil");
                         }}
                       >
                         Slutför profil

@@ -86,6 +86,13 @@ export const leadsApi = {
     apiClient.mutation(convexApiRefs.leads.update, { id, payload }, "Kunde inte uppdatera intresseanmälan.")
 };
 
+export const leadActivitiesApi = {
+  getActivities: (leadId) =>
+    apiClient.query(convexApiRefs.leadActivities.list, { leadId }, "Kunde inte läsa aktivitetsloggen."),
+  addActivity: (leadId, type, body) =>
+    apiClient.mutation(convexApiRefs.leadActivities.create, { leadId, type, body }, "Kunde inte spara aktiviteten.")
+};
+
 export const aiApi = {
   runSearch: (payload) => apiClient.query(convexApiRefs.ai.search, payload, "Kunde inte köra AI-sökningen.")
 };

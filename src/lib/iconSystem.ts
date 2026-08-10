@@ -92,6 +92,7 @@ export const ICONS = {
   // --- Status, feedback, AI ---
   star: "star",               // StarIcon — favorite / shortlist
   crown: "crown",             // CrownIcon — featured / highlighted
+  trophy: "trophy",            // TrophyIcon — top placement / ranking boost
   gauge: "gauge",             // GaugeIcon — match score
   checkBadge: "badge-check",         // CheckBadgeIcon — verified
   sparkles: "sparkles",           // SparklesIcon — AI / smart feature

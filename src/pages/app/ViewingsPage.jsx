@@ -1,16 +1,32 @@
 import { formatDate } from "../../lib/formatters";
 
 function statusClass(status) {
-  if (status === "Ny") return "border-amber-200 bg-amber-50 text-amber-800";
-  if (status === "Kontaktad") return "border-blue-200 bg-blue-50 text-blue-800";
-  if (status === "Visning bokad") return "border-emerald-200 bg-emerald-50 text-emerald-800";
+  if (status === "new") return "border-amber-200 bg-amber-50 text-amber-800";
+  if (status === "contacted") return "border-blue-200 bg-blue-50 text-blue-800";
+  if (status === "viewing_booked") return "border-emerald-200 bg-emerald-50 text-emerald-800";
+  if (status === "negotiating") return "border-indigo-200 bg-indigo-50 text-indigo-800";
+  if (status === "won") return "border-emerald-200 bg-emerald-50 text-emerald-800";
+  if (status === "lost") return "border-rose-200 bg-rose-50 text-rose-800";
   return "border-black/10 bg-[#f7f7f7] text-ink-700";
 }
 
+function statusLabel(status) {
+  if (status === "new") return "Ny";
+  if (status === "contacted") return "Kontaktad";
+  if (status === "viewing_booked") return "Visning bokad";
+  if (status === "negotiating") return "Förhandling";
+  if (status === "won") return "Vunnen";
+  if (status === "lost") return "Förlorad";
+  return status;
+}
+
 function statusDetail(status) {
-  if (status === "Ny") return "Väntar på svar";
-  if (status === "Kontaktad") return "Dialog pågår";
-  if (status === "Visning bokad") return "Tid är bokad";
+  if (status === "new") return "Väntar på svar";
+  if (status === "contacted") return "Dialog pågår";
+  if (status === "viewing_booked") return "Tid är bokad";
+  if (status === "negotiating") return "Förhandling pågår";
+  if (status === "won") return "Avslutad affär";
+  if (status === "lost") return "Ärendet är avslutat";
   return "Ärendet är avslutat";
 }
 
@@ -45,7 +61,7 @@ function ViewingsPage({ app }) {
                       <p className="text-xs text-ink-500">{viewing.listing?.district || "-"} • {viewing.listing?.address || "-"}</p>
                     </div>
                     <span className={`rounded-full border px-2 py-1 text-xs font-semibold ${statusClass(viewing.status)}`}>
-                      {viewing.status}
+                      {statusLabel(viewing.status)}
                     </span>
                   </div>
 

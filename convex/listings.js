@@ -24,18 +24,31 @@ function toNumber(value, fallback = 0) {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
-function normalizeImages(payload) {
-  if (Array.isArray(payload.images) && payload.images.length > 0) {
-    return payload.images.filter(Boolean);
+function toImageEntry(entry, index) {
+  if (entry && typeof entry === "object" && typeof entry.url === "string") {
+    return {
+      url: entry.url,
+      order: typeof entry.order === "number" ? entry.order : index,
+      ...(entry.tag ? { tag: entry.tag } : {})
+    };
   }
+  return { url: String(entry), order: index };
+}
 
-  const cover = payload.image || payload.coverImage || "";
-  return cover ? [cover] : ["/object-images/object-1.jpeg"];
+function normalizeImages(payload) {
+  let rawImages;
+  if (Array.isArray(payload.images) && payload.images.length > 0) {
+    rawImages = payload.images.filter(Boolean);
+  } else {
+    const cover = payload.image || payload.coverImage || "";
+    rawImages = cover ? [cover] : ["/object-images/object-1.jpeg"];
+  }
+  return rawImages.map(toImageEntry);
 }
 
 function buildListingPayload(payload, ownerId, companyId = "", existingListing = null) {
   const images = normalizeImages(payload);
-  const image = payload.image || payload.coverImage || images[0] || existingListing?.image || "/object-images/object-1.jpeg";
+  const image = payload.image || payload.coverImage || images[0]?.url || existingListing?.image || "/object-images/object-1.jpeg";
 
   return {
     title: payload.title ?? existingListing?.title ?? "",

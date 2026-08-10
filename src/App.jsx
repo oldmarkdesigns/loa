@@ -5,22 +5,20 @@ import AppShell from "./components/layout/AppShell";
 import ToastStack from "./components/layout/ToastStack";
 import LandingPage from "./pages/LandingPage";
 import CallbackPage from "./pages/CallbackPage";
-import LoginPage from "./pages/LoginPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import OnboardingPage from "./pages/OnboardingPage";
 import SignupPage from "./pages/SignupPage";
-import LeadsPage from "./pages/app/LeadsPage";
 import ListingDetailPage from "./pages/app/ListingDetailPage";
 import ManageListingPage from "./pages/app/ManageListingPage";
 import MessagesPage from "./pages/app/MessagesPage";
 import AdminPanelPage from "./pages/app/AdminPanelPage";
+import BrokerPanelPage from "./pages/app/BrokerPanelPage";
 import ProfilePage from "./pages/app/ProfilePage";
 import PublishPage from "./pages/app/PublishPage";
-import PublisherOverviewPage from "./pages/app/PublisherOverviewPage";
 import RentPage from "./pages/app/RentPage";
 import SettingsPage from "./pages/app/SettingsPage";
 import ViewingsPage from "./pages/app/ViewingsPage";
-import { defaultAppPathForRole, defaultAppPathForUser, navigateTo, usePathname } from "./lib/router";
+import { defaultAppPathForRole, defaultAppPathForUser, navigateTo, normalizeAppRole, usePathname } from "./lib/router";
 import { AppProvider, useAppState } from "./state/AppState";
 
 function AppContent() {
@@ -44,7 +42,7 @@ function AppContent() {
     const returnTo = isProtectedAppPath ? pathname : "/app/rent";
 
     signIn({ state: { returnTo } }).catch(() => {
-      navigateTo(`/login?returnTo=${encodeURIComponent(returnTo)}`);
+      navigateTo("/");
     });
   }
 
@@ -61,17 +59,23 @@ function AppContent() {
       return;
     }
 
+    if (pathname === "/login") {
+      navigateTo("/", { replace: true });
+      return;
+    }
+
     const isAuthenticated = Boolean(app.user);
     const isOnboardingPath = pathname === "/onboarding" || pathname.startsWith("/onboarding/");
     const isAppPath = pathname === "/app" || pathname.startsWith("/app/");
     const isAdminPath = pathname === "/app/admin" || pathname.startsWith("/app/admin/");
+    const isBrokerPath = pathname === "/app/broker" || pathname.startsWith("/app/broker/");
     const isPublicRentPath = pathname === "/app/rent";
     const isPublicListingPath = pathname.startsWith("/app/listings/");
     const isCallbackPath = pathname === "/callback";
-    const isAuthPath = pathname === "/login" || pathname === "/signup" || pathname === "/forgot-password" || isCallbackPath;
+    const isAuthPath = pathname === "/signup" || pathname === "/forgot-password" || isCallbackPath;
     const normalizedRoles = Array.isArray(app.user?.roles)
-      ? app.user.roles.map((item) => item === "publisher" ? "broker" : item)
-      : [app.user?.role === "publisher" ? "broker" : (app.user?.role || "renter")];
+      ? app.user.roles.map(normalizeAppRole)
+      : [normalizeAppRole(app.user?.role)];
     const hasCompanyAdminRole = normalizedRoles.includes("company_admin");
     const hasPendingBrokerVerification =
       app.user?.profile?.requestedRole === "broker" &&
@@ -105,12 +109,14 @@ function AppContent() {
     }
 
     if (!isAuthenticated && pathname === "/app") {
-      navigateTo("/login?returnTo=/app", { replace: true });
+      navigateTo("/", { replace: true });
+      signIn({ state: { returnTo: "/app" } }).catch(() => {});
       return;
     }
 
     if (!isAuthenticated && isAppPath && !isPublicRentPath && !isPublicListingPath) {
-      navigateTo(`/login?returnTo=${encodeURIComponent(pathname)}`, { replace: true });
+      navigateTo("/", { replace: true });
+      signIn({ state: { returnTo: pathname } }).catch(() => {});
       return;
     }
 
@@ -167,18 +173,18 @@ function AppContent() {
     }
 
     if (isAuthenticated && userReadyForApp) {
-      const normalizedRole = app.user.role === "publisher" ? "broker" : app.user.role;
+      const normalizedRole = normalizeAppRole(app.user.role);
       const fallbackRole = normalizedRole === "broker" || normalizedRole === "company_admin" ? normalizedRole : "renter";
-      const rawRoles = Array.isArray(app.user.roles) ? app.user.roles.map((item) => item === "publisher" ? "broker" : item) : [fallbackRole];
+      const rawRoles = Array.isArray(app.user.roles) ? app.user.roles.map(normalizeAppRole) : [fallbackRole];
       const roleSet = new Set(rawRoles.filter((item) => item === "renter" || item === "broker" || item === "company_admin"));
       const role = roleSet.has("company_admin")
         ? "company_admin"
         : fallbackRole;
       const hasPublisherRole = roleSet.has("broker") || roleSet.has("company_admin");
       const renterAllowed = ["/app/rent", "/app/viewings", "/app/messages", "/app/profile", "/app/settings", "/app/listings"];
-      const brokerAllowed = ["/app/my-listings", "/app/publish", "/app/leads", "/app/messages", "/app/profile", "/app/settings", "/app/rent", "/app/listings"];
-      const companyAdminAllowed = [...brokerAllowed, "/app/admin"];
-      const extraForPublisherMembers = hasPublisherRole ? ["/app/my-listings", "/app/publish", "/app/leads"] : [];
+      const brokerAllowed = ["/app/broker", "/app/my-listings", "/app/publish", "/app/messages", "/app/settings", "/app/rent", "/app/listings"];
+      const companyAdminAllowed = ["/app/admin", "/app/publish", "/app/messages", "/app/settings", "/app/rent", "/app/listings"];
+      const extraForPublisherMembers = hasPublisherRole ? ["/app/broker", "/app/my-listings", "/app/publish"] : [];
       const allowedBases = role === "company_admin"
         ? companyAdminAllowed
         : role === "broker"
@@ -196,13 +202,28 @@ function AppContent() {
         return;
       }
 
-      if (pathname === "/app/favorites") {
-        navigateTo("/app/profile?tab=favorites", { replace: true });
+      if (isBrokerPath && role !== "broker") {
+        navigateTo(defaultAppPathForRole(role), { replace: true });
         return;
       }
 
-      if ((role === "broker" || role === "company_admin") && pathname === "/app/viewings") {
-        navigateTo("/app/leads", { replace: true });
+      if (pathname === "/app/favorites") {
+        const favoritesTarget = role === "company_admin"
+          ? "/app/admin/profil?tab=favorites"
+          : role === "broker"
+            ? "/app/broker/profil?tab=favorites"
+            : "/app/profile?tab=favorites";
+        navigateTo(favoritesTarget, { replace: true });
+        return;
+      }
+
+      if (role === "broker" && pathname === "/app/viewings") {
+        navigateTo("/app/broker/leads", { replace: true });
+        return;
+      }
+
+      if (role === "company_admin" && pathname === "/app/viewings") {
+        navigateTo("/app/admin/leads", { replace: true });
         return;
       }
 
@@ -212,7 +233,7 @@ function AppContent() {
       }
 
       if (role === "broker" && pathname.startsWith("/app/") && !pathnameAllowed) {
-        navigateTo("/app/my-listings", { replace: true });
+        navigateTo("/app/broker", { replace: true });
       }
     }
   }, [app.isAuthPending, app.isBootstrapping, app.user, pathname]);
@@ -273,8 +294,6 @@ function AppContent() {
         onLogout={app.logout}
       />
     );
-  } else if (pathname === "/login") {
-    content = <LoginPage />;
   } else if (pathname === "/signup") {
     content = (
       <SignupPage
@@ -305,6 +324,7 @@ function AppContent() {
     const isListingGalleryPath = Boolean(pathname.match(/^\/app\/listings\/[^/]+\/gallery$/));
     const managedListingId = manageListingMatch ? decodeURIComponent(manageListingMatch[1]) : null;
     const isAdminPath = pathname === "/app/admin" || pathname.startsWith("/app/admin/");
+    const isBrokerPath = pathname === "/app/broker" || pathname.startsWith("/app/broker/");
 
     if (!app.user) {
       if (pathname === "/app/rent") {
@@ -334,35 +354,33 @@ function AppContent() {
       }
     } else {
     let appRouteContent = null;
-    const activeRole = app.user?.role === "publisher" ? "broker" : (app.user?.role || "renter");
+    const activeRole = normalizeAppRole(app.user?.role);
 
     if (isAdminPath) {
       appRouteContent = <AdminPanelPage app={app} pathname={pathname} />;
+    } else if (isBrokerPath) {
+      appRouteContent = <BrokerPanelPage app={app} pathname={pathname} />;
     } else if (pathname === "/app/rent") {
       appRouteContent = <RentPage app={app} onRequireAuth={openAuthOverlay} />;
     } else if (listingId) {
       appRouteContent = <ListingDetailPage app={app} listingId={listingId} initialView={isListingGalleryPath ? "gallery" : "detail"} />;
     } else if (managedListingId) {
       appRouteContent = <ManageListingPage app={app} listingId={managedListingId} />;
-    } else if (pathname === "/app/my-listings") {
-      appRouteContent = <PublisherOverviewPage app={app} />;
     } else if (pathname === "/app/viewings") {
-      appRouteContent = activeRole === "broker" || activeRole === "company_admin" ? <LeadsPage app={app} /> : <ViewingsPage app={app} />;
+      appRouteContent = <ViewingsPage app={app} />;
     } else if (pathname === "/app/messages") {
       appRouteContent = <MessagesPage app={app} />;
-    } else if (pathname === "/app/leads") {
-      appRouteContent = <LeadsPage app={app} />;
     } else if (pathname === "/app/profile") {
       appRouteContent = <ProfilePage app={app} />;
     } else if (pathname === "/app/settings") {
       appRouteContent = <SettingsPage app={app} />;
     } else if (pathname === "/app/publish") {
-      appRouteContent = <PublishPage app={app} />;
+      appRouteContent = <PublishPage app={app} pathname={pathname} />;
     } else {
       appRouteContent = activeRole === "company_admin"
         ? <AdminPanelPage app={app} pathname="/app/admin" />
         : activeRole === "broker"
-          ? <PublisherOverviewPage app={app} />
+          ? <BrokerPanelPage app={app} pathname="/app/broker" />
           : <RentPage app={app} />;
     }
 

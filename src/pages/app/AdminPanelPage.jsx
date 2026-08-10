@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { navigateTo, routeMatches } from "../../lib/router";
 import { formatSek } from "../../lib/formatters";
+import AdminPanelShell from "../../components/layout/AdminPanelShell";
+import PanelProfileSection from "./PanelProfileSection";
 import {
   Area,
   AreaChart,
@@ -37,10 +39,8 @@ import {
   HistoryIcon,
   InfoCircleIcon,
   LayoutDashboardIcon,
-  LogoutIcon,
   MessageSquareIcon,
   MoreHorizontalIcon,
-  PanelLeftIcon,
   PencilIcon,
   PinIcon,
   PlusIcon,
@@ -56,7 +56,7 @@ import {
   XIcon
 } from "../../components/icons/UiIcons";
 
-const ADMIN_NAV_ITEMS = [
+export const ADMIN_NAV_ITEMS = [
   { key: "oversikt", label: "Översikt", path: "/app/admin", Icon: LayoutDashboardIcon },
   { key: "annonser", label: "Annonser", path: "/app/admin/annonser", Icon: BuildingIcon },
   { key: "leads", label: "Leads & Matchningar", path: "/app/admin/leads", Icon: SparklesIcon },
@@ -66,8 +66,16 @@ const ADMIN_NAV_ITEMS = [
   { key: "statistik", label: "Statistik", path: "/app/admin/statistik", Icon: BarChart3Icon }
 ];
 
+export const ADMIN_BOTTOM_NAV_ITEMS = [
+  { key: "profil", label: "Profil", path: "/app/admin/profil", Icon: UserIcon },
+  { key: "adminprofil", label: "Adminprofil", path: "/app/admin/adminprofil", Icon: BuildingIcon },
+  { key: "installningar", label: "Inställningar", path: "/app/admin/installningar", Icon: SettingsGearIcon },
+  { key: "hjalp", label: "Hjälp", path: "/app/admin/hjalp", Icon: SupportIcon }
+];
+
 const SECTION_TITLES = {
   oversikt: "Översikt",
+  profil: "Profil",
   adminprofil: "Adminprofil",
   annonser: "Annonser",
   leads: "Leads & Matchningar",
@@ -195,7 +203,7 @@ function adminListingFromListing(listing, app) {
   return {
     id: listing.id,
     title: listing.title || "Namnlös annons",
-    image: listing.image || listing.images?.[0] || "/object-images/object-1.jpeg",
+    image: listing.image || listing.images?.[0]?.url || listing.images?.[0] || "/object-images/object-1.jpeg",
     district: listing.district || "-",
     type: listing.type || "Övrigt",
     size: listing.sizeSqm || listing.size || 0,
@@ -905,109 +913,6 @@ function WeeklyActivityHeatmap() {
         ))}
       </div>
     </article>
-  );
-}
-
-function AdminSidebar({ pathname, onNavigate, onLogout, hasCompanyData = true, listingCount = 0, notificationCount = 0 }) {
-  return (
-    <div className="flex h-full min-h-0 flex-col">
-      <div className="px-4 pb-4 pt-4 sm:px-6 sm:pt-6">
-        <nav className="space-y-1">
-          {ADMIN_NAV_ITEMS.map((item) => {
-            const active = item.key === "oversikt"
-              ? pathname === "/app/admin" || pathname === "/app/admin/"
-              : routeMatches(pathname, item.path);
-            const badgeValue = item.key === "annonser" && hasCompanyData && listingCount > 0
-              ? listingCount
-              : item.key === "notifikationer" && notificationCount > 0
-                ? notificationCount
-                : null;
-            return (
-              <button
-                key={item.key}
-                type="button"
-                className={`menu-hover-row w-full px-3 py-2.5 text-left text-sm font-semibold transition ${
-                  active ? "bg-[#0b0a0e] text-white" : "text-ink-700 hover:bg-black/5"
-                }`}
-                onClick={() => onNavigate(item.path)}
-              >
-                <span className="flex items-center gap-2">
-                  <item.Icon className="h-[18px] w-[18px] shrink-0" />
-                  <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                  {badgeValue ? (
-                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${active ? "bg-[#ffffff]/20 text-white" : "bg-black/10 text-ink-700"}`}>
-                      {badgeValue}
-                    </span>
-                  ) : null}
-                </span>
-              </button>
-            );
-          })}
-        </nav>
-      </div>
-
-      <div className="mt-auto p-4 pt-0 sm:px-6">
-        <div className="mb-3 border-t border-black/10 pt-3">
-          <div className="space-y-1">
-            <button
-              type="button"
-              className={`menu-hover-row w-full px-3 py-2.5 text-left text-sm font-semibold transition ${
-                routeMatches(pathname, "/app/admin/adminprofil")
-                  ? "bg-[#0b0a0e] text-white"
-                  : "text-ink-700 hover:bg-black/5"
-              }`}
-              onClick={() => onNavigate("/app/admin/adminprofil")}
-            >
-              <span className="flex items-center gap-2">
-                <UserIcon className="h-[18px] w-[18px] shrink-0" />
-                <span className="min-w-0 flex-1 truncate">Adminprofil</span>
-              </span>
-            </button>
-            <button
-              type="button"
-              className={`menu-hover-row w-full px-3 py-2.5 text-left text-sm font-semibold transition ${
-                routeMatches(pathname, "/app/admin/installningar")
-                  ? "bg-[#0b0a0e] text-white"
-                  : "text-ink-700 hover:bg-black/5"
-              }`}
-              onClick={() => onNavigate("/app/admin/installningar")}
-            >
-              <span className="flex items-center gap-2">
-                <SettingsGearIcon className="h-[18px] w-[18px] shrink-0" />
-                <span className="min-w-0 flex-1 truncate">Inställningar</span>
-              </span>
-            </button>
-            <button
-              type="button"
-              className={`menu-hover-row w-full px-3 py-2.5 text-left text-sm font-semibold transition ${
-                routeMatches(pathname, "/app/admin/hjalp")
-                  ? "bg-[#0b0a0e] text-white"
-                  : "text-ink-700 hover:bg-black/5"
-              }`}
-              onClick={() => onNavigate("/app/admin/hjalp")}
-            >
-              <span className="flex items-center gap-2">
-                <SupportIcon className="h-[18px] w-[18px] shrink-0" />
-                <span className="min-w-0 flex-1 truncate">Hjälp</span>
-              </span>
-            </button>
-            <button
-              type="button"
-              className="menu-hover-row w-full px-3 py-2.5 text-left text-sm font-semibold text-ink-700 transition hover:bg-black/5"
-              onClick={async () => {
-                await onLogout?.();
-                navigateTo("/", { replace: true });
-              }}
-            >
-              <span className="flex items-center gap-2">
-                <LogoutIcon className="h-[18px] w-[18px] shrink-0" />
-                <span className="min-w-0 flex-1 truncate">Logga ut</span>
-              </span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
   );
 }
 
@@ -3488,7 +3393,6 @@ function AdminPlaceholder({ sectionKey }) {
 
 function AdminPanelPage({ app, pathname }) {
   const sectionKey = sectionFromPath(pathname);
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const currentSectionLabel = SECTION_TITLES[sectionKey] || "Översikt";
   const companyListings = ownedAdminListings(app);
   const notificationCount = countAdminNotifications(app);
@@ -3496,68 +3400,27 @@ function AdminPanelPage({ app, pathname }) {
   const shouldShowEmptyCompanyPage = !hasCompanyProfile && !["adminprofil", "hjalp", "installningar", "notifikationer", "maklare", "annonser"].includes(sectionKey);
 
   return (
-    <section className="flex h-full min-h-0 bg-[#ffffff]">
-      <aside className="hidden h-full w-[296px] shrink-0 border-r border-black/10 bg-[#ffffff] lg:block">
-        <AdminSidebar pathname={pathname} onNavigate={(nextPath) => navigateTo(nextPath)} onLogout={app?.logout} hasCompanyData={companyListings.length > 0} listingCount={companyListings.length} notificationCount={notificationCount} />
-      </aside>
-
-      <div data-admin-scroll-container="true" className="min-h-0 flex-1 overflow-y-auto">
-        <div className="sticky top-0 z-10 border-b border-black/10 bg-[#ffffff] px-4 py-2.5 lg:hidden">
-          <div className="flex items-center justify-between gap-3">
-            <button
-              type="button"
-              className="inline-flex min-h-0 items-center gap-1.5 rounded-full border border-black/20 bg-[#ffffff] px-3 py-2 text-xs font-semibold text-ink-700"
-              onClick={() => setMobileSidebarOpen(true)}
-            >
-              <PanelLeftIcon className="h-4 w-4" />
-              Meny
-            </button>
-            <p className="text-sm font-semibold text-ink-800">{currentSectionLabel}</p>
-          </div>
-        </div>
-
-        <div className="mx-auto w-full max-w-[1600px] p-4 sm:p-6">
-          {shouldShowEmptyCompanyPage ? <EmptyCompanyAdminPage app={app} sectionKey={sectionKey} /> : null}
-          {!shouldShowEmptyCompanyPage && sectionKey === "oversikt" ? <AdminOverview app={app} /> : null}
-          {!shouldShowEmptyCompanyPage && sectionKey === "annonser" ? <AdminListingsPage listings={companyListings} /> : null}
-          {!shouldShowEmptyCompanyPage && sectionKey === "leads" ? <AdminLeadMatchesPage app={app} /> : null}
-          {!shouldShowEmptyCompanyPage && sectionKey === "inkorg" ? <AdminInquiriesPage pathname={pathname} /> : null}
-          {!shouldShowEmptyCompanyPage && sectionKey === "notifikationer" ? <AdminNotificationsPage app={app} /> : null}
-          {!shouldShowEmptyCompanyPage && sectionKey === "maklare" ? <AdminBrokersPage app={app} /> : null}
-          {!shouldShowEmptyCompanyPage && sectionKey === "statistik" ? <AdminStatistics app={app} /> : null}
-          {!shouldShowEmptyCompanyPage && sectionKey === "aktivitet" ? <AdminActivityPage /> : null}
-          {sectionKey === "adminprofil" ? <AdminProfile app={app} /> : null}
-          {!shouldShowEmptyCompanyPage && sectionKey !== "oversikt" && sectionKey !== "annonser" && sectionKey !== "leads" && sectionKey !== "inkorg" && sectionKey !== "notifikationer" && sectionKey !== "maklare" && sectionKey !== "adminprofil" && sectionKey !== "statistik" && sectionKey !== "aktivitet" ? <AdminPlaceholder sectionKey={sectionKey} /> : null}
-        </div>
-      </div>
-
-      {mobileSidebarOpen ? (
-        <div className="fixed inset-0 z-[70] bg-transparent lg:hidden" onClick={() => setMobileSidebarOpen(false)}>
-          <div className="h-full w-[min(88vw,320px)] border-r border-black/10 bg-[#ffffff]" onClick={(event) => event.stopPropagation()}>
-            <div className="flex items-center justify-end border-b border-black/10 p-3">
-              <button
-                type="button"
-                className="inline-flex h-9 w-9 min-h-0 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] text-ink-700"
-                onClick={() => setMobileSidebarOpen(false)}
-              >
-                <XIcon className="h-4 w-4" />
-              </button>
-            </div>
-            <AdminSidebar
-              pathname={pathname}
-              onNavigate={(nextPath) => {
-                setMobileSidebarOpen(false);
-                navigateTo(nextPath);
-              }}
-              onLogout={app?.logout}
-              hasCompanyData={companyListings.length > 0}
-              listingCount={companyListings.length}
-              notificationCount={notificationCount}
-            />
-          </div>
-        </div>
-      ) : null}
-    </section>
+    <AdminPanelShell
+      pathname={pathname}
+      navItems={ADMIN_NAV_ITEMS}
+      bottomNavItems={ADMIN_BOTTOM_NAV_ITEMS}
+      sectionTitle={currentSectionLabel}
+      onLogout={app?.logout}
+      badges={{ annonser: companyListings.length, notifikationer: notificationCount }}
+    >
+      {shouldShowEmptyCompanyPage ? <EmptyCompanyAdminPage app={app} sectionKey={sectionKey} /> : null}
+      {!shouldShowEmptyCompanyPage && sectionKey === "oversikt" ? <AdminOverview app={app} /> : null}
+      {!shouldShowEmptyCompanyPage && sectionKey === "annonser" ? <AdminListingsPage listings={companyListings} /> : null}
+      {!shouldShowEmptyCompanyPage && sectionKey === "leads" ? <AdminLeadMatchesPage app={app} /> : null}
+      {!shouldShowEmptyCompanyPage && sectionKey === "inkorg" ? <AdminInquiriesPage pathname={pathname} /> : null}
+      {!shouldShowEmptyCompanyPage && sectionKey === "notifikationer" ? <AdminNotificationsPage app={app} /> : null}
+      {!shouldShowEmptyCompanyPage && sectionKey === "maklare" ? <AdminBrokersPage app={app} /> : null}
+      {!shouldShowEmptyCompanyPage && sectionKey === "statistik" ? <AdminStatistics app={app} /> : null}
+      {!shouldShowEmptyCompanyPage && sectionKey === "aktivitet" ? <AdminActivityPage /> : null}
+      {sectionKey === "profil" ? <PanelProfileSection app={app} basePath="/app/admin/profil" /> : null}
+      {sectionKey === "adminprofil" ? <AdminProfile app={app} /> : null}
+      {!shouldShowEmptyCompanyPage && sectionKey !== "oversikt" && sectionKey !== "annonser" && sectionKey !== "leads" && sectionKey !== "inkorg" && sectionKey !== "notifikationer" && sectionKey !== "maklare" && sectionKey !== "profil" && sectionKey !== "adminprofil" && sectionKey !== "statistik" && sectionKey !== "aktivitet" ? <AdminPlaceholder sectionKey={sectionKey} /> : null}
+    </AdminPanelShell>
   );
 }
 

@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState } from 
 import { useAuth } from "@workos-inc/authkit-react";
 import { useConvexAuth } from "convex/react";
 import { aiApi, authApi, favoriteApi, leadsApi, listingApi, profileApi, viewingsApi } from "../api";
-import { navigateTo } from "../lib/router";
+import { navigateTo, normalizeAppRole } from "../lib/router";
 import {
   analyticsEventNames,
   trackEvent,
@@ -199,8 +199,7 @@ function mapRenterProgramToFilters(program) {
 }
 
 function normalizeUserRole(role) {
-  if (role === "publisher") return "broker";
-  return role === "company_admin" || role === "broker" ? role : "renter";
+  return normalizeAppRole(role);
 }
 
 function safeProfileUpdatePayload(payload = {}) {

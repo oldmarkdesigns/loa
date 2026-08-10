@@ -87,6 +87,7 @@ export const update = mutationGeneric({
     const patch = {
       status: args?.payload?.status || lead.status,
       notes: args?.payload?.notes ?? lead.notes,
+      followUpDate: args?.payload?.followUpDate ?? lead.followUpDate,
       updatedAt: nowIso()
     };
 

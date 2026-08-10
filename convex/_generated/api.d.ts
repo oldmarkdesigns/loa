@@ -10,9 +10,11 @@
 
 import type * as ai from "../ai.js";
 import type * as favorites from "../favorites.js";
+import type * as leadActivities from "../leadActivities.js";
 import type * as leads from "../leads.js";
 import type * as lib from "../lib.js";
 import type * as listings from "../listings.js";
+import type * as migrations from "../migrations.js";
 import type * as setup from "../setup.js";
 import type * as users from "../users.js";
 import type * as viewings from "../viewings.js";
@@ -26,9 +28,11 @@ import type {
 declare const fullApi: ApiFromModules<{
   ai: typeof ai;
   favorites: typeof favorites;
+  leadActivities: typeof leadActivities;
   leads: typeof leads;
   lib: typeof lib;
   listings: typeof listings;
+  migrations: typeof migrations;
   setup: typeof setup;
   users: typeof users;
   viewings: typeof viewings;

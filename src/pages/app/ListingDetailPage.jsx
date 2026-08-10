@@ -714,9 +714,10 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
 
   const images = useMemo(() => {
     if (!listing) return [];
-    return Array.isArray(listing.images) && listing.images.length > 0
+    const source = Array.isArray(listing.images) && listing.images.length > 0
       ? listing.images
       : [listing.image || "/object-images/object-1.jpeg"];
+    return source.map((entry) => (typeof entry === "string" ? entry : entry?.url)).filter(Boolean);
   }, [listing]);
   const galleryPreviewImages = useMemo(() => {
     if (images.length === 0) return [];
