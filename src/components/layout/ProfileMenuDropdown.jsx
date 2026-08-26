@@ -28,6 +28,16 @@ function ProfileMenuDropdown({
     : activeRole === "broker"
       ? "/app/broker/profil"
       : "/app/profile";
+  const savedListingsPath = activeRole === "company_admin"
+    ? "/app/admin/sparade-objekt"
+    : activeRole === "broker"
+      ? "/app/broker/sparade-objekt"
+      : "/app/profile?tab=favorites";
+  const savedSearchesPath = activeRole === "company_admin"
+    ? "/app/admin/sparade-sokningar"
+    : activeRole === "broker"
+      ? "/app/broker/sparade-sokningar"
+      : "/app/profile?tab=history";
 
   async function navigateToBrokerPath(path) {
     setMenuOpen(false);
@@ -46,7 +56,7 @@ function ProfileMenuDropdown({
               <button
                 type="button"
                 className="menu-hover-row inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5"
-                onClick={() => navigateToBrokerPath(willBeCompanyAdmin ? "/app/admin/annonser" : "/app/broker")}
+                onClick={() => navigateToBrokerPath(willBeCompanyAdmin ? "/app/admin/annonser" : "/app/broker/objekt")}
               >
                 <Icon name="building" className="h-4 w-4" />
                 <span>Dina objekt</span>
@@ -113,7 +123,7 @@ function ProfileMenuDropdown({
             className="menu-hover-row inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5"
             onClick={() => {
               setMenuOpen(false);
-              navigateTo(`${profileBasePath}?tab=favorites`);
+              navigateTo(savedListingsPath);
             }}
           >
             <Icon name="star" className="h-4 w-4" />
@@ -124,7 +134,7 @@ function ProfileMenuDropdown({
             className="menu-hover-row inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5"
             onClick={() => {
               setMenuOpen(false);
-              navigateTo(`${profileBasePath}?tab=history`);
+              navigateTo(savedSearchesPath);
             }}
           >
             <Icon name="search" className="h-4 w-4" />

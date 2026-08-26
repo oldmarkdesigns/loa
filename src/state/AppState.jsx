@@ -249,6 +249,7 @@ export function AppProvider({ children }) {
   const [notifications, setNotifications] = useState([]);
   const [companyBrokers, setCompanyBrokers] = useState([]);
   const [adminCompany, setAdminCompany] = useState(null);
+  const [myCompanies, setMyCompanies] = useState([]);
   const [savedFilters, setSavedFiltersState] = useState(defaultFilters);
   const [filterPresets, setFilterPresets] = useState([]);
   const [savedAiSearches, setSavedAiSearches] = useState([]);
@@ -281,6 +282,7 @@ export function AppProvider({ children }) {
       setNotifications([]);
       setCompanyBrokers([]);
       setAdminCompany(null);
+      setMyCompanies([]);
       return;
     }
 
@@ -304,8 +306,15 @@ export function AppProvider({ children }) {
     if (hasPublisherAccess) {
       const { leads: leadData } = await leadsApi.getLeads();
       setLeads(leadData);
+      try {
+        const companiesData = await profileApi.listMyCompanies();
+        setMyCompanies(Array.isArray(companiesData) ? companiesData : []);
+      } catch (_error) {
+        setMyCompanies([]);
+      }
     } else {
       setLeads([]);
+      setMyCompanies([]);
     }
 
     if (hasCompanyAdminAccess) {
@@ -350,13 +359,15 @@ export function AppProvider({ children }) {
       await loadPublicListings();
   }
 
-  async function bootstrapSession() {
+  async function bootstrapSession(retryCount = 0) {
     if (authSyncInFlightRef.current) {
       return;
     }
 
     authSyncInFlightRef.current = true;
     setIsSessionSyncing(true);
+
+    let willRetry = false;
 
     try {
       if (!isConvexAuthenticated || !authUser) {
@@ -374,7 +385,21 @@ export function AppProvider({ children }) {
 
       hydrateLocalUserState(syncedUser);
       await refreshCoreData(syncedUser);
-    } catch (_error) {
+    } catch (error) {
+      // @convex-dev/workos reports isAuthenticated as soon as the WorkOS SDK's `user`
+      // populates, before its own fetchAccessToken() necessarily has a token ready (that
+      // call swallows failures and returns null) - so the very first sync right after a
+      // fresh login can reach the backend with no identity yet and get rejected. Nothing
+      // else retries this, so without a retry here app.user stays null for the rest of
+      // the session. Retry briefly before treating it as a real logged-out state.
+      const isTransientAuthRace = String(error?.message || "").includes("WorkOS-session saknas");
+      if (isTransientAuthRace && retryCount < 4) {
+        willRetry = true;
+        authSyncInFlightRef.current = false;
+        window.setTimeout(() => bootstrapSession(retryCount + 1), 350 * (retryCount + 1));
+        return;
+      }
+
       hydrateLocalUserState(null);
       setFavorites([]);
       setViewings([]);
@@ -389,8 +414,10 @@ export function AppProvider({ children }) {
         setListings([]);
       }
     } finally {
-      setIsBootstrapping(false);
-      setIsSessionSyncing(false);
+      if (!willRetry) {
+        setIsBootstrapping(false);
+        setIsSessionSyncing(false);
+      }
       authSyncInFlightRef.current = false;
     }
   }
@@ -502,6 +529,27 @@ export function AppProvider({ children }) {
       return nextUser;
     } catch (error) {
       pushToast(error.message || "Kunde inte byta roll just nu.", "error");
+      return user;
+    }
+  }
+
+  async function switchActiveCompany(companyId) {
+    if (!user) return user;
+
+    try {
+      const { user: nextUser } = await profileApi.switchActiveCompany(companyId);
+      hydrateLocalUserState(nextUser);
+
+      try {
+        await refreshCoreData(nextUser);
+      } catch (_error) {
+        // Keep the company switch successful even if secondary data refresh fails.
+      }
+
+      pushToast("Du bytte bolag.", "info");
+      return nextUser;
+    } catch (error) {
+      pushToast(error.message || "Kunde inte byta bolag just nu.", "error");
       return user;
     }
   }
@@ -804,6 +852,7 @@ export function AppProvider({ children }) {
       notifications,
       companyBrokers,
       adminCompany,
+      myCompanies,
       savedFilters,
       filterPresets,
       savedAiSearches,
@@ -814,6 +863,7 @@ export function AppProvider({ children }) {
       logout,
       completeOnboarding,
       switchRole,
+      switchActiveCompany,
       updateProfile,
       findCompanyByOrganizationNumber,
       searchListings,
@@ -853,6 +903,7 @@ export function AppProvider({ children }) {
       notifications,
       companyBrokers,
       adminCompany,
+      myCompanies,
       listings,
       savedAiSearches,
       savedFilters,

@@ -34,6 +34,9 @@ export const profileApi = {
   completeOnboarding: (payload) =>
     apiClient.mutation(convexApiRefs.users.completeOnboarding, payload, "Kunde inte slutföra onboarding."),
   listNotifications: () => apiClient.query(convexApiRefs.users.listNotifications, {}, "Kunde inte läsa notiser."),
+  listMyCompanies: () => apiClient.query(convexApiRefs.users.listMyCompanies, {}, "Kunde inte läsa dina bolag."),
+  switchActiveCompany: (companyId) =>
+    apiClient.mutation(convexApiRefs.users.switchActiveCompany, { companyId }, "Kunde inte byta bolag."),
   listCompanyBrokers: () => apiClient.query(convexApiRefs.users.listCompanyBrokers, {}, "Kunde inte läsa mäklarteamet."),
   approveBrokerRequest: (userId) =>
     apiClient.mutation(convexApiRefs.users.approveBrokerRequest, { userId }, "Kunde inte godkänna mäklaren."),

@@ -1,19 +1,15 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { formatSek } from "../../lib/formatters";
 import { normalizeAppRole } from "../../lib/router";
 import {
-  ArchiveIcon,
   CalendarIcon,
   CircleDotIcon,
   MoreHorizontalIcon,
   PaperclipIcon,
-  PinIcon,
   SearchIcon,
   SendHorizontalIcon,
   SparklesIcon,
-  StarIcon,
-  TagIcon,
-  UserPlusIcon
+  StarIcon
 } from "../../components/icons/UiIcons";
 
 const MESSAGE_LISTING = {
@@ -32,14 +28,6 @@ const BROKER_PROFILE = {
   company: "Nordic Estate",
   role: "Mäklare",
   responseTime: "~2h"
-};
-
-const RENTER_PROFILE = {
-  name: "Elin Andersson",
-  initials: "EA",
-  company: "Nordic Product Studio AB",
-  teamSize: "18 personer",
-  budget: "52 000 kr/mån"
 };
 
 const renterConversations = [
@@ -240,12 +228,34 @@ function pipelineToneClass(tone) {
 
 function MessagesPage({ app }) {
   const activeRole = normalizeAppRole(app?.user?.role);
-  const isBrokerView = activeRole === "broker";
+  const isBrokerView = activeRole === "broker" || activeRole === "company_admin";
   const [searchQuery, setSearchQuery] = useState("");
   const [activeConversationId, setActiveConversationId] = useState(isBrokerView ? brokerConversations[0].id : renterConversations[0].id);
   const [draft, setDraft] = useState("");
   const [filter, setFilter] = useState("all");
   const [favoriteConversationIds, setFavoriteConversationIds] = useState(() => new Set());
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const suggestionsButtonRef = useRef(null);
+  const suggestionsPanelRef = useRef(null);
+
+  useEffect(() => {
+    function onPointerDown(event) {
+      if (
+        suggestionsButtonRef.current
+        && !suggestionsButtonRef.current.contains(event.target)
+        && suggestionsPanelRef.current
+        && !suggestionsPanelRef.current.contains(event.target)
+      ) {
+        setShowSuggestions(false);
+      }
+    }
+    window.addEventListener("pointerdown", onPointerDown);
+    return () => window.removeEventListener("pointerdown", onPointerDown);
+  }, []);
+
+  useEffect(() => {
+    setShowSuggestions(false);
+  }, [activeConversationId]);
 
   const conversations = isBrokerView ? brokerConversations : renterConversations;
 
@@ -314,7 +324,7 @@ function MessagesPage({ app }) {
   return (
     <section className="h-full overflow-y-auto bg-[#ffffff] lg:overflow-hidden">
       <div className="min-h-full w-full lg:h-full">
-        <div className="grid min-h-full overflow-hidden lg:h-full lg:min-h-0 lg:grid-cols-[380px,minmax(0,1fr)] xl:grid-cols-[420px,minmax(0,1fr),320px]">
+        <div className="grid min-h-full overflow-hidden lg:h-full lg:min-h-0 lg:grid-cols-[380px,minmax(0,1fr)] xl:grid-cols-[420px,minmax(0,1fr)]">
           <aside className="flex min-h-0 flex-col border-b border-black/10 bg-[#fbfbfa] lg:border-b-0 lg:border-r">
             <div className="border-b border-black/10 p-4 sm:p-5">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ink-500">
@@ -486,9 +496,19 @@ function MessagesPage({ app }) {
                     {activeConversation.messages.length > 0 ? activeConversation.messages.map((message) => {
                       if (message.type === "system") {
                         return (
-                          <div key={message.id} className="space-y-2 text-center">
-                            <div className="inline-flex rounded-full border border-black/10 bg-[#ffffff] px-5 py-2 text-sm text-ink-600">
-                              {message.text}
+                          <div key={message.id} className="flex flex-col items-center gap-2">
+                            <div className="flex w-full max-w-sm items-center gap-3 rounded-2xl border border-black/10 bg-[#ffffff] p-2">
+                              <img
+                                src={MESSAGE_LISTING.image}
+                                alt={MESSAGE_LISTING.title}
+                                className="h-14 w-14 shrink-0 rounded-xl object-cover"
+                                loading="lazy"
+                              />
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate text-sm font-semibold text-[#0b0a0e]">{MESSAGE_LISTING.title}</p>
+                                <p className="truncate text-xs text-ink-600">{MESSAGE_LISTING.district} · {MESSAGE_LISTING.size} m²</p>
+                                <p className="text-xs font-semibold text-ink-800">{formatSek(MESSAGE_LISTING.priceMonthly)}/mån</p>
+                              </div>
                             </div>
                             <p className="text-[11px] text-ink-400">{message.timestamp}</p>
                           </div>
@@ -519,146 +539,82 @@ function MessagesPage({ app }) {
                 </div>
 
                 <footer className="border-t border-black/10 bg-[#ffffff] px-4 py-4 sm:px-5">
-                  <div className="mx-auto flex max-w-3xl items-center gap-3 rounded-[28px] border border-black/10 bg-[#fbfbfa] p-2">
-                    <button type="button" className="inline-flex h-9 w-9 min-h-0 items-center justify-center rounded-full text-ink-500">
-                      <PaperclipIcon className="h-4 w-4" />
-                    </button>
-                    <input
-                      className="min-w-0 flex-1 bg-transparent text-sm text-ink-900 outline-none placeholder:text-ink-400"
-                      placeholder={isBrokerView ? "Skriv ett svar..." : "Skriv ett meddelande..."}
-                      value={draft}
-                      onChange={(event) => setDraft(event.target.value)}
-                    />
-                    <button
-                      type="button"
-                      aria-label="Skicka"
-                      onClick={sendDraft}
-                      className="inline-flex h-10 w-10 min-h-0 items-center justify-center rounded-full bg-[#0b0a0e] text-white"
-                    >
-                      <SendHorizontalIcon className="h-4 w-4" />
-                    </button>
+                  <div className="mx-auto flex max-w-3xl items-center gap-2">
+                    <div ref={suggestionsButtonRef} className="relative inline-flex shrink-0">
+                      <button
+                        type="button"
+                        aria-label="Föreslagna svar"
+                        aria-expanded={showSuggestions}
+                        onClick={() => setShowSuggestions((value) => !value)}
+                        className={`inline-flex h-11 w-11 min-h-0 items-center justify-center rounded-full border outline-none transition [-webkit-tap-highlight-color:transparent] focus:outline-none focus-visible:outline-none active:bg-black/10 ${
+                          showSuggestions ? "border-[#0b0a0e] bg-black/5 text-[#0b0a0e]" : "border-black/10 bg-[#fbfbfa] text-ink-500 hover:border-[#0b0a0e]/25"
+                        }`}
+                      >
+                        <SparklesIcon className="h-4 w-4" />
+                      </button>
+
+                      {showSuggestions ? (
+                        <div
+                          ref={suggestionsPanelRef}
+                          className="absolute bottom-full left-0 z-20 mb-3 w-[320px] max-h-[360px] overflow-y-auto rounded-3xl border border-black/10 bg-[#ffffff] p-3 shadow-[0_20px_48px_rgba(15,25,48,0.16)]"
+                        >
+                          <div className="flex items-center gap-2 px-1">
+                            <SparklesIcon className="h-4 w-4 text-[#0b0a0e]" />
+                            <h3 className="text-sm font-semibold text-[#0b0a0e]">Föreslagna svar</h3>
+                          </div>
+                          <p className="mt-1 px-1 text-xs text-ink-600">Baserat på senaste meddelandet</p>
+                          <div className="mt-2 space-y-2">
+                            {activeConversation?.suggestions?.length ? activeConversation.suggestions.map((suggestion) => (
+                              <button
+                                key={suggestion.id}
+                                type="button"
+                                onClick={() => {
+                                  useSuggestion(suggestion.text);
+                                  setShowSuggestions(false);
+                                }}
+                                className="message-suggestion-card w-full border border-black/10 bg-[#fbfbfa] p-3 text-left transition hover:bg-[#ffffff]"
+                              >
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide ${suggestionToneClass(suggestion.tone)}`}>
+                                    {suggestion.tag}
+                                  </span>
+                                  <span className="text-[11px] text-ink-500">{suggestion.label}</span>
+                                </div>
+                                <p className="mt-2 text-sm leading-relaxed text-ink-800">{suggestion.text}</p>
+                              </button>
+                            )) : (
+                              <p className="px-1 py-2 text-sm text-ink-500">Inga förslag just nu.</p>
+                            )}
+                          </div>
+                        </div>
+                      ) : null}
+                    </div>
+
+                    <div className="flex min-w-0 flex-1 items-center gap-3 rounded-[28px] border border-black/10 bg-[#fbfbfa] p-2">
+                      <button type="button" className="inline-flex h-9 w-9 min-h-0 items-center justify-center rounded-full text-ink-500">
+                        <PaperclipIcon className="h-4 w-4" />
+                      </button>
+                      <input
+                        className="min-w-0 flex-1 bg-transparent text-sm text-ink-900 outline-none placeholder:text-ink-400"
+                        placeholder={isBrokerView ? "Skriv ett svar..." : "Skriv ett meddelande..."}
+                        value={draft}
+                        onChange={(event) => setDraft(event.target.value)}
+                      />
+                      <button
+                        type="button"
+                        aria-label="Skicka"
+                        onClick={sendDraft}
+                        className="inline-flex h-10 w-10 min-h-0 items-center justify-center rounded-full bg-[#0b0a0e] text-white"
+                      >
+                        <SendHorizontalIcon className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
                 </footer>
               </>
             ) : null}
           </div>
 
-          <aside className="hidden min-h-0 bg-[#fbfbfa] xl:block">
-            <div className="h-full overflow-y-auto p-4">
-              <article className="overflow-hidden rounded-3xl border border-black/10 bg-[#ffffff]">
-                <img src={MESSAGE_LISTING.image} alt={MESSAGE_LISTING.title} className="h-36 w-full object-cover" loading="lazy" />
-                <div className="p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ink-500">Matchad annons</p>
-                  <h3 className="mt-2 text-base font-semibold text-[#0b0a0e]">{MESSAGE_LISTING.title}</h3>
-                  <p className="mt-2 inline-flex items-center gap-1 text-xs text-ink-600">
-                    <PinIcon className="h-3.5 w-3.5" />
-                    {MESSAGE_LISTING.district} · {MESSAGE_LISTING.size} m²
-                  </p>
-                  <p className="mt-2 text-sm font-semibold text-[#0b0a0e]">{formatSek(MESSAGE_LISTING.priceMonthly)}/mån</p>
-                </div>
-              </article>
-
-              <article className="mt-3 rounded-3xl border border-black/10 bg-[#ffffff] p-4">
-                <div>
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ink-500">
-                      {isBrokerView ? "Hyresgäst" : "Mäklare"}
-                    </p>
-                    <h3 className="mt-2 text-base font-semibold text-[#0b0a0e]">
-                      {isBrokerView ? RENTER_PROFILE.name : BROKER_PROFILE.name}
-                    </h3>
-                  </div>
-                </div>
-
-                {isBrokerView ? (
-                  <div className="mt-4 space-y-2">
-                    <div className="rounded-2xl border border-black/10 px-3 py-3">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-500">Bolag</p>
-                      <p className="mt-2 text-sm text-ink-900">{RENTER_PROFILE.company}</p>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="rounded-2xl border border-black/10 px-3 py-3">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-500">Team</p>
-                        <p className="mt-2 text-sm text-ink-900">{RENTER_PROFILE.teamSize}</p>
-                      </div>
-                      <div className="rounded-2xl border border-black/10 px-3 py-3">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-500">Budget</p>
-                        <p className="mt-2 text-sm text-ink-900">{RENTER_PROFILE.budget}</p>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="mt-4 space-y-2">
-                    <div className="text-sm text-ink-900">
-                      <span className="font-semibold">{BROKER_PROFILE.name}</span>
-                    </div>
-                    <div className="rounded-2xl border border-black/10 px-3 py-3">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-500">Byrå</p>
-                      <p className="mt-2 text-sm text-ink-900">{BROKER_PROFILE.company}</p>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="rounded-2xl border border-black/10 px-3 py-3">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-500">Roll</p>
-                        <p className="mt-2 text-xs text-ink-900">Ansvarig mäklare</p>
-                      </div>
-                      <div className="rounded-2xl border border-black/10 px-3 py-3">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-500">Svarstid</p>
-                        <p className="mt-2 text-sm text-ink-900">{BROKER_PROFILE.responseTime}</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </article>
-
-              <article className="mt-3 rounded-3xl border border-black/10 bg-[#ffffff] p-4">
-                <div className="flex items-center gap-2">
-                  <SparklesIcon className="h-4 w-4 text-[#0b0a0e]" />
-                  <h3 className="text-base font-semibold text-[#0b0a0e]">Föreslagna svar</h3>
-                </div>
-                <p className="mt-2 text-sm text-ink-600">Baserat på senaste meddelandet</p>
-                <div className="mt-3 space-y-2">
-                  {activeConversation?.suggestions?.map((suggestion) => (
-                    <button
-                      key={suggestion.id}
-                      type="button"
-                      onClick={() => useSuggestion(suggestion.text)}
-                      className="message-suggestion-card w-full border border-black/10 bg-[#fbfbfa] p-3 text-left transition hover:bg-[#ffffff]"
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide ${suggestionToneClass(suggestion.tone)}`}>
-                          {suggestion.tag}
-                        </span>
-                        <span className="text-[11px] text-ink-500">{suggestion.label}</span>
-                      </div>
-                      <p className="mt-2 text-sm leading-relaxed text-ink-800">{suggestion.text}</p>
-                    </button>
-                  ))}
-                </div>
-              </article>
-
-              {isBrokerView ? (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <button type="button" className="inline-flex min-h-0 items-center gap-1.5 rounded-full border border-black/10 bg-[#ffffff] px-3 py-2 text-sm text-ink-700">
-                    <TagIcon className="h-3.5 w-3.5" />
-                    Märk
-                  </button>
-                  <button type="button" className="inline-flex min-h-0 items-center gap-1.5 rounded-full border border-black/10 bg-[#ffffff] px-3 py-2 text-sm text-ink-700">
-                    <UserPlusIcon className="h-3.5 w-3.5" />
-                    Tilldela
-                  </button>
-                  <button type="button" className="inline-flex min-h-0 items-center gap-1.5 rounded-full border border-black/10 bg-[#ffffff] px-3 py-2 text-sm text-ink-700">
-                    <ArchiveIcon className="h-3.5 w-3.5" />
-                    Arkivera
-                  </button>
-                </div>
-              ) : (
-                <p className="mt-3 inline-flex items-center gap-2 text-xs text-ink-600">
-                  <CircleDotIcon className="h-3.5 w-3.5 text-[#406947]" />
-                  All kommunikation sker via Lokalflöde.
-                </p>
-              )}
-            </div>
-          </aside>
         </div>
       </div>
     </section>

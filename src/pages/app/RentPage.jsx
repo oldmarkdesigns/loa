@@ -3,7 +3,6 @@ import ListingVisualCard from "../../components/app/ListingVisualCard";
 import ViewingRequestModal from "../../components/app/ViewingRequestModal";
 import LocalProgramPickerModal from "../../components/app/LocalProgramPickerModal";
 import FurnishingToggle from "../../components/app/FurnishingToggle";
-import AiGuidedAssistant from "../../components/app/AiGuidedAssistant";
 import Breadcrumbs from "../../components/layout/Breadcrumbs";
 import { buildAmenityAliasMap, propertyAmenityOptions } from "../../lib/propertyAmenityIcons";
 import {
@@ -12,9 +11,10 @@ import {
   ListIcon,
   MapIcon,
   ResetIcon,
-  SearchIcon,
+  SendHorizontalIcon,
   SparklesIcon,
   StarIcon,
+  UsersGroupIcon,
 } from "../../components/icons/UiIcons";
 import { listingApi } from "../../api";
 import { districtOptions, listingTypes } from "../../data/mockData";
@@ -582,28 +582,6 @@ function MapCanvas({ listings, onMarkerClick, dense = false }) {
   );
 }
 
-function PillToggle({ checked, onToggle, ariaLabel, className = "", thumbClassName = "" }) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      aria-label={ariaLabel}
-      className={`relative inline-flex h-6 w-10 min-h-0 items-center rounded-full p-0.5 transition-[background-color,border-color] duration-200 ease-out ${
-        checked ? "bg-[#0b0a0e]" : "bg-[#d8dde5]"
-      } ${className}`}
-      onClick={onToggle}
-    >
-      <span
-        aria-hidden="true"
-        className={`rounded-full bg-[#ffffff] shadow-[0_1px_2px_rgba(15,25,48,0.35)] transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-          checked ? "translate-x-4" : "translate-x-0"
-        } ${thumbClassName}`}
-      />
-    </button>
-  );
-}
-
 function AuthPromptModal({ mode, onClose, onRequireAuth }) {
   if (!mode) {
     return null;
@@ -657,15 +635,6 @@ function hasRunSearchInUrl() {
 function hasAvailableListingsViewInUrl() {
   if (typeof window === "undefined") return false;
   return new URLSearchParams(window.location.search).get("view") === "available";
-}
-
-function shouldForceCoreStepFromUrl() {
-  if (typeof window === "undefined") return false;
-  const params = new URLSearchParams(window.location.search);
-  if (params.get("run") !== "1") return false;
-  const teamSizeFromUrl = String(params.get("teamSize") || "").trim();
-  const districtFromUrl = String(params.get("district") || "").trim();
-  return Boolean(teamSizeFromUrl || districtFromUrl);
 }
 
 function readFlagParam(params, key, legacyKey = "") {
@@ -1356,6 +1325,25 @@ function buildResultsSuggestionCandidates({
   return { explicitCandidates, fallbackCandidates };
 }
 
+function FadeIn({ children, className = "" }) {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => setVisible(true));
+    const fallback = window.setTimeout(() => setVisible(true), 50);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.clearTimeout(fallback);
+    };
+  }, []);
+
+  return (
+    <div className={`transition-opacity duration-300 ease-out ${visible ? "opacity-100" : "opacity-0"} ${className}`}>
+      {children}
+    </div>
+  );
+}
+
 function RentPage({ app, isGuest = false, onRequireAuth }) {
   const {
     user,
@@ -1386,6 +1374,21 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
   const [showEditorAiInfo, setShowEditorAiInfo] = useState(false);
   const [hideLocalProgramQuickCard, setHideLocalProgramQuickCard] = useState(false);
   const [isLocalProgramQuickCardDissolving, setIsLocalProgramQuickCardDissolving] = useState(false);
+  const [isFilterBarStuck, setIsFilterBarStuck] = useState(false);
+  const resultsScrollRef = useRef(null);
+  const filterBarSentinelRef = useRef(null);
+
+  useEffect(() => {
+    const sentinel = filterBarSentinelRef.current;
+    const root = resultsScrollRef.current;
+    if (!sentinel || !root) return undefined;
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsFilterBarStuck(!entry.isIntersecting),
+      { root, threshold: 0, rootMargin: "160px 0px 0px 0px" }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, []);
   const [editorModeOpacity, setEditorModeOpacity] = useState(1);
   const [amenityQuery, setAmenityQuery] = useState("");
   const [furnishedFilter, setFurnishedFilter] = useState("all");
@@ -1404,7 +1407,6 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
   const [hoveredListingId, setHoveredListingId] = useState(null);
   const [authPromptMode, setAuthPromptMode] = useState("");
   const [resultViewMode, setResultViewMode] = useState("list");
-  const [aiGuideResetKey, setAiGuideResetKey] = useState(0);
   const [sortBy, setSortBy] = useState("relevance");
   const [useNewSearchCta, setUseNewSearchCta] = useState(false);
   const [isAvailableListingsView, setIsAvailableListingsView] = useState(() => hasAvailableListingsViewInUrl());
@@ -1426,8 +1428,8 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
     aiChangedChipKeys: [],
     aiChangedChipEntries: []
   });
-  const [aiGuideStepRequest, setAiGuideStepRequest] = useState(null);
-  const [forceAiGuideCoreStep, setForceAiGuideCoreStep] = useState(() => shouldForceCoreStepFromUrl());
+  const [aiPromptDraft, setAiPromptDraft] = useState("");
+  const [isAiSearchPending, setIsAiSearchPending] = useState(false);
   const [resultsSuggestion, setResultsSuggestion] = useState(null);
   const [resultsSuggestionLoading, setResultsSuggestionLoading] = useState(false);
   const [dismissedResultsSuggestionKey, setDismissedResultsSuggestionKey] = useState("");
@@ -1686,6 +1688,15 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
   }, [showEditorAiPanel, sidePanelMode]);
 
   useEffect(() => {
+    if (!showEditorAiPanel) return undefined;
+    function onEscape(event) {
+      if (event.key === "Escape") setShowEditorAiPanel(false);
+    }
+    window.addEventListener("keydown", onEscape);
+    return () => window.removeEventListener("keydown", onEscape);
+  }, [showEditorAiPanel]);
+
+  useEffect(() => {
     if (showAdvancedSearchEditor) {
       setShowAdvancedSearchOverlay(true);
       setIsAdvancedSearchOverlayActive(false);
@@ -1870,36 +1881,6 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
       }
     }
     return inferred;
-  }
-
-  async function previewEditorAiFilters(nextFilters, context = {}) {
-    const nextAmenityTerms = String(context.amenityQuery || "").trim();
-    const nextPrompt = String(context.prompt || "").trim();
-    const nextFurnishedFilter = typeof context.furnishedFilter === "string" ? context.furnishedFilter : furnishedFilter;
-    setFilters(nextFilters);
-    setAmenityQuery(nextAmenityTerms);
-    setFurnishedFilter(nextFurnishedFilter);
-    setAiLivePreview((prev) => ({
-      filters: nextFilters,
-      amenityQuery: nextAmenityTerms,
-      furnishedFilter: nextFurnishedFilter,
-      aiPrompt: nextPrompt,
-      matchCount: null,
-      aiChangedChipKeys: prev.aiChangedChipKeys || [],
-      aiChangedChipEntries: prev.aiChangedChipEntries || []
-    }));
-    const listingData = await searchListings(nextFilters);
-    const narrowed = applyAmenityAndFurnishedFilters(listingData, nextAmenityTerms, nextFurnishedFilter);
-    setAiLivePreview((prev) => ({
-      filters: nextFilters,
-      amenityQuery: nextAmenityTerms,
-      furnishedFilter: nextFurnishedFilter,
-      aiPrompt: nextPrompt,
-      matchCount: narrowed.length,
-      aiChangedChipKeys: prev.aiChangedChipKeys || [],
-      aiChangedChipEntries: prev.aiChangedChipEntries || []
-    }));
-    return narrowed.length;
   }
 
   async function submitGuidedEditorAiSearch(payload) {
@@ -2164,7 +2145,6 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
         aiChangedChipKeys: [],
         aiChangedChipEntries: []
       });
-      setAiGuideResetKey((value) => value + 1);
     });
   }
 
@@ -2173,7 +2153,6 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
     const params = new URLSearchParams(window.location.search);
     if (params.get("run") !== "1") {
       setIsHydratingLandingSearch(false);
-      setForceAiGuideCoreStep(false);
       return;
     }
 
@@ -2235,8 +2214,6 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
       aiChangedChipEntries: []
     });
     setShowEditorAiPanel(false);
-    setForceAiGuideCoreStep(false);
-    setAiGuideStepRequest(null);
 
     async function bootstrapFromLandingSearch() {
       try {
@@ -2874,18 +2851,14 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
     collapseLocalProgramHeaderCta();
   }
 
-  async function submitInlineGuidedAiSearch(payload) {
-    const prompt = String(payload?.prompt || "").trim();
-    const nextFilters = payload?.filters || filters;
-    const nextAmenityQuery = String(payload?.amenityQuery || "").trim();
-    const nextFurnishedFilter = typeof payload?.furnishedFilter === "string" ? payload.furnishedFilter : furnishedFilter;
-    setFilters(nextFilters);
-    setFurnishedFilter(nextFurnishedFilter);
-    await executeSearch(nextFilters, {
-      aiPrompt: prompt,
-      amenityQuery: nextAmenityQuery,
-      furnishedFilter: nextFurnishedFilter
-    });
+  async function submitAiChatPrompt(promptText) {
+    const cleaned = String(promptText || "").trim();
+    if (!cleaned || isAiSearchPending) return;
+    setIsAiSearchPending(true);
+    await submitGuidedEditorAiSearch({ prompt: cleaned });
+    setIsAiSearchPending(false);
+    setShowEditorAiPanel(false);
+    setAiPromptDraft("");
   }
 
   async function applyNoMatchSuggestion(suggestion) {
@@ -2927,7 +2900,6 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
       aiChangedChipKeys,
       aiChangedChipEntries
     });
-    setAiGuideResetKey((value) => value + 1);
     setNoMatchSuggestions([]);
   }
 
@@ -2970,7 +2942,6 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
       aiChangedChipKeys,
       aiChangedChipEntries
     });
-    setAiGuideResetKey((value) => value + 1);
     setDismissedResultsSuggestionKey("");
     if (isAvailableListingsView) {
       transitionFromAvailableToResults();
@@ -3181,7 +3152,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                 <SparklesIcon className="h-4 w-4 text-[#4f46e5]" />
                 AI-förslag
               </p>
-              <p className="text-[1.05rem] font-semibold text-ink-900">Ingen matchning just nu</p>
+              <p className="text-[1.05rem] font-semibold text-ink-900">{summaryResultCount > 0 ? "Få matchningar" : "Ingen matchning just nu"}</p>
               <p className="text-sm text-ink-700">AI granskar vilken inställning som begränsar träffarna mest.</p>
             </div>
           </div>
@@ -3192,7 +3163,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                 <SparklesIcon className="h-4 w-4 text-[#4f46e5]" />
                 AI-förslag
               </p>
-              <p className="text-[1.05rem] font-semibold text-ink-900">Ingen matchning just nu</p>
+              <p className="text-[1.05rem] font-semibold text-ink-900">{summaryResultCount > 0 ? "Få matchningar" : "Ingen matchning just nu"}</p>
               <p className="text-sm font-semibold text-ink-900">
                 {renderTextWithBoldMarkers(getSuggestionProblemText(visibleResultsSuggestion))}
               </p>
@@ -3231,25 +3202,114 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
     </div>
   ) : null;
 
-  const aiGuideToggleControl = (
-    <div className="inline-flex h-[44px] items-center gap-1.5 rounded-full border border-[#4f46e5]/12 bg-gradient-to-r from-[#fbfaff] to-white px-3 text-xs font-semibold text-ink-700">
-      <span className="inline-flex items-center gap-1">
-        <SparklesIcon className="h-3.5 w-3.5 text-[#4f46e5]" />
-        <span>AI-guide</span>
-      </span>
-      <PillToggle
-        checked={showEditorAiPanel}
-        onToggle={handleFilterSearchToggle}
-        ariaLabel="AI-guide i sökraden"
-        className="h-7 w-11"
-        thumbClassName="h-6 w-6"
-      />
-    </div>
+  const aiSearchUserFirstName = String(app.user?.name || "").trim().split(/\s+/)[0] || "";
+  const aiSearchPromptSuggestions = [
+    "Kontor för 15 personer i Södermalm",
+    "Visa lokaler under 50 000 kr/mån",
+    "Möblerat kontor nära tunnelbana"
+  ];
+
+  const aiSearchTriggerControl = (
+    <button
+      type="button"
+      onClick={() => setShowEditorAiPanel(true)}
+      className="inline-flex h-[44px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-[#4f46e5]/15 bg-[#f5f4ff] px-4 text-sm font-semibold text-[#4f46e5] transition hover:bg-[#efeeff]"
+    >
+      <SparklesIcon className="h-3.5 w-3.5" />
+      Sök
+    </button>
   );
+
+  const aiSearchOverlay = showEditorAiPanel ? (
+    <div
+      className="fixed inset-0 z-[85] flex items-start justify-center bg-black/20 px-4 pb-4 pt-24 backdrop-blur-[2px]"
+      onClick={() => setShowEditorAiPanel(false)}
+    >
+      <div
+        className="flex max-h-[80vh] w-full max-w-xl flex-col overflow-hidden rounded-3xl border border-black/10 bg-[#ffffff] shadow-[0_24px_64px_rgba(15,25,48,0.28)]"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="flex shrink-0 items-center justify-between border-b border-black/10 px-5 py-4">
+          <span className="inline-flex items-center gap-2 text-sm font-semibold text-ink-700">
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#0b0a0e] text-white">
+              <SparklesIcon className="h-3.5 w-3.5" />
+            </span>
+            AI-sök
+          </span>
+          <button
+            type="button"
+            className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-[#ffffff] px-3 py-1.5 text-xs font-semibold text-ink-700 transition hover:border-[#0b0a0e]/30"
+            onClick={() => setAiPromptDraft("")}
+          >
+            <ResetIcon className="h-3.5 w-3.5" />
+            Ny start
+          </button>
+        </div>
+
+        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-10 text-center">
+          <span className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-full bg-[#f5f4ff] text-[#4f46e5]">
+            <SparklesIcon className="h-6 w-6" />
+          </span>
+          <h3 className="mt-4 text-xl font-semibold text-[#0b0a0e]">
+            Välkommen{aiSearchUserFirstName ? `, ${aiSearchUserFirstName}` : ""}!
+          </h3>
+          <p className="mx-auto mt-6 max-w-xs text-left text-xs font-semibold uppercase tracking-wide text-ink-500">
+            Beskriv lokalen ni söker
+          </p>
+          <div className="mx-auto mt-3 flex max-w-xs flex-col gap-2">
+            {aiSearchPromptSuggestions.map((suggestion) => (
+              <button
+                key={suggestion}
+                type="button"
+                className="rounded-2xl border border-black/10 bg-[#ffffff] px-4 py-3 text-left text-sm text-ink-700 transition hover:border-[#0b0a0e]/30 hover:bg-[#fafafa] disabled:opacity-40"
+                onClick={() => submitAiChatPrompt(suggestion)}
+                disabled={isAiSearchPending}
+              >
+                {suggestion}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <form
+          className="shrink-0 border-t border-black/10 p-3"
+          onSubmit={(event) => {
+            event.preventDefault();
+            submitAiChatPrompt(aiPromptDraft);
+          }}
+        >
+          <div className="flex items-end gap-2 rounded-2xl border border-black/10 bg-[#fbfbfa] p-2">
+            <textarea
+              value={aiPromptDraft}
+              onChange={(event) => setAiPromptDraft(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && !event.shiftKey) {
+                  event.preventDefault();
+                  submitAiChatPrompt(aiPromptDraft);
+                }
+              }}
+              rows={1}
+              placeholder="Börja skriva..."
+              className="max-h-28 min-h-[40px] flex-1 resize-none bg-transparent px-2 py-2 text-sm text-ink-900 placeholder:text-ink-500 focus:outline-none"
+              disabled={isAiSearchPending}
+            />
+            <button
+              type="submit"
+              className="close-circle-button inline-flex items-center justify-center rounded-full bg-[#0b0a0e] text-white transition disabled:opacity-40"
+              disabled={isAiSearchPending || !aiPromptDraft.trim()}
+              aria-label="Skicka"
+            >
+              <SendHorizontalIcon className="h-4 w-4" />
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  ) : null;
 
   const sideFilterPanel = (
     <div className="space-y-3">
-      <form className="mt-3 flex flex-col" onSubmit={submitSideFilterSearch}>
+      <form className="flex flex-col" onSubmit={submitSideFilterSearch}>
         <div className="space-y-3">
           <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] md:items-end">
             <label>
@@ -3288,6 +3348,72 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
           </div>
         </div>
       </form>
+    </div>
+  );
+
+  const stickyFilterBar = (
+    <div className="inline-flex flex-wrap items-center gap-2 rounded-full border border-black/10 bg-[#ffffff] p-3 shadow-[0_10px_28px_rgba(15,25,48,0.08)]">
+      <label className="flex h-10 min-w-0 shrink-0 items-center gap-1.5 rounded-full border border-black/10 bg-[#fbfbfa] px-3">
+        <UsersGroupIcon className="h-4 w-4 shrink-0 text-ink-600" />
+        <input
+          value={filters.teamSize}
+          onChange={(event) => setFilters((prev) => ({ ...prev, teamSize: event.target.value }))}
+          className="w-12 min-w-0 bg-transparent text-sm text-ink-900 placeholder:text-ink-500 focus:outline-none"
+          placeholder="Platser"
+          type="number"
+          min="1"
+        />
+        <span className="shrink-0 text-sm font-medium text-ink-700">st</span>
+      </label>
+      <label className="flex h-10 shrink-0 items-center gap-1.5 rounded-full border border-black/10 bg-[#fbfbfa] px-3">
+        <MapIcon className="h-4 w-4 shrink-0 text-ink-600" />
+        <select
+          value={filters.district}
+          onChange={(event) => setFilters((prev) => ({ ...prev, district: event.target.value }))}
+          className="bg-transparent text-sm text-ink-900 focus:outline-none"
+        >
+          <option value="Alla">Alla områden</option>
+          {districtOptions.map((district) => <option key={district} value={district}>{district}</option>)}
+        </select>
+      </label>
+      <button
+        type="button"
+        className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full border border-black/10 bg-[#fbfbfa] px-3 text-xs font-semibold text-ink-700 hover:bg-[#ffffff]"
+        onClick={() => setShowAdvancedSearchEditor(true)}
+      >
+        <FilterIcon className="h-3.5 w-3.5" />
+        <span>Visa alla filter</span>
+      </button>
+      <span className="mx-0.5 h-6 w-px shrink-0 bg-black/10" />
+      <button
+        type="button"
+        aria-label="Spara sökning"
+        title="Spara sökning"
+        className="close-circle-button inline-flex items-center justify-center rounded-full border border-black/10 text-ink-600 transition hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
+        onClick={handleSaveSearchAction}
+      >
+        <StarIcon className="h-4 w-4" />
+      </button>
+      <button
+        type="button"
+        aria-label="Bevaka sökning"
+        title="Bevaka sökning"
+        className="close-circle-button inline-flex items-center justify-center rounded-full border border-black/10 text-ink-600 transition hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
+        onClick={handleWatchSearchAction}
+      >
+        <EyeIcon className="h-4 w-4" />
+      </button>
+      <button
+        type="button"
+        aria-label="Nollställ"
+        title="Nollställ"
+        className="close-circle-button inline-flex items-center justify-center rounded-full border border-black/10 text-ink-600 transition hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
+        onClick={() => {
+          void handleResetSearchResults();
+        }}
+      >
+        <ResetIcon className="h-4 w-4" />
+      </button>
     </div>
   );
 
@@ -3500,396 +3626,10 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
           </div>
         ) : (
           <div className="flex min-h-0 flex-1 flex-col gap-4">
-            {false ? (
-              <article
-                className={`mx-auto w-full text-ink-900 ${
-                  showSearchEditor && !isAvailableListingsView && !isClosingSearchEditor ? "search-editor-expand-in" : ""
-                } ${
-                  (isClosingSearchEditor || isLeavingAvailableView) ? "search-editor-collapse-out" : ""
-                } ${
-                  isAvailableListingsView && isEnteringAvailableView ? "search-editor-expand-in" : ""
-                }`}
-              >
-                <form className="space-y-6" onSubmit={submitEditorSearch}>
-                  <div className="transition-opacity duration-200" style={{ opacity: editorModeOpacity }}>
-                  {showEditorAiPanel ? (
-                    <AiGuidedAssistant
-                      key={`editor-ai-${aiGuideResetKey}`}
-                      initialFilters={filters}
-                      districtOptions={districtOptions}
-                      listingTypes={listingTypes}
-                      amenityOptions={editorAmenityOptions}
-                      transitDistanceOptions={transitDistanceOptions}
-                      contractFlexOptions={contractFlexOptions}
-                      accessHoursOptions={accessHoursOptions}
-                      parkingTypeOptions={parkingTypeOptions}
-                      layoutTypeOptions={layoutTypeOptions}
-                      advertiserOptions={advertiserOptions}
-                      initialAmenityQuery={amenityQuery}
-                      initialFurnishedFilter={furnishedFilter}
-                      onPreviewFilters={previewEditorAiFilters}
-                      onSubmitSearch={submitGuidedEditorAiSearch}
-                      onOpenInfo={() => setShowEditorAiInfo(true)}
-                    onResetSearch={() => {
-                      void handleResetSearchResults();
-                    }}
-                      resultCount={visibleListings.length}
-                      defaultResultCount={sortedListings.length}
-                      requestedStepRequest={aiGuideStepRequest}
-                      forceStepId={forceAiGuideCoreStep ? "core" : null}
-                      onShowMatches={() => {
-                        resultsTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-                      }}
-                      submitLabel={isAvailableListingsView ? "Visa träffar" : "Uppdatera sökning"}
-                  />
-                  ) : (
-                    <>
-                      {showAdvancedSearchEditor ? (
-                        <div className="space-y-5">
-                          <div className="grid gap-5 sm:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,0.55fr)]">
-                            <label>
-                              <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Sök</span>
-                              <div className="relative">
-                                <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-500" />
-                                <input
-                                  value={filters.query}
-                                  onChange={(event) => setFilters((prev) => ({ ...prev, query: event.target.value }))}
-                                  className={`${heroInputClass} pl-10`}
-                                  placeholder="Gata, adress eller fritext"
-                                />
-                              </div>
-                            </label>
-                            <label>
-                              <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Område</span>
-                              <select
-                                value={filters.district}
-                                onChange={(event) => setFilters((prev) => ({ ...prev, district: event.target.value }))}
-                                className={heroSelectClass}
-                              >
-                                <option value="Alla" className="text-black">Alla områden</option>
-                                {districtOptions.map((district) => <option key={district} value={district} className="text-black">{district}</option>)}
-                              </select>
-                            </label>
-                            <label>
-                              <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Typ</span>
-                              <select
-                                value={Array.isArray(filters.type) && filters.type.length > 0 ? filters.type[0] : "Alla"}
-                                onChange={(event) => {
-                                  const nextType = event.target.value;
-                                  setFilters((prev) => ({ ...prev, type: nextType === "Alla" ? [] : [nextType] }));
-                                }}
-                                className={heroSelectClass}
-                              >
-                                <option value="Alla" className="text-black">Alla typer</option>
-                                {listingTypes.map((type) => <option key={type} value={type} className="text-black">{type}</option>)}
-                              </select>
-                            </label>
-                          </div>
-                          <div className="grid gap-5 sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.9fr)] sm:items-start">
-                            <label>
-                              <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Team</span>
-                              <input
-                                value={filters.teamSize}
-                                onChange={(event) => setFilters((prev) => ({ ...prev, teamSize: event.target.value }))}
-                                className={heroInputClass}
-                                placeholder="Platser"
-                                type="number"
-                                min="1"
-                              />
-                            </label>
-                            <label>
-                              <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Min yta</span>
-                              <input value={filters.minSize} onChange={(event) => setFilters((prev) => ({ ...prev, minSize: event.target.value }))} className={heroInputClass} placeholder="Min kvm" type="number" min="0" />
-                            </label>
-                            <label>
-                              <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Max yta</span>
-                              <input value={filters.maxSize} onChange={(event) => setFilters((prev) => ({ ...prev, maxSize: event.target.value }))} className={heroInputClass} placeholder="Max kvm" type="number" min="0" />
-                            </label>
-                            <label>
-                              <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Inflyttning</span>
-                              <input
-                                value={filters.moveInDate || ""}
-                                onChange={(event) => setFilters((prev) => ({ ...prev, moveInDate: event.target.value }))}
-                                className={`${heroInputClass} h-[48px] py-0`}
-                                type="date"
-                              />
-                            </label>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="space-y-5">
-                          <div className="grid gap-5 sm:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,0.55fr)]">
-                            <label>
-                              <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Sök</span>
-                              <div className="relative">
-                                <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-500" />
-                                <input
-                                  value={filters.query}
-                                  onChange={(event) => setFilters((prev) => ({ ...prev, query: event.target.value }))}
-                                  className={`${heroInputClass} pl-10`}
-                                  placeholder="Gata, adress eller fritext"
-                                />
-                              </div>
-                            </label>
-                            <label>
-                              <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Område</span>
-                              <select
-                                value={filters.district}
-                                onChange={(event) => setFilters((prev) => ({ ...prev, district: event.target.value }))}
-                                className={heroSelectClass}
-                              >
-                                <option value="Alla" className="text-black">Alla områden</option>
-                                {districtOptions.map((district) => <option key={district} value={district} className="text-black">{district}</option>)}
-                              </select>
-                            </label>
-                            <label>
-                              <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Typ</span>
-                              <select
-                                value={Array.isArray(filters.type) && filters.type.length > 0 ? filters.type[0] : "Alla"}
-                                onChange={(event) => {
-                                  const nextType = event.target.value;
-                                  setFilters((prev) => ({ ...prev, type: nextType === "Alla" ? [] : [nextType] }));
-                                }}
-                                className={heroSelectClass}
-                              >
-                                <option value="Alla" className="text-black">Alla typer</option>
-                                {listingTypes.map((type) => <option key={type} value={type} className="text-black">{type}</option>)}
-                              </select>
-                            </label>
-                          </div>
-                          <div className="grid gap-5 sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.9fr)] sm:items-start">
-                            <label>
-                              <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Team</span>
-                              <input
-                                value={filters.teamSize}
-                                onChange={(event) => setFilters((prev) => ({ ...prev, teamSize: event.target.value }))}
-                                className={heroInputClass}
-                                placeholder="Platser"
-                                type="number"
-                                min="1"
-                              />
-                            </label>
-                            <label>
-                              <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Min yta</span>
-                              <input value={filters.minSize} onChange={(event) => setFilters((prev) => ({ ...prev, minSize: event.target.value }))} className={heroInputClass} placeholder="Min kvm" type="number" min="0" />
-                            </label>
-                            <label>
-                              <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Max yta</span>
-                              <input value={filters.maxSize} onChange={(event) => setFilters((prev) => ({ ...prev, maxSize: event.target.value }))} className={heroInputClass} placeholder="Max kvm" type="number" min="0" />
-                            </label>
-                            <label>
-                              <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Inflyttning</span>
-                              <input
-                                value={filters.moveInDate || ""}
-                                onChange={(event) => setFilters((prev) => ({ ...prev, moveInDate: event.target.value }))}
-                                className={`${heroInputClass} h-[48px] py-0`}
-                                type="date"
-                              />
-                            </label>
-                          </div>
-                        </div>
-                      )}
-
-                      <div
-                        className={`grid overflow-hidden transition-[grid-template-rows,opacity,margin] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-                          showAdvancedSearchEditor ? "mt-5 opacity-100" : "mt-0 opacity-0"
-                        }`}
-                        style={{ gridTemplateRows: showAdvancedSearchEditor ? "1fr" : "0fr" }}
-                      >
-                        <div className="min-h-0 space-y-5">
-                          <div className="grid gap-5 sm:grid-cols-[minmax(0,320px)_minmax(0,1.4fr)_minmax(0,0.8fr)_minmax(0,0.8fr)] sm:items-start">
-                            <div>
-                              <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Möblering</span>
-                              <FurnishingToggle
-                                options={furnishedOptions}
-                                value={furnishedFilter}
-                                onChange={setFurnishedFilter}
-                              />
-                            </div>
-                            <div>
-                              <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Budget / månad</span>
-                              <div className="grid gap-5 sm:grid-cols-2">
-                                <label>
-                                  <input
-                                    value={String(filters.minBudget ?? "")}
-                                    onChange={(event) => setFilters((prev) => ({ ...prev, minBudget: event.target.value }))}
-                                    className={`${heroInputClass} h-[48px] py-0`}
-                                    placeholder="Min (ex. 25 000)"
-                                    type="number"
-                                    min="0"
-                                  />
-                                </label>
-                                <label>
-                                  <input
-                                    value={String(filters.maxBudget ?? "").trim() === "250000" ? "" : filters.maxBudget}
-                                    onChange={(event) => setFilters((prev) => ({ ...prev, maxBudget: event.target.value }))}
-                                    className={`${heroInputClass} h-[48px] py-0`}
-                                    placeholder="Max (ex. 250000)"
-                                    type="number"
-                                    min="0"
-                                  />
-                                </label>
-                              </div>
-                            </div>
-                            <label>
-                              <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Access</span>
-                              <select
-                                value={filters.accessHours || "Alla"}
-                                onChange={(event) => setFilters((prev) => ({ ...prev, accessHours: event.target.value === "Alla" ? "" : event.target.value }))}
-                                className={`${heroSelectClass} h-[48px] py-0`}
-                              >
-                                {accessHoursOptions.map((option) => <option key={option} value={option} className="text-black">{option}</option>)}
-                              </select>
-                            </label>
-                            <label>
-                              <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Hyresvärd</span>
-                              <select
-                                value={filters.advertiser || "Alla"}
-                                onChange={(event) => setFilters((prev) => ({ ...prev, advertiser: event.target.value }))}
-                                className={`${heroSelectClass} h-[48px] py-0`}
-                              >
-                                {advertiserOptions.map((option) => <option key={option} value={option} className="text-black">{option}</option>)}
-                              </select>
-                            </label>
-                          </div>
-
-                          <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto_auto_auto] sm:items-end">
-                            <label>
-                              <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Kommunaltrafik</span>
-                              <select
-                                value={filters.transitDistance || "Alla"}
-                                onChange={(event) => setFilters((prev) => ({ ...prev, transitDistance: event.target.value === "Alla" ? "" : event.target.value }))}
-                                className={`${heroSelectClass} h-[48px] py-0`}
-                              >
-                                {transitDistanceOptions.map((option) => <option key={option} value={option} className="text-black">{option}</option>)}
-                              </select>
-                            </label>
-                            <label>
-                              <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Avtalsflex</span>
-                              <select
-                                value={filters.contractFlex || "Alla"}
-                                onChange={(event) => setFilters((prev) => ({ ...prev, contractFlex: event.target.value === "Alla" ? "" : event.target.value }))}
-                                className={`${heroSelectClass} h-[48px] py-0`}
-                              >
-                                {contractFlexOptions.map((option) => <option key={option} value={option} className="text-black">{option}</option>)}
-                              </select>
-                            </label>
-                            <label>
-                              <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Parkering</span>
-                              <select
-                                value={filters.parkingType || "Alla"}
-                                onChange={(event) => setFilters((prev) => ({ ...prev, parkingType: event.target.value === "Alla" ? "" : event.target.value }))}
-                                className={`${heroSelectClass} h-[48px] py-0`}
-                              >
-                                {parkingTypeOptions.map((option) => <option key={option} value={option} className="text-black">{option}</option>)}
-                              </select>
-                            </label>
-                            <label>
-                              <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Planlösning</span>
-                              <select
-                                value={filters.layoutType || "Alla"}
-                                onChange={(event) => setFilters((prev) => ({ ...prev, layoutType: event.target.value === "Alla" ? "" : event.target.value }))}
-                                className={`${heroSelectClass} h-[48px] py-0`}
-                              >
-                                {layoutTypeOptions.map((option) => <option key={option} value={option} className="text-black">{option}</option>)}
-                              </select>
-                            </label>
-                            <label className="inline-flex h-[48px] items-center gap-2 rounded-2xl border border-black/10 bg-[#ffffff] px-3 text-xs font-semibold text-ink-700">
-                              <input
-                                type="checkbox"
-                                className="search-flag-checkbox"
-                                checked={Boolean(filters.includeOperatingCosts)}
-                                onChange={(event) => setFilters((prev) => ({ ...prev, includeOperatingCosts: event.target.checked }))}
-                              />
-                              Driftkostn. ingår
-                            </label>
-                            <label className="inline-flex h-[48px] items-center gap-2 rounded-2xl border border-black/10 bg-[#ffffff] px-3 text-xs font-semibold text-ink-700">
-                              <input
-                                type="checkbox"
-                                className="search-flag-checkbox"
-                                checked={Boolean(filters.accessibilityAdapted)}
-                                onChange={(event) => setFilters((prev) => ({ ...prev, accessibilityAdapted: event.target.checked }))}
-                              />
-                              Tillgänglighetsanp.
-                            </label>
-                            <label className="inline-flex h-[48px] items-center gap-2 rounded-2xl border border-black/10 bg-[#ffffff] px-3 text-xs font-semibold text-ink-700">
-                              <input
-                                type="checkbox"
-                                className="search-flag-checkbox"
-                                checked={Boolean(filters.ecoCertified)}
-                                onChange={(event) => setFilters((prev) => ({ ...prev, ecoCertified: event.target.checked }))}
-                              />
-                              Miljöcertifierad
-                            </label>
-                          </div>
-
-                          <div>
-                            <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-700">Bekvämligheter</p>
-                            <div className="mt-2 flex flex-wrap gap-2">
-                              {editorAmenityOptions.map((option) => {
-                                const Icon = option.icon;
-                                const active = isAmenitySelected(option.value);
-                                return (
-                                  <button
-                                    key={option.value}
-                                    type="button"
-                                    className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition ${
-                                      active ? "border-[#0b0a0e] bg-[#0b0a0e] text-white" : "border-black/10 bg-[#ffffff] text-ink-700 hover:bg-[#ffffff]"
-                                    }`}
-                                    onClick={() => toggleAmenity(option.value)}
-                                  >
-                                    <Icon className="h-4 w-4 shrink-0" />
-                                    {option.label}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {isAvailableListingsView ? (
-                        <div className="mt-5 flex items-center justify-between gap-2">
-                          <button
-                            type="button"
-                            className="inline-flex items-center gap-2 rounded-2xl border border-black/10 bg-[#ffffff] px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-[#ffffff]"
-                            onClick={() => {
-                              setShowAdvancedSearchEditor((value) => !value);
-                            }}
-                          >
-                            <span>{showAdvancedSearchEditor ? "Visa färre filter" : "Visa alla filter"}</span>
-                            <span aria-hidden="true" className="text-sm leading-none">{showAdvancedSearchEditor ? "−" : "+"}</span>
-                          </button>
-                          <button type="submit" className="inline-flex items-center gap-1.5 rounded-2xl border border-[#0b0a0e] bg-[#0b0a0e] px-5 py-3 text-sm font-semibold text-white">
-                            <SearchIcon className="h-4 w-4" />
-                            Sök lokaler
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="mt-5 flex items-center justify-end gap-2">
-                          <button
-                            type="button"
-                            className="rounded-2xl border border-black/10 bg-[#ffffff] px-4 py-3 text-sm font-semibold text-ink-700 hover:bg-[#ffffff]"
-                            onClick={closeSearchEditorSmooth}
-                          >
-                            Avbryt
-                          </button>
-                          <button type="submit" className="rounded-2xl border border-[#0b0a0e] bg-[#0b0a0e] px-5 py-3 text-sm font-semibold text-white">
-                            Uppdatera sökning
-                          </button>
-                        </div>
-                      )}
-                    </>
-                  )}
-                  </div>
-                </form>
-                </article>
-            ) : null}
-
             <div className="min-h-0 flex-1">
               {showInlineAiGuide ? (
                 <div className="flex h-full min-h-0 flex-col gap-5 overflow-hidden xl:grid xl:grid-cols-[minmax(0,1.02fr)_minmax(540px,0.98fr)] xl:gap-6">
-                  <div data-scroll-top-scope="results" className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain pb-8 xl:pr-2 xl:pb-16">
+                  <div ref={resultsScrollRef} data-scroll-top-scope="results" className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain pb-8 xl:pr-2 xl:pb-16">
                     <div className="px-1 py-1">
                       <Breadcrumbs
                         className="mb-2"
@@ -3900,55 +3640,30 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                       />
                       <div className="flex flex-wrap items-center justify-between gap-3 sm:flex-nowrap">
                         <div className="min-w-0 flex-1">
-                          <h1 className="truncate text-2xl font-semibold leading-10">{displayedShowingSearchResults ? "Sökresultat" : "Lediga lokaler"}</h1>
+                          <h1 className="truncate text-2xl font-semibold leading-8">{displayedShowingSearchResults ? "Sökresultat" : "Lediga lokaler"}</h1>
                         </div>
                         <div className="ml-auto flex w-full flex-wrap items-center justify-end gap-2 self-center sm:w-auto sm:flex-nowrap">
                           {primaryHeaderAction}
                           {secondaryHeaderActions}
-                          {aiGuideToggleControl}
+                          {aiSearchTriggerControl}
                         </div>
                       </div>
                     </div>
 
-                    <div className="min-w-0">
-                      {showEditorAiPanel ? (
-                        <AiGuidedAssistant
-                          key={`inline-ai-${aiGuideResetKey}`}
-                          initialFilters={filters}
-                          districtOptions={districtOptions}
-                          listingTypes={listingTypes}
-                          amenityOptions={editorAmenityOptions}
-                          transitDistanceOptions={transitDistanceOptions}
-                          contractFlexOptions={contractFlexOptions}
-                          accessHoursOptions={accessHoursOptions}
-                          parkingTypeOptions={parkingTypeOptions}
-                          layoutTypeOptions={layoutTypeOptions}
-                          advertiserOptions={advertiserOptions}
-                          initialAmenityQuery={amenityQuery}
-                          initialFurnishedFilter={furnishedFilter}
-                          onPreviewFilters={previewEditorAiFilters}
-                          onSubmitSearch={submitInlineGuidedAiSearch}
-                          onOpenInfo={() => setShowEditorAiInfo(true)}
-                          onResetSearch={() => {
-                            void handleResetSearchResults();
-                          }}
-                          resultCount={displayedVisibleListings.length}
-                          defaultResultCount={sortedListings.length}
-                          requestedStepRequest={aiGuideStepRequest}
-                          forceStepId={forceAiGuideCoreStep ? "core" : null}
-                          onShowMatches={() => {
-                            resultsTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-                          }}
-                          submitLabel="Uppdatera sökning"
-                          showHeader={false}
-                          bare
-                        />
+                    <div ref={filterBarSentinelRef} className="!mt-0 h-px" />
+                    <div
+                      className={`z-20 mx-auto !mt-2 w-full min-w-0 !p-0 transition-[max-width] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                        isFilterBarStuck ? "sticky top-3 flex max-w-[680px] justify-center" : "max-w-none"
+                      }`}
+                    >
+                      {isFilterBarStuck ? (
+                        <FadeIn key="sticky-pill">{stickyFilterBar}</FadeIn>
                       ) : (
                         sideFilterPanel
                       )}
                     </div>
 
-                    <div className="space-y-3">
+                    <div className="!mt-4 space-y-3">
                       {displayedShowPreferencesSummaryCard ? (
                         <div className="bg-[#ffffff]">
                           <div className="relative">
@@ -4010,7 +3725,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                       <div className="ml-auto flex w-full flex-wrap items-center justify-end gap-2 self-center sm:w-auto sm:flex-nowrap">
                         {primaryHeaderAction}
                         {secondaryHeaderActions}
-                        {aiGuideToggleControl}
+                        {aiSearchTriggerControl}
                       </div>
                     </div>
                   </div>
@@ -4298,6 +4013,8 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
       />
 
       <AuthPromptModal mode={authPromptMode} onClose={() => setAuthPromptMode("")} onRequireAuth={onRequireAuth} />
+
+      {aiSearchOverlay}
 
       {showEditorAiInfo ? (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-transparent p-4" onClick={() => setShowEditorAiInfo(false)}>

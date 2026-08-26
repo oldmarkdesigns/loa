@@ -125,19 +125,18 @@ function MarketingHeader({
               {!hasCompanyAdminRole && hasBrokerAccess ? (
                 <button
                   type="button"
-                  className="btn-primary inline-flex h-11 items-center gap-1.5 px-4 text-xs"
+                  className="btn-secondary inline-flex h-11 items-center px-4 text-xs"
                   onClick={async () => {
                     if (activeRole === "renter") {
                       await onSwitchRole?.("broker");
                     }
-                    navigateTo("/app/publish");
+                    navigateTo("/app/broker");
                   }}
                 >
-                  <span aria-hidden="true" className="text-sm leading-none">+</span>
-                  <span>Publicera annons</span>
+                  Växla till adminläge
                 </button>
               ) : null}
-              {!hasCompanyAdminRole ? (
+              {!hasBrokerAccess ? (
                 <button
                   type="button"
                   aria-label="Meddelanden"

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { navigateTo, routeMatches } from "../../lib/router";
 import { LogoutIcon, PanelLeftIcon, XIcon } from "../icons/UiIcons";
 
-function PanelSidebarNav({ pathname, navItems, rootPath, onNavigate, badges }) {
+function PanelSidebarNav({ pathname, navItems, rootPath, onNavigate, badges, collapsed = false }) {
   return (
     <nav className="space-y-1">
       {navItems.map((item) => {
@@ -14,18 +14,29 @@ function PanelSidebarNav({ pathname, navItems, rootPath, onNavigate, badges }) {
           <button
             key={item.key}
             type="button"
-            className={`menu-hover-row w-full px-3 py-2.5 text-left text-sm font-semibold transition ${
-              active ? "bg-[#0b0a0e] text-white" : "text-ink-700 hover:bg-black/5"
-            }`}
+            title={collapsed ? item.label : undefined}
+            aria-label={item.label}
+            className={`menu-hover-row w-full text-left text-sm font-semibold transition ${
+              collapsed ? "flex justify-center px-0 py-2.5" : "px-3 py-2.5"
+            } ${active ? "bg-[#0b0a0e] text-white" : "text-ink-700 hover:bg-black/5"}`}
             onClick={() => onNavigate(item.path)}
           >
-            <span className="flex items-center gap-2">
-              <item.Icon className="h-[18px] w-[18px] shrink-0" />
-              <span className="min-w-0 flex-1 truncate">{item.label}</span>
-              {badgeValue ? (
-                <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${active ? "bg-[#ffffff]/20 text-white" : "bg-black/10 text-ink-700"}`}>
-                  {badgeValue}
-                </span>
+            <span className={`flex items-center ${collapsed ? "justify-center" : "gap-2"}`}>
+              <span className="relative inline-flex shrink-0">
+                <item.Icon className="h-[18px] w-[18px] shrink-0" />
+                {collapsed && badgeValue ? (
+                  <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-[#e5484d] ring-2 ring-[#ffffff]" />
+                ) : null}
+              </span>
+              {!collapsed ? (
+                <>
+                  <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                  {badgeValue ? (
+                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${active ? "bg-[#ffffff]/20 text-white" : "bg-black/10 text-ink-700"}`}>
+                      {badgeValue}
+                    </span>
+                  ) : null}
+                </>
               ) : null}
             </span>
           </button>
@@ -35,12 +46,26 @@ function PanelSidebarNav({ pathname, navItems, rootPath, onNavigate, badges }) {
   );
 }
 
-function PanelSidebar({ pathname, navItems, bottomNavItems, onNavigate, onLogout, badges }) {
+function PanelSidebar({ pathname, navItems, bottomNavItems, onNavigate, onLogout, badges, collapsed = false, onToggleCollapsed }) {
   const rootPath = navItems[0]?.path;
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="px-4 pb-4 pt-4 sm:px-6 sm:pt-6">
-        <PanelSidebarNav pathname={pathname} navItems={navItems} rootPath={rootPath} onNavigate={onNavigate} badges={badges} />
+        <PanelSidebarNav pathname={pathname} navItems={navItems} rootPath={rootPath} onNavigate={onNavigate} badges={badges} collapsed={collapsed} />
+        {onToggleCollapsed ? (
+          <div className={`mt-2 flex ${collapsed ? "justify-center" : "justify-end"}`}>
+            <button
+              type="button"
+              className="inline-flex h-9 w-9 min-h-0 shrink-0 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] text-ink-700 transition hover:border-[#0b0a0e]/25"
+              onClick={onToggleCollapsed}
+              aria-label={collapsed ? "Expandera meny" : "Fäll ihop meny"}
+              aria-pressed={collapsed}
+              title={collapsed ? "Expandera meny" : "Fäll ihop meny"}
+            >
+              <PanelLeftIcon className={`h-4 w-4 transition-transform ${collapsed ? "rotate-180" : ""}`} />
+            </button>
+          </div>
+        ) : null}
       </div>
 
       <div className="mt-auto p-4 pt-0 sm:px-6">
@@ -52,29 +77,35 @@ function PanelSidebar({ pathname, navItems, bottomNavItems, onNavigate, onLogout
                 <button
                   key={item.key}
                   type="button"
-                  className={`menu-hover-row w-full px-3 py-2.5 text-left text-sm font-semibold transition ${
-                    active ? "bg-[#0b0a0e] text-white" : "text-ink-700 hover:bg-black/5"
-                  }`}
+                  title={collapsed ? item.label : undefined}
+                  aria-label={item.label}
+                  className={`menu-hover-row w-full text-left text-sm font-semibold transition ${
+                    collapsed ? "flex justify-center px-0 py-2.5" : "px-3 py-2.5"
+                  } ${active ? "bg-[#0b0a0e] text-white" : "text-ink-700 hover:bg-black/5"}`}
                   onClick={() => onNavigate(item.path)}
                 >
-                  <span className="flex items-center gap-2">
+                  <span className={`flex items-center ${collapsed ? "justify-center" : "gap-2"}`}>
                     <item.Icon className="h-[18px] w-[18px] shrink-0" />
-                    <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                    {!collapsed ? <span className="min-w-0 flex-1 truncate">{item.label}</span> : null}
                   </span>
                 </button>
               );
             })}
             <button
               type="button"
-              className="menu-hover-row w-full px-3 py-2.5 text-left text-sm font-semibold text-ink-700 transition hover:bg-black/5"
+              title={collapsed ? "Logga ut" : undefined}
+              aria-label="Logga ut"
+              className={`menu-hover-row w-full text-left text-sm font-semibold text-ink-700 transition hover:bg-black/5 ${
+                collapsed ? "flex justify-center px-0 py-2.5" : "px-3 py-2.5"
+              }`}
               onClick={async () => {
                 await onLogout?.();
                 navigateTo("/", { replace: true });
               }}
             >
-              <span className="flex items-center gap-2">
+              <span className={`flex items-center ${collapsed ? "justify-center" : "gap-2"}`}>
                 <LogoutIcon className="h-[18px] w-[18px] shrink-0" />
-                <span className="min-w-0 flex-1 truncate">Logga ut</span>
+                {!collapsed ? <span className="min-w-0 flex-1 truncate">Logga ut</span> : null}
               </span>
             </button>
           </div>
@@ -84,12 +115,17 @@ function PanelSidebar({ pathname, navItems, bottomNavItems, onNavigate, onLogout
   );
 }
 
-function AdminPanelShell({ pathname, navItems, bottomNavItems, sectionTitle, onLogout, badges = {}, children }) {
+function AdminPanelShell({ pathname, navItems, bottomNavItems, sectionTitle, onLogout, badges = {}, fullBleedContent = false, children }) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   return (
     <section className="flex h-full min-h-0 bg-[#ffffff]">
-      <aside className="hidden h-full w-[296px] shrink-0 border-r border-black/10 bg-[#ffffff] lg:block">
+      <aside
+        className={`hidden h-full shrink-0 overflow-hidden border-r border-black/10 bg-[#ffffff] transition-[width] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] lg:block ${
+          sidebarCollapsed ? "w-[84px]" : "w-[296px]"
+        }`}
+      >
         <PanelSidebar
           pathname={pathname}
           navItems={navItems}
@@ -97,11 +133,16 @@ function AdminPanelShell({ pathname, navItems, bottomNavItems, sectionTitle, onL
           onNavigate={(nextPath) => navigateTo(nextPath)}
           onLogout={onLogout}
           badges={badges}
+          collapsed={sidebarCollapsed}
+          onToggleCollapsed={() => setSidebarCollapsed((value) => !value)}
         />
       </aside>
 
-      <div data-admin-scroll-container="true" className="min-h-0 flex-1 overflow-y-auto">
-        <div className="sticky top-0 z-10 border-b border-black/10 bg-[#ffffff] px-4 py-2.5 lg:hidden">
+      <div
+        data-admin-scroll-container="true"
+        className={`flex min-h-0 flex-1 flex-col ${fullBleedContent ? "overflow-hidden" : "overflow-y-auto"}`}
+      >
+        <div className="sticky top-0 z-10 shrink-0 border-b border-black/10 bg-[#ffffff] px-4 py-2.5 lg:hidden">
           <div className="flex items-center justify-between gap-3">
             <button
               type="button"
@@ -115,9 +156,11 @@ function AdminPanelShell({ pathname, navItems, bottomNavItems, sectionTitle, onL
           </div>
         </div>
 
-        <div className="mx-auto w-full max-w-[1600px] p-4 sm:p-6">
-          {children}
-        </div>
+        {fullBleedContent ? (
+          <div className="min-h-0 flex-1">{children}</div>
+        ) : (
+          <div className="mx-auto w-full max-w-[1600px] p-4 sm:p-6">{children}</div>
+        )}
       </div>
 
       {mobileSidebarOpen ? (

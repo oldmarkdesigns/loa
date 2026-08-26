@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import FurnishingToggle from "../../components/app/FurnishingToggle";
-import Breadcrumbs from "../../components/layout/Breadcrumbs";
 import AdminPanelShell from "../../components/layout/AdminPanelShell";
 import FieldLabel from "../../components/app/FieldLabel";
 import ListingPreview from "../../components/app/ListingPreview";
@@ -11,6 +10,7 @@ import { districtOptions, listingTypes } from "../../data/mockData";
 import { ADMIN_NAV_ITEMS, ADMIN_BOTTOM_NAV_ITEMS } from "./AdminPanelPage";
 import { BROKER_NAV_ITEMS, BROKER_BOTTOM_NAV_ITEMS } from "./BrokerPanelPage";
 import {
+  ArrowLeftIcon,
   BuildingIcon,
   CheckBadgeIcon,
   ExternalLinkIcon,
@@ -291,6 +291,7 @@ function PublishPage({ app, pathname = "/app/publish" }) {
   const isCompanyAdmin = activeRole === "company_admin";
   const panelNavItems = isCompanyAdmin ? ADMIN_NAV_ITEMS : BROKER_NAV_ITEMS;
   const panelBottomNavItems = isCompanyAdmin ? ADMIN_BOTTOM_NAV_ITEMS : BROKER_BOTTOM_NAV_ITEMS;
+  const myListingsPath = isCompanyAdmin ? "/app/admin/annonser" : "/app/broker/objekt";
 
   const [stepIndex, setStepIndex] = useState(0);
   const [draft, setDraft] = useState(initialDraft);
@@ -512,7 +513,7 @@ function PublishPage({ app, pathname = "/app/publish" }) {
 
   return (
     <AdminPanelShell
-      pathname={pathname}
+      pathname={myListingsPath}
       navItems={panelNavItems}
       bottomNavItems={panelBottomNavItems}
       sectionTitle="Publicera annons"
@@ -520,13 +521,14 @@ function PublishPage({ app, pathname = "/app/publish" }) {
     >
       <div className="space-y-5">
         <header className="px-1 py-1">
-          <Breadcrumbs
-            className="mb-2"
-            items={[
-              { label: "Startsida", to: "/" },
-              { label: "Publicera annons" }
-            ]}
-          />
+          <button
+            type="button"
+            className="mb-2 inline-flex items-center gap-1.5 text-sm font-semibold text-ink-700 transition hover:text-[#0b0a0e]"
+            onClick={() => navigateTo(myListingsPath)}
+          >
+            <ArrowLeftIcon className="h-4 w-4" />
+            Tillbaka till mina lokaler
+          </button>
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Annonsflöde</p>
@@ -926,7 +928,7 @@ function PublishPage({ app, pathname = "/app/publish" }) {
                       >
                         Visa annons live
                       </button>
-                      <button type="button" className="btn-secondary w-full px-4" onClick={() => navigateTo(isCompanyAdmin ? "/app/admin/annonser" : "/app/broker")}>
+                      <button type="button" className="btn-secondary w-full px-4" onClick={() => navigateTo(myListingsPath)}>
                         Gå till mina objekt
                       </button>
                       <button type="button" className="btn-secondary w-full px-4" onClick={resetFlow}>

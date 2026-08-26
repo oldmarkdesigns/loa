@@ -74,11 +74,14 @@ function SignupPage({ onCheckCompanyByOrganizationNumber, onCompleteSignup, curr
   const { isLoading, user, signIn, signUp } = useAuth();
   // `user` from useAuth() can be silently restored from a persisted WorkOS session on page
   // load (devMode keeps tokens in localStorage), even though this app never confirmed the
-  // person as signed in this tab. Only trust it here if a real redirect just completed in
-  // this tab (set by onRedirectCallback in main.jsx) - otherwise a stale session would
-  // leak someone else's name/email into the signup form without any visible login step.
-  const authJustCompleted = typeof window !== "undefined" && window.sessionStorage.getItem("office_auth_just_completed") === "1";
-  const signupUser = currentUser || (authJustCompleted ? user : null);
+  // person as signed in this tab. Only trust it for THIS mount if a real redirect completed
+  // right before it (set by onRedirectCallback in main.jsx) - captured once here, then
+  // consumed below, since the flag itself stays "1" until onboarding fully finishes and
+  // would otherwise keep matching on every later, unrelated visit to this page.
+  const [trustAuthUserThisMount] = useState(
+    () => typeof window !== "undefined" && window.sessionStorage.getItem("office_auth_just_completed") === "1"
+  );
+  const signupUser = currentUser || (trustAuthUserThisMount ? user : null);
   const isConfigured = hasConvexConfig && hasWorkosConfig;
   const countryCodeOptions = [
     { label: "Sverige (+46)", value: "+46" },
@@ -112,8 +115,20 @@ function SignupPage({ onCheckCompanyByOrganizationNumber, onCompleteSignup, curr
   const [pendingFormattedOrganizationNumber, setPendingFormattedOrganizationNumber] = useState("");
   const [companySetupPromptOpen, setCompanySetupPromptOpen] = useState(false);
   const [pendingOnboardingPath, setPendingOnboardingPath] = useState("");
-  const [detailsStep, setDetailsStep] = useState(() => stepFromSearch(window.location.search || ""));
+  const [detailsStep, setDetailsStep] = useState(() => {
+    const value = stepFromSearch(window.location.search || "");
+    // TEMP DIAGNOSTIC - remove once the role-selection bounce is confirmed fixed.
+    console.warn("[DIAG SignupPage mount]", {
+      href: window.location.href,
+      search: window.location.search,
+      resolvedStep: value,
+      draftRaw: window.sessionStorage.getItem("office_rental_signup_draft"),
+      authJustCompletedFlag: window.sessionStorage.getItem("office_auth_just_completed")
+    });
+    return value;
+  });
   const cardWrapRef = useRef(null);
+  const skipAutoAdvanceRef = useRef(false);
   const [cardWidth, setCardWidth] = useState(null);
   const [search, setSearch] = useState(window.location.search || "");
 
@@ -151,6 +166,13 @@ function SignupPage({ onCheckCompanyByOrganizationNumber, onCompleteSignup, curr
     form.role === "broker";
 
   useEffect(() => {
+    if (trustAuthUserThisMount && typeof window !== "undefined") {
+      window.sessionStorage.removeItem("office_auth_just_completed");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
     function syncSearch() {
       setSearch(window.location.search || "");
     }
@@ -169,10 +191,28 @@ function SignupPage({ onCheckCompanyByOrganizationNumber, onCompleteSignup, curr
   }, [search]);
 
   useEffect(() => {
-    if (!signupUser || detailsStep === STEP_PROFILE_EXTRA) return;
+    // TEMP DIAGNOSTIC - remove once the role-selection bounce is confirmed fixed.
+    console.warn("[DIAG auto-advance effect]", {
+      detailsStep,
+      skip: skipAutoAdvanceRef.current,
+      draftPresent: Boolean(readSignupDraft()),
+      currentSearch: window.location.search
+    });
+    if (skipAutoAdvanceRef.current) {
+      skipAutoAdvanceRef.current = false;
+      return;
+    }
+    if (detailsStep === STEP_PROFILE_EXTRA) return;
+    // A saved draft only ever exists after startSignup() wrote it, right before leaving for
+    // WorkOS - so its presence alone (role/intent already chosen) is reason enough to land
+    // back on profile-extra. Deliberately NOT gated on signupUser/authUser: that value only
+    // becomes available once the WorkOS SDK's own async token exchange resolves, which can
+    // land a render or two after this effect first runs post-redirect, so waiting on it here
+    // was the actual cause of bouncing back to role selection instead of going straight to
+    // "Berätta om dig själv".
     if (!readSignupDraft()) return;
     navigateTo(profileExtraPath(returnTo), { replace: true });
-  }, [detailsStep, returnTo, signupUser]);
+  }, [detailsStep, returnTo]);
 
   useEffect(() => {
     const params = new URLSearchParams(search);
@@ -464,7 +504,12 @@ function SignupPage({ onCheckCompanyByOrganizationNumber, onCompleteSignup, curr
 
   function goBackFromDetails() {
     if (detailsStep === STEP_PROFILE_EXTRA) {
-      navigateTo("/", { replace: true });
+      skipAutoAdvanceRef.current = true;
+      if (form.intentSelection === "lease-out") {
+        navigateTo(`/signup?step=role&returnTo=${encodeURIComponent(returnTo)}`, { replace: true });
+      } else {
+        navigateTo("/signup", { replace: true });
+      }
       return;
     }
     if (detailsStep === STEP_ROLE) {
@@ -637,8 +682,9 @@ function SignupPage({ onCheckCompanyByOrganizationNumber, onCompleteSignup, curr
         : "Fyll i de sista uppgifterna för din profil.";
   const submitLabel =
     pending
-      ? detailsStep === STEP_PROFILE_EXTRA ? "Sparar..." : "Startar..."
+      ? detailsStep === STEP_PROFILE_EXTRA ? "Sparar..." : "Skapar konto"
       : "Fortsätt";
+  const showSubmitLoadingDots = pending && detailsStep !== STEP_PROFILE_EXTRA;
 
   return (
     <main className="grid min-h-screen place-items-center bg-[#ffffff] px-4 pb-8 pt-20">
@@ -722,8 +768,15 @@ function SignupPage({ onCheckCompanyByOrganizationNumber, onCompleteSignup, curr
               {error ? <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">{error}</p> : null}
 
               <div className={`flex flex-col gap-3 ${detailsStep === STEP_PROFILE_EXTRA ? "pt-2" : "mt-6"}`}>
-                <button type="submit" className="rounded-full border border-[#0b0a0e] bg-[#0b0a0e] px-5 py-3 text-sm font-semibold text-white" disabled={pending || isLoading}>
+                <button type="submit" className="inline-flex items-center justify-center gap-1.5 rounded-full border border-[#0b0a0e] bg-[#0b0a0e] px-5 py-3 text-sm font-semibold text-white" disabled={pending || isLoading}>
                   {submitLabel}
+                  {showSubmitLoadingDots ? (
+                    <span className="button-loading-dots inline-flex items-center gap-0.5" aria-hidden="true">
+                      <span />
+                      <span />
+                      <span />
+                    </span>
+                  ) : null}
                 </button>
                 {detailsStep !== STEP_INTENT ? (
                   <button

@@ -95,6 +95,22 @@ function AppContent() {
     const hasSignupDraft = typeof window !== "undefined" && Boolean(window.sessionStorage.getItem("office_rental_signup_draft"));
     const onboardingCompletionScreen = typeof window !== "undefined" ? window.sessionStorage.getItem("office_onboarding_completion_screen") : "";
 
+    // TEMP DIAGNOSTIC - remove once the role-selection bounce is confirmed fixed.
+    console.warn("[DIAG App guard effect]", {
+      pathname,
+      search,
+      isAuthenticated,
+      appUser: app.user ? { id: app.user.id, email: app.user.email, role: app.user.role, roles: app.user.roles, onboardingCompleted: app.user.onboardingCompleted } : null,
+      userReadyForApp,
+      userNeedsOnboarding,
+      isAuthPath,
+      isCallbackPath,
+      isOnboardingPath,
+      authJustCompleted,
+      hasSignupDraft,
+      hasCompanyAdminRole
+    });
+
     if (logoutInProgress && pathname !== "/") {
       navigateTo("/", { replace: true });
       return;
@@ -209,9 +225,9 @@ function AppContent() {
 
       if (pathname === "/app/favorites") {
         const favoritesTarget = role === "company_admin"
-          ? "/app/admin/profil?tab=favorites"
+          ? "/app/admin/sparade-objekt"
           : role === "broker"
-            ? "/app/broker/profil?tab=favorites"
+            ? "/app/broker/sparade-objekt"
             : "/app/profile?tab=favorites";
         navigateTo(favoritesTarget, { replace: true });
         return;
@@ -391,7 +407,9 @@ function AppContent() {
           listings={app.listings}
           notifications={app.notifications}
           companyBrokers={app.companyBrokers}
+          myCompanies={app.myCompanies}
           onSwitchRole={app.switchRole}
+          onSwitchCompany={app.switchActiveCompany}
           onLogout={app.logout}
         >
           {appRouteContent}

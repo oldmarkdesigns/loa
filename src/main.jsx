@@ -28,6 +28,14 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         : hasSignupDraft
           ? "/signup?step=profile-extra"
           : "/signup";
+      // TEMP DIAGNOSTIC - remove once the role-selection bounce is confirmed fixed.
+      console.warn("[DIAG onRedirectCallback]", {
+        stateReceived: state,
+        stateReturnTo: state?.returnTo,
+        hasSignupDraft,
+        draftRaw: typeof window !== "undefined" ? window.sessionStorage.getItem("office_rental_signup_draft") : null,
+        finalReturnTo: returnTo
+      });
       navigateTo(returnTo, { replace: true });
     }}
     onRefreshFailure={({ signIn }) => {

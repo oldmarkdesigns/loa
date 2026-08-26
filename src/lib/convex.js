@@ -32,6 +32,8 @@ export const convexApiRefs = {
     switchActiveRole: mutationRef("users:switchActiveRole"),
     completeOnboarding: mutationRef("users:completeOnboarding"),
     listNotifications: queryRef("users:listNotifications"),
+    listMyCompanies: queryRef("users:listMyCompanies"),
+    switchActiveCompany: mutationRef("users:switchActiveCompany"),
     listCompanyBrokers: queryRef("users:listCompanyBrokers"),
     approveBrokerRequest: mutationRef("users:approveBrokerRequest"),
     rejectBrokerRequest: mutationRef("users:rejectBrokerRequest"),

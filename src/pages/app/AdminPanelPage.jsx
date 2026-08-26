@@ -3,6 +3,7 @@ import { navigateTo, routeMatches } from "../../lib/router";
 import { formatSek } from "../../lib/formatters";
 import AdminPanelShell from "../../components/layout/AdminPanelShell";
 import PanelProfileSection from "./PanelProfileSection";
+import MessagesPage from "./MessagesPage";
 import {
   Area,
   AreaChart,
@@ -60,8 +61,11 @@ export const ADMIN_NAV_ITEMS = [
   { key: "oversikt", label: "Översikt", path: "/app/admin", Icon: LayoutDashboardIcon },
   { key: "annonser", label: "Annonser", path: "/app/admin/annonser", Icon: BuildingIcon },
   { key: "leads", label: "Leads & Matchningar", path: "/app/admin/leads", Icon: SparklesIcon },
+  { key: "meddelanden", label: "Meddelanden", path: "/app/admin/meddelanden", Icon: MessageSquareIcon },
   { key: "notifikationer", label: "Notifikationer", path: "/app/admin/notifikationer", Icon: BellIcon },
   { key: "maklare", label: "Mäklare", path: "/app/admin/maklare", Icon: UsersGroupIcon },
+  { key: "sparade-objekt", label: "Sparade objekt", path: "/app/admin/sparade-objekt", Icon: StarIcon },
+  { key: "sparade-sokningar", label: "Sparade sökningar", path: "/app/admin/sparade-sokningar", Icon: SearchIcon },
   { key: "aktivitet", label: "Aktivitet", path: "/app/admin/aktivitet", Icon: HistoryIcon },
   { key: "statistik", label: "Statistik", path: "/app/admin/statistik", Icon: BarChart3Icon }
 ];
@@ -79,9 +83,12 @@ const SECTION_TITLES = {
   adminprofil: "Adminprofil",
   annonser: "Annonser",
   leads: "Leads & Matchningar",
+  meddelanden: "Meddelanden",
   inkorg: "Inkorg",
   notifikationer: "Notifikationer",
   maklare: "Mäklare",
+  "sparade-objekt": "Sparade objekt",
+  "sparade-sokningar": "Sparade sökningar",
   aktivitet: "Aktivitet",
   statistik: "Statistik",
   hjalp: "Hjälp",
@@ -3407,6 +3414,7 @@ function AdminPanelPage({ app, pathname }) {
       sectionTitle={currentSectionLabel}
       onLogout={app?.logout}
       badges={{ annonser: companyListings.length, notifikationer: notificationCount }}
+      fullBleedContent={sectionKey === "meddelanden"}
     >
       {shouldShowEmptyCompanyPage ? <EmptyCompanyAdminPage app={app} sectionKey={sectionKey} /> : null}
       {!shouldShowEmptyCompanyPage && sectionKey === "oversikt" ? <AdminOverview app={app} /> : null}
@@ -3417,9 +3425,12 @@ function AdminPanelPage({ app, pathname }) {
       {!shouldShowEmptyCompanyPage && sectionKey === "maklare" ? <AdminBrokersPage app={app} /> : null}
       {!shouldShowEmptyCompanyPage && sectionKey === "statistik" ? <AdminStatistics app={app} /> : null}
       {!shouldShowEmptyCompanyPage && sectionKey === "aktivitet" ? <AdminActivityPage /> : null}
+      {sectionKey === "meddelanden" ? <MessagesPage app={app} /> : null}
+      {sectionKey === "sparade-objekt" ? <PanelProfileSection app={app} basePath="/app/admin/profil" forcedTab="favorites" /> : null}
+      {sectionKey === "sparade-sokningar" ? <PanelProfileSection app={app} basePath="/app/admin/profil" forcedTab="history" /> : null}
       {sectionKey === "profil" ? <PanelProfileSection app={app} basePath="/app/admin/profil" /> : null}
       {sectionKey === "adminprofil" ? <AdminProfile app={app} /> : null}
-      {!shouldShowEmptyCompanyPage && sectionKey !== "oversikt" && sectionKey !== "annonser" && sectionKey !== "leads" && sectionKey !== "inkorg" && sectionKey !== "notifikationer" && sectionKey !== "maklare" && sectionKey !== "profil" && sectionKey !== "adminprofil" && sectionKey !== "statistik" && sectionKey !== "aktivitet" ? <AdminPlaceholder sectionKey={sectionKey} /> : null}
+      {!shouldShowEmptyCompanyPage && sectionKey !== "oversikt" && sectionKey !== "annonser" && sectionKey !== "leads" && sectionKey !== "inkorg" && sectionKey !== "notifikationer" && sectionKey !== "maklare" && sectionKey !== "meddelanden" && sectionKey !== "sparade-objekt" && sectionKey !== "sparade-sokningar" && sectionKey !== "profil" && sectionKey !== "adminprofil" && sectionKey !== "statistik" && sectionKey !== "aktivitet" ? <AdminPlaceholder sectionKey={sectionKey} /> : null}
     </AdminPanelShell>
   );
 }

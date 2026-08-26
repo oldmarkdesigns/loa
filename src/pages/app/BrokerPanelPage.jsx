@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Area, AreaChart, ResponsiveContainer, Tooltip } from "recharts";
 import { leadActivitiesApi, listingApi } from "../../api";
 import { formatDate } from "../../lib/formatters";
@@ -14,18 +15,28 @@ import StatusPill, {
 import {
   BuildingIcon,
   CalendarIcon,
+  LayoutDashboardIcon,
   MessageSquareIcon,
   MoreHorizontalIcon,
+  SearchIcon,
   SettingsGearIcon,
+  SparklesIcon,
+  StarIcon,
   SupportIcon,
   UserIcon,
   XIcon
 } from "../../components/icons/UiIcons";
 import PanelProfileSection from "./PanelProfileSection";
+import MessagesPage from "./MessagesPage";
+import { useListingEditorState, ListingEditorSections, ListingEditorFooterActions } from "../../components/app/ListingEditorOverlay";
 
 export const BROKER_NAV_ITEMS = [
-  { key: "objekt", label: "Mina objekt", path: "/app/broker", Icon: BuildingIcon },
-  { key: "leads", label: "Leads", path: "/app/broker/leads", Icon: MessageSquareIcon }
+  { key: "oversikt", label: "Översikt", path: "/app/broker", Icon: LayoutDashboardIcon },
+  { key: "objekt", label: "Dina objekt", path: "/app/broker/objekt", Icon: BuildingIcon },
+  { key: "leads", label: "Leads", path: "/app/broker/leads", Icon: SparklesIcon },
+  { key: "meddelanden", label: "Meddelanden", path: "/app/broker/meddelanden", Icon: MessageSquareIcon },
+  { key: "sparade-objekt", label: "Sparade objekt", path: "/app/broker/sparade-objekt", Icon: StarIcon },
+  { key: "sparade-sokningar", label: "Sparade sökningar", path: "/app/broker/sparade-sokningar", Icon: SearchIcon }
 ];
 
 export const BROKER_BOTTOM_NAV_ITEMS = [
@@ -35,8 +46,12 @@ export const BROKER_BOTTOM_NAV_ITEMS = [
 ];
 
 const BROKER_SECTION_TITLES = {
-  objekt: "Mina objekt",
+  oversikt: "Översikt",
+  objekt: "Dina objekt",
   leads: "Leads",
+  meddelanden: "Meddelanden",
+  "sparade-objekt": "Sparade objekt",
+  "sparade-sokningar": "Sparade sökningar",
   profil: "Profil",
   installningar: "Inställningar",
   hjalp: "Hjälp"
@@ -44,8 +59,8 @@ const BROKER_SECTION_TITLES = {
 
 function sectionFromPath(pathname) {
   const match = pathname.match(/^\/(?:app\/)?broker\/([^/?#]+)/);
-  const key = match?.[1] || "objekt";
-  return BROKER_SECTION_TITLES[key] ? key : "objekt";
+  const key = match?.[1] || "oversikt";
+  return BROKER_SECTION_TITLES[key] ? key : "oversikt";
 }
 
 function timeValue(dateValue) {
@@ -147,12 +162,9 @@ function SparkKpiCard({ card, series }) {
   );
 }
 
-function BrokerListingsSection({ app }) {
+function useBrokerListingsData(app) {
   const { user, leads = [], updateListing } = app;
 
-  const [query, setQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("alla");
-  const [cardView, setCardView] = useState("compact");
   const [publisherListings, setPublisherListings] = useState([]);
   const [isLoadingListings, setIsLoadingListings] = useState(true);
 
@@ -238,16 +250,11 @@ function BrokerListingsSection({ app }) {
       .sort((a, b) => timeValue(b.updatedAt) - timeValue(a.updatedAt));
   }, [leadCountByListingId, ownListings]);
 
-  const filteredListings = useMemo(() => {
-    const lowered = query.trim().toLowerCase();
-    return listingPerformance.filter((listing) => {
-      const statusMatch = statusFilter === "alla" || String(listing.status || "") === statusFilter;
-      const queryMatch = !lowered || [listing.title, listing.address, listing.district, listing.type]
-        .filter(Boolean)
-        .some((value) => String(value).toLowerCase().includes(lowered));
-      return statusMatch && queryMatch;
-    });
-  }, [listingPerformance, query, statusFilter]);
+  return { user, updateListing, isLoadingListings, listingPerformance, ownLeads, ownListings, refreshPublisherListings };
+}
+
+function BrokerOverviewSection({ app }) {
+  const { isLoadingListings, listingPerformance, ownLeads, ownListings } = useBrokerListingsData(app);
 
   const activeCount = listingPerformance.filter((listing) => listing.status === "active").length;
   const draftCount = listingPerformance.filter((listing) => listing.status !== "active").length;
@@ -344,20 +351,14 @@ function BrokerListingsSection({ app }) {
     response: listingPerformance.slice(0, 6).map((listing) => Number(listing.responseHours || averageResponse || 0))
   };
 
-  async function handleListingStatusChange(event, listingId) {
-    event.stopPropagation();
-    await updateListing?.(listingId, { status: event.target.value });
-    await refreshPublisherListings();
-  }
-
   return (
     <div className="space-y-5">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Hyresvärd</p>
-          <h1 className="mt-1 text-2xl font-semibold">Mina objekt</h1>
+          <h1 className="mt-1 text-2xl font-semibold">Översikt</h1>
           <p className="mt-2 text-sm text-ink-600">
-            Hantera objekt, följ statistik och arbeta med leads i ett sammanhängande flöde.
+            Statistik och prestanda för dina objekt och leads.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -372,261 +373,314 @@ function BrokerListingsSection({ app }) {
         </div>
       </header>
 
+      {isLoadingListings ? (
+        <div className="rounded-2xl border border-black/10 bg-[#fafafa] px-4 py-5 text-sm text-ink-600">
+          Laddar statistik...
+        </div>
+      ) : null}
+
       <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         {kpiCards.map((card) => (
           <SparkKpiCard key={card.key} card={card} series={sparklineSeries[card.key] || []} />
         ))}
       </section>
 
-      <div className="grid gap-4 xl:grid-cols-[1.55fr_0.95fr]">
-        <article className="surface self-start p-4 sm:p-5">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-2xl font-semibold">Hantera objekt</h2>
-            <div className="grid w-full gap-2 sm:w-auto sm:grid-cols-[280px_170px_auto]">
-              <input
-                className="field"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Sök titel, adress eller område"
-              />
-              <select className="field" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
-                <option value="alla">Alla statusar</option>
-                {listingStatusOptions().map((status) => (
-                  <option key={status.value} value={status.value}>{status.label}</option>
-                ))}
-              </select>
-              <div className="inline-flex items-center gap-2 rounded-2xl border border-black/10 bg-[#ffffff] px-3 py-2 text-xs font-semibold text-ink-700">
-                <span>Detaljvy</span>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={cardView === "detailed"}
-                  aria-label="Detaljvy"
-                  className={`relative inline-flex h-6 w-10 min-h-0 items-center rounded-full p-0.5 transition-colors ${
-                    cardView === "detailed" ? "justify-end bg-[#0b0a0e]" : "justify-start bg-[#a8adb3]"
-                  }`}
-                  onClick={() => setCardView((prev) => (prev === "detailed" ? "compact" : "detailed"))}
-                >
-                  <span aria-hidden="true" className="h-5 w-5 rounded-full bg-[#ffffff] shadow-[0_1px_2px_rgba(15,25,48,0.35)]" />
-                </button>
-              </div>
+      <div className="grid gap-4 xl:grid-cols-2">
+        <article className="surface p-4 sm:p-5">
+          <h3 className="text-lg font-semibold">Objektprestanda</h3>
+          <p className="mt-1 text-xs text-ink-600">Visningar och leads per objekt</p>
+          <div className="mt-4 space-y-3">
+            {topPerformers.length === 0 ? (
+              <p className="rounded-2xl border border-black/10 bg-[#fafafa] px-3 py-4 text-sm text-ink-600">
+                Publicera ditt första objekt för att se statistik.
+              </p>
+            ) : null}
+            {topPerformers.map((entry) => {
+              const width = Math.max(8, Math.round((entry.views / maxViews) * 100));
+              return (
+                <div key={entry.id}>
+                  <div className="mb-1 flex items-center justify-between gap-2 text-xs">
+                    <span className="truncate font-semibold">{entry.title}</span>
+                    <span className="text-ink-600">{entry.views.toLocaleString("sv-SE")} visningar</span>
+                  </div>
+                  <div className="h-2.5 rounded-full bg-[#ffffff]">
+                    <div className="h-full rounded-full bg-[#0b0a0e]" style={{ width: `${width}%` }} />
+                  </div>
+                  <div className="mt-1 text-[11px] text-ink-600">
+                    {entry.listingLeads} leads • konvertering {entry.conversion.toFixed(2)}%
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </article>
+
+        <article className="surface p-4">
+          <h3 className="text-sm font-semibold">Överblick</h3>
+          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+            <div className="rounded-xl border border-black/10 bg-[#ffffff] px-2.5 py-2">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">Aktiva objekt</p>
+              <p className="mt-1 text-xl font-semibold leading-none">{activeCount}</p>
+              <p className="mt-1 text-[11px] text-ink-600">{draftCount} utkast</p>
+            </div>
+            <div className="rounded-xl border border-black/10 bg-[#ffffff] px-2.5 py-2">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">Visningar</p>
+              <p className="mt-1 text-xl font-semibold leading-none">{totalViews.toLocaleString("sv-SE")}</p>
+              <p className="mt-1 text-[11px] text-ink-600">30 dagar</p>
+            </div>
+            <div className="rounded-xl border border-black/10 bg-[#ffffff] px-2.5 py-2">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">Leads</p>
+              <p className="mt-1 text-xl font-semibold leading-none">{totalLeads}</p>
+              <p className="mt-1 text-[11px] text-ink-600">Konv. {conversionRate.toFixed(1)}%</p>
+            </div>
+            <div className="rounded-xl border border-black/10 bg-[#ffffff] px-2.5 py-2">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">Svarstid</p>
+              <p className="mt-1 text-xl font-semibold leading-none">{averageResponse}h</p>
+              <p className="mt-1 text-[11px] text-ink-600">Genomsnitt</p>
             </div>
           </div>
+        </article>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            {isLoadingListings ? (
-              <div className="rounded-2xl border border-black/10 bg-[#fafafa] px-4 py-5 text-sm text-ink-600 sm:col-span-2">
-                Laddar dina objekt...
-              </div>
+        <article className="surface p-4 sm:p-5">
+          <h3 className="text-lg font-semibold">Lead-pipeline</h3>
+          <p className="mt-1 text-xs text-ink-600">Status över alla inkomna intressen</p>
+          <div className="mt-4 space-y-2">
+            {pipelineEntries.length === 0 ? (
+              <p className="rounded-2xl border border-black/10 bg-[#fafafa] px-3 py-4 text-sm text-ink-600">
+                Inga leads ännu.
+              </p>
             ) : null}
-
-            {!isLoadingListings && filteredListings.length === 0 ? (
-              <div className="rounded-2xl border border-black/10 bg-[#fafafa] px-4 py-5 text-sm text-ink-600 sm:col-span-2">
-                Inga objekt matchar dina filter.
+            {pipelineEntries.map((entry) => (
+              <div key={entry.status} className="flex items-center justify-between rounded-xl border border-black/10 bg-[#ffffff] px-3 py-2">
+                <span className="text-sm text-ink-700">{entry.label}</span>
+                <span className="text-sm font-semibold text-ink-900">{entry.count}</span>
               </div>
-            ) : null}
-
-            {filteredListings.map((listing) => (
-              <article
-                key={listing.id}
-                role="button"
-                tabIndex={0}
-                className="!rounded-[24px] border border-black/10 bg-[#ffffff] p-3 text-left transition hover:border-[#0b0a0e]/30 hover:bg-[#ffffff] sm:p-4"
-                onClick={() => navigateTo(`/app/my-listings/${encodeURIComponent(listing.id)}`)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") navigateTo(`/app/my-listings/${encodeURIComponent(listing.id)}`);
-                }}
-              >
-                {cardView === "compact" ? (
-                  <div className="space-y-3">
-                    <div className="grid grid-cols-[92px_1fr] gap-3">
-                      <img
-                        src={listing.image || "/object-images/object-1.jpeg"}
-                        alt={listing.title}
-                        className="h-20 w-full rounded-lg border border-black/10 object-cover"
-                      />
-                      <div className="flex min-w-0 flex-col justify-between">
-                        <div className="flex items-start justify-between gap-2">
-                          <p className="truncate text-sm font-semibold">{listing.title || listing.address}</p>
-                          <StatusPill status={listing.status} variant="listing" className="shrink-0 text-[10px]" />
-                        </div>
-                        <p className="text-sm text-ink-600">{listing.district} • {listing.address}</p>
-                        <p className="mt-1 text-xs text-ink-600">
-                          {listing.views.toLocaleString("sv-SE")} visningar • {listing.inquiries.toLocaleString("sv-SE")} intressen • {listing.listingLeads} leads
-                        </p>
-                        <select
-                          className="field mt-2 min-h-0 py-1.5 text-xs"
-                          value={listing.status || "draft"}
-                          onClick={(event) => event.stopPropagation()}
-                          onChange={(event) => handleListingStatusChange(event, listing.id)}
-                        >
-                          {listingStatusOptions().map((status) => (
-                            <option key={status.value} value={status.value}>{status.label}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-3.5">
-                    <img
-                      src={listing.image || "/object-images/object-1.jpeg"}
-                      alt={listing.title}
-                      className="h-36 w-full rounded-lg border border-black/10 object-cover"
-                    />
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <p className="text-base font-semibold leading-tight">{listing.title}</p>
-                        <p className="text-sm text-ink-600">{listing.district} • {listing.address}</p>
-                      </div>
-                      <StatusPill status={listing.status} variant="listing" className="text-[11px]" />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      <span className="rounded-xl border border-black/10 bg-[#ffffff] px-2.5 py-2 text-center font-semibold text-ink-800 whitespace-nowrap">
-                        {listing.sizeSqm} kvm
-                      </span>
-                      <span className="rounded-xl border border-black/10 bg-[#ffffff] px-2.5 py-2 text-center font-semibold text-ink-800 whitespace-nowrap">
-                        {listing.capacity} platser
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-2">
-                      <div className="rounded-xl border border-black/10 bg-[#ffffff] px-2.5 py-2">
-                        <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">Objektstatus</p>
-                        <p className="mt-0.5 text-sm font-semibold text-ink-900">{listingStatusLabel(listing.status)}</p>
-                      </div>
-                      <div className="rounded-xl border border-black/10 bg-[#ffffff] px-2.5 py-2">
-                        <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">Visningar</p>
-                        <p className="mt-0.5 text-sm font-semibold text-ink-900">{listing.views.toLocaleString("sv-SE")}</p>
-                      </div>
-                      <div className="rounded-xl border border-black/10 bg-[#ffffff] px-2.5 py-2">
-                        <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">Leads</p>
-                        <p className="mt-0.5 text-sm font-semibold text-ink-900">{listing.listingLeads}</p>
-                      </div>
-                    </div>
-
-                    {Array.isArray(listing.amenities) && listing.amenities.length > 0 ? (
-                      <div className="flex flex-wrap gap-1.5">
-                        {listing.amenities.slice(0, 4).map((amenity) => (
-                          <span key={`${listing.id}-${amenity}`} className="rounded-full border border-black/10 bg-[#ffffff] px-2 py-0.5 text-[11px] font-semibold text-ink-600">
-                            {amenity}
-                          </span>
-                        ))}
-                      </div>
-                    ) : null}
-
-                    <select
-                      className="field min-h-0 py-1.5 text-xs"
-                      value={listing.status || "draft"}
-                      onClick={(event) => event.stopPropagation()}
-                      onChange={(event) => handleListingStatusChange(event, listing.id)}
-                    >
-                      {listingStatusOptions().map((status) => (
-                        <option key={status.value} value={status.value}>{status.label}</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-              </article>
             ))}
           </div>
         </article>
 
-        <div className="space-y-4">
-          <article className="surface p-4 sm:p-5">
-            <h3 className="text-lg font-semibold">Objektprestanda</h3>
-            <p className="mt-1 text-xs text-ink-600">Visningar och leads per objekt</p>
-            <div className="mt-4 space-y-3">
-              {topPerformers.length === 0 ? (
-                <p className="rounded-2xl border border-black/10 bg-[#fafafa] px-3 py-4 text-sm text-ink-600">
-                  Publicera ditt första objekt för att se statistik.
-                </p>
-              ) : null}
-              {topPerformers.map((entry) => {
-                const width = Math.max(8, Math.round((entry.views / maxViews) * 100));
-                return (
-                  <div key={entry.id}>
-                    <div className="mb-1 flex items-center justify-between gap-2 text-xs">
-                      <span className="truncate font-semibold">{entry.title}</span>
-                      <span className="text-ink-600">{entry.views.toLocaleString("sv-SE")} visningar</span>
-                    </div>
-                    <div className="h-2.5 rounded-full bg-[#ffffff]">
-                      <div className="h-full rounded-full bg-[#0b0a0e]" style={{ width: `${width}%` }} />
-                    </div>
-                    <div className="mt-1 text-[11px] text-ink-600">
-                      {entry.listingLeads} leads • konvertering {entry.conversion.toFixed(2)}%
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </article>
-
-          <article className="surface p-4">
-            <h3 className="text-sm font-semibold">Överblick</h3>
-            <div className="mt-2 grid gap-2 sm:grid-cols-2">
-              <div className="rounded-xl border border-black/10 bg-[#ffffff] px-2.5 py-2">
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">Aktiva objekt</p>
-                <p className="mt-1 text-xl font-semibold leading-none">{activeCount}</p>
-                <p className="mt-1 text-[11px] text-ink-600">{draftCount} utkast</p>
+        <article className="surface p-4 sm:p-5">
+          <h3 className="text-lg font-semibold">Senaste aktivitet</h3>
+          <div className="mt-3 space-y-2">
+            {activityFeed.length === 0 ? (
+              <p className="rounded-2xl border border-black/10 bg-[#fafafa] px-3 py-4 text-sm text-ink-600">
+                Aktivitet visas när objekt eller leads uppdateras.
+              </p>
+            ) : null}
+            {activityFeed.map((event) => (
+              <div key={event.id} className="rounded-xl border border-black/10 bg-[#ffffff] px-3 py-2.5">
+                <p className="text-sm font-semibold">{event.label}</p>
+                <p className="text-xs text-ink-600">{event.meta}</p>
+                <p className="mt-1 text-[11px] text-ink-500">{formatDate(event.date)}</p>
               </div>
-              <div className="rounded-xl border border-black/10 bg-[#ffffff] px-2.5 py-2">
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">Visningar</p>
-                <p className="mt-1 text-xl font-semibold leading-none">{totalViews.toLocaleString("sv-SE")}</p>
-                <p className="mt-1 text-[11px] text-ink-600">30 dagar</p>
-              </div>
-              <div className="rounded-xl border border-black/10 bg-[#ffffff] px-2.5 py-2">
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">Leads</p>
-                <p className="mt-1 text-xl font-semibold leading-none">{totalLeads}</p>
-                <p className="mt-1 text-[11px] text-ink-600">Konv. {conversionRate.toFixed(1)}%</p>
-              </div>
-              <div className="rounded-xl border border-black/10 bg-[#ffffff] px-2.5 py-2">
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">Svarstid</p>
-                <p className="mt-1 text-xl font-semibold leading-none">{averageResponse}h</p>
-                <p className="mt-1 text-[11px] text-ink-600">Genomsnitt</p>
-              </div>
-            </div>
-          </article>
-
-          <article className="surface p-4 sm:p-5">
-            <h3 className="text-lg font-semibold">Lead-pipeline</h3>
-            <p className="mt-1 text-xs text-ink-600">Status över alla inkomna intressen</p>
-            <div className="mt-4 space-y-2">
-              {pipelineEntries.length === 0 ? (
-                <p className="rounded-2xl border border-black/10 bg-[#fafafa] px-3 py-4 text-sm text-ink-600">
-                  Inga leads ännu.
-                </p>
-              ) : null}
-              {pipelineEntries.map((entry) => (
-                <div key={entry.status} className="flex items-center justify-between rounded-xl border border-black/10 bg-[#ffffff] px-3 py-2">
-                  <span className="text-sm text-ink-700">{entry.label}</span>
-                  <span className="text-sm font-semibold text-ink-900">{entry.count}</span>
-                </div>
-              ))}
-            </div>
-          </article>
-
-          <article className="surface p-4 sm:p-5">
-            <h3 className="text-lg font-semibold">Senaste aktivitet</h3>
-            <div className="mt-3 space-y-2">
-              {activityFeed.length === 0 ? (
-                <p className="rounded-2xl border border-black/10 bg-[#fafafa] px-3 py-4 text-sm text-ink-600">
-                  Aktivitet visas när objekt eller leads uppdateras.
-                </p>
-              ) : null}
-              {activityFeed.map((event) => (
-                <div key={event.id} className="rounded-xl border border-black/10 bg-[#ffffff] px-3 py-2.5">
-                  <p className="text-sm font-semibold">{event.label}</p>
-                  <p className="text-xs text-ink-600">{event.meta}</p>
-                  <p className="mt-1 text-[11px] text-ink-500">{formatDate(event.date)}</p>
-                </div>
-              ))}
-            </div>
-          </article>
-        </div>
+            ))}
+          </div>
+        </article>
       </div>
     </div>
+  );
+}
+
+function BrokerListingsSection({ app }) {
+  const { isLoadingListings, listingPerformance, refreshPublisherListings } = useBrokerListingsData(app);
+
+  const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("alla");
+  const [selectedListingId, setSelectedListingId] = useState(null);
+
+  const filteredListings = useMemo(() => {
+    const lowered = query.trim().toLowerCase();
+    return listingPerformance.filter((listing) => {
+      const statusMatch = statusFilter === "alla" || String(listing.status || "") === statusFilter;
+      const queryMatch = !lowered || [listing.title, listing.address, listing.district, listing.type]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(lowered));
+      return statusMatch && queryMatch;
+    });
+  }, [listingPerformance, query, statusFilter]);
+
+  const selectedListing = selectedListingId
+    ? filteredListings.find((listing) => String(listing.id) === String(selectedListingId)) || null
+    : null;
+
+  return (
+    <div className="space-y-5">
+      <header className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Hyresvärd</p>
+          <h1 className="mt-1 text-2xl font-semibold">Dina objekt</h1>
+          <p className="mt-2 text-sm text-ink-600">
+            Hantera dina aktiva och inaktiva objekt.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <button type="button" className="btn-secondary px-4" onClick={() => navigateTo("/app/broker/leads")}>
+            <CalendarIcon className="mr-1.5 h-4 w-4" />
+            Intressen
+          </button>
+          <button type="button" className="btn-primary px-4" onClick={() => navigateTo("/app/publish")}>
+            <span className="mr-1.5 text-base leading-none">+</span>
+            Publicera ny annons
+          </button>
+        </div>
+      </header>
+
+      <section className="surface overflow-hidden">
+        <div className="border-b border-black/10 px-4 py-4 sm:px-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Hantera objekt</p>
+              <p className="mt-1 text-sm text-ink-600">Klicka på en rad för att öppna objektet.</p>
+            </div>
+            <span className="rounded-full bg-black/10 px-2 py-0.5 text-[11px] font-semibold text-ink-700">{filteredListings.length} rader</span>
+          </div>
+          <div className="mt-3 grid gap-2 sm:grid-cols-[280px_170px]">
+            <input
+              className="field"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Sök titel, adress eller område"
+            />
+            <select className="field" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
+              <option value="alla">Alla statusar</option>
+              {listingStatusOptions().map((status) => (
+                <option key={status.value} value={status.value}>{status.label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="hidden border-b border-black/10 bg-[#fafafa] px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-ink-500 sm:grid sm:grid-cols-[minmax(0,1fr)_100px_96px_72px_84px] sm:items-center sm:gap-4 sm:px-5">
+          <span>Objekt</span>
+          <span>Status</span>
+          <span className="text-right">Visningar</span>
+          <span className="text-right">Leads</span>
+          <span className="text-right">Yta</span>
+        </div>
+
+        <div className="divide-y divide-black/10">
+          {filteredListings.map((listing) => (
+            <button
+              key={listing.id}
+              type="button"
+              className="flex w-full items-center gap-4 px-4 py-3.5 text-left transition hover:bg-[#fafafa] sm:grid sm:grid-cols-[minmax(0,1fr)_100px_96px_72px_84px] sm:px-5"
+              onClick={() => setSelectedListingId(listing.id)}
+            >
+              <div className="flex min-w-0 items-center gap-3">
+                <img
+                  src={listing.image || "/object-images/object-1.jpeg"}
+                  alt={listing.title}
+                  className="h-12 w-16 shrink-0 rounded-lg border border-black/10 object-cover"
+                />
+                <span className="min-w-0">
+                  <span className="block truncate font-semibold text-ink-900">{listing.title || listing.address}</span>
+                  <span className="block truncate text-xs text-ink-600">{listing.district} • {listing.address}</span>
+                </span>
+              </div>
+              <span className="hidden sm:block">
+                <StatusPill status={listing.status} variant="listing" />
+              </span>
+              <span className="hidden text-right text-sm font-semibold text-ink-800 sm:block">{listing.views.toLocaleString("sv-SE")}</span>
+              <span className="hidden text-right text-sm font-semibold text-ink-800 sm:block">{listing.listingLeads}</span>
+              <span className="hidden text-right text-xs font-semibold text-ink-500 sm:block">{listing.sizeSqm} kvm</span>
+            </button>
+          ))}
+          {!isLoadingListings && filteredListings.length === 0 ? (
+            <div className="px-4 py-10 text-center sm:px-5">
+              <p className="font-semibold text-ink-900">Inga objekt matchar dina filter</p>
+              <p className="mt-1 text-sm text-ink-500">Publicera en annons för att se den här.</p>
+            </div>
+          ) : null}
+          {isLoadingListings ? (
+            <div className="px-4 py-10 text-center text-sm text-ink-600 sm:px-5">
+              Laddar dina objekt...
+            </div>
+          ) : null}
+        </div>
+      </section>
+
+      {selectedListing ? (
+        <ListingEditorSidePanel
+          listing={selectedListing}
+          app={app}
+          onClose={() => setSelectedListingId(null)}
+          onMutated={refreshPublisherListings}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+function SidePanelFrame({ widthClassName, onClose, children }) {
+  const [open, setOpen] = useState(false);
+  const closingRef = useRef(false);
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => setOpen(true));
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
+  function handleClose() {
+    if (closingRef.current) return;
+    closingRef.current = true;
+    setOpen(false);
+    window.setTimeout(() => onClose?.(), 300);
+  }
+
+  return createPortal(
+    <div className="fixed inset-0 z-[80]">
+      <div
+        className={`absolute inset-0 bg-black/25 transition-opacity duration-300 ease-out ${open ? "opacity-100" : "opacity-0"}`}
+        aria-hidden="true"
+        onClick={handleClose}
+      />
+      <aside
+        className={`absolute inset-y-0 right-0 flex ${widthClassName} flex-col border-l border-black/10 bg-[#ffffff] shadow-[0_24px_64px_rgba(15,25,48,0.24)] transition-transform duration-300 ease-out ${
+          open ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        {children(handleClose)}
+      </aside>
+    </div>,
+    document.body
+  );
+}
+
+function ListingEditorSidePanel({ listing, app, onClose, onMutated }) {
+  const editor = useListingEditorState(listing, app, { onMutated });
+
+  return (
+    <SidePanelFrame widthClassName="w-[min(700px,100vw)]" onClose={onClose}>
+      {(handleClose) => (
+        <>
+          <div className="border-b border-black/10 px-5 py-4">
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Objektredigering</p>
+                <h2 className="mt-1 truncate text-xl font-semibold text-ink-900">{editor.draft.title || "Hantera objekt"}</h2>
+                <p className="mt-1 truncate text-sm text-ink-600">{editor.draft.address}, Stockholm</p>
+              </div>
+              <button
+                type="button"
+                aria-label="Stäng"
+                className="inline-flex h-10 w-10 min-h-0 shrink-0 items-center justify-center rounded-full border border-black/10 bg-[#ffffff]"
+                onClick={handleClose}
+              >
+                <XIcon className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+
+          <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+            <ListingEditorSections listing={listing} editor={editor} />
+          </div>
+
+          <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-black/10 px-5 py-4">
+            <ListingEditorFooterActions listing={listing} editor={editor} onClosed={handleClose} />
+          </div>
+        </>
+      )}
+    </SidePanelFrame>
   );
 }
 
@@ -701,9 +755,9 @@ function LeadDetailPanel({ lead, app, onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 z-[80]">
-      <button type="button" aria-label="Stäng" className="absolute inset-0 bg-black/25" onClick={onClose} />
-      <aside className="absolute inset-y-0 right-0 flex w-[min(560px,100vw)] flex-col border-l border-black/10 bg-[#ffffff] shadow-[0_24px_64px_rgba(15,25,48,0.24)]">
+    <SidePanelFrame widthClassName="w-[min(560px,100vw)]" onClose={onClose}>
+      {(handleClose) => (
+        <>
         <div className="border-b border-black/10 px-5 py-4">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
@@ -715,7 +769,7 @@ function LeadDetailPanel({ lead, app, onClose }) {
               type="button"
               aria-label="Stäng"
               className="inline-flex h-10 w-10 min-h-0 shrink-0 items-center justify-center rounded-full border border-black/10 bg-[#ffffff]"
-              onClick={onClose}
+              onClick={handleClose}
             >
               <XIcon className="h-4 w-4" />
             </button>
@@ -802,8 +856,9 @@ function LeadDetailPanel({ lead, app, onClose }) {
             </div>
           </section>
         </div>
-      </aside>
-    </div>
+        </>
+      )}
+    </SidePanelFrame>
   );
 }
 
@@ -838,17 +893,17 @@ function BrokerLeadsSection({ app }) {
       </header>
 
       <section className="grid gap-3 md:grid-cols-3">
-        <article className="surface p-4">
+        <article className="rounded-3xl bg-[#F3F7F7] p-4">
           <p className="text-sm text-ink-600">Totala leads</p>
           <p className="mt-3 text-[30px] font-semibold leading-none text-[#0b0a0e]">{rows.length}</p>
           <p className="mt-2 text-xs text-ink-500">Alla aktiva intresseanmälningar</p>
         </article>
-        <article className="surface p-4">
+        <article className="rounded-3xl bg-[#F3F7F7] p-4">
           <p className="text-sm text-ink-600">Förfallna uppföljningar</p>
           <p className="mt-3 text-[30px] font-semibold leading-none text-[#0b0a0e]">{overdueCount}</p>
           <p className="mt-2 text-xs text-ink-500">Beräknat i klienten från dagens datum</p>
         </article>
-        <article className="surface p-4">
+        <article className="rounded-3xl bg-[#F3F7F7] p-4">
           <p className="text-sm text-ink-600">Bokade visningar</p>
           <p className="mt-3 text-[30px] font-semibold leading-none text-[#0b0a0e]">{viewingCount}</p>
           <p className="mt-2 text-xs text-ink-500">Snittmatch {avgScore}%</p>
@@ -976,7 +1031,7 @@ function BrokerPlaceholder({ sectionKey }) {
 
 function BrokerPanelPage({ app, pathname }) {
   const sectionKey = sectionFromPath(pathname);
-  const currentSectionLabel = BROKER_SECTION_TITLES[sectionKey] || "Mina objekt";
+  const currentSectionLabel = BROKER_SECTION_TITLES[sectionKey] || "Översikt";
   const leadCount = Array.isArray(app?.leads) ? app.leads.length : 0;
 
   return (
@@ -987,9 +1042,14 @@ function BrokerPanelPage({ app, pathname }) {
       sectionTitle={currentSectionLabel}
       onLogout={app?.logout}
       badges={{ leads: leadCount }}
+      fullBleedContent={sectionKey === "meddelanden"}
     >
+      {sectionKey === "oversikt" ? <BrokerOverviewSection app={app} /> : null}
       {sectionKey === "objekt" ? <BrokerListingsSection app={app} /> : null}
       {sectionKey === "leads" ? <BrokerLeadsSection app={app} /> : null}
+      {sectionKey === "meddelanden" ? <MessagesPage app={app} /> : null}
+      {sectionKey === "sparade-objekt" ? <PanelProfileSection app={app} basePath="/app/broker/profil" forcedTab="favorites" /> : null}
+      {sectionKey === "sparade-sokningar" ? <PanelProfileSection app={app} basePath="/app/broker/profil" forcedTab="history" /> : null}
       {sectionKey === "profil" ? <PanelProfileSection app={app} basePath="/app/broker/profil" /> : null}
       {sectionKey === "installningar" || sectionKey === "hjalp" ? <BrokerPlaceholder sectionKey={sectionKey} /> : null}
     </AdminPanelShell>

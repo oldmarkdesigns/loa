@@ -679,6 +679,75 @@ export const listNotifications = queryGeneric({
   }
 });
 
+export const listMyCompanies = queryGeneric({
+  args: {},
+  handler: async (ctx) => {
+    const viewer = await getViewerOrThrow(ctx);
+    const memberships = await ctx.db
+      .query("companyMemberships")
+      .withIndex("by_user_id", (query) => query.eq("userId", viewer.id))
+      .take(50);
+
+    const companies = [];
+    for (const membership of memberships) {
+      if (membership.status !== "active") continue;
+      const company = await ctx.db
+        .query("companies")
+        .withIndex("by_public_id", (query) => query.eq("id", membership.companyId))
+        .unique();
+      if (!company) continue;
+      companies.push({
+        companyId: company.id,
+        name: company.name,
+        organizationNumber: company.organizationNumber,
+        role: membership.role
+      });
+    }
+
+    return companies;
+  }
+});
+
+export const switchActiveCompany = mutationGeneric({
+  args: {
+    companyId: v.string()
+  },
+  handler: async (ctx, args) => {
+    const viewer = await getViewerOrThrow(ctx);
+    const membership = await ctx.db
+      .query("companyMemberships")
+      .withIndex("by_user_company", (query) => query.eq("userId", viewer.id).eq("companyId", args.companyId))
+      .unique();
+
+    if (!membership || membership.status !== "active") {
+      throw new Error("Du är inte medlem i det bolaget.");
+    }
+
+    const company = await ctx.db
+      .query("companies")
+      .withIndex("by_public_id", (query) => query.eq("id", args.companyId))
+      .unique();
+
+    if (!company) {
+      throw new Error("Bolaget hittades inte.");
+    }
+
+    await ctx.db.patch(viewer._id, {
+      profile: {
+        ...(viewer.profile || {}),
+        companyId: company.id,
+        companyName: company.name,
+        legalEntity: company.name,
+        organizationNumber: company.organizationNumber,
+        companyOrganizationNumber: company.organizationNumber
+      },
+      updatedAt: nowIso()
+    });
+
+    return { user: sanitizeUser(await ctx.db.get(viewer._id)) };
+  }
+});
+
 export const listCompanyBrokers = queryGeneric({
   args: {},
   handler: async (ctx) => {

@@ -31,7 +31,9 @@ function AppShell({
   listings = [],
   notifications = [],
   companyBrokers = [],
+  myCompanies = [],
   onSwitchRole,
+  onSwitchCompany,
   onLogout,
   onRequireAuth,
   isGuest = false,
@@ -42,6 +44,7 @@ function AppShell({
   const isPublisherWorkspacePath = (
     routeMatches(pathname, "/app/publish")
     || routeMatches(pathname, "/app/broker")
+    || routeMatches(pathname, "/app/my-listings")
   );
   const isBrokerPanelContext = !isGuest && hasPublisherAccess && !isAdminContext && isPublisherWorkspacePath;
   const isPanelContext = isAdminContext || isBrokerPanelContext;
@@ -108,7 +111,7 @@ function AppShell({
     () => notificationItems.filter((item) => !seenNotificationIds.includes(item.id)),
     [notificationItems, seenNotificationIds]
   );
-  const activeAdminCompany = useMemo(() => {
+  const activeCompany = useMemo(() => {
     const name = companyNameForUser(user);
     return {
       id: user?.profile?.companyId || user?.id || "company",
@@ -116,6 +119,7 @@ function AppShell({
       initials: initialsForName(name)
     };
   }, [user]);
+  const myCompanyOptions = useMemo(() => (Array.isArray(myCompanies) ? myCompanies : []), [myCompanies]);
 
   useEffect(() => {
     function onPointerDown(event) {
@@ -215,7 +219,7 @@ function AppShell({
         >
           <div className="grid w-full grid-cols-[1fr_auto] items-center gap-4">
             <div className="flex min-w-0 items-center gap-3">
-              {isAdminContext ? (
+              {isAdminContext || isBrokerPanelContext ? (
                 <div ref={adminCompanyButtonRef} className="relative inline-block max-w-full">
                   <button
                     type="button"
@@ -223,10 +227,10 @@ function AppShell({
                     onClick={() => setAdminCompanyOpen((value) => !value)}
                   >
                     <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0b0a0e] text-sm font-semibold text-white">
-                      {activeAdminCompany.initials}
+                      {activeCompany.initials}
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-base font-semibold text-ink-900">{activeAdminCompany.name}</span>
+                      <span className="block truncate text-base font-semibold text-ink-900">{activeCompany.name}</span>
                     </span>
                     <span
                       aria-hidden="true"
@@ -237,13 +241,39 @@ function AppShell({
                   {adminCompanyOpen ? (
                     <div ref={adminCompanyPanelRef} className="absolute left-0 top-[calc(100%+0.4rem)] z-[62] w-[280px] rounded-2xl border border-black/10 bg-[#ffffff] p-2 shadow-[0_10px_28px_rgba(15,25,48,0.12)]">
                       <div className="space-y-1">
-                        <button
-                          type="button"
-                          className="menu-hover-row w-full bg-[#eef2f8] px-2.5 py-2 text-left text-sm font-semibold text-[#0b0a0e]"
-                          onClick={() => setAdminCompanyOpen(false)}
-                        >
-                          {activeAdminCompany.name}
-                        </button>
+                        {myCompanyOptions.length > 0 ? (
+                          myCompanyOptions.map((company) => {
+                            const isActive = String(company.companyId) === String(user?.profile?.companyId || "");
+                            return (
+                              <button
+                                key={company.companyId}
+                                type="button"
+                                className={`menu-hover-row flex w-full items-center gap-2.5 px-2.5 py-2 text-left text-sm font-semibold transition ${
+                                  isActive ? "bg-[#eef2f8] text-[#0b0a0e]" : "text-ink-700 hover:bg-black/5"
+                                }`}
+                                onClick={async () => {
+                                  setAdminCompanyOpen(false);
+                                  if (!isActive) {
+                                    await onSwitchCompany?.(company.companyId);
+                                  }
+                                }}
+                              >
+                                <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0b0a0e] text-xs font-semibold text-white">
+                                  {initialsForName(company.name)}
+                                </span>
+                                <span className="min-w-0 flex-1 truncate">{company.name}</span>
+                              </button>
+                            );
+                          })
+                        ) : (
+                          <button
+                            type="button"
+                            className="menu-hover-row w-full bg-[#eef2f8] px-2.5 py-2 text-left text-sm font-semibold text-[#0b0a0e]"
+                            onClick={() => setAdminCompanyOpen(false)}
+                          >
+                            {activeCompany.name}
+                          </button>
+                        )}
                       </div>
                     </div>
                   ) : null}
@@ -264,7 +294,7 @@ function AppShell({
                 <button
                   type="button"
                   className="btn-primary inline-flex h-11 items-center gap-1.5 px-4 text-xs"
-                  onClick={() => navigateTo(isAdminContext ? "/app/admin/annonser" : "/app/broker")}
+                  onClick={() => navigateTo(isAdminContext ? "/app/admin/annonser" : "/app/broker/objekt")}
                 >
                   <span aria-hidden="true" className="text-sm leading-none">+</span>
                   <span>Publicera annons</span>

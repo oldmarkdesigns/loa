@@ -87,7 +87,7 @@ const mockRenterMatches = [
   }
 ];
 
-function PanelProfileSection({ app, basePath }) {
+function PanelProfileSection({ app, basePath, forcedTab }) {
   const {
     user,
     favorites = [],
@@ -97,7 +97,7 @@ function PanelProfileSection({ app, basePath }) {
     deleteSavedFilter
   } = app;
 
-  const [activeTab, setActiveTab] = useState("profile");
+  const activeTab = forcedTab || "profile";
   const [showProgramOverlay, setShowProgramOverlay] = useState(false);
   const [editingProgramId, setEditingProgramId] = useState(null);
   const [showEditOverlay, setShowEditOverlay] = useState(false);
@@ -160,25 +160,6 @@ function PanelProfileSection({ app, basePath }) {
   }));
   const selectedProgramAmenities = useMemo(() => listFromDelimitedValue(programDraft.amenities), [programDraft.amenities]);
 
-  function syncActiveTabFromLocation() {
-    const tab = new URLSearchParams(window.location.search).get("tab");
-    if (tab === "profile" || tab === "favorites" || tab === "history") {
-      setActiveTab(tab);
-      return;
-    }
-    setActiveTab("profile");
-  }
-
-  useEffect(() => {
-    syncActiveTabFromLocation();
-    window.addEventListener("popstate", syncActiveTabFromLocation);
-    window.addEventListener("app:navigate", syncActiveTabFromLocation);
-    return () => {
-      window.removeEventListener("popstate", syncActiveTabFromLocation);
-      window.removeEventListener("app:navigate", syncActiveTabFromLocation);
-    };
-  }, []);
-
   useEffect(() => {
     if (!showProgramOverlay) return;
     const selectedProgram = renterPrograms.find((program) => program.id === editingProgramId) || createBlankProgram(renterPrograms.length);
@@ -224,11 +205,6 @@ function PanelProfileSection({ app, basePath }) {
     return { done, total, percent };
   }, [profileSetupTasks]);
   const showProfileSetupCard = profileSetupProgress.done < profileSetupProgress.total;
-
-  function activateTab(tabKey) {
-    setActiveTab(tabKey);
-    navigateTo(tabKey === "profile" ? basePath : `${basePath}?tab=${tabKey}`);
-  }
 
   function openNewProgramEditor() {
     setEditingProgramId(null);
@@ -374,31 +350,6 @@ function PanelProfileSection({ app, basePath }) {
 
   return (
     <section className="relative flex h-full min-h-0 flex-col">
-      {activeTab === "favorites" || activeTab === "history" ? (
-        <div className="shrink-0 border-b border-black/10 bg-[#ffffff] px-4 py-2 sm:px-6 -mx-4 -mt-4 sm:-mx-6 sm:-mt-6 mb-4">
-          <nav className="flex w-full flex-wrap items-center justify-start gap-5">
-            {[
-              { key: "favorites", label: "Sparade objekt" },
-              { key: "history", label: "Sparade sökningar" }
-            ].map((tab) => {
-              const active = activeTab === tab.key;
-              return (
-                <button
-                  key={tab.key}
-                  type="button"
-                  className={`tab-underline-button border-b-2 pb-0.5 text-sm font-semibold transition ${
-                    active ? "border-[#0b0a0e] text-[#0b0a0e]" : "border-transparent text-[#0b0a0e]/85 hover:text-[#0b0a0e]"
-                  }`}
-                  onClick={() => activateTab(tab.key)}
-                >
-                  {tab.label}
-                </button>
-              );
-            })}
-          </nav>
-        </div>
-      ) : null}
-
       {activeTab === "profile" ? (
         <div className="space-y-4">
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
