@@ -17,7 +17,7 @@ import {
   UsersGroupIcon,
 } from "../../components/icons/UiIcons";
 import { listingApi } from "../../api";
-import { districtOptions, listingTypes } from "../../data/mockData";
+import { districtOptions, listingTypes, listings as baseListingDataset } from "../../data/mockData";
 import { PLATFORM_GOOGLE_MAP_STYLE } from "../../lib/googleMapStyles";
 import { navigateTo, normalizeAppRole } from "../../lib/router";
 
@@ -1347,7 +1347,7 @@ function FadeIn({ children, className = "" }) {
 function RentPage({ app, isGuest = false, onRequireAuth }) {
   const {
     user,
-    listings,
+    listings: rawListings,
     favorites,
     savedFilters,
     searchListings,
@@ -1357,6 +1357,8 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
     requestViewing,
     runAiSearch
   } = app;
+
+  const listings = Array.isArray(rawListings) && rawListings.length > 0 ? rawListings : baseListingDataset;
 
   const [filters, setFilters] = useState(savedFilters);
   const [isHydratingLandingSearch, setIsHydratingLandingSearch] = useState(() => hasRunSearchInUrl());

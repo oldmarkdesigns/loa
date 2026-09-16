@@ -6,6 +6,7 @@ import Breadcrumbs from "../../components/layout/Breadcrumbs";
 import { formatSek } from "../../lib/formatters";
 import { PLATFORM_GOOGLE_MAP_STYLE } from "../../lib/googleMapStyles";
 import { normalizePopularListingFallback, popularListingFallbackKey } from "../../lib/popularListingFallback";
+import { listings as baseListingDataset } from "../../data/mockData";
 import { navigateTo } from "../../lib/router";
 import { trackContactClicked, trackListingViewed } from "../../lib/analytics";
 import imagesPictogram from "../../../Assets/Pictograms/images.png";
@@ -630,8 +631,13 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
   const backLabel = source === "available" ? "Gå till lediga lokaler" : "Gå till sökresultat";
   const galleryHref = `/app/listings/${encodeURIComponent(listingId)}/gallery?source=${source}`;
 
+  const effectiveListings = useMemo(
+    () => (Array.isArray(app.listings) && app.listings.length > 0 ? app.listings : baseListingDataset),
+    [app.listings]
+  );
+
   const listing = useMemo(() => {
-    const existing = app.listings.find((item) => String(item.id) === String(listingId));
+    const existing = effectiveListings.find((item) => String(item.id) === String(listingId));
     if (existing) return existing;
     if (typeof window === "undefined") return null;
     try {
@@ -641,14 +647,14 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
     } catch {
       return null;
     }
-  }, [app.listings, listingId]);
+  }, [effectiveListings, listingId]);
 
   const similarListings = useMemo(() => {
     if (!listing) return [];
-    const sameDistrict = app.listings.filter((item) => item.id !== listing.id && item.district === listing.district);
-    const remaining = app.listings.filter((item) => item.id !== listing.id && item.district !== listing.district);
+    const sameDistrict = effectiveListings.filter((item) => item.id !== listing.id && item.district === listing.district);
+    const remaining = effectiveListings.filter((item) => item.id !== listing.id && item.district !== listing.district);
     return [...sameDistrict, ...remaining].slice(0, 6);
-  }, [app.listings, listing]);
+  }, [effectiveListings, listing]);
 
   const insight = useMemo(() => getDistrictInsight(listing?.district), [listing?.district]);
   const displayAmenities = useMemo(() => (listing ? buildDisplayAmenities(listing) : []), [listing]);
@@ -682,8 +688,8 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
     const ownTitle = normalizeMatchValue(listing.title);
     const ownDistrict = normalizeMatchValue(listing.district);
 
-    const matched = Array.isArray(app.listings)
-      ? app.listings.find((item) => {
+    const matched = Array.isArray(effectiveListings)
+      ? effectiveListings.find((item) => {
           const itemAddress = normalizeMatchValue(item?.address);
           const itemTitle = normalizeMatchValue(item?.title);
           if ((ownAddress && itemAddress === ownAddress) || (ownTitle && itemTitle === ownTitle)) {
@@ -697,7 +703,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
       : null;
 
     return matched?.id || ownId || null;
-  }, [app.listings, listing]);
+  }, [effectiveListings, listing]);
 
   const isSaved = useMemo(
     () => Boolean((app.favorites || []).some((entry) => String(entry.listingId) === String(resolvedFavoriteListingId))),
