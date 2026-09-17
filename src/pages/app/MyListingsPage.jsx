@@ -4,6 +4,10 @@ import { navigateTo } from "../../lib/router";
 import { districtOptions, listingTypes } from "../../data/mockData";
 import PresetTextField from "../../components/app/PresetTextField";
 import { Icon } from "../../components/icons/Icon";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const termPresets = ["3 månader", "6 månader", "12 månader", "24 månader", "36 månader", "Flexibelt avtal"];
 const availabilityPresets = ["Ledig nu", "Inom 2 veckor", "Inom 1 månad", "Inom 2 månader", "Efter överenskommelse"];
@@ -178,12 +182,12 @@ function PublishReview({ draft, onEdit, onApproveAndPublish, pending }) {
       </div>
       <ListingPreview draft={draft} />
       <div className="flex w-full justify-end gap-2">
-        <button type="button" className="rounded-2xl border border-black/20 bg-[#ffffff] px-4 py-2 text-xs font-semibold" onClick={onEdit}>
+        <Button type="button" variant="outline" className="h-auto rounded-2xl px-4 py-2 text-xs font-semibold" onClick={onEdit}>
           Ändra annons
-        </button>
-        <button type="button" className="rounded-2xl border border-[#0d162b] bg-[#0d162b] px-4 py-2 text-xs font-semibold text-white" onClick={onApproveAndPublish} disabled={pending}>
+        </Button>
+        <Button type="button" className="h-auto rounded-2xl bg-[#0d162b] px-4 py-2 text-xs font-semibold hover:bg-[#0d162b]/90" onClick={onApproveAndPublish} disabled={pending}>
           {pending ? "Publicerar..." : "Godkänn och publicera"}
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -194,12 +198,12 @@ function PublishSuccess({ draft, onCreateAnother, onViewListing }) {
     <div className="mt-6 space-y-4 rounded-2xl border border-emerald-200 bg-emerald-50/40 p-4">
       <ListingPreview draft={draft} />
       <div className="flex justify-end gap-2">
-        <button type="button" className="rounded-2xl border border-black/20 bg-[#ffffff] px-4 py-2 text-xs font-semibold text-black" onClick={onCreateAnother}>
+        <Button type="button" variant="outline" className="h-auto rounded-2xl px-4 py-2 text-xs font-semibold text-black" onClick={onCreateAnother}>
           Publicera nytt objekt
-        </button>
-        <button type="button" className="rounded-2xl border border-[#0d162b] bg-[#0d162b] px-4 py-2 text-xs font-semibold text-white" onClick={onViewListing}>
+        </Button>
+        <Button type="button" className="h-auto rounded-2xl bg-[#0d162b] px-4 py-2 text-xs font-semibold hover:bg-[#0d162b]/90" onClick={onViewListing}>
           Visa objekt
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -354,7 +358,7 @@ function MyListingsPage({ app }) {
   }
 
   function createFieldClass(stepIndex, fieldKey) {
-    return `field ${createFieldInvalid(stepIndex, fieldKey) ? "border-rose-300 bg-rose-50 focus:border-rose-500" : ""}`;
+    return createFieldInvalid(stepIndex, fieldKey) ? "border-rose-300 bg-rose-50 focus-visible:border-rose-500" : "";
   }
 
   async function handleSaveAndPublish() {
@@ -470,9 +474,9 @@ function MyListingsPage({ app }) {
               <h1 className="text-3xl font-semibold">Ändra objekt</h1>
               <p className="text-sm text-ink-600">Uppdatera all information och publicera ändringarna direkt.</p>
             </div>
-            <button type="button" className="rounded-2xl border border-black/20 bg-[#ffffff] px-4 py-2.5 text-sm font-semibold" onClick={resetEditView}>
+            <Button type="button" variant="outline" className="h-auto rounded-2xl px-4 py-2.5 text-sm font-semibold" onClick={resetEditView}>
               Stäng
-            </button>
+            </Button>
           </div>
 
           <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
@@ -480,20 +484,26 @@ function MyListingsPage({ app }) {
               <div className="rounded-2xl border border-black/10 bg-[#ffffff] p-3">
                 <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">1. Grund</p>
                 <div className="mt-2 space-y-3">
-                  <input className="field" value={draft.title} onChange={(event) => setDraft((prev) => ({ ...prev, title: event.target.value }))} placeholder="Rubrik" />
+                  <Input value={draft.title} onChange={(event) => setDraft((prev) => ({ ...prev, title: event.target.value }))} placeholder="Rubrik" />
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <select className="field" value={draft.district} onChange={(event) => setDraft((prev) => ({ ...prev, district: event.target.value }))}>
-                      {districtOptions.map((district) => (
-                        <option key={district} value={district}>{district}</option>
-                      ))}
-                    </select>
-                    <select className="field" value={draft.type} onChange={(event) => setDraft((prev) => ({ ...prev, type: event.target.value }))}>
-                      {listingTypes.map((type) => (
-                        <option key={type} value={type}>{type}</option>
-                      ))}
-                    </select>
+                    <Select value={draft.district} onValueChange={(value) => setDraft((prev) => ({ ...prev, district: value }))}>
+                      <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {districtOptions.map((district) => (
+                          <SelectItem key={district} value={district}>{district}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select value={draft.type} onValueChange={(value) => setDraft((prev) => ({ ...prev, type: value }))}>
+                      <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {listingTypes.map((type) => (
+                          <SelectItem key={type} value={type}>{type}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <input className="field" value={draft.address} onChange={(event) => setDraft((prev) => ({ ...prev, address: event.target.value }))} placeholder="Adress" />
+                  <Input value={draft.address} onChange={(event) => setDraft((prev) => ({ ...prev, address: event.target.value }))} placeholder="Adress" />
                 </div>
               </div>
 
@@ -501,11 +511,11 @@ function MyListingsPage({ app }) {
                 <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">2. Villkor</p>
                 <div className="mt-2 space-y-3">
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <input className="field" type="number" min="0" value={draft.priceMonthly} onChange={(event) => setDraft((prev) => ({ ...prev, priceMonthly: event.target.value }))} placeholder="Månadshyra (SEK)" />
-                    <input className="field" type="number" min="0" value={draft.sizeSqm} onChange={(event) => setDraft((prev) => ({ ...prev, sizeSqm: event.target.value }))} placeholder="Yta (kvm)" />
+                    <Input type="number" min="0" value={draft.priceMonthly} onChange={(event) => setDraft((prev) => ({ ...prev, priceMonthly: event.target.value }))} placeholder="Månadshyra (SEK)" />
+                    <Input type="number" min="0" value={draft.sizeSqm} onChange={(event) => setDraft((prev) => ({ ...prev, sizeSqm: event.target.value }))} placeholder="Yta (kvm)" />
                   </div>
                   <div className="grid gap-3 sm:grid-cols-3">
-                    <input className="field" type="number" min="0" value={draft.capacity} onChange={(event) => setDraft((prev) => ({ ...prev, capacity: event.target.value }))} placeholder="Kapacitet" />
+                    <Input type="number" min="0" value={draft.capacity} onChange={(event) => setDraft((prev) => ({ ...prev, capacity: event.target.value }))} placeholder="Kapacitet" />
                     <PresetTextField
                       value={draft.term}
                       onChange={(value) => setDraft((prev) => ({ ...prev, term: value }))}
@@ -519,15 +529,15 @@ function MyListingsPage({ app }) {
                       selectPlaceholder="Tillgänglighet"
                     />
                   </div>
-                  <input className="field" type="number" min="1" value={draft.responseHours} onChange={(event) => setDraft((prev) => ({ ...prev, responseHours: event.target.value }))} placeholder="Svarstid (timmar)" />
+                  <Input type="number" min="1" value={draft.responseHours} onChange={(event) => setDraft((prev) => ({ ...prev, responseHours: event.target.value }))} placeholder="Svarstid (timmar)" />
                 </div>
               </div>
 
               <div className="rounded-2xl border border-black/10 bg-[#ffffff] p-3">
                 <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">3. Media</p>
                 <div className="mt-2 space-y-3">
-                  <input className="field" value={draft.image} onChange={(event) => setDraft((prev) => ({ ...prev, image: event.target.value }))} placeholder="Sökväg till omslagsbild" />
-                  <textarea className="field min-h-28" value={draft.amenities} onChange={(event) => setDraft((prev) => ({ ...prev, amenities: event.target.value }))} placeholder="Faciliteter, separera med kommatecken" />
+                  <Input value={draft.image} onChange={(event) => setDraft((prev) => ({ ...prev, image: event.target.value }))} placeholder="Sökväg till omslagsbild" />
+                  <Textarea className="min-h-28" value={draft.amenities} onChange={(event) => setDraft((prev) => ({ ...prev, amenities: event.target.value }))} placeholder="Faciliteter, separera med kommatecken" />
                 </div>
               </div>
 
@@ -535,12 +545,12 @@ function MyListingsPage({ app }) {
 
               <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
                 <div className="flex flex-wrap gap-2">
-                  <button type="button" className="rounded-2xl border border-black/20 bg-[#ffffff] px-4 py-2 text-sm font-semibold" onClick={resetEditView}>
+                  <Button type="button" variant="outline" className="h-auto rounded-2xl px-4 py-2 text-sm font-semibold" onClick={resetEditView}>
                     Avbryt
-                  </button>
-                  <button type="button" className="rounded-2xl border border-[#0b0a0e] bg-[#0b0a0e] px-4 py-2 text-sm font-semibold text-white" onClick={handleSaveAndPublish} disabled={pending}>
+                  </Button>
+                  <Button type="button" className="h-auto rounded-2xl px-4 py-2 text-sm font-semibold" onClick={handleSaveAndPublish} disabled={pending}>
                     {pending ? "Sparar..." : "Spara och publicera"}
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -613,31 +623,37 @@ function MyListingsPage({ app }) {
               <div className="mt-6 space-y-4 rounded-3xl border border-black/10 bg-[#ffffff] p-4">
                 {createStep === 0 ? (
                   <div className="space-y-3">
-                    <input className={createFieldClass(0, "title")} value={createDraft.title} onChange={(event) => setCreateDraft((prev) => ({ ...prev, title: event.target.value }))} placeholder="Rubrik" />
+                    <Input className={createFieldClass(0, "title")} value={createDraft.title} onChange={(event) => setCreateDraft((prev) => ({ ...prev, title: event.target.value }))} placeholder="Rubrik" />
                     <div className="grid gap-3 sm:grid-cols-2">
-                      <select className="field" value={createDraft.district} onChange={(event) => setCreateDraft((prev) => ({ ...prev, district: event.target.value }))}>
-                        {districtOptions.map((district) => (
-                          <option key={district} value={district}>{district}</option>
-                        ))}
-                      </select>
-                      <select className="field" value={createDraft.type} onChange={(event) => setCreateDraft((prev) => ({ ...prev, type: event.target.value }))}>
-                        {listingTypes.map((type) => (
-                          <option key={type} value={type}>{type}</option>
-                        ))}
-                      </select>
+                      <Select value={createDraft.district} onValueChange={(value) => setCreateDraft((prev) => ({ ...prev, district: value }))}>
+                        <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {districtOptions.map((district) => (
+                            <SelectItem key={district} value={district}>{district}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Select value={createDraft.type} onValueChange={(value) => setCreateDraft((prev) => ({ ...prev, type: value }))}>
+                        <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {listingTypes.map((type) => (
+                            <SelectItem key={type} value={type}>{type}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
-                    <input className={createFieldClass(0, "address")} value={createDraft.address} onChange={(event) => setCreateDraft((prev) => ({ ...prev, address: event.target.value }))} placeholder="Adress" />
+                    <Input className={createFieldClass(0, "address")} value={createDraft.address} onChange={(event) => setCreateDraft((prev) => ({ ...prev, address: event.target.value }))} placeholder="Adress" />
                   </div>
                 ) : null}
 
                 {createStep === 1 ? (
                   <div className="space-y-3">
                     <div className="grid gap-3 sm:grid-cols-2">
-                      <input className={createFieldClass(1, "priceMonthly")} type="number" min="0" value={createDraft.priceMonthly} onChange={(event) => setCreateDraft((prev) => ({ ...prev, priceMonthly: event.target.value }))} placeholder="Månadshyra (SEK)" />
-                      <input className={createFieldClass(1, "sizeSqm")} type="number" min="0" value={createDraft.sizeSqm} onChange={(event) => setCreateDraft((prev) => ({ ...prev, sizeSqm: event.target.value }))} placeholder="Yta (kvm)" />
+                      <Input className={createFieldClass(1, "priceMonthly")} type="number" min="0" value={createDraft.priceMonthly} onChange={(event) => setCreateDraft((prev) => ({ ...prev, priceMonthly: event.target.value }))} placeholder="Månadshyra (SEK)" />
+                      <Input className={createFieldClass(1, "sizeSqm")} type="number" min="0" value={createDraft.sizeSqm} onChange={(event) => setCreateDraft((prev) => ({ ...prev, sizeSqm: event.target.value }))} placeholder="Yta (kvm)" />
                     </div>
                     <div className="grid gap-3 sm:grid-cols-3">
-                      <input className={createFieldClass(1, "capacity")} type="number" min="0" value={createDraft.capacity} onChange={(event) => setCreateDraft((prev) => ({ ...prev, capacity: event.target.value }))} placeholder="Kapacitet" />
+                      <Input className={createFieldClass(1, "capacity")} type="number" min="0" value={createDraft.capacity} onChange={(event) => setCreateDraft((prev) => ({ ...prev, capacity: event.target.value }))} placeholder="Kapacitet" />
                       <PresetTextField
                         value={createDraft.term}
                         onChange={(value) => setCreateDraft((prev) => ({ ...prev, term: value }))}
@@ -651,14 +667,14 @@ function MyListingsPage({ app }) {
                         selectPlaceholder="Tillgänglighet"
                       />
                     </div>
-                    <input className="field" type="number" min="1" value={createDraft.responseHours} onChange={(event) => setCreateDraft((prev) => ({ ...prev, responseHours: event.target.value }))} placeholder="Svarstid (timmar)" />
+                    <Input type="number" min="1" value={createDraft.responseHours} onChange={(event) => setCreateDraft((prev) => ({ ...prev, responseHours: event.target.value }))} placeholder="Svarstid (timmar)" />
                   </div>
                 ) : null}
 
                 {createStep === 2 ? (
                   <div className="space-y-3">
-                    <input className={createFieldClass(2, "image")} value={createDraft.image} onChange={(event) => setCreateDraft((prev) => ({ ...prev, image: event.target.value }))} placeholder="Sökväg till omslagsbild" />
-                    <textarea className="field min-h-24" value={createDraft.amenities} onChange={(event) => setCreateDraft((prev) => ({ ...prev, amenities: event.target.value }))} placeholder="Faciliteter, separera med kommatecken" />
+                    <Input className={createFieldClass(2, "image")} value={createDraft.image} onChange={(event) => setCreateDraft((prev) => ({ ...prev, image: event.target.value }))} placeholder="Sökväg till omslagsbild" />
+                    <Textarea className="min-h-24" value={createDraft.amenities} onChange={(event) => setCreateDraft((prev) => ({ ...prev, amenities: event.target.value }))} placeholder="Faciliteter, separera med kommatecken" />
                   </div>
                 ) : null}
 
@@ -686,21 +702,22 @@ function MyListingsPage({ app }) {
 
                 {createStep < 3 ? (
                   <div className="flex flex-wrap items-center justify-between gap-2 border-t border-black/10 pt-4">
-                    <button
+                    <Button
                       type="button"
-                      className="rounded-2xl border border-black/20 bg-[#ffffff] px-4 py-2 text-sm font-semibold disabled:opacity-50"
+                      variant="outline"
+                      className="h-auto rounded-2xl px-4 py-2 text-sm font-semibold"
                       onClick={() => setCreateStep((value) => Math.max(0, value - 1))}
                       disabled={createStep === 0}
                     >
                       Föregående
-                    </button>
+                    </Button>
                     <div className="flex gap-2">
-                      <button type="button" className="rounded-2xl border border-black/20 bg-[#ffffff] px-4 py-2 text-sm font-semibold" onClick={resetCreateFlow}>
+                      <Button type="button" variant="outline" className="h-auto rounded-2xl px-4 py-2 text-sm font-semibold" onClick={resetCreateFlow}>
                         Nollställ
-                      </button>
-                      <button type="button" className="rounded-2xl border border-[#0d162b] bg-[#0d162b] px-4 py-2 text-sm font-semibold text-white" onClick={handleCreateNext}>
+                      </Button>
+                      <Button type="button" className="h-auto rounded-2xl bg-[#0d162b] px-4 py-2 text-sm font-semibold hover:bg-[#0d162b]/90" onClick={handleCreateNext}>
                         Nästa steg
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 ) : null}
@@ -714,27 +731,36 @@ function MyListingsPage({ app }) {
             <div className="mb-3 shrink-0 space-y-3">
               <div className="rounded-2xl border border-black/10 bg-[#ffffff] p-3">
                 <div className="grid gap-2 sm:grid-cols-[1fr_170px_250px]">
-                  <input
-                    className="field"
+                  <Input
                     value={listQuery}
                     onChange={(event) => setListQuery(event.target.value)}
                     placeholder="Sök titel, adress eller område"
                   />
-                  <select className="field" value={listStatus} onChange={(event) => setListStatus(event.target.value)}>
-                    <option value="alla">Alla statusar</option>
-                    <option value="active">Aktiva</option>
-                    <option value="draft">Utkast</option>
-                  </select>
-                  <select className="field w-full" value={sortBy} onChange={(event) => setSortBy(event.target.value)}>
-                    <option value="date_desc">Datum för publicering (senast)</option>
-                    <option value="date_asc">Datum för publicering (äldst)</option>
-                    <option value="size_desc">Storlek (störst först)</option>
-                    <option value="size_asc">Storlek (minst först)</option>
-                    <option value="price_desc">Hyra (högst först)</option>
-                    <option value="price_asc">Hyra (lägst först)</option>
-                    <option value="updated_desc">Senast uppdaterad</option>
-                    <option value="title_asc">Titel (A-Ö)</option>
-                  </select>
+                  <Select value={listStatus} onValueChange={setListStatus}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="alla">Alla statusar</SelectItem>
+                      <SelectItem value="active">Aktiva</SelectItem>
+                      <SelectItem value="draft">Utkast</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={sortBy} onValueChange={setSortBy}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="date_desc">Datum för publicering (senast)</SelectItem>
+                      <SelectItem value="date_asc">Datum för publicering (äldst)</SelectItem>
+                      <SelectItem value="size_desc">Storlek (störst först)</SelectItem>
+                      <SelectItem value="size_asc">Storlek (minst först)</SelectItem>
+                      <SelectItem value="price_desc">Hyra (högst först)</SelectItem>
+                      <SelectItem value="price_asc">Hyra (lägst först)</SelectItem>
+                      <SelectItem value="updated_desc">Senast uppdaterad</SelectItem>
+                      <SelectItem value="title_asc">Titel (A-Ö)</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <p className="mt-2 text-xs text-ink-600">Visar {sortedOwnListings.length} av {ownListings.length} objekt</p>
               </div>
@@ -780,15 +806,15 @@ function MyListingsPage({ app }) {
                       </div>
 
                       <div className="flex flex-wrap justify-end gap-1.5">
-                        <button type="button" className="whitespace-nowrap rounded-2xl border border-black/20 bg-[#ffffff] px-3 py-1.5 text-[11px] font-semibold" onClick={() => requestListingVerification(listing.id)}>
+                        <Button type="button" variant="outline" className="h-auto whitespace-nowrap rounded-2xl px-3 py-1.5 text-[11px] font-semibold" onClick={() => requestListingVerification(listing.id)}>
                           Begär verifiering
-                        </button>
-                        <button type="button" className="whitespace-nowrap rounded-2xl border border-black/20 bg-[#ffffff] px-3 py-1.5 text-[11px] font-semibold" onClick={() => startEdit(listing)}>
+                        </Button>
+                        <Button type="button" variant="outline" className="h-auto whitespace-nowrap rounded-2xl px-3 py-1.5 text-[11px] font-semibold" onClick={() => startEdit(listing)}>
                           Ändra
-                        </button>
-                        <button type="button" className="whitespace-nowrap rounded-2xl border border-rose-200 bg-rose-50 px-3 py-1.5 text-[11px] font-semibold text-rose-700" onClick={() => handleDelete(listing)}>
+                        </Button>
+                        <Button type="button" variant="outline" className="h-auto whitespace-nowrap rounded-2xl border-rose-200 bg-rose-50 px-3 py-1.5 text-[11px] font-semibold text-rose-700 hover:bg-rose-100 hover:text-rose-700" onClick={() => handleDelete(listing)}>
                           Radera
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   </div>
