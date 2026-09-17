@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { navigateTo, routeMatches } from "../../lib/router";
-import { formatSek } from "../../lib/formatters";
+import { formatDate, formatSek } from "../../lib/formatters";
 import AdminPanelShell from "../../components/layout/AdminPanelShell";
 import PanelProfileSection from "./PanelProfileSection";
 import MessagesPage from "./MessagesPage";
+import StatusPill from "../../components/app/StatusPill";
+import { prospectsApi } from "../../api";
 import {
   Area,
   AreaChart,
@@ -42,6 +44,7 @@ import {
   LayoutDashboardIcon,
   MessageSquareIcon,
   MoreHorizontalIcon,
+  PdfIcon,
   PencilIcon,
   PinIcon,
   PlusIcon,
@@ -61,6 +64,7 @@ export const ADMIN_NAV_ITEMS = [
   { key: "oversikt", label: "Översikt", path: "/app/admin", Icon: LayoutDashboardIcon },
   { key: "annonser", label: "Annonser", path: "/app/admin/annonser", Icon: BuildingIcon },
   { key: "leads", label: "Leads & Matchningar", path: "/app/admin/leads", Icon: SparklesIcon },
+  { key: "prospekt", label: "Prospekt", path: "/app/admin/prospekt", Icon: PdfIcon },
   { key: "meddelanden", label: "Meddelanden", path: "/app/admin/meddelanden", Icon: MessageSquareIcon },
   { key: "notifikationer", label: "Notifikationer", path: "/app/admin/notifikationer", Icon: BellIcon },
   { key: "maklare", label: "Mäklare", path: "/app/admin/maklare", Icon: UsersGroupIcon },
@@ -83,6 +87,7 @@ const SECTION_TITLES = {
   adminprofil: "Adminprofil",
   annonser: "Annonser",
   leads: "Leads & Matchningar",
+  prospekt: "Prospekt",
   meddelanden: "Meddelanden",
   inkorg: "Inkorg",
   notifikationer: "Notifikationer",
@@ -3398,13 +3403,120 @@ function AdminPlaceholder({ sectionKey }) {
   );
 }
 
+function AdminProspectsPage({ app }) {
+  const [prospects, setProspects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const companyListings = ownedAdminListings(app);
+  const listingById = new Map(companyListings.map((listing) => [String(listing.id), listing]));
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      setLoading(true);
+      try {
+        const { prospects: list } = await prospectsApi.listForCompany();
+        if (!cancelled) setProspects(list);
+      } catch (_error) {
+        if (!cancelled) setProspects([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return (
+    <div className="space-y-4">
+      <header className="surface p-4 sm:p-5">
+        <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Adminpanel</p>
+        <h1 className="mt-1 text-2xl font-semibold text-ink-900">Prospekt</h1>
+        <p className="mt-1 text-sm text-ink-600">
+          Överblick över prospekt skapade av dig eller dina mäklare. Skapande och redigering sker i respektive mäklares egen panel.
+        </p>
+      </header>
+
+      <article className="surface overflow-hidden">
+        <div className="border-b border-black/10 px-4 py-4 sm:px-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Prospekt</p>
+              <p className="mt-1 text-sm text-ink-600">Skapande och redigering sker i respektive mäklares egen panel.</p>
+            </div>
+            <span className="rounded-full bg-black/10 px-2 py-0.5 text-[11px] font-semibold text-ink-700">{prospects.length} rader</span>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[720px] text-sm">
+            <thead className="bg-[#fafafa] text-[11px] uppercase tracking-wide text-ink-500">
+              <tr>
+                <th className="px-4 py-3 text-left font-semibold sm:px-5">Prospekt</th>
+                <th className="px-4 py-3 text-left font-semibold">Objekt</th>
+                <th className="px-4 py-3 text-left font-semibold">Status</th>
+                <th className="px-4 py-3 text-left font-semibold">Version</th>
+                <th className="px-4 py-3 text-left font-semibold sm:px-5">Uppdaterad</th>
+              </tr>
+            </thead>
+            <tbody>
+              {prospects.map((prospect) => {
+                const listing = listingById.get(String(prospect.listingId));
+                return (
+                  <tr key={prospect.id} className="border-t border-black/10">
+                    <td className="px-4 py-3.5 align-top sm:px-5">
+                      <div className="flex items-center gap-3">
+                        <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#0b0a0e] text-white">
+                          <PdfIcon className="h-4 w-4" />
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block truncate font-semibold text-ink-900">{prospect.title}</span>
+                          <span className="block truncate text-xs text-ink-600">{listing?.title || listing?.address || prospect.listingId}</span>
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3.5 align-top font-semibold text-ink-800">{listing?.title || "Objekt"}</td>
+                    <td className="px-4 py-3.5 align-top">
+                      <StatusPill status={prospect.status} variant="prospect" />
+                    </td>
+                    <td className="px-4 py-3.5 align-top text-sm font-semibold text-ink-700">
+                      {prospect.currentVersion ? `v${prospect.currentVersion}` : "Utkast"}
+                    </td>
+                    <td className="px-4 py-3.5 align-top text-xs font-semibold text-ink-500 sm:px-5">{formatDate(prospect.updatedAt)}</td>
+                  </tr>
+                );
+              })}
+              {!loading && prospects.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="border-t border-black/10 px-4 py-10 text-center sm:px-5">
+                    <p className="font-semibold text-ink-900">Inga prospekt än</p>
+                    <p className="mt-1 text-sm text-ink-500">Dina mäklare kan skapa prospekt från sina egna objekt.</p>
+                  </td>
+                </tr>
+              ) : null}
+              {loading ? (
+                <tr>
+                  <td colSpan={5} className="border-t border-black/10 px-4 py-10 text-center text-sm text-ink-600 sm:px-5">
+                    Laddar prospekt...
+                  </td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
+        </div>
+      </article>
+    </div>
+  );
+}
+
 function AdminPanelPage({ app, pathname }) {
   const sectionKey = sectionFromPath(pathname);
   const currentSectionLabel = SECTION_TITLES[sectionKey] || "Översikt";
   const companyListings = ownedAdminListings(app);
   const notificationCount = countAdminNotifications(app);
   const hasCompanyProfile = Boolean(app?.adminCompany?.id || app?.user?.profile?.companyId || app?.user?.profile?.companyName || app?.user?.profile?.legalEntity);
-  const shouldShowEmptyCompanyPage = !hasCompanyProfile && !["adminprofil", "hjalp", "installningar", "notifikationer", "maklare", "annonser"].includes(sectionKey);
+  const shouldShowEmptyCompanyPage = !hasCompanyProfile && !["adminprofil", "hjalp", "installningar", "notifikationer", "maklare", "annonser", "prospekt"].includes(sectionKey);
 
   return (
     <AdminPanelShell
@@ -3415,11 +3527,13 @@ function AdminPanelPage({ app, pathname }) {
       onLogout={app?.logout}
       badges={{ annonser: companyListings.length, notifikationer: notificationCount }}
       fullBleedContent={sectionKey === "meddelanden"}
+      contentKey={shouldShowEmptyCompanyPage ? "empty-company" : sectionKey}
     >
       {shouldShowEmptyCompanyPage ? <EmptyCompanyAdminPage app={app} sectionKey={sectionKey} /> : null}
       {!shouldShowEmptyCompanyPage && sectionKey === "oversikt" ? <AdminOverview app={app} /> : null}
       {!shouldShowEmptyCompanyPage && sectionKey === "annonser" ? <AdminListingsPage listings={companyListings} /> : null}
       {!shouldShowEmptyCompanyPage && sectionKey === "leads" ? <AdminLeadMatchesPage app={app} /> : null}
+      {!shouldShowEmptyCompanyPage && sectionKey === "prospekt" ? <AdminProspectsPage app={app} /> : null}
       {!shouldShowEmptyCompanyPage && sectionKey === "inkorg" ? <AdminInquiriesPage pathname={pathname} /> : null}
       {!shouldShowEmptyCompanyPage && sectionKey === "notifikationer" ? <AdminNotificationsPage app={app} /> : null}
       {!shouldShowEmptyCompanyPage && sectionKey === "maklare" ? <AdminBrokersPage app={app} /> : null}
@@ -3430,7 +3544,7 @@ function AdminPanelPage({ app, pathname }) {
       {sectionKey === "sparade-sokningar" ? <PanelProfileSection app={app} basePath="/app/admin/profil" forcedTab="history" /> : null}
       {sectionKey === "profil" ? <PanelProfileSection app={app} basePath="/app/admin/profil" /> : null}
       {sectionKey === "adminprofil" ? <AdminProfile app={app} /> : null}
-      {!shouldShowEmptyCompanyPage && sectionKey !== "oversikt" && sectionKey !== "annonser" && sectionKey !== "leads" && sectionKey !== "inkorg" && sectionKey !== "notifikationer" && sectionKey !== "maklare" && sectionKey !== "meddelanden" && sectionKey !== "sparade-objekt" && sectionKey !== "sparade-sokningar" && sectionKey !== "profil" && sectionKey !== "adminprofil" && sectionKey !== "statistik" && sectionKey !== "aktivitet" ? <AdminPlaceholder sectionKey={sectionKey} /> : null}
+      {!shouldShowEmptyCompanyPage && sectionKey !== "oversikt" && sectionKey !== "annonser" && sectionKey !== "leads" && sectionKey !== "prospekt" && sectionKey !== "inkorg" && sectionKey !== "notifikationer" && sectionKey !== "maklare" && sectionKey !== "meddelanden" && sectionKey !== "sparade-objekt" && sectionKey !== "sparade-sokningar" && sectionKey !== "profil" && sectionKey !== "adminprofil" && sectionKey !== "statistik" && sectionKey !== "aktivitet" ? <AdminPlaceholder sectionKey={sectionKey} /> : null}
     </AdminPanelShell>
   );
 }

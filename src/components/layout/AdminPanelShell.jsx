@@ -1,10 +1,41 @@
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { navigateTo, routeMatches } from "../../lib/router";
 import { LogoutIcon, PanelLeftIcon, XIcon } from "../icons/UiIcons";
 
 function PanelSidebarNav({ pathname, navItems, rootPath, onNavigate, badges, collapsed = false }) {
+  const navRef = useRef(null);
+  const hasAnimatedRef = useRef(false);
+  const [indicator, setIndicator] = useState(null);
+
+  useLayoutEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+    const activeEl = nav.querySelector('[data-active="true"]');
+    if (!activeEl) {
+      setIndicator((prev) => (prev ? { ...prev, visible: false } : prev));
+      return;
+    }
+    setIndicator({
+      top: activeEl.offsetTop,
+      height: activeEl.offsetHeight,
+      visible: true,
+      animate: hasAnimatedRef.current,
+    });
+    hasAnimatedRef.current = true;
+  }, [pathname, collapsed, navItems]);
+
   return (
-    <nav className="space-y-1">
+    <nav ref={navRef} className="relative">
+      <span
+        aria-hidden="true"
+        className={`admin-nav-indicator ${indicator?.animate ? "is-animated" : ""}`}
+        style={
+          indicator?.visible
+            ? { transform: `translateY(${indicator.top}px)`, height: `${indicator.height}px`, opacity: 1 }
+            : { opacity: 0 }
+        }
+      />
+      <div className="space-y-1">
       {navItems.map((item) => {
         const active = item.path === rootPath
           ? pathname === rootPath || pathname === `${rootPath}/`
@@ -14,11 +45,12 @@ function PanelSidebarNav({ pathname, navItems, rootPath, onNavigate, badges, col
           <button
             key={item.key}
             type="button"
+            data-active={active ? "true" : "false"}
             title={collapsed ? item.label : undefined}
             aria-label={item.label}
-            className={`menu-hover-row w-full text-left text-sm font-semibold transition ${
+            className={`admin-nav-row menu-hover-row relative z-[1] w-full text-left text-sm font-semibold ${
               collapsed ? "flex justify-center px-0 py-2.5" : "px-3 py-2.5"
-            } ${active ? "bg-[#0b0a0e] text-white" : "text-ink-700 hover:bg-black/5"}`}
+            } ${active ? "text-white" : "text-ink-700 hover:bg-black/5"}`}
             onClick={() => onNavigate(item.path)}
           >
             <span className={`flex items-center ${collapsed ? "justify-center" : "gap-2"}`}>
@@ -42,6 +74,7 @@ function PanelSidebarNav({ pathname, navItems, rootPath, onNavigate, badges, col
           </button>
         );
       })}
+      </div>
     </nav>
   );
 }
@@ -62,7 +95,7 @@ function PanelSidebar({ pathname, navItems, bottomNavItems, onNavigate, onLogout
               aria-pressed={collapsed}
               title={collapsed ? "Expandera meny" : "Fäll ihop meny"}
             >
-              <PanelLeftIcon className={`h-4 w-4 transition-transform ${collapsed ? "rotate-180" : ""}`} />
+              <PanelLeftIcon className={`admin-sidebar-toggle-icon h-4 w-4 ${collapsed ? "rotate-180" : ""}`} />
             </button>
           </div>
         ) : null}
@@ -79,9 +112,9 @@ function PanelSidebar({ pathname, navItems, bottomNavItems, onNavigate, onLogout
                   type="button"
                   title={collapsed ? item.label : undefined}
                   aria-label={item.label}
-                  className={`menu-hover-row w-full text-left text-sm font-semibold transition ${
+                  className={`admin-nav-row menu-hover-row w-full text-left text-sm font-semibold ${
                     collapsed ? "flex justify-center px-0 py-2.5" : "px-3 py-2.5"
-                  } ${active ? "bg-[#0b0a0e] text-white" : "text-ink-700 hover:bg-black/5"}`}
+                  } ${active ? "admin-nav-row--active bg-[#0b0a0e] text-white" : "text-ink-700 hover:bg-black/5"}`}
                   onClick={() => onNavigate(item.path)}
                 >
                   <span className={`flex items-center ${collapsed ? "justify-center" : "gap-2"}`}>
@@ -95,7 +128,7 @@ function PanelSidebar({ pathname, navItems, bottomNavItems, onNavigate, onLogout
               type="button"
               title={collapsed ? "Logga ut" : undefined}
               aria-label="Logga ut"
-              className={`menu-hover-row w-full text-left text-sm font-semibold text-ink-700 transition hover:bg-black/5 ${
+              className={`admin-nav-row menu-hover-row w-full text-left text-sm font-semibold text-ink-700 hover:bg-black/5 ${
                 collapsed ? "flex justify-center px-0 py-2.5" : "px-3 py-2.5"
               }`}
               onClick={async () => {
@@ -115,14 +148,14 @@ function PanelSidebar({ pathname, navItems, bottomNavItems, onNavigate, onLogout
   );
 }
 
-function AdminPanelShell({ pathname, navItems, bottomNavItems, sectionTitle, onLogout, badges = {}, fullBleedContent = false, children }) {
+function AdminPanelShell({ pathname, navItems, bottomNavItems, sectionTitle, onLogout, badges = {}, fullBleedContent = false, contentKey, children }) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   return (
     <section className="flex h-full min-h-0 bg-[#ffffff]">
       <aside
-        className={`hidden h-full shrink-0 overflow-hidden border-r border-black/10 bg-[#ffffff] transition-[width] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] lg:block ${
+        className={`admin-sidebar-panel hidden h-full shrink-0 overflow-hidden border-r border-black/10 bg-[#ffffff] lg:block ${
           sidebarCollapsed ? "w-[84px]" : "w-[296px]"
         }`}
       >
@@ -157,9 +190,9 @@ function AdminPanelShell({ pathname, navItems, bottomNavItems, sectionTitle, onL
         </div>
 
         {fullBleedContent ? (
-          <div className="min-h-0 flex-1">{children}</div>
+          <div key={contentKey ?? pathname} className="admin-section-enter min-h-0 flex-1">{children}</div>
         ) : (
-          <div className="mx-auto w-full max-w-[1600px] p-4 sm:p-6">{children}</div>
+          <div key={contentKey ?? pathname} className="admin-section-enter--lift mx-auto w-full max-w-[1600px] p-4 sm:p-6">{children}</div>
         )}
       </div>
 

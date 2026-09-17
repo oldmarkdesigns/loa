@@ -4,10 +4,10 @@ import {
   assertViewerHasRole,
   duplicateSignal,
   findListingByPublicId,
+  findOwnedListingOrThrow,
   getViewer,
   getViewerOrThrow,
   getVisibleListingOrThrow,
-  companyBrokerUserIds,
   listVisibleListings,
   listingQualityScore,
   listingWithOwner,
@@ -80,28 +80,6 @@ function buildListingPayload(payload, ownerId, companyId = "", existingListing =
 async function collectAllListings(ctx) {
   const listings = await ctx.db.query("listings").collect();
   return listings.map(stripSystemFields);
-}
-
-async function findOwnedListingOrThrow(ctx, listingId) {
-  const viewer = await getViewerOrThrow(ctx);
-  const listing = await findListingByPublicId(ctx, listingId);
-  const viewerCompanyId = userCompanyId(viewer);
-
-  if (!listing) {
-    throw new Error("Objektet hittades inte.");
-  }
-
-  const brokerUserIds = await companyBrokerUserIds(ctx, viewer);
-
-  if (
-    listing.ownerId !== viewer.id
-    && (!viewerCompanyId || listing.companyId !== viewerCompanyId)
-    && !brokerUserIds.has(listing.ownerId)
-  ) {
-    throw new Error("Du kan bara uppdatera dina egna objekt.");
-  }
-
-  return { viewer, listing };
 }
 
 export const list = queryGeneric({

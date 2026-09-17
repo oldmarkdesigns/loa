@@ -96,6 +96,57 @@ export const leadActivitiesApi = {
     apiClient.mutation(convexApiRefs.leadActivities.create, { leadId, type, body }, "Kunde inte spara aktiviteten.")
 };
 
+export const prospectsApi = {
+  generateUploadUrl: () =>
+    apiClient.mutation(convexApiRefs.prospects.generateUploadUrl, {}, "Kunde inte förbereda uppladdningen."),
+  createProspect: (listingId, title) =>
+    apiClient.mutation(convexApiRefs.prospects.create, { listingId, title }, "Kunde inte skapa prospektet."),
+  saveDraft: (id, title, sections) =>
+    apiClient.mutation(convexApiRefs.prospects.saveDraft, { id, title, sections }, "Kunde inte spara utkastet."),
+  publishVersion: (id, changeSummary) =>
+    apiClient.mutation(convexApiRefs.prospects.publishVersion, { id, changeSummary }, "Kunde inte publicera versionen."),
+  archiveProspect: (id) => apiClient.mutation(convexApiRefs.prospects.archive, { id }, "Kunde inte arkivera prospektet."),
+  getProspect: (id) => apiClient.query(convexApiRefs.prospects.get, { id }, "Prospektet hittades inte."),
+  listMine: () => apiClient.query(convexApiRefs.prospects.listMine, {}, "Kunde inte läsa dina prospekt."),
+  listForListing: (listingId) =>
+    apiClient.query(convexApiRefs.prospects.listForListing, { listingId }, "Kunde inte läsa prospekt för objektet."),
+  listForCompany: () => apiClient.query(convexApiRefs.prospects.listForCompany, {}, "Kunde inte läsa bolagets prospekt."),
+  listVersions: (prospectId) =>
+    apiClient.query(convexApiRefs.prospects.listVersions, { prospectId }, "Kunde inte läsa versionshistoriken."),
+  restoreVersion: (prospectId, versionNumber) =>
+    apiClient.mutation(convexApiRefs.prospects.restoreVersion, { prospectId, versionNumber }, "Kunde inte återställa versionen.")
+};
+
+export const prospectCommentsApi = {
+  listComments: (prospectId) =>
+    apiClient.query(convexApiRefs.prospectComments.list, { prospectId }, "Kunde inte läsa kommentarerna."),
+  addComment: (prospectId, sectionId, body) =>
+    apiClient.mutation(convexApiRefs.prospectComments.add, { prospectId, sectionId, body }, "Kunde inte spara kommentaren."),
+  addGuestComment: (token, sectionId, guestName, body) =>
+    apiClient.mutation(
+      convexApiRefs.prospectComments.addGuest,
+      { token, sectionId, guestName, body },
+      "Kunde inte spara kommentaren."
+    )
+};
+
+export const prospectSharingApi = {
+  addCollaborator: (prospectId, userId) =>
+    apiClient.mutation(convexApiRefs.prospectSharing.addCollaborator, { prospectId, userId }, "Kunde inte lägga till samarbetspartnern."),
+  removeCollaborator: (prospectId, userId) =>
+    apiClient.mutation(convexApiRefs.prospectSharing.removeCollaborator, { prospectId, userId }, "Kunde inte ta bort samarbetspartnern."),
+  listCollaborators: (prospectId) =>
+    apiClient.query(convexApiRefs.prospectSharing.listCollaborators, { prospectId }, "Kunde inte läsa samarbetspartners."),
+  createGuestLink: (prospectId, label) =>
+    apiClient.mutation(convexApiRefs.prospectSharing.createGuestLink, { prospectId, label }, "Kunde inte skapa gästlänken."),
+  revokeGuestLink: (prospectId, guestLinkId) =>
+    apiClient.mutation(convexApiRefs.prospectSharing.revokeGuestLink, { prospectId, guestLinkId }, "Kunde inte återkalla gästlänken."),
+  listGuestLinks: (prospectId) =>
+    apiClient.query(convexApiRefs.prospectSharing.listGuestLinks, { prospectId }, "Kunde inte läsa gästlänkar."),
+  getByGuestToken: (token) =>
+    apiClient.mutation(convexApiRefs.prospectSharing.getByGuestToken, { token }, "Länken kunde inte öppnas.")
+};
+
 export const aiApi = {
   runSearch: (payload) => apiClient.query(convexApiRefs.ai.search, payload, "Kunde inte köra AI-sökningen.")
 };

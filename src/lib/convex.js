@@ -68,6 +68,33 @@ export const convexApiRefs = {
     list: queryRef("leadActivities:list"),
     create: mutationRef("leadActivities:create")
   },
+  prospects: {
+    generateUploadUrl: mutationRef("prospects:generateUploadUrl"),
+    create: mutationRef("prospects:create"),
+    saveDraft: mutationRef("prospects:saveDraft"),
+    publishVersion: mutationRef("prospects:publishVersion"),
+    archive: mutationRef("prospects:archive"),
+    get: queryRef("prospects:get"),
+    listMine: queryRef("prospects:listMine"),
+    listForListing: queryRef("prospects:listForListing"),
+    listForCompany: queryRef("prospects:listForCompany"),
+    listVersions: queryRef("prospects:listVersions"),
+    restoreVersion: mutationRef("prospects:restoreVersion")
+  },
+  prospectComments: {
+    list: queryRef("prospectComments:listComments"),
+    add: mutationRef("prospectComments:addComment"),
+    addGuest: mutationRef("prospectComments:addGuestComment")
+  },
+  prospectSharing: {
+    addCollaborator: mutationRef("prospectSharing:addCollaborator"),
+    removeCollaborator: mutationRef("prospectSharing:removeCollaborator"),
+    listCollaborators: queryRef("prospectSharing:listCollaborators"),
+    createGuestLink: mutationRef("prospectSharing:createGuestLink"),
+    revokeGuestLink: mutationRef("prospectSharing:revokeGuestLink"),
+    listGuestLinks: queryRef("prospectSharing:listGuestLinks"),
+    getByGuestToken: mutationRef("prospectSharing:getByGuestToken")
+  },
   ai: {
     search: queryRef("ai:search")
   }

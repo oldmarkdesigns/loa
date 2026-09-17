@@ -125,3 +125,4 @@ export const SettingsGearIcon = createSemanticIcon("settingsGear", "SettingsGear
 export const InfoCircleIcon = createSemanticIcon("infoCircle", "InfoCircleIcon");
 export const SupportIcon = createSemanticIcon("support", "SupportIcon");
 export const LogoutIcon = createSemanticIcon("logout", "LogoutIcon");
+export const CheckIcon = createSemanticIcon("check", "CheckIcon");

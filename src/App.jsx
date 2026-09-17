@@ -14,6 +14,8 @@ import MessagesPage from "./pages/app/MessagesPage";
 import AdminPanelPage from "./pages/app/AdminPanelPage";
 import BrokerPanelPage from "./pages/app/BrokerPanelPage";
 import ProfilePage from "./pages/app/ProfilePage";
+import ProspectRenterPage from "./pages/app/ProspectRenterPage";
+import ProspectGuestPage from "./pages/ProspectGuestPage";
 import PublishPage from "./pages/app/PublishPage";
 import RentPage from "./pages/app/RentPage";
 import SettingsPage from "./pages/app/SettingsPage";
@@ -197,9 +199,9 @@ function AppContent() {
         ? "company_admin"
         : fallbackRole;
       const hasPublisherRole = roleSet.has("broker") || roleSet.has("company_admin");
-      const renterAllowed = ["/app/rent", "/app/viewings", "/app/messages", "/app/profile", "/app/settings", "/app/listings"];
-      const brokerAllowed = ["/app/broker", "/app/my-listings", "/app/publish", "/app/messages", "/app/settings", "/app/rent", "/app/listings"];
-      const companyAdminAllowed = ["/app/admin", "/app/publish", "/app/messages", "/app/settings", "/app/rent", "/app/listings"];
+      const renterAllowed = ["/app/rent", "/app/viewings", "/app/messages", "/app/profile", "/app/settings", "/app/listings", "/app/prospekt"];
+      const brokerAllowed = ["/app/broker", "/app/my-listings", "/app/publish", "/app/messages", "/app/settings", "/app/rent", "/app/listings", "/app/prospekt"];
+      const companyAdminAllowed = ["/app/admin", "/app/publish", "/app/messages", "/app/settings", "/app/rent", "/app/listings", "/app/prospekt"];
       const extraForPublisherMembers = hasPublisherRole ? ["/app/broker", "/app/my-listings", "/app/publish"] : [];
       const allowedBases = role === "company_admin"
         ? companyAdminAllowed
@@ -333,12 +335,17 @@ function AppContent() {
         pathname={pathname}
       />
     );
+  } else if (pathname.startsWith("/prospekt/dela/")) {
+    const guestToken = decodeURIComponent(pathname.slice("/prospekt/dela/".length));
+    content = <ProspectGuestPage token={guestToken} />;
   } else if (pathname.startsWith("/app")) {
     const listingDetailMatch = pathname.match(/^\/app\/listings\/([^/]+)(?:\/gallery)?$/);
     const manageListingMatch = pathname.match(/^\/app\/my-listings\/([^/]+)$/);
+    const prospectMatch = pathname.match(/^\/app\/prospekt\/([^/]+)$/);
     const listingId = listingDetailMatch ? decodeURIComponent(listingDetailMatch[1]) : null;
     const isListingGalleryPath = Boolean(pathname.match(/^\/app\/listings\/[^/]+\/gallery$/));
     const managedListingId = manageListingMatch ? decodeURIComponent(manageListingMatch[1]) : null;
+    const prospectId = prospectMatch ? decodeURIComponent(prospectMatch[1]) : null;
     const isAdminPath = pathname === "/app/admin" || pathname.startsWith("/app/admin/");
     const isBrokerPath = pathname === "/app/broker" || pathname.startsWith("/app/broker/");
 
@@ -382,6 +389,8 @@ function AppContent() {
       appRouteContent = <ListingDetailPage app={app} listingId={listingId} initialView={isListingGalleryPath ? "gallery" : "detail"} />;
     } else if (managedListingId) {
       appRouteContent = <ManageListingPage app={app} listingId={managedListingId} />;
+    } else if (prospectId) {
+      appRouteContent = <ProspectRenterPage app={app} prospectId={prospectId} />;
     } else if (pathname === "/app/viewings") {
       appRouteContent = <ViewingsPage app={app} />;
     } else if (pathname === "/app/messages") {

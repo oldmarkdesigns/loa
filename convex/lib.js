@@ -12,6 +12,9 @@ export const LEAD_STATUSES = ["new", "contacted", "viewing_booked", "negotiating
 // Canonical listing lifecycle stages, same convention as LEAD_STATUSES above.
 export const LISTING_STATUSES = ["draft", "active", "negotiating", "rented", "inactive"];
 
+// Canonical prospect lifecycle stages, same convention as LEAD_STATUSES above.
+export const PROSPECT_STATUSES = ["draft", "published", "archived"];
+
 export function nowIso() {
   return new Date().toISOString();
 }
@@ -319,6 +322,142 @@ export async function getVisibleListingOrThrow(ctx, listingId) {
   }
 
   return listing;
+}
+
+export async function findOwnedListingOrThrow(ctx, listingId) {
+  const viewer = await getViewerOrThrow(ctx);
+  const listing = await findListingByPublicId(ctx, listingId);
+  const viewerCompanyId = userCompanyId(viewer);
+
+  if (!listing) {
+    throw new Error("Objektet hittades inte.");
+  }
+
+  const brokerUserIds = await companyBrokerUserIds(ctx, viewer);
+
+  if (
+    listing.ownerId !== viewer.id
+    && (!viewerCompanyId || listing.companyId !== viewerCompanyId)
+    && !brokerUserIds.has(listing.ownerId)
+  ) {
+    throw new Error("Du kan bara uppdatera dina egna objekt.");
+  }
+
+  return { viewer, listing };
+}
+
+export async function findProspectByPublicId(ctx, prospectId) {
+  return await ctx.db
+    .query("prospects")
+    .withIndex("by_public_id", (query) => query.eq("id", prospectId))
+    .unique();
+}
+
+export async function findProspectCollaboration(ctx, prospectId, userId) {
+  return await ctx.db
+    .query("prospectCollaborators")
+    .withIndex("by_prospect_user", (query) => query.eq("prospectId", prospectId).eq("userId", userId))
+    .unique();
+}
+
+export async function findOwnedProspectOrThrow(ctx, prospectId) {
+  const viewer = await getViewerOrThrow(ctx);
+  const prospect = await findProspectByPublicId(ctx, prospectId);
+
+  if (!prospect) {
+    throw new Error("Prospektet hittades inte.");
+  }
+
+  const viewerCompanyId = userCompanyId(viewer);
+  const brokerUserIds = await companyBrokerUserIds(ctx, viewer);
+
+  if (
+    prospect.ownerId !== viewer.id
+    && (!viewerCompanyId || prospect.companyId !== viewerCompanyId)
+    && !brokerUserIds.has(prospect.ownerId)
+  ) {
+    throw new Error("Du kan bara redigera dina egna prospekt.");
+  }
+
+  return { viewer, prospect };
+}
+
+export async function findViewableProspectOrThrow(ctx, prospectId) {
+  const viewer = await getViewerOrThrow(ctx);
+  const prospect = await findProspectByPublicId(ctx, prospectId);
+
+  if (!prospect) {
+    throw new Error("Prospektet hittades inte.");
+  }
+
+  const viewerCompanyId = userCompanyId(viewer);
+  const brokerUserIds = await companyBrokerUserIds(ctx, viewer);
+  const hasEditAccess = Boolean(
+    prospect.ownerId === viewer.id
+    || (viewerCompanyId && prospect.companyId === viewerCompanyId)
+    || brokerUserIds.has(prospect.ownerId)
+  );
+
+  if (hasEditAccess) {
+    return { viewer, prospect, hasEditAccess: true };
+  }
+
+  const collaboration = await findProspectCollaboration(ctx, prospect.id, viewer.id);
+  if (!collaboration) {
+    throw new Error("Du har inte åtkomst till det här prospektet.");
+  }
+
+  return { viewer, prospect, hasEditAccess: false };
+}
+
+export async function findProspectByGuestTokenOrThrow(ctx, token) {
+  const guestLink = await ctx.db
+    .query("prospectGuestLinks")
+    .withIndex("by_token", (query) => query.eq("token", String(token || "")))
+    .unique();
+
+  const now = nowIso();
+  const isValid = Boolean(
+    guestLink
+    && !guestLink.revokedAt
+    && (!guestLink.expiresAt || guestLink.expiresAt > now)
+  );
+
+  // One generic message whether the token is missing, revoked, or expired — never
+  // reveal which, so a guessed token can't be used to probe link state.
+  if (!isValid) {
+    throw new Error("Länken är inte längre giltig.");
+  }
+
+  const prospect = await findProspectByPublicId(ctx, guestLink.prospectId);
+  if (!prospect) {
+    throw new Error("Länken är inte längre giltig.");
+  }
+
+  return { guestLink, prospect };
+}
+
+export async function hydrateProspectComment(ctx, comment) {
+  if (comment.authorType !== "user" || !comment.authorId) {
+    return stripSystemFields(comment);
+  }
+
+  const author = await findUserByPublicId(ctx, comment.authorId);
+  return { ...stripSystemFields(comment), authorName: author?.name || "Användare" };
+}
+
+export async function resolveProspectSectionsForDisplay(ctx, sections) {
+  return Promise.all(
+    (sections || []).map(async (section) => ({
+      ...section,
+      attachments: await Promise.all(
+        (section.attachments || []).map(async (attachment) => ({
+          ...attachment,
+          url: await ctx.storage.getUrl(attachment.storageId)
+        }))
+      )
+    }))
+  );
 }
 
 function seedUsers() {

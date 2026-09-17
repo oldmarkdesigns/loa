@@ -119,6 +119,9 @@ export const ICONS = {
 
   // --- Support ---
   support: "headset",            // SupportIcon — help center
+
+  // --- Confirm / form actions ---
+  check: "check",             // CheckIcon — confirm a custom value
 } as const;
 
 export type IconKey = keyof typeof ICONS;

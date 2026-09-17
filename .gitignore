@@ -5,3 +5,6 @@ dist
 .env
 .env.local
 .convex
+
+*storybook.log
+storybook-static

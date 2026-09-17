@@ -26,11 +26,19 @@ const LISTING_STATUS_META = {
   inactive: { label: "Inaktiv", tone: "neutral" }
 };
 
+// Mirrors PROSPECT_STATUSES in convex/lib.js.
+const PROSPECT_STATUS_META = {
+  draft: { label: "Utkast", tone: "neutral" },
+  published: { label: "Publicerad", tone: "emerald" },
+  archived: { label: "Arkiverad", tone: "neutral" }
+};
+
 export const LEAD_STATUS_ORDER = ["new", "contacted", "viewing_booked", "negotiating", "won", "lost"];
 export const LISTING_STATUS_ORDER = ["draft", "active", "negotiating", "rented", "inactive"];
+export const PROSPECT_STATUS_ORDER = ["draft", "published", "archived"];
 
 function metaFor(status, variant) {
-  const map = variant === "listing" ? LISTING_STATUS_META : LEAD_STATUS_META;
+  const map = variant === "listing" ? LISTING_STATUS_META : variant === "prospect" ? PROSPECT_STATUS_META : LEAD_STATUS_META;
   return map[status] || { label: status || "Okänd", tone: "neutral" };
 }
 
@@ -42,12 +50,20 @@ export function listingStatusLabel(status) {
   return metaFor(status, "listing").label;
 }
 
+export function prospectStatusLabel(status) {
+  return metaFor(status, "prospect").label;
+}
+
 export function leadStatusOptions() {
   return LEAD_STATUS_ORDER.map((value) => ({ value, label: LEAD_STATUS_META[value].label }));
 }
 
 export function listingStatusOptions() {
   return LISTING_STATUS_ORDER.map((value) => ({ value, label: LISTING_STATUS_META[value].label }));
+}
+
+export function prospectStatusOptions() {
+  return PROSPECT_STATUS_ORDER.map((value) => ({ value, label: PROSPECT_STATUS_META[value].label }));
 }
 
 function StatusPill({ status, variant = "lead", className = "" }) {

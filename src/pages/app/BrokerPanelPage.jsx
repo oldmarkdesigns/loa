@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip } from "recharts";
-import { leadActivitiesApi, listingApi } from "../../api";
+import { leadActivitiesApi, listingApi, prospectCommentsApi, prospectsApi } from "../../api";
 import { formatDate } from "../../lib/formatters";
 import { navigateTo } from "../../lib/router";
 import AdminPanelShell from "../../components/layout/AdminPanelShell";
+import SidePanelFrame from "../../components/layout/SidePanelFrame";
 import StatusPill, {
   LEAD_STATUS_ORDER,
   listingStatusLabel,
@@ -13,27 +13,36 @@ import StatusPill, {
   leadStatusOptions
 } from "../../components/app/StatusPill";
 import {
+  ArchiveIcon,
   BuildingIcon,
   CalendarIcon,
   LayoutDashboardIcon,
   MessageSquareIcon,
   MoreHorizontalIcon,
+  PdfIcon,
+  PlusIcon,
   SearchIcon,
   SettingsGearIcon,
   SparklesIcon,
   StarIcon,
   SupportIcon,
   UserIcon,
+  UsersGroupIcon,
   XIcon
 } from "../../components/icons/UiIcons";
 import PanelProfileSection from "./PanelProfileSection";
 import MessagesPage from "./MessagesPage";
 import { useListingEditorState, ListingEditorSections, ListingEditorFooterActions } from "../../components/app/ListingEditorOverlay";
+import { useProspectEditorState, ProspectEditorSections, ProspectEditorFooterActions } from "../../components/app/ProspectEditorSections";
+import ProspectCommentThread from "../../components/app/ProspectCommentThread";
+import ProspectVersionHistoryPanel from "../../components/app/ProspectVersionHistoryPanel";
+import ProspectShareSheet from "../../components/app/ProspectShareSheet";
 
 export const BROKER_NAV_ITEMS = [
   { key: "oversikt", label: "Översikt", path: "/app/broker", Icon: LayoutDashboardIcon },
   { key: "objekt", label: "Dina objekt", path: "/app/broker/objekt", Icon: BuildingIcon },
   { key: "leads", label: "Leads", path: "/app/broker/leads", Icon: SparklesIcon },
+  { key: "prospekt", label: "Prospekt", path: "/app/broker/prospekt", Icon: PdfIcon },
   { key: "meddelanden", label: "Meddelanden", path: "/app/broker/meddelanden", Icon: MessageSquareIcon },
   { key: "sparade-objekt", label: "Sparade objekt", path: "/app/broker/sparade-objekt", Icon: StarIcon },
   { key: "sparade-sokningar", label: "Sparade sökningar", path: "/app/broker/sparade-sokningar", Icon: SearchIcon }
@@ -49,6 +58,7 @@ const BROKER_SECTION_TITLES = {
   oversikt: "Översikt",
   objekt: "Dina objekt",
   leads: "Leads",
+  prospekt: "Prospekt",
   meddelanden: "Meddelanden",
   "sparade-objekt": "Sparade objekt",
   "sparade-sokningar": "Sparade sökningar",
@@ -611,41 +621,6 @@ function BrokerListingsSection({ app }) {
   );
 }
 
-function SidePanelFrame({ widthClassName, onClose, children }) {
-  const [open, setOpen] = useState(false);
-  const closingRef = useRef(false);
-
-  useEffect(() => {
-    const frame = requestAnimationFrame(() => setOpen(true));
-    return () => cancelAnimationFrame(frame);
-  }, []);
-
-  function handleClose() {
-    if (closingRef.current) return;
-    closingRef.current = true;
-    setOpen(false);
-    window.setTimeout(() => onClose?.(), 300);
-  }
-
-  return createPortal(
-    <div className="fixed inset-0 z-[80]">
-      <div
-        className={`absolute inset-0 bg-black/25 transition-opacity duration-300 ease-out ${open ? "opacity-100" : "opacity-0"}`}
-        aria-hidden="true"
-        onClick={handleClose}
-      />
-      <aside
-        className={`absolute inset-y-0 right-0 flex ${widthClassName} flex-col border-l border-black/10 bg-[#ffffff] shadow-[0_24px_64px_rgba(15,25,48,0.24)] transition-transform duration-300 ease-out ${
-          open ? "translate-x-0" : "translate-x-full"
-        }`}
-      >
-        {children(handleClose)}
-      </aside>
-    </div>,
-    document.body
-  );
-}
-
 function ListingEditorSidePanel({ listing, app, onClose, onMutated }) {
   const editor = useListingEditorState(listing, app, { onMutated });
 
@@ -681,6 +656,395 @@ function ListingEditorSidePanel({ listing, app, onClose, onMutated }) {
         </>
       )}
     </SidePanelFrame>
+  );
+}
+
+function ProspectWorkspaceCard({ title, children }) {
+  return (
+    <section className="surface p-4 sm:p-5">
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">{title}</p>
+      <div className="mt-3">{children}</div>
+    </section>
+  );
+}
+
+const PROSPECT_WORKSPACE_TABS = [
+  { key: "prospekt", label: "Prospekt", Icon: PdfIcon },
+  { key: "samarbete", label: "Samarbete", Icon: UsersGroupIcon },
+  { key: "installningar", label: "Inställningar", Icon: SettingsGearIcon }
+];
+
+function ProspectWorkspaceTabNav({ tabs, activeKey, onSelect }) {
+  const navRef = useRef(null);
+  const hasAnimatedRef = useRef(false);
+  const [indicator, setIndicator] = useState(null);
+
+  useLayoutEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+    const activeEl = nav.querySelector('[data-active="true"]');
+    if (!activeEl) {
+      setIndicator((prev) => (prev ? { ...prev, visible: false } : prev));
+      return;
+    }
+    setIndicator({
+      left: activeEl.offsetLeft,
+      width: activeEl.offsetWidth,
+      visible: true,
+      animate: hasAnimatedRef.current
+    });
+    hasAnimatedRef.current = true;
+  }, [activeKey, tabs]);
+
+  return (
+    <nav ref={navRef} className="relative flex gap-1">
+      <span
+        aria-hidden="true"
+        className={`admin-nav-indicator-h ${indicator?.animate ? "is-animated" : ""}`}
+        style={
+          indicator?.visible
+            ? { transform: `translateX(${indicator.left}px)`, width: `${indicator.width}px`, opacity: 1 }
+            : { opacity: 0 }
+        }
+      />
+      {tabs.map((tab) => {
+        const active = tab.key === activeKey;
+        return (
+          <button
+            key={tab.key}
+            type="button"
+            data-active={active ? "true" : "false"}
+            className={`admin-nav-row menu-hover-row relative z-[1] inline-flex items-center gap-2 px-3.5 py-2 text-sm font-semibold ${
+              active ? "text-white" : "text-ink-700 hover:bg-black/5"
+            }`}
+            onClick={() => onSelect(tab.key)}
+          >
+            <tab.Icon className="h-4 w-4 shrink-0" />
+            {tab.label}
+          </button>
+        );
+      })}
+    </nav>
+  );
+}
+
+function ProspectWorkspaceSidePanel({ prospectId, listingId, app, onClose, onMutated }) {
+  const [prospect, setProspect] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("prospekt");
+  const [comments, setComments] = useState([]);
+  const [commentsPending, setCommentsPending] = useState(false);
+  const [archiving, setArchiving] = useState(false);
+
+  async function loadProspect() {
+    setLoading(true);
+    try {
+      const { prospect: loaded } = await prospectsApi.getProspect(prospectId);
+      setProspect(loaded);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function loadComments() {
+    const { comments: list } = await prospectCommentsApi.listComments(prospectId);
+    setComments(list);
+  }
+
+  useEffect(() => {
+    void loadProspect();
+    void loadComments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prospectId]);
+
+  const editor = useProspectEditorState(prospect || { id: prospectId, title: "", draftSections: [], publishedSections: [], currentVersion: 0 }, app, {
+    onMutated: async () => {
+      await loadProspect();
+      await onMutated?.();
+    }
+  });
+
+  async function addComment(sectionId, body) {
+    setCommentsPending(true);
+    try {
+      await prospectCommentsApi.addComment(prospectId, sectionId, body);
+      await loadComments();
+    } finally {
+      setCommentsPending(false);
+    }
+  }
+
+  async function archiveProspect(handleClose) {
+    setArchiving(true);
+    try {
+      await prospectsApi.archiveProspect(prospectId);
+      app.pushToast("Prospekt arkiverat.", "info");
+      await onMutated?.();
+      handleClose();
+    } finally {
+      setArchiving(false);
+    }
+  }
+
+  return (
+    <SidePanelFrame widthClassName="w-[min(560px,100vw)]" onClose={onClose}>
+      {(handleClose) => (
+        <>
+          <div className="border-b border-black/10 px-5 py-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Titel</p>
+            <div className="mt-1.5 flex items-center gap-3">
+              {prospect ? (
+                <input
+                  className="field flex-1 py-2"
+                  value={editor.title}
+                  onChange={(event) => editor.setTitle(event.target.value)}
+                  placeholder="Namnge prospektet..."
+                  aria-label="Titel"
+                />
+              ) : (
+                <p className="flex-1 py-2 text-[15px] text-ink-500">Laddar...</p>
+              )}
+              <button
+                type="button"
+                aria-label="Stäng"
+                className="inline-flex h-10 w-10 min-h-0 shrink-0 items-center justify-center rounded-full border border-black/10 bg-[#ffffff]"
+                onClick={handleClose}
+              >
+                <XIcon className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="mt-3">
+              <ProspectWorkspaceTabNav tabs={PROSPECT_WORKSPACE_TABS} activeKey={activeTab} onSelect={setActiveTab} />
+            </div>
+          </div>
+
+          <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+            {loading || !prospect ? (
+              <p className="text-sm text-ink-500">Laddar prospekt...</p>
+            ) : (
+              <div className="space-y-4">
+                {activeTab === "prospekt" ? (
+                  <>
+                    <ProspectEditorSections editor={editor} listingSummary={prospect.listingSummary} />
+                    <ProspectWorkspaceCard title="Kommentarer">
+                      <div className="h-72">
+                        <ProspectCommentThread
+                          sections={editor.sections}
+                          comments={comments}
+                          onAddComment={addComment}
+                          pending={commentsPending}
+                        />
+                      </div>
+                    </ProspectWorkspaceCard>
+                  </>
+                ) : null}
+
+                {activeTab === "samarbete" ? (
+                  <ProspectShareSheet prospectId={prospect.id} listingId={listingId} prospect={prospect} app={app} />
+                ) : null}
+
+                {activeTab === "installningar" ? (
+                  <div className="space-y-4">
+                    {prospect.status !== "archived" ? (
+                      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4">
+                        <div>
+                          <p className="text-sm font-semibold text-rose-900">Arkivera prospekt</p>
+                          <p className="mt-1 text-xs text-rose-700">Döljer prospektet från din lista.</p>
+                        </div>
+                        <button
+                          type="button"
+                          className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-rose-200 bg-[#ffffff] px-4 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-100"
+                          onClick={() => archiveProspect(handleClose)}
+                          disabled={archiving}
+                        >
+                          <ArchiveIcon className="h-4 w-4" />
+                          {archiving ? "Arkiverar..." : "Arkivera"}
+                        </button>
+                      </div>
+                    ) : null}
+                    <ProspectWorkspaceCard title="Versionshistorik">
+                      <ProspectVersionHistoryPanel prospectId={prospect.id} app={app} onRestored={loadProspect} />
+                    </ProspectWorkspaceCard>
+                  </div>
+                ) : null}
+              </div>
+            )}
+          </div>
+
+          {prospect && activeTab === "prospekt" ? (
+            <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-black/10 px-5 py-4">
+              <ProspectEditorFooterActions editor={editor} />
+            </div>
+          ) : null}
+        </>
+      )}
+    </SidePanelFrame>
+  );
+}
+
+function BrokerProspectsSection({ app }) {
+  const { ownListings } = useBrokerListingsData(app);
+  const [prospects, setProspects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedProspectId, setSelectedProspectId] = useState(null);
+  const [creatingListingId, setCreatingListingId] = useState("");
+  const [creating, setCreating] = useState(false);
+
+  async function loadProspects() {
+    setLoading(true);
+    try {
+      const { prospects: list } = await prospectsApi.listMine();
+      setProspects(list);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    void loadProspects();
+  }, []);
+
+  const listingById = new Map(ownListings.map((listing) => [String(listing.id), listing]));
+  const selectedProspect = prospects.find((prospect) => prospect.id === selectedProspectId) || null;
+
+  async function createProspect() {
+    const listingId = creatingListingId || ownListings[0]?.id;
+    if (!listingId) return;
+    setCreating(true);
+    try {
+      const { prospect } = await prospectsApi.createProspect(listingId);
+      app.pushToast("Prospekt skapat.", "success");
+      await loadProspects();
+      setSelectedProspectId(prospect.id);
+    } catch (error) {
+      app.pushToast(error.message || "Kunde inte skapa prospektet.", "error");
+    } finally {
+      setCreating(false);
+    }
+  }
+
+  return (
+    <div className="space-y-5">
+      <header>
+        <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Hyresvärd</p>
+        <h1 className="mt-1 text-2xl font-semibold">Prospekt</h1>
+        <p className="mt-2 text-sm text-ink-600">Skapa, dela och versionshantera prospekt för dina objekt.</p>
+      </header>
+
+      <section className="surface overflow-hidden">
+        <div className="border-b border-black/10 px-4 py-4 sm:px-5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Prospekt</p>
+              {ownListings.length > 0 ? (
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <select
+                    className="field"
+                    value={creatingListingId || ownListings[0]?.id || ""}
+                    onChange={(event) => setCreatingListingId(event.target.value)}
+                  >
+                    {ownListings.map((listing) => (
+                      <option key={listing.id} value={listing.id}>{listing.title || listing.address}</option>
+                    ))}
+                  </select>
+                  <button type="button" className="btn-primary px-4" onClick={createProspect} disabled={creating}>
+                    <PlusIcon className="mr-1.5 h-4 w-4" />
+                    {creating ? "Skapar..." : "Nytt prospekt"}
+                  </button>
+                </div>
+              ) : (
+                <p className="mt-1 text-sm text-ink-600">Du har inga objekt än.</p>
+              )}
+            </div>
+            <span className="shrink-0 rounded-full bg-black/10 px-2 py-0.5 text-[11px] font-semibold text-ink-700">{prospects.length} rader</span>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[860px] text-sm">
+            <thead className="bg-[#fafafa] text-[11px] uppercase tracking-wide text-ink-500">
+              <tr>
+                <th className="px-4 py-3 text-left font-semibold sm:px-5">Prospekt</th>
+                <th className="px-4 py-3 text-left font-semibold">Objekt</th>
+                <th className="px-4 py-3 text-left font-semibold">Status</th>
+                <th className="px-4 py-3 text-left font-semibold">Version</th>
+                <th className="px-4 py-3 text-left font-semibold">Uppdaterad</th>
+                <th className="px-4 py-3 text-right font-semibold sm:px-5">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {prospects.map((prospect) => {
+                const listing = listingById.get(String(prospect.listingId));
+                return (
+                  <tr
+                    key={prospect.id}
+                    className="cursor-pointer border-t border-black/10 transition hover:bg-[#fafafa]"
+                    onClick={() => setSelectedProspectId(prospect.id)}
+                  >
+                    <td className="px-4 py-3.5 align-top sm:px-5">
+                      <div className="flex items-center gap-3">
+                        <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#0b0a0e] text-white">
+                          <PdfIcon className="h-4 w-4" />
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block truncate font-semibold text-ink-900">{prospect.title}</span>
+                          <span className="block truncate text-xs text-ink-600">{listing?.title || listing?.address || prospect.listingId}</span>
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3.5 align-top font-semibold text-ink-800">{listing?.title || "Objekt"}</td>
+                    <td className="px-4 py-3.5 align-top">
+                      <StatusPill status={prospect.status} variant="prospect" />
+                    </td>
+                    <td className="px-4 py-3.5 align-top text-sm font-semibold text-ink-700">
+                      {prospect.currentVersion ? `v${prospect.currentVersion}` : "Utkast"}
+                    </td>
+                    <td className="px-4 py-3.5 align-top text-xs font-semibold text-ink-500">{relativeTime(prospect.updatedAt)}</td>
+                    <td className="px-4 py-3.5 text-right sm:px-5">
+                      <button
+                        type="button"
+                        className="inline-flex h-9 w-9 min-h-0 items-center justify-center rounded-full border border-transparent text-ink-600 hover:border-black/10 hover:bg-[#ffffff]"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setSelectedProspectId(prospect.id);
+                        }}
+                      >
+                        <MoreHorizontalIcon className="h-4 w-4" />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+              {!loading && prospects.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="border-t border-black/10 px-4 py-10 text-center sm:px-5">
+                    <p className="font-semibold text-ink-900">Inga prospekt än</p>
+                    <p className="mt-1 text-sm text-ink-500">Skapa ett prospekt för ett av dina objekt.</p>
+                  </td>
+                </tr>
+              ) : null}
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="border-t border-black/10 px-4 py-10 text-center text-sm text-ink-600 sm:px-5">
+                    Laddar prospekt...
+                  </td>
+                </tr>
+              ) : null}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {selectedProspect ? (
+        <ProspectWorkspaceSidePanel
+          prospectId={selectedProspect.id}
+          listingId={selectedProspect.listingId}
+          app={app}
+          onClose={() => setSelectedProspectId(null)}
+          onMutated={loadProspects}
+        />
+      ) : null}
+    </div>
   );
 }
 
@@ -1043,10 +1407,12 @@ function BrokerPanelPage({ app, pathname }) {
       onLogout={app?.logout}
       badges={{ leads: leadCount }}
       fullBleedContent={sectionKey === "meddelanden"}
+      contentKey={sectionKey}
     >
       {sectionKey === "oversikt" ? <BrokerOverviewSection app={app} /> : null}
       {sectionKey === "objekt" ? <BrokerListingsSection app={app} /> : null}
       {sectionKey === "leads" ? <BrokerLeadsSection app={app} /> : null}
+      {sectionKey === "prospekt" ? <BrokerProspectsSection app={app} /> : null}
       {sectionKey === "meddelanden" ? <MessagesPage app={app} /> : null}
       {sectionKey === "sparade-objekt" ? <PanelProfileSection app={app} basePath="/app/broker/profil" forcedTab="favorites" /> : null}
       {sectionKey === "sparade-sokningar" ? <PanelProfileSection app={app} basePath="/app/broker/profil" forcedTab="history" /> : null}

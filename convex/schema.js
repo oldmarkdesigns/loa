@@ -1,6 +1,21 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
+const prospectSectionValidator = v.object({
+  id: v.string(),
+  kind: v.string(),
+  title: v.string(),
+  body: v.string(),
+  fields: v.optional(v.any()),
+  order: v.number(),
+  attachments: v.array(v.object({
+    storageId: v.id("_storage"),
+    fileName: v.string(),
+    contentType: v.optional(v.string()),
+    order: v.number()
+  }))
+});
+
 export default defineSchema({
   appMeta: defineTable({
     key: v.string(),
@@ -184,5 +199,75 @@ export default defineSchema({
     createdAt: v.string()
   })
     .index("by_public_id", ["id"])
-    .index("by_lead_id", ["leadId"])
+    .index("by_lead_id", ["leadId"]),
+  prospects: defineTable({
+    id: v.string(),
+    listingId: v.string(),
+    title: v.string(),
+    // Free string, matching the LEAD_STATUSES/LISTING_STATUSES convention — canonical
+    // values live in PROSPECT_STATUSES in convex/lib.js.
+    status: v.string(),
+    currentVersion: v.number(),
+    draftSections: v.array(prospectSectionValidator),
+    publishedSections: v.array(prospectSectionValidator),
+    ownerId: v.string(),
+    companyId: v.optional(v.string()),
+    createdAt: v.string(),
+    updatedAt: v.string()
+  })
+    .index("by_public_id", ["id"])
+    .index("by_listing_id", ["listingId"])
+    .index("by_owner_id", ["ownerId"]),
+  prospectVersions: defineTable({
+    id: v.string(),
+    prospectId: v.string(),
+    versionNumber: v.number(),
+    title: v.string(),
+    sectionsSnapshot: v.array(prospectSectionValidator),
+    authorId: v.string(),
+    changeSummary: v.optional(v.string()),
+    createdAt: v.string()
+  })
+    .index("by_public_id", ["id"])
+    .index("by_prospect_id", ["prospectId"])
+    .index("by_prospect_version", ["prospectId", "versionNumber"]),
+  prospectComments: defineTable({
+    id: v.string(),
+    prospectId: v.string(),
+    sectionId: v.string(),
+    authorType: v.union(v.literal("user"), v.literal("guest")),
+    authorId: v.optional(v.string()),
+    guestName: v.optional(v.string()),
+    guestLinkId: v.optional(v.string()),
+    body: v.string(),
+    createdAt: v.string()
+  })
+    .index("by_public_id", ["id"])
+    .index("by_prospect_id", ["prospectId"])
+    .index("by_prospect_section", ["prospectId", "sectionId"]),
+  prospectCollaborators: defineTable({
+    id: v.string(),
+    prospectId: v.string(),
+    userId: v.string(),
+    addedByUserId: v.string(),
+    createdAt: v.string()
+  })
+    .index("by_public_id", ["id"])
+    .index("by_prospect_id", ["prospectId"])
+    .index("by_user_id", ["userId"])
+    .index("by_prospect_user", ["prospectId", "userId"]),
+  prospectGuestLinks: defineTable({
+    id: v.string(),
+    token: v.string(),
+    prospectId: v.string(),
+    label: v.optional(v.string()),
+    createdByUserId: v.string(),
+    expiresAt: v.optional(v.string()),
+    revokedAt: v.optional(v.string()),
+    lastAccessedAt: v.optional(v.string()),
+    createdAt: v.string()
+  })
+    .index("by_public_id", ["id"])
+    .index("by_token", ["token"])
+    .index("by_prospect_id", ["prospectId"])
 });

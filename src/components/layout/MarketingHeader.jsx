@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { navigateTo, routeMatches } from "../../lib/router";
 import { deriveNavbarRoleState } from "../../lib/navbarRoles";
-import { BuildingIcon, LockIcon, MessageSquareIcon, UserIcon } from "../icons/UiIcons";
+import { BuildingIcon, LockIcon, MessageSquareIcon, SwitchHorizontalIcon, UserIcon } from "../icons/UiIcons";
 import MarketingNavLinks, { marketingPrimaryItems, marketingSectionItems } from "./MarketingNavLinks";
 import ProfileMenuDropdown from "./ProfileMenuDropdown";
 
@@ -119,6 +119,7 @@ function MarketingHeader({
                     navigateTo("/app/admin");
                   }}
                 >
+                  <SwitchHorizontalIcon className="mr-2 h-4 w-4" />
                   Växla till adminläge
                 </button>
               ) : null}
@@ -133,6 +134,7 @@ function MarketingHeader({
                     navigateTo("/app/broker");
                   }}
                 >
+                  <SwitchHorizontalIcon className="mr-2 h-4 w-4" />
                   Växla till adminläge
                 </button>
               ) : null}
