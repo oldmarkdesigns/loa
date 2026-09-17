@@ -1,38 +1,25 @@
-import { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import { useState } from "react";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 
 function SidePanelFrame({ widthClassName, onClose, children }) {
-  const [open, setOpen] = useState(false);
-  const closingRef = useRef(false);
+  const [open, setOpen] = useState(true);
 
-  useEffect(() => {
-    const frame = requestAnimationFrame(() => setOpen(true));
-    return () => cancelAnimationFrame(frame);
-  }, []);
-
-  function handleClose() {
-    if (closingRef.current) return;
-    closingRef.current = true;
-    setOpen(false);
-    window.setTimeout(() => onClose?.(), 300);
-  }
-
-  return createPortal(
-    <div className="fixed inset-0 z-[80]">
-      <div
-        className={`absolute inset-0 bg-black/25 transition-opacity duration-300 ease-out ${open ? "opacity-100" : "opacity-0"}`}
-        aria-hidden="true"
-        onClick={handleClose}
-      />
-      <aside
-        className={`absolute inset-y-0 right-0 flex ${widthClassName} flex-col border-l border-black/10 bg-[#ffffff] shadow-[0_24px_64px_rgba(15,25,48,0.24)] transition-transform duration-300 ease-out ${
-          open ? "translate-x-0" : "translate-x-full"
-        }`}
+  return (
+    <Sheet
+      open={open}
+      onOpenChange={setOpen}
+      onOpenChangeComplete={(isOpen) => {
+        if (!isOpen) onClose?.();
+      }}
+    >
+      <SheetContent
+        side="right"
+        showCloseButton={false}
+        className={`${widthClassName} max-w-none gap-0 bg-[#ffffff] text-base`}
       >
-        {children(handleClose)}
-      </aside>
-    </div>,
-    document.body
+        {children(() => setOpen(false))}
+      </SheetContent>
+    </Sheet>
   );
 }
 

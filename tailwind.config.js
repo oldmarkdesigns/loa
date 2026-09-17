@@ -20,6 +20,11 @@ const dataStateVariants = plugin(({ addVariant }) => {
   addVariant("data-vertical", '&[data-orientation="vertical"]');
   addVariant("data-placeholder", '&[data-placeholder]');
   addVariant("data-inset", '&[data-inset]');
+  // Base UI sets these during enter/exit CSS transitions (not a v4
+  // @custom-variant alias, but still unrecognized by v3 without registration).
+  addVariant("data-starting-style", '&[data-starting-style]');
+  addVariant("data-ending-style", '&[data-ending-style]');
+  addVariant("supports-backdrop-filter", "@supports (backdrop-filter: blur(1px))");
 });
 
 /** @type {import('tailwindcss').Config} */
