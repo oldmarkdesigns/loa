@@ -5,6 +5,7 @@ import { ArrowUpIcon, BellIcon, MouseScrollIcon, SwitchHorizontalIcon } from "..
 import AppFooter from "./AppFooter";
 import MarketingHeader from "./MarketingHeader";
 import ProfileMenuDropdown from "./ProfileMenuDropdown";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import companyLogo from "../../../Assets/Logo/LOA-Logo.png";
 
 function initialsForName(name = "") {
@@ -59,7 +60,6 @@ function AppShell({
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [seenNotificationIds, setSeenNotificationIds] = useState([]);
   const [adminCompanyOpen, setAdminCompanyOpen] = useState(false);
-  const profileMenuPanelRef = useRef(null);
   const notificationButtonRef = useRef(null);
   const notificationPanelRef = useRef(null);
   const adminCompanyButtonRef = useRef(null);
@@ -326,14 +326,27 @@ function AppShell({
                   ) : null}
                 </button>
               </div>
-              <button
-                type="button"
-                aria-label="Profilmeny"
-                className="inline-flex h-11 w-11 min-h-0 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] text-sm font-semibold text-[#0b0a0e] transition hover:border-[#0b0a0e]/25"
-                onClick={() => setMenuOpen((value) => !value)}
-              >
-                {initialsForName(user?.name || user?.email || "Profil")}
-              </button>
+              <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+                <DropdownMenuTrigger
+                  render={
+                    <button
+                      type="button"
+                      aria-label="Profilmeny"
+                      className="inline-flex h-11 w-11 min-h-0 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] text-sm font-semibold text-[#0b0a0e] transition hover:border-[#0b0a0e]/25"
+                    />
+                  }
+                >
+                  {initialsForName(user?.name || user?.email || "Profil")}
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" sideOffset={8} className="w-[min(320px,calc(100vw-2rem))] rounded-2xl border border-black/10 p-3 shadow-[0_10px_28px_rgba(15,25,48,0.10)]">
+                  <ProfileMenuDropdown
+                    setMenuOpen={setMenuOpen}
+                    user={user}
+                    onSwitchRole={onSwitchRole}
+                    onLogout={onLogout}
+                  />
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </header>
@@ -351,17 +364,6 @@ function AppShell({
           onRequireAuth={onRequireAuth}
         />
       )}
-
-      {menuOpen && isPanelContext ? (
-        <ProfileMenuDropdown
-          menuOpen={menuOpen}
-          setMenuOpen={setMenuOpen}
-          profileMenuPanelRef={profileMenuPanelRef}
-          user={user}
-          onSwitchRole={onSwitchRole}
-          onLogout={onLogout}
-        />
-      ) : null}
 
       {notificationOpen && !isGuest ? (
         <div ref={notificationPanelRef} className="fixed right-4 top-[72px] z-[60] w-[min(360px,calc(100vw-2rem))] rounded-2xl border border-black/10 bg-[#ffffff] p-3 shadow-[0_10px_28px_rgba(15,25,48,0.10)]">

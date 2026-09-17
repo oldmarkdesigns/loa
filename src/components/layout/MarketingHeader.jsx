@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { navigateTo, routeMatches } from "../../lib/router";
 import { deriveNavbarRoleState } from "../../lib/navbarRoles";
 import { BuildingIcon, LockIcon, MessageSquareIcon, SwitchHorizontalIcon, UserIcon } from "../icons/UiIcons";
 import MarketingNavLinks, { marketingPrimaryItems, marketingSectionItems } from "./MarketingNavLinks";
 import ProfileMenuDropdown from "./ProfileMenuDropdown";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 function MarketingHeader({
   pathname,
@@ -24,8 +25,6 @@ function MarketingHeader({
   const { activeRole, hasCompanyAdminRole, hasBrokerAccess } = deriveNavbarRoleState(user, { isGuest });
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const menuRef = useRef(null);
-  const profileMenuPanelRef = useRef(null);
   const initials = useMemo(() => {
     const source = (user?.name || (isGuest ? "Gäst" : "AA")).trim();
     const words = source.split(" ").filter(Boolean);
@@ -33,22 +32,6 @@ function MarketingHeader({
     return `${words[0][0] || ""}${words[1][0] || ""}`.toUpperCase() || "AA";
   }, [isGuest, user?.name]);
   const activeHref = routeMatches(pathname, "/app/rent") ? marketingPrimaryItems[0].href : null;
-
-  useEffect(() => {
-    function onPointerDown(event) {
-      if (
-        menuRef.current
-        && !menuRef.current.contains(event.target)
-        && profileMenuPanelRef.current
-        && !profileMenuPanelRef.current.contains(event.target)
-      ) {
-        setMenuOpen(false);
-      }
-    }
-
-    window.addEventListener("pointerdown", onPointerDown);
-    return () => window.removeEventListener("pointerdown", onPointerDown);
-  }, []);
 
   useEffect(() => {
     setMenuOpen(false);
@@ -149,26 +132,38 @@ function MarketingHeader({
                 </button>
               ) : null}
               {!hasCompanyAdminRole ? (
-                <div ref={menuRef} className="relative inline-flex h-11 items-center self-center">
-                  <button
-                    type="button"
-                    className="inline-flex h-full w-11 items-center justify-center overflow-hidden rounded-full border border-black/20 bg-[#ffffff] text-sm font-semibold text-ink-700"
-                    onClick={() => setMenuOpen((value) => !value)}
-                    aria-label="Öppna profilmeny"
-                    aria-expanded={menuOpen}
-                    aria-haspopup="menu"
-                    title="Profil"
-                  >
-                    {user?.profile?.avatarUrl ? (
-                      <img
-                        src={user.profile.avatarUrl}
-                        alt={user?.name || "Profil"}
-                        className="h-full w-full object-cover"
+                <div className="relative inline-flex h-11 items-center self-center">
+                  <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+                    <DropdownMenuTrigger
+                      render={
+                        <button
+                          type="button"
+                          className="inline-flex h-full w-11 items-center justify-center overflow-hidden rounded-full border border-black/20 bg-[#ffffff] text-sm font-semibold text-ink-700"
+                          aria-label="Öppna profilmeny"
+                          title="Profil"
+                        />
+                      }
+                    >
+                      {user?.profile?.avatarUrl ? (
+                        <img
+                          src={user.profile.avatarUrl}
+                          alt={user?.name || "Profil"}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        initials
+                      )}
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" sideOffset={8} className="w-[min(320px,calc(100vw-2rem))] rounded-2xl border border-black/10 p-3 shadow-[0_10px_28px_rgba(15,25,48,0.10)]">
+                      <ProfileMenuDropdown
+                        setMenuOpen={setMenuOpen}
+                        user={user}
+                        onSwitchRole={onSwitchRole}
+                        onLogout={onLogout}
+                        onHelp={onHelp}
                       />
-                    ) : (
-                      initials
-                    )}
-                  </button>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               ) : null}
               <button
@@ -221,18 +216,6 @@ function MarketingHeader({
           )}
         </div>
       </header>
-
-      {menuOpen ? (
-        <ProfileMenuDropdown
-          menuOpen={menuOpen}
-          setMenuOpen={setMenuOpen}
-          profileMenuPanelRef={profileMenuPanelRef}
-          user={user}
-          onSwitchRole={onSwitchRole}
-          onLogout={onLogout}
-          onHelp={onHelp}
-        />
-      ) : null}
 
       {mobileMenuOpen ? (
         <div className="fixed inset-0 z-[60] bg-transparent lg:hidden" onClick={() => setMobileMenuOpen(false)}>

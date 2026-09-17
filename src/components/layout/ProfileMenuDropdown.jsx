@@ -1,17 +1,26 @@
 import { navigateTo, normalizeAppRole } from "../../lib/router";
 import { Icon } from "../icons/Icon";
+import { DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+
+function MenuRow({ icon, children, onClick }) {
+  return (
+    <DropdownMenuItem
+      className="menu-hover-row w-full gap-2 rounded-xl px-3 py-2 font-semibold text-ink-700 focus:bg-black/5 focus:text-ink-700"
+      onClick={onClick}
+    >
+      <Icon name={icon} className="h-4 w-4" />
+      <span>{children}</span>
+    </DropdownMenuItem>
+  );
+}
 
 function ProfileMenuDropdown({
-  menuOpen,
   setMenuOpen,
-  profileMenuPanelRef,
   user,
   onSwitchRole,
   onLogout,
   onHelp
 }) {
-  if (!menuOpen) return null;
-
   const normalizedRoles = Array.from(new Set([
     ...(Array.isArray(user?.roles) ? user.roles : []),
     user?.role
@@ -49,163 +58,124 @@ function ProfileMenuDropdown({
 
   return (
     <>
-      <div ref={profileMenuPanelRef} className="fixed right-4 top-[72px] z-[60] w-[min(320px,calc(100vw-2rem))] rounded-2xl border border-black/10 bg-[#ffffff] p-3 shadow-[0_10px_28px_rgba(15,25,48,0.10)]">
-        <div className="space-y-2 text-sm">
-          {hasBrokerAccess ? (
-            <>
-              <button
-                type="button"
-                className="menu-hover-row inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5"
-                onClick={() => navigateToBrokerPath(willBeCompanyAdmin ? "/app/admin/annonser" : "/app/broker/objekt")}
-              >
-                <Icon name="building" className="h-4 w-4" />
-                <span>Dina objekt</span>
-              </button>
-              <button
-                type="button"
-                className="menu-hover-row inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5"
-                onClick={() => navigateToBrokerPath("/app/publish")}
-              >
-                <Icon name="plus" className="h-4 w-4" />
-                <span>Publicera annons</span>
-              </button>
-              <button
-                type="button"
-                className="menu-hover-row inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5"
-                onClick={() => navigateToBrokerPath(willBeCompanyAdmin ? "/app/admin/leads" : "/app/broker/leads")}
-              >
-                <Icon name="calendar" className="h-4 w-4" />
-                <span>Intresse och visningar</span>
-              </button>
-            </>
-          ) : null}
-          {hasBrokerAccess ? <div className="my-3 h-px bg-black/10" /> : null}
-          <button
-            type="button"
-            className="menu-hover-row inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5"
-            onClick={() => {
-              setMenuOpen(false);
-              navigateTo(profileBasePath);
-            }}
-          >
-            <Icon name="user" className="h-4 w-4" />
-            <span>Profil</span>
-          </button>
-          {hasCompanyAdminAccess && activeRole === "renter" ? (
-            <button
-              type="button"
-              className="menu-hover-row inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5"
-              onClick={async () => {
-                setMenuOpen(false);
-                await onSwitchRole?.("company_admin");
-                navigateTo("/app/admin");
-              }}
-            >
-              <Icon name="switchHorizontal" className="h-4 w-4" />
-              <span>Växla till Företag</span>
-            </button>
-          ) : null}
-          {!hasCompanyAdminAccess && hasBrokerAccess && activeRole === "renter" ? (
-            <button
-              type="button"
-              className="menu-hover-row inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5"
-              onClick={async () => {
-                setMenuOpen(false);
-                await onSwitchRole?.("broker");
-              }}
-            >
-              <Icon name="switchHorizontal" className="h-4 w-4" />
-              <span>Växla till hyresvärd</span>
-            </button>
-          ) : null}
-          <button
-            type="button"
-            className="menu-hover-row inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5"
-            onClick={() => {
-              setMenuOpen(false);
-              navigateTo(savedListingsPath);
-            }}
-          >
-            <Icon name="star" className="h-4 w-4" />
-            <span>Sparade objekt</span>
-          </button>
-          <button
-            type="button"
-            className="menu-hover-row inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5"
-            onClick={() => {
-              setMenuOpen(false);
-              navigateTo(savedSearchesPath);
-            }}
-          >
-            <Icon name="search" className="h-4 w-4" />
-            <span>Sparade sökningar</span>
-          </button>
-          <button
-            type="button"
-            className="menu-hover-row inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5"
-            onClick={() => {
-              setMenuOpen(false);
-              navigateTo("/app/settings");
-            }}
-          >
-            <Icon name="settingsGear" className="h-4 w-4" />
-            <span>Inställningar</span>
-          </button>
-          <div className="my-3 h-px bg-black/10" />
-          {isRenterMode && !hasBrokerAccess ? (
-            <button
-              type="button"
-              className="menu-hover-row inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5"
-              onClick={() => {
-                setMenuOpen(false);
-                navigateTo("/onboarding/publisher-profile?role=broker&intent=add-role");
-              }}
-            >
-              <Icon name="checkBadge" className="h-4 w-4" />
-              <span>Verifiera dig som mäklare</span>
-            </button>
-          ) : !isRenterMode ? (
-            <button
-              type="button"
-              className="menu-hover-row inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5"
-              onClick={() => {
-                setMenuOpen(false);
-                navigateTo("/app/publish");
-              }}
-            >
-              <Icon name="infoCircle" className="h-4 w-4" />
-              <span>För hyresvärdar</span>
-            </button>
-          ) : null}
-          <button
-            type="button"
-            className="menu-hover-row inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5"
-            onClick={() => {
-              setMenuOpen(false);
-              if (onHelp) {
-                onHelp();
-                return;
-              }
-              navigateTo("/#faq");
-            }}
-          >
-            <Icon name="support" className="h-4 w-4" />
-            <span>Hjälp</span>
-          </button>
-          <button
-            type="button"
-            className="menu-hover-row inline-flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-semibold text-ink-700 transition hover:bg-black/5"
-            onClick={async () => {
-              setMenuOpen(false);
-              await onLogout?.();
-              navigateTo("/", { replace: true });
-            }}
-          >
-            <Icon name="logout" className="h-4 w-4" />
-            <span>Logga ut</span>
-          </button>
-        </div>
-      </div>
+      {hasBrokerAccess ? (
+        <>
+          <MenuRow icon="building" onClick={() => navigateToBrokerPath(willBeCompanyAdmin ? "/app/admin/annonser" : "/app/broker/objekt")}>
+            Dina objekt
+          </MenuRow>
+          <MenuRow icon="plus" onClick={() => navigateToBrokerPath("/app/publish")}>
+            Publicera annons
+          </MenuRow>
+          <MenuRow icon="calendar" onClick={() => navigateToBrokerPath(willBeCompanyAdmin ? "/app/admin/leads" : "/app/broker/leads")}>
+            Intresse och visningar
+          </MenuRow>
+          <DropdownMenuSeparator className="my-3 bg-black/10" />
+        </>
+      ) : null}
+      <MenuRow
+        icon="user"
+        onClick={() => {
+          setMenuOpen(false);
+          navigateTo(profileBasePath);
+        }}
+      >
+        Profil
+      </MenuRow>
+      {hasCompanyAdminAccess && activeRole === "renter" ? (
+        <MenuRow
+          icon="switchHorizontal"
+          onClick={async () => {
+            setMenuOpen(false);
+            await onSwitchRole?.("company_admin");
+            navigateTo("/app/admin");
+          }}
+        >
+          Växla till Företag
+        </MenuRow>
+      ) : null}
+      {!hasCompanyAdminAccess && hasBrokerAccess && activeRole === "renter" ? (
+        <MenuRow
+          icon="switchHorizontal"
+          onClick={async () => {
+            setMenuOpen(false);
+            await onSwitchRole?.("broker");
+          }}
+        >
+          Växla till hyresvärd
+        </MenuRow>
+      ) : null}
+      <MenuRow
+        icon="star"
+        onClick={() => {
+          setMenuOpen(false);
+          navigateTo(savedListingsPath);
+        }}
+      >
+        Sparade objekt
+      </MenuRow>
+      <MenuRow
+        icon="search"
+        onClick={() => {
+          setMenuOpen(false);
+          navigateTo(savedSearchesPath);
+        }}
+      >
+        Sparade sökningar
+      </MenuRow>
+      <MenuRow
+        icon="settingsGear"
+        onClick={() => {
+          setMenuOpen(false);
+          navigateTo("/app/settings");
+        }}
+      >
+        Inställningar
+      </MenuRow>
+      <DropdownMenuSeparator className="my-3 bg-black/10" />
+      {isRenterMode && !hasBrokerAccess ? (
+        <MenuRow
+          icon="checkBadge"
+          onClick={() => {
+            setMenuOpen(false);
+            navigateTo("/onboarding/publisher-profile?role=broker&intent=add-role");
+          }}
+        >
+          Verifiera dig som mäklare
+        </MenuRow>
+      ) : !isRenterMode ? (
+        <MenuRow
+          icon="infoCircle"
+          onClick={() => {
+            setMenuOpen(false);
+            navigateTo("/app/publish");
+          }}
+        >
+          För hyresvärdar
+        </MenuRow>
+      ) : null}
+      <MenuRow
+        icon="support"
+        onClick={() => {
+          setMenuOpen(false);
+          if (onHelp) {
+            onHelp();
+            return;
+          }
+          navigateTo("/#faq");
+        }}
+      >
+        Hjälp
+      </MenuRow>
+      <MenuRow
+        icon="logout"
+        onClick={async () => {
+          setMenuOpen(false);
+          await onLogout?.();
+          navigateTo("/", { replace: true });
+        }}
+      >
+        Logga ut
+      </MenuRow>
     </>
   );
 }

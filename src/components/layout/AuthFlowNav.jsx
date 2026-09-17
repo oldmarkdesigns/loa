@@ -1,10 +1,11 @@
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { useAuth } from "@workos-inc/authkit-react";
 import MarketingNavLinks from "./MarketingNavLinks";
 import { navigateTo } from "../../lib/router";
 import { deriveNavbarRoleState } from "../../lib/navbarRoles";
 import { LockIcon, MessageSquareIcon, UserIcon } from "../icons/UiIcons";
 import ProfileMenuDropdown from "./ProfileMenuDropdown";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 function loginReturnTo() {
   const requested = new URLSearchParams(window.location.search).get("returnTo");
@@ -14,7 +15,6 @@ function loginReturnTo() {
 function AuthFlowNav({ user, onSwitchRole, onLogout }) {
   const { signIn } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
-  const profileMenuPanelRef = useRef(null);
   const { hasCompanyAdminRole } = deriveNavbarRoleState(user);
   const initials = useMemo(() => {
     const source = String(user?.name || "AA").trim();
@@ -56,18 +56,29 @@ function AuthFlowNav({ user, onSwitchRole, onLogout }) {
                   </button>
                 ) : null}
                 {!hasCompanyAdminRole ? (
-                  <button
-                    type="button"
-                    className="inline-flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-black/20 bg-[#ffffff] text-sm font-semibold text-ink-700"
-                    onClick={() => setMenuOpen((value) => !value)}
-                    aria-label="Öppna profilmeny"
-                    aria-expanded={menuOpen}
-                    aria-haspopup="menu"
-                  >
-                    {user?.profile?.avatarUrl ? (
-                      <img src={user.profile.avatarUrl} alt={user?.name || "Profil"} className="h-full w-full object-cover" />
-                    ) : initials}
-                  </button>
+                  <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+                    <DropdownMenuTrigger
+                      render={
+                        <button
+                          type="button"
+                          className="inline-flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-black/20 bg-[#ffffff] text-sm font-semibold text-ink-700"
+                          aria-label="Öppna profilmeny"
+                        />
+                      }
+                    >
+                      {user?.profile?.avatarUrl ? (
+                        <img src={user.profile.avatarUrl} alt={user?.name || "Profil"} className="h-full w-full object-cover" />
+                      ) : initials}
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" sideOffset={8} className="w-[min(320px,calc(100vw-2rem))] rounded-2xl border border-black/10 p-3 shadow-[0_10px_28px_rgba(15,25,48,0.10)]">
+                      <ProfileMenuDropdown
+                        setMenuOpen={setMenuOpen}
+                        user={user}
+                        onSwitchRole={onSwitchRole}
+                        onLogout={onLogout}
+                      />
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 ) : null}
               </>
             ) : (
@@ -98,14 +109,6 @@ function AuthFlowNav({ user, onSwitchRole, onLogout }) {
           </div>
         </div>
       </header>
-      <ProfileMenuDropdown
-        menuOpen={menuOpen}
-        setMenuOpen={setMenuOpen}
-        profileMenuPanelRef={profileMenuPanelRef}
-        user={user}
-        onSwitchRole={onSwitchRole}
-        onLogout={onLogout}
-      />
     </>
   );
 }
