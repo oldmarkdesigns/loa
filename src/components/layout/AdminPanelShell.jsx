@@ -1,6 +1,8 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { navigateTo, routeMatches } from "../../lib/router";
 import { LogoutIcon, PanelLeftIcon, XIcon } from "../icons/UiIcons";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 
 function PanelSidebarNav({ pathname, navItems, rootPath, onNavigate, badges, collapsed = false }) {
   const navRef = useRef(null);
@@ -87,16 +89,18 @@ function PanelSidebar({ pathname, navItems, bottomNavItems, onNavigate, onLogout
         <PanelSidebarNav pathname={pathname} navItems={navItems} rootPath={rootPath} onNavigate={onNavigate} badges={badges} collapsed={collapsed} />
         {onToggleCollapsed ? (
           <div className={`mt-2 flex ${collapsed ? "justify-center" : "justify-end"}`}>
-            <button
+            <Button
               type="button"
-              className="inline-flex h-9 w-9 min-h-0 shrink-0 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] text-ink-700 transition hover:border-[#0b0a0e]/25"
+              variant="outline"
+              size="icon"
+              className="h-9 w-9 rounded-full border-black/10 text-ink-700 hover:border-[#0b0a0e]/25 hover:bg-transparent"
               onClick={onToggleCollapsed}
               aria-label={collapsed ? "Expandera meny" : "Fäll ihop meny"}
               aria-pressed={collapsed}
               title={collapsed ? "Expandera meny" : "Fäll ihop meny"}
             >
               <PanelLeftIcon className={`admin-sidebar-toggle-icon h-4 w-4 ${collapsed ? "rotate-180" : ""}`} />
-            </button>
+            </Button>
           </div>
         ) : null}
       </div>
@@ -177,14 +181,15 @@ function AdminPanelShell({ pathname, navItems, bottomNavItems, sectionTitle, onL
       >
         <div className="sticky top-0 z-10 shrink-0 border-b border-black/10 bg-[#ffffff] px-4 py-2.5 lg:hidden">
           <div className="flex items-center justify-between gap-3">
-            <button
+            <Button
               type="button"
-              className="inline-flex min-h-0 items-center gap-1.5 rounded-full border border-black/20 bg-[#ffffff] px-3 py-2 text-xs font-semibold text-ink-700"
+              variant="outline"
+              className="h-auto gap-1.5 rounded-full border-black/20 px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-transparent"
               onClick={() => setMobileSidebarOpen(true)}
             >
               <PanelLeftIcon className="h-4 w-4" />
               Meny
-            </button>
+            </Button>
             <p className="text-sm font-semibold text-ink-800">{sectionTitle}</p>
           </div>
         </div>
@@ -196,32 +201,32 @@ function AdminPanelShell({ pathname, navItems, bottomNavItems, sectionTitle, onL
         )}
       </div>
 
-      {mobileSidebarOpen ? (
-        <div className="fixed inset-0 z-[70] bg-transparent lg:hidden" onClick={() => setMobileSidebarOpen(false)}>
-          <div className="h-full w-[min(88vw,320px)] border-r border-black/10 bg-[#ffffff]" onClick={(event) => event.stopPropagation()}>
-            <div className="flex items-center justify-end border-b border-black/10 p-3">
-              <button
-                type="button"
-                className="inline-flex h-9 w-9 min-h-0 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] text-ink-700"
-                onClick={() => setMobileSidebarOpen(false)}
-              >
-                <XIcon className="h-4 w-4" />
-              </button>
-            </div>
-            <PanelSidebar
-              pathname={pathname}
-              navItems={navItems}
-              bottomNavItems={bottomNavItems}
-              onNavigate={(nextPath) => {
-                setMobileSidebarOpen(false);
-                navigateTo(nextPath);
-              }}
-              onLogout={onLogout}
-              badges={badges}
-            />
+      <Sheet open={mobileSidebarOpen} onOpenChange={setMobileSidebarOpen}>
+        <SheetContent side="left" showCloseButton={false} className="w-[min(88vw,320px)] max-w-none gap-0 bg-[#ffffff] p-0">
+          <div className="flex items-center justify-end border-b border-black/10 p-3">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon-sm"
+              className="h-9 w-9 rounded-full border-black/10 text-ink-700 hover:bg-transparent"
+              onClick={() => setMobileSidebarOpen(false)}
+            >
+              <XIcon className="h-4 w-4" />
+            </Button>
           </div>
-        </div>
-      ) : null}
+          <PanelSidebar
+            pathname={pathname}
+            navItems={navItems}
+            bottomNavItems={bottomNavItems}
+            onNavigate={(nextPath) => {
+              setMobileSidebarOpen(false);
+              navigateTo(nextPath);
+            }}
+            onLogout={onLogout}
+            badges={badges}
+          />
+        </SheetContent>
+      </Sheet>
     </section>
   );
 }
