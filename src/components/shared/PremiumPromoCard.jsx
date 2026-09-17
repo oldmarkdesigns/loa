@@ -1,3 +1,5 @@
+import { Button } from "@/components/ui/button";
+
 function PremiumPromoCard({ className = "", onUpgrade, buttonLabel = "Uppgradera (demo)" }) {
   const cardClassName = ["rounded-3xl border border-black/10 bg-[#ffffff] p-5", className].filter(Boolean).join(" ");
 
@@ -10,13 +12,13 @@ function PremiumPromoCard({ className = "", onUpgrade, buttonLabel = "Uppgradera
         </span>
       </p>
       <p className="mt-3 text-sm text-ink-600">Premiumprofiler får i snitt fler relevanta förfrågningar och snabbare återkoppling.</p>
-      <button
+      <Button
         type="button"
-        className="mt-4 rounded-full border border-[#0b0a0e] bg-[#ffffff] px-4 py-2.5 text-sm font-semibold text-[#0b0a0e]"
+        className="mt-4 h-auto rounded-full border-[#0b0a0e] bg-[#ffffff] px-4 py-2.5 text-sm font-semibold text-[#0b0a0e] hover:bg-[#ffffff]"
         onClick={onUpgrade}
       >
         {buttonLabel}
-      </button>
+      </Button>
     </article>
   );
 }
