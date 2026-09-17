@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { formatSek } from "../../lib/formatters";
 import { normalizeAppRole } from "../../lib/router";
 import {
@@ -11,6 +11,9 @@ import {
   SparklesIcon,
   StarIcon
 } from "../../components/icons/UiIcons";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 const MESSAGE_LISTING = {
   id: "msg-listing-1",
@@ -235,23 +238,6 @@ function MessagesPage({ app }) {
   const [filter, setFilter] = useState("all");
   const [favoriteConversationIds, setFavoriteConversationIds] = useState(() => new Set());
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const suggestionsButtonRef = useRef(null);
-  const suggestionsPanelRef = useRef(null);
-
-  useEffect(() => {
-    function onPointerDown(event) {
-      if (
-        suggestionsButtonRef.current
-        && !suggestionsButtonRef.current.contains(event.target)
-        && suggestionsPanelRef.current
-        && !suggestionsPanelRef.current.contains(event.target)
-      ) {
-        setShowSuggestions(false);
-      }
-    }
-    window.addEventListener("pointerdown", onPointerDown);
-    return () => window.removeEventListener("pointerdown", onPointerDown);
-  }, []);
 
   useEffect(() => {
     setShowSuggestions(false);
@@ -335,8 +321,8 @@ function MessagesPage({ app }) {
               </h1>
               <label className="relative mt-4 block">
                 <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
-                <input
-                  className="field !rounded-2xl !bg-[#ffffff] pl-9"
+                <Input
+                  className="rounded-2xl bg-[#ffffff] pl-9"
                   placeholder={isBrokerView ? "Sök namn, bolag eller annons" : "Sök mäklare eller annons"}
                   value={searchQuery}
                   onChange={(event) => setSearchQuery(event.target.value)}
@@ -346,15 +332,16 @@ function MessagesPage({ app }) {
                 {filterTabs.map((tab) => {
                   const active = filter === tab.key;
                   return (
-                    <button
+                    <Button
                       key={tab.key}
                       type="button"
-                      onClick={() => setFilter(tab.key)}
-                      className={`inline-flex min-h-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold transition ${
+                      variant="outline"
+                      className={`h-auto gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold ${
                         active
-                          ? "bg-[#0b0a0e] text-white"
-                          : "border border-black/10 bg-[#ffffff] text-ink-700 hover:border-[#0b0a0e]"
+                          ? "border-transparent bg-[#0b0a0e] text-white hover:bg-[#0b0a0e]/90"
+                          : "border-black/10 text-ink-700 hover:border-[#0b0a0e] hover:bg-transparent"
                       }`}
+                      onClick={() => setFilter(tab.key)}
                     >
                       {tab.label}
                       <span className={`inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] ${
@@ -362,7 +349,7 @@ function MessagesPage({ app }) {
                       }`}>
                         {tab.count}
                       </span>
-                    </button>
+                    </Button>
                   );
                 })}
               </div>
@@ -455,38 +442,22 @@ function MessagesPage({ app }) {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      {isBrokerView ? (
-                        <>
-                          <button type="button" className="inline-flex min-h-0 items-center gap-1.5 rounded-full border border-black/10 bg-[#ffffff] px-3 py-2 text-xs font-semibold text-ink-800">
-                            <CalendarIcon className="h-3.5 w-3.5" />
-                            Visning att boka
-                          </button>
-                          <button
-                            type="button"
-                            onClick={toggleActiveConversationFavorite}
-                            className="inline-flex h-10 w-10 min-h-0 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] p-0 text-ink-800"
-                          >
-                            <StarIcon className={`h-3.5 w-3.5 ${activeConversationIsFavorite ? "fill-[#0b0a0e] text-[#0b0a0e]" : "text-ink-500"}`} />
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <button type="button" className="inline-flex min-h-0 items-center gap-1.5 rounded-full border border-black/10 bg-[#ffffff] px-3 py-2 text-xs font-semibold text-ink-800">
-                            <CalendarIcon className="h-3.5 w-3.5" />
-                            Svara på tider
-                          </button>
-                          <button
-                            type="button"
-                            onClick={toggleActiveConversationFavorite}
-                            className="inline-flex h-10 w-10 min-h-0 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] p-0 text-ink-800"
-                          >
-                            <StarIcon className={`h-3.5 w-3.5 ${activeConversationIsFavorite ? "fill-[#0b0a0e] text-[#0b0a0e]" : "text-ink-500"}`} />
-                          </button>
-                        </>
-                      )}
-                      <button type="button" className="inline-flex h-10 w-10 min-h-0 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] text-ink-700">
+                      <Button type="button" variant="outline" className="h-auto gap-1.5 rounded-full border-black/10 px-3 py-2 text-xs font-semibold text-ink-800 hover:bg-transparent">
+                        <CalendarIcon className="h-3.5 w-3.5" />
+                        {isBrokerView ? "Visning att boka" : "Svara på tider"}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="h-10 w-10 rounded-full border-black/10 text-ink-800 hover:bg-transparent"
+                        onClick={toggleActiveConversationFavorite}
+                      >
+                        <StarIcon className={`h-3.5 w-3.5 ${activeConversationIsFavorite ? "fill-[#0b0a0e] text-[#0b0a0e]" : "text-ink-500"}`} />
+                      </Button>
+                      <Button type="button" variant="outline" size="icon" className="h-10 w-10 rounded-full border-black/10 text-ink-700 hover:bg-transparent">
                         <MoreHorizontalIcon className="h-4 w-4" />
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </header>
@@ -540,74 +511,77 @@ function MessagesPage({ app }) {
 
                 <footer className="border-t border-black/10 bg-[#ffffff] px-4 py-4 sm:px-5">
                   <div className="mx-auto flex max-w-3xl items-center gap-2">
-                    <div ref={suggestionsButtonRef} className="relative inline-flex shrink-0">
-                      <button
-                        type="button"
-                        aria-label="Föreslagna svar"
-                        aria-expanded={showSuggestions}
-                        onClick={() => setShowSuggestions((value) => !value)}
-                        className={`inline-flex h-11 w-11 min-h-0 items-center justify-center rounded-full border outline-none transition [-webkit-tap-highlight-color:transparent] focus:outline-none focus-visible:outline-none active:bg-black/10 ${
-                          showSuggestions ? "border-[#0b0a0e] bg-black/5 text-[#0b0a0e]" : "border-black/10 bg-[#fbfbfa] text-ink-500 hover:border-[#0b0a0e]/25"
-                        }`}
+                    <Popover open={showSuggestions} onOpenChange={setShowSuggestions}>
+                      <PopoverTrigger
+                        render={
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            aria-label="Föreslagna svar"
+                            className={`h-11 w-11 rounded-full ${
+                              showSuggestions ? "border-[#0b0a0e] bg-black/5 text-[#0b0a0e] hover:bg-black/5" : "border-black/10 bg-[#fbfbfa] text-ink-500 hover:border-[#0b0a0e]/25 hover:bg-[#fbfbfa]"
+                            }`}
+                          />
+                        }
                       >
                         <SparklesIcon className="h-4 w-4" />
-                      </button>
-
-                      {showSuggestions ? (
-                        <div
-                          ref={suggestionsPanelRef}
-                          className="absolute bottom-full left-0 z-20 mb-3 w-[320px] max-h-[360px] overflow-y-auto rounded-3xl border border-black/10 bg-[#ffffff] p-3 shadow-[0_20px_48px_rgba(15,25,48,0.16)]"
-                        >
-                          <div className="flex items-center gap-2 px-1">
-                            <SparklesIcon className="h-4 w-4 text-[#0b0a0e]" />
-                            <h3 className="text-sm font-semibold text-[#0b0a0e]">Föreslagna svar</h3>
-                          </div>
-                          <p className="mt-1 px-1 text-xs text-ink-600">Baserat på senaste meddelandet</p>
-                          <div className="mt-2 space-y-2">
-                            {activeConversation?.suggestions?.length ? activeConversation.suggestions.map((suggestion) => (
-                              <button
-                                key={suggestion.id}
-                                type="button"
-                                onClick={() => {
-                                  useSuggestion(suggestion.text);
-                                  setShowSuggestions(false);
-                                }}
-                                className="message-suggestion-card w-full border border-black/10 bg-[#fbfbfa] p-3 text-left transition hover:bg-[#ffffff]"
-                              >
-                                <div className="flex items-center justify-between gap-2">
-                                  <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide ${suggestionToneClass(suggestion.tone)}`}>
-                                    {suggestion.tag}
-                                  </span>
-                                  <span className="text-[11px] text-ink-500">{suggestion.label}</span>
-                                </div>
-                                <p className="mt-2 text-sm leading-relaxed text-ink-800">{suggestion.text}</p>
-                              </button>
-                            )) : (
-                              <p className="px-1 py-2 text-sm text-ink-500">Inga förslag just nu.</p>
-                            )}
-                          </div>
+                      </PopoverTrigger>
+                      <PopoverContent
+                        side="top"
+                        align="start"
+                        className="w-[320px] max-h-[360px] overflow-y-auto rounded-3xl border border-black/10 p-3 shadow-[0_20px_48px_rgba(15,25,48,0.16)]"
+                      >
+                        <div className="flex items-center gap-2 px-1">
+                          <SparklesIcon className="h-4 w-4 text-[#0b0a0e]" />
+                          <h3 className="text-sm font-semibold text-[#0b0a0e]">Föreslagna svar</h3>
                         </div>
-                      ) : null}
-                    </div>
+                        <p className="mt-1 px-1 text-xs text-ink-600">Baserat på senaste meddelandet</p>
+                        <div className="mt-2 space-y-2">
+                          {activeConversation?.suggestions?.length ? activeConversation.suggestions.map((suggestion) => (
+                            <button
+                              key={suggestion.id}
+                              type="button"
+                              onClick={() => {
+                                useSuggestion(suggestion.text);
+                                setShowSuggestions(false);
+                              }}
+                              className="message-suggestion-card w-full border border-black/10 bg-[#fbfbfa] p-3 text-left transition hover:bg-[#ffffff]"
+                            >
+                              <div className="flex items-center justify-between gap-2">
+                                <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide ${suggestionToneClass(suggestion.tone)}`}>
+                                  {suggestion.tag}
+                                </span>
+                                <span className="text-[11px] text-ink-500">{suggestion.label}</span>
+                              </div>
+                              <p className="mt-2 text-sm leading-relaxed text-ink-800">{suggestion.text}</p>
+                            </button>
+                          )) : (
+                            <p className="px-1 py-2 text-sm text-ink-500">Inga förslag just nu.</p>
+                          )}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
 
                     <div className="flex min-w-0 flex-1 items-center gap-3 rounded-[28px] border border-black/10 bg-[#fbfbfa] p-2">
-                      <button type="button" className="inline-flex h-9 w-9 min-h-0 items-center justify-center rounded-full text-ink-500">
+                      <Button type="button" variant="ghost" size="icon" className="h-9 w-9 rounded-full text-ink-500 hover:bg-transparent">
                         <PaperclipIcon className="h-4 w-4" />
-                      </button>
-                      <input
-                        className="min-w-0 flex-1 bg-transparent text-sm text-ink-900 outline-none placeholder:text-ink-400"
+                      </Button>
+                      <Input
+                        className="h-auto min-w-0 flex-1 border-none bg-transparent px-0 shadow-none focus-visible:ring-0"
                         placeholder={isBrokerView ? "Skriv ett svar..." : "Skriv ett meddelande..."}
                         value={draft}
                         onChange={(event) => setDraft(event.target.value)}
                       />
-                      <button
+                      <Button
                         type="button"
+                        size="icon"
                         aria-label="Skicka"
+                        className="h-10 w-10 rounded-full bg-[#0b0a0e] hover:bg-[#0b0a0e]/90"
                         onClick={sendDraft}
-                        className="inline-flex h-10 w-10 min-h-0 items-center justify-center rounded-full bg-[#0b0a0e] text-white"
                       >
                         <SendHorizontalIcon className="h-4 w-4" />
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </footer>
