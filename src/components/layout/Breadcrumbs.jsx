@@ -1,32 +1,39 @@
 import { navigateTo } from "../../lib/router";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator
+} from "@/components/ui/breadcrumb";
 
 function Breadcrumbs({ items = [], className = "" }) {
   if (!Array.isArray(items) || items.length === 0) return null;
 
   return (
-    <nav aria-label="Brödsmulor" className={className}>
-      <ol className="flex flex-wrap items-center gap-1.5 text-xs font-semibold text-ink-700">
+    <Breadcrumb className={className}>
+      <BreadcrumbList className="flex-nowrap gap-1.5 text-xs font-semibold text-ink-700 sm:gap-1.5">
         {items.map((item, index) => {
           const isLast = index === items.length - 1;
           return (
-            <li key={`${item.label}-${index}`} className="inline-flex items-center gap-1.5">
+            <BreadcrumbItem key={`${item.label}-${index}`} className="gap-1.5">
               {item.to && !isLast ? (
-                <button
-                  type="button"
-                  className="min-h-0 p-0 text-xs font-semibold text-ink-700 hover:text-black"
-                  onClick={() => navigateTo(item.to)}
+                <BreadcrumbLink
+                  render={<button type="button" onClick={() => navigateTo(item.to)} />}
+                  className="text-xs font-semibold text-ink-700 hover:text-black"
                 >
                   {item.label}
-                </button>
+                </BreadcrumbLink>
               ) : (
-                <span className="font-semibold text-ink-700">{item.label}</span>
+                <BreadcrumbPage className="text-xs font-semibold text-ink-700">{item.label}</BreadcrumbPage>
               )}
-              {!isLast ? <span aria-hidden="true" className="text-ink-500">/</span> : null}
-            </li>
+              {!isLast ? <BreadcrumbSeparator className="text-ink-500">/</BreadcrumbSeparator> : null}
+            </BreadcrumbItem>
           );
         })}
-      </ol>
-    </nav>
+      </BreadcrumbList>
+    </Breadcrumb>
   );
 }
 

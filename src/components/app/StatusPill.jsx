@@ -1,3 +1,5 @@
+import { Badge } from "@/components/ui/badge";
+
 const TONE_CLASSES = {
   emerald: "border-emerald-200 bg-emerald-50 text-emerald-800",
   amber: "border-amber-200 bg-amber-50 text-amber-800",
@@ -69,9 +71,12 @@ export function prospectStatusOptions() {
 function StatusPill({ status, variant = "lead", className = "" }) {
   const { label, tone } = metaFor(status, variant);
   return (
-    <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${TONE_CLASSES[tone]} ${className}`}>
+    <Badge
+      variant="outline"
+      className={`h-auto rounded-full border px-2.5 py-0.5 text-xs font-semibold ${TONE_CLASSES[tone]} ${className}`}
+    >
       {label}
-    </span>
+    </Badge>
   );
 }
 

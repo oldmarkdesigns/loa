@@ -1,3 +1,5 @@
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 function PresetTextField({
   value,
   onChange,
@@ -7,18 +9,16 @@ function PresetTextField({
   const selectedPreset = presets.includes(value) ? value : "";
 
   return (
-    <select
-      className="field"
-      value={selectedPreset}
-      onChange={(event) => {
-        onChange(event.target.value);
-      }}
-    >
-      <option value="">{selectPlaceholder}</option>
-      {presets.map((item) => (
-        <option key={item} value={item}>{item}</option>
-      ))}
-    </select>
+    <Select value={selectedPreset} onValueChange={onChange}>
+      <SelectTrigger className="w-full">
+        <SelectValue placeholder={selectPlaceholder} />
+      </SelectTrigger>
+      <SelectContent>
+        {presets.map((item) => (
+          <SelectItem key={item} value={item}>{item}</SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }
 

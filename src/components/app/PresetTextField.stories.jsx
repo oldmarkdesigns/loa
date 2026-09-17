@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { expect } from "storybook/test";
+import { expect, within } from "storybook/test";
 import PresetTextField from "./PresetTextField";
 
 const PRESETS = ["Kontor", "Coworking", "Lager", "Butik"];
@@ -20,9 +20,12 @@ export default meta;
 export const Default = {
   args: { presets: PRESETS, value: "", selectPlaceholder: "Välj lokaltyp" },
   play: async ({ canvas, userEvent }) => {
-    const select = canvas.getByRole("combobox");
-    await userEvent.selectOptions(select, "Coworking");
-    await expect(select).toHaveValue("Coworking");
+    const trigger = canvas.getByRole("combobox");
+    await userEvent.click(trigger);
+    // The listbox renders in a portal outside canvasElement, so query the document.
+    const option = await within(document.body).findByRole("option", { name: "Coworking" });
+    await userEvent.click(option);
+    await expect(trigger).toHaveTextContent("Coworking");
   }
 };
 
