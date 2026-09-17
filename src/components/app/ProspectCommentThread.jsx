@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { formatDate } from "../../lib/formatters";
 import { SendHorizontalIcon } from "../icons/UiIcons";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 function ProspectCommentThread({
   sections = [],
@@ -28,22 +30,28 @@ function ProspectCommentThread({
   return (
     <div className="flex h-full flex-col">
       <div className="flex flex-wrap gap-1.5 border-b border-black/10 pb-3">
-        <button
+        <Button
           type="button"
+          variant="outline"
+          className={`h-auto rounded-2xl border-ink-200 px-3 py-1 text-xs font-semibold text-ink-700 transition ${
+            activeSectionId === "general" ? "border-[#0b0a0e] bg-[#0b0a0e] text-white hover:bg-[#0b0a0e]/90" : ""
+          }`}
           onClick={() => setActiveSectionId("general")}
-          className={`chip transition ${activeSectionId === "general" ? "border-[#0b0a0e] bg-[#0b0a0e] text-white" : ""}`}
         >
           Allmänt
-        </button>
+        </Button>
         {sections.map((section) => (
-          <button
+          <Button
             key={section.id}
             type="button"
+            variant="outline"
+            className={`h-auto rounded-2xl border-ink-200 px-3 py-1 text-xs font-semibold text-ink-700 transition ${
+              activeSectionId === section.id ? "border-[#0b0a0e] bg-[#0b0a0e] text-white hover:bg-[#0b0a0e]/90" : ""
+            }`}
             onClick={() => setActiveSectionId(section.id)}
-            className={`chip transition ${activeSectionId === section.id ? "border-[#0b0a0e] bg-[#0b0a0e] text-white" : ""}`}
           >
             {section.title || "Sektion"}
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -67,23 +75,21 @@ function ProspectCommentThread({
 
       <form className="shrink-0 space-y-2 border-t border-black/10 pt-3" onSubmit={handleSubmit}>
         {requireGuestName ? (
-          <input
-            className="field"
+          <Input
             placeholder="Ditt namn"
             value={guestName}
             onChange={(event) => onGuestNameChange?.(event.target.value)}
           />
         ) : null}
         <div className="flex gap-2">
-          <input
-            className="field"
+          <Input
             placeholder={`Kommentera "${activeSection?.title || "Allmänt"}"...`}
             value={body}
             onChange={(event) => setBody(event.target.value)}
           />
-          <button type="submit" className="btn-primary shrink-0 px-4" disabled={!canSubmit || pending}>
+          <Button type="submit" size="icon" className="shrink-0" disabled={!canSubmit || pending} aria-label="Skicka kommentar">
             <SendHorizontalIcon className="h-4 w-4" />
-          </button>
+          </Button>
         </div>
       </form>
     </div>
