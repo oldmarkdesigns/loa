@@ -1,7 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { CameraIcon, XIcon } from "../icons/UiIcons";
+import { useMemo, useRef, useState } from "react";
+import { CameraIcon } from "../icons/UiIcons";
 import { parseAmenities } from "../../lib/formatters";
 import { amenityOptions, listFromDelimitedValue, normalizeAmenity } from "../../lib/profileHelpers";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 
 function buildDraft(listing) {
   return {
@@ -120,26 +124,26 @@ export function ListingEditorSections({ listing, editor }) {
         <div className="mt-4 grid gap-3">
           <label className="block text-sm font-medium text-ink-700">
             Titel
-            <input className="field mt-1" value={draft.title} onChange={(event) => setDraft((prev) => ({ ...prev, title: event.target.value }))} />
+            <Input className="mt-1" value={draft.title} onChange={(event) => setDraft((prev) => ({ ...prev, title: event.target.value }))} />
           </label>
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="block text-sm font-medium text-ink-700">
               Område
-              <input className="field mt-1" value={draft.district} onChange={(event) => setDraft((prev) => ({ ...prev, district: event.target.value }))} />
+              <Input className="mt-1" value={draft.district} onChange={(event) => setDraft((prev) => ({ ...prev, district: event.target.value }))} />
             </label>
             <label className="block text-sm font-medium text-ink-700">
               Adress
-              <input className="field mt-1" value={draft.address} onChange={(event) => setDraft((prev) => ({ ...prev, address: event.target.value }))} />
+              <Input className="mt-1" value={draft.address} onChange={(event) => setDraft((prev) => ({ ...prev, address: event.target.value }))} />
             </label>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="block text-sm font-medium text-ink-700">
               Storlek (kvm)
-              <input className="field mt-1" type="number" min="0" value={draft.sizeSqm} onChange={(event) => setDraft((prev) => ({ ...prev, sizeSqm: event.target.value }))} />
+              <Input className="mt-1" type="number" min="0" value={draft.sizeSqm} onChange={(event) => setDraft((prev) => ({ ...prev, sizeSqm: event.target.value }))} />
             </label>
             <label className="block text-sm font-medium text-ink-700">
               Pris (kr/mån)
-              <input className="field mt-1" type="number" min="0" value={draft.priceMonthly} onChange={(event) => setDraft((prev) => ({ ...prev, priceMonthly: event.target.value }))} />
+              <Input className="mt-1" type="number" min="0" value={draft.priceMonthly} onChange={(event) => setDraft((prev) => ({ ...prev, priceMonthly: event.target.value }))} />
             </label>
           </div>
         </div>
@@ -154,17 +158,18 @@ export function ListingEditorSections({ listing, editor }) {
             const Icon = option.icon;
             const active = selectedAmenities.some((item) => normalizeAmenity(item) === normalizeAmenity(option.value));
             return (
-              <button
+              <Button
                 key={option.value}
                 type="button"
-                className={`inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border px-3.5 py-2.5 text-sm font-semibold transition ${
-                  active ? "border-[#0b0a0e] bg-[#0b0a0e] text-white" : "border-black/10 bg-[#ffffff] text-ink-700 hover:bg-[#ffffff]"
+                variant="outline"
+                className={`h-auto shrink-0 gap-2 whitespace-nowrap rounded-full px-3.5 py-2.5 text-sm font-semibold ${
+                  active ? "border-[#0b0a0e] bg-[#0b0a0e] text-white hover:bg-[#0b0a0e]/90" : "border-black/10 text-ink-700 hover:bg-[#ffffff]"
                 }`}
                 onClick={() => toggleAmenity(option.value)}
               >
                 <Icon className="h-[18px] w-[18px] shrink-0" />
                 {option.label}
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -182,14 +187,16 @@ export function ListingEditorSections({ listing, editor }) {
         />
         <div className="relative mt-3">
           <img src={draft.image || "/object-images/object-1.jpeg"} alt={draft.title} className="h-56 w-full rounded-xl border border-black/10 object-cover sm:h-64" />
-          <button
+          <Button
             type="button"
-            className="absolute right-2 top-2 inline-flex h-9 w-9 min-h-0 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] text-ink-700 shadow-[0_1px_2px_rgba(15,25,48,0.15)] transition hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
+            variant="outline"
+            size="icon"
+            className="absolute right-2 top-2 h-9 w-9 rounded-full border-black/10 text-ink-700 shadow-[0_1px_2px_rgba(15,25,48,0.15)] hover:border-[#0b0a0e] hover:bg-[#ffffff] hover:text-[#0b0a0e]"
             aria-label="Byt bild"
             onClick={() => imageInputRef.current?.click()}
           >
             <CameraIcon className="h-4 w-4" />
-          </button>
+          </Button>
         </div>
         <div className="mt-2 grid grid-cols-4 gap-1.5">
           {[0, 1, 2, 3].map((index) => (
@@ -197,17 +204,17 @@ export function ListingEditorSections({ listing, editor }) {
           ))}
         </div>
         {listing.status !== "active" ? (
-          <button type="button" className="btn-secondary mt-3 px-3 py-2 text-sm" onClick={publish}>
+          <Button type="button" variant="secondary" className="mt-3 h-auto px-3 py-2 text-sm" onClick={publish}>
             Publicera objekt
-          </button>
+          </Button>
         ) : null}
       </section>
 
       <section className="rounded-2xl border border-black/10 bg-[#ffffff] p-4 sm:p-5">
         <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">Om lokalen</p>
         <h2 className="mt-0.5 text-lg font-semibold text-[#0b0a0e]">Beskrivning</h2>
-        <textarea
-          className="field mt-3 min-h-32"
+        <Textarea
+          className="mt-3 min-h-32"
           value={draft.description}
           onChange={(event) => setDraft((prev) => ({ ...prev, description: event.target.value }))}
           placeholder="Beskriv lokalen, läget och vad som gör den attraktiv."
@@ -220,75 +227,64 @@ export function ListingEditorSections({ listing, editor }) {
 export function ListingEditorFooterActions({ listing, editor, onClosed }) {
   return (
     <>
-      <button type="button" className="btn-secondary px-4 py-2 text-sm" onClick={editor.toggleStatus}>
+      <Button type="button" variant="secondary" className="h-auto px-4 py-2 text-sm" onClick={editor.toggleStatus}>
         {listing.status === "active" ? "Dölj objekt" : "Aktivera objekt"}
-      </button>
-      <button
+      </Button>
+      <Button
         type="button"
-        className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-100"
+        variant="outline"
+        className="h-auto rounded-xl border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-100 hover:text-rose-700"
         onClick={async () => {
           await editor.removeListing();
           onClosed?.();
         }}
       >
         Radera objekt
-      </button>
-      <button type="button" className="btn-primary px-4 py-2 text-sm" onClick={editor.saveChanges} disabled={editor.saving}>
+      </Button>
+      <Button type="button" className="h-auto px-4 py-2 text-sm" onClick={editor.saveChanges} disabled={editor.saving}>
         {editor.saving ? "Sparar..." : "Spara ändringar"}
-      </button>
+      </Button>
     </>
   );
 }
 
 function ListingEditorOverlay({ listing, app, onClose }) {
   const editor = useListingEditorState(listing, app);
-
-  useEffect(() => {
-    function onEscape(event) {
-      if (event.key === "Escape") onClose?.();
-    }
-    window.addEventListener("keydown", onEscape);
-    return () => window.removeEventListener("keydown", onEscape);
-  }, [onClose]);
+  const [open, setOpen] = useState(true);
 
   return (
-    <div
-      className="fixed inset-0 z-[90] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
-      onClick={onClose}
+    <Dialog
+      open={open}
+      onOpenChange={setOpen}
+      onOpenChangeComplete={(isOpen) => {
+        if (!isOpen) onClose?.();
+      }}
     >
-      <div
-        className="flex max-h-[90vh] w-full max-w-[1000px] flex-col overflow-hidden rounded-3xl border border-black/10 bg-[#ffffff] shadow-[0_24px_64px_rgba(15,25,48,0.28)]"
-        onClick={(event) => event.stopPropagation()}
+      <DialogContent
+        showCloseButton
+        className="flex max-h-[90vh] w-full max-w-[1000px] flex-col gap-0 overflow-hidden rounded-3xl border border-black/10 bg-[#ffffff] p-0 shadow-[0_24px_64px_rgba(15,25,48,0.28)]"
       >
-        <div className="flex shrink-0 flex-wrap items-start justify-between gap-3 border-b border-black/10 p-5 sm:p-6">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Objektredigering</p>
-            <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <h1 className="text-xl font-semibold tracking-tight text-[#0b0a0e] sm:text-2xl">
-                {editor.draft.title || "Hantera objekt"}
-              </h1>
-              <p className="text-base font-medium text-ink-600">{editor.draft.address}, Stockholm</p>
-            </div>
+        <DialogHeader className="shrink-0 gap-1 border-b border-black/10 p-5 text-left sm:p-6">
+          <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Objektredigering</p>
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <DialogTitle className="text-xl font-semibold tracking-tight text-[#0b0a0e] sm:text-2xl">
+              {editor.draft.title || "Hantera objekt"}
+            </DialogTitle>
+            <DialogDescription className="text-base font-medium text-ink-600">
+              {editor.draft.address}, Stockholm
+            </DialogDescription>
           </div>
-          <button
-            type="button"
-            className="close-circle-button inline-flex items-center justify-center rounded-full border border-black/15 bg-[#ffffff] text-ink-700"
-            onClick={onClose}
-            aria-label="Stäng"
-          >
-            <XIcon className="h-4 w-4" />
-          </button>
-        </div>
+        </DialogHeader>
 
         <div className="min-h-0 flex-1 overflow-y-auto p-5 sm:p-6">
           <ListingEditorSections listing={listing} editor={editor} />
         </div>
 
         <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-black/10 p-4 sm:p-5">
-          <ListingEditorFooterActions listing={listing} editor={editor} onClosed={onClose} />
+          <ListingEditorFooterActions listing={listing} editor={editor} onClosed={() => setOpen(false)} />
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

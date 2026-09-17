@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useAuth } from "@workos-inc/authkit-react";
 import { navigateTo } from "../lib/router";
 import AuthFlowNav from "../components/layout/AuthFlowNav";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 function ForgotPasswordPage() {
   const { signIn } = useAuth();
@@ -27,8 +29,7 @@ function ForgotPasswordPage() {
           >
             <label className="block">
               <span className="mb-1 block text-xs font-semibold text-ink-700">E-post</span>
-              <input
-                className="field"
+              <Input
                 type="email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
@@ -36,22 +37,23 @@ function ForgotPasswordPage() {
               />
             </label>
 
-            <button type="submit" className="inline-flex w-full items-center justify-center rounded-full bg-[#0b0a0e] px-4 py-3 text-sm font-semibold text-white transition">
+            <Button type="submit" className="h-auto w-full rounded-full bg-[#0b0a0e] px-4 py-3 text-sm font-semibold text-white hover:bg-[#0b0a0e]/90">
               Skicka återställningslänk
-            </button>
+            </Button>
 
             {sent ? <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700">Om kontot finns har vi skickat en återställningslänk.</p> : null}
           </form>
 
           <div className="mt-4 text-center">
             <p className="text-xs text-ink-700">Minns du lösenordet?</p>
-            <button
+            <Button
               type="button"
-              className="mt-2 inline-flex items-center justify-center rounded-full border border-black/20 bg-[#ffffff] px-4 py-2 text-xs font-semibold text-ink-700 hover:bg-[#f8fafc]"
+              variant="outline"
+              className="mt-2 h-auto rounded-full border-black/20 px-4 py-2 text-xs font-semibold text-ink-700 hover:bg-[#f8fafc]"
               onClick={() => signIn({ state: { returnTo: "/app/rent" } }).catch(() => navigateTo("/"))}
             >
               Logga in
-            </button>
+            </Button>
           </div>
         </div>
 
