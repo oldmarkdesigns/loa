@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Icon } from "../../components/icons/Icon";
 import PremiumPromoCard from "../../components/shared/PremiumPromoCard";
 import { navigateTo, normalizeAppRole } from "../../lib/router";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 const settingsSections = [
   { key: "personal", title: "Personligt", subtitle: "Din personliga information och hur vi kontaktar dig." },
@@ -125,29 +127,29 @@ function SettingsPage({ app }) {
                               <div className="mt-4 grid max-w-[560px] gap-3 sm:grid-cols-2">
                                 <div className="max-w-[260px]">
                                   <label className="mb-1 block text-sm text-ink-700">Förnamn</label>
-                                  <input className="field" value={personalDraft.firstName} onChange={(event) => setPersonalDraft((prev) => ({ ...prev, firstName: event.target.value }))} placeholder="Förnamn" />
+                                  <Input value={personalDraft.firstName} onChange={(event) => setPersonalDraft((prev) => ({ ...prev, firstName: event.target.value }))} placeholder="Förnamn" />
                                 </div>
                                 <div className="max-w-[260px]">
                                   <label className="mb-1 block text-sm text-ink-700">Efternamn</label>
-                                  <input className="field" value={personalDraft.lastName} onChange={(event) => setPersonalDraft((prev) => ({ ...prev, lastName: event.target.value }))} placeholder="Efternamn" />
+                                  <Input value={personalDraft.lastName} onChange={(event) => setPersonalDraft((prev) => ({ ...prev, lastName: event.target.value }))} placeholder="Efternamn" />
                                 </div>
                               </div>
                             ) : (
                               <p className="mt-2 text-[16px] leading-tight text-ink-700">{user?.name || "-"}</p>
                             )}
                           </div>
-                          <button type="button" className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-black/15 text-ink-700 hover:bg-[#f8fafc]" onClick={() => setPersonalEditKey((prev) => (prev === "name" ? "" : "name"))}>
+                          <Button type="button" variant="outline" size="icon" className="h-10 w-10 rounded-full border-black/15 text-ink-700 hover:bg-[#f8fafc]" onClick={() => setPersonalEditKey((prev) => (prev === "name" ? "" : "name"))}>
                             <Icon name="pencil" className="h-4 w-4" />
-                          </button>
+                          </Button>
                         </div>
                         {personalEditKey === "name" ? (
                           <div className="mt-4 flex flex-wrap items-center gap-2">
-                            <button type="button" className="btn-primary px-5 py-2.5 text-sm" disabled={savingPersonal} onClick={savePersonalEdit}>
+                            <Button type="button" className="h-auto px-5 py-2.5 text-sm" disabled={savingPersonal} onClick={savePersonalEdit}>
                               {savingPersonal ? "Sparar..." : "Spara"}
-                            </button>
-                            <button type="button" className="btn-secondary px-5 py-2.5 text-sm" disabled={savingPersonal} onClick={() => setPersonalEditKey("")}>
+                            </Button>
+                            <Button type="button" variant="secondary" className="h-auto px-5 py-2.5 text-sm" disabled={savingPersonal} onClick={() => setPersonalEditKey("")}>
                               Avbryt
-                            </button>
+                            </Button>
                           </div>
                         ) : null}
                       </article>
@@ -159,7 +161,7 @@ function SettingsPage({ app }) {
                             {personalEditKey === "email" ? (
                               <div className="mt-4 max-w-[420px]">
                                 <label className="mb-1 block text-sm text-ink-700">E-post</label>
-                                <input className="field" value={personalDraft.email} onChange={(event) => setPersonalDraft((prev) => ({ ...prev, email: event.target.value }))} placeholder="namn@domän.se" />
+                                <Input value={personalDraft.email} onChange={(event) => setPersonalDraft((prev) => ({ ...prev, email: event.target.value }))} placeholder="namn@domän.se" />
                               </div>
                             ) : (
                               <>
@@ -168,18 +170,18 @@ function SettingsPage({ app }) {
                               </>
                             )}
                           </div>
-                          <button type="button" className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-black/15 text-ink-700 hover:bg-[#f8fafc]" onClick={() => setPersonalEditKey((prev) => (prev === "email" ? "" : "email"))}>
+                          <Button type="button" variant="outline" size="icon" className="h-10 w-10 rounded-full border-black/15 text-ink-700 hover:bg-[#f8fafc]" onClick={() => setPersonalEditKey((prev) => (prev === "email" ? "" : "email"))}>
                             <Icon name="pencil" className="h-4 w-4" />
-                          </button>
+                          </Button>
                         </div>
                         {personalEditKey === "email" ? (
                           <div className="mt-4 flex flex-wrap items-center gap-2">
-                            <button type="button" className="btn-primary px-5 py-2.5 text-sm" disabled={savingPersonal} onClick={savePersonalEdit}>
+                            <Button type="button" className="h-auto px-5 py-2.5 text-sm" disabled={savingPersonal} onClick={savePersonalEdit}>
                               {savingPersonal ? "Sparar..." : "Spara"}
-                            </button>
-                            <button type="button" className="btn-secondary px-5 py-2.5 text-sm" disabled={savingPersonal} onClick={() => setPersonalEditKey("")}>
+                            </Button>
+                            <Button type="button" variant="secondary" className="h-auto px-5 py-2.5 text-sm" disabled={savingPersonal} onClick={() => setPersonalEditKey("")}>
                               Avbryt
-                            </button>
+                            </Button>
                           </div>
                         ) : null}
                       </article>
@@ -191,24 +193,24 @@ function SettingsPage({ app }) {
                             {personalEditKey === "phone" ? (
                               <div className="mt-4 max-w-[340px]">
                                 <label className="mb-1 block text-sm text-ink-700">Telefonnummer</label>
-                                <input className="field" value={personalDraft.phone} onChange={(event) => setPersonalDraft((prev) => ({ ...prev, phone: event.target.value }))} placeholder="+46..." />
+                                <Input value={personalDraft.phone} onChange={(event) => setPersonalDraft((prev) => ({ ...prev, phone: event.target.value }))} placeholder="+46..." />
                               </div>
                             ) : (
                               <p className="mt-2 text-[16px] leading-tight text-ink-700">{user?.phone || "Ej angivet"}</p>
                             )}
                           </div>
-                          <button type="button" className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-black/15 text-ink-700 hover:bg-[#f8fafc]" onClick={() => setPersonalEditKey((prev) => (prev === "phone" ? "" : "phone"))}>
+                          <Button type="button" variant="outline" size="icon" className="h-10 w-10 rounded-full border-black/15 text-ink-700 hover:bg-[#f8fafc]" onClick={() => setPersonalEditKey((prev) => (prev === "phone" ? "" : "phone"))}>
                             <Icon name="pencil" className="h-4 w-4" />
-                          </button>
+                          </Button>
                         </div>
                         {personalEditKey === "phone" ? (
                           <div className="mt-4 flex flex-wrap items-center gap-2">
-                            <button type="button" className="btn-primary px-5 py-2.5 text-sm" disabled={savingPersonal} onClick={savePersonalEdit}>
+                            <Button type="button" className="h-auto px-5 py-2.5 text-sm" disabled={savingPersonal} onClick={savePersonalEdit}>
                               {savingPersonal ? "Sparar..." : "Spara"}
-                            </button>
-                            <button type="button" className="btn-secondary px-5 py-2.5 text-sm" disabled={savingPersonal} onClick={() => setPersonalEditKey("")}>
+                            </Button>
+                            <Button type="button" variant="secondary" className="h-auto px-5 py-2.5 text-sm" disabled={savingPersonal} onClick={() => setPersonalEditKey("")}>
                               Avbryt
-                            </button>
+                            </Button>
                           </div>
                         ) : null}
                       </article>
@@ -224,9 +226,10 @@ function SettingsPage({ app }) {
                       <p className="text-sm text-ink-700">Aktiv roll: <span className="font-semibold">{activeRoleLabel}</span></p>
                       <div className="flex flex-wrap gap-2">
                         {normalizeAppRole(user?.role) === "broker" || normalizeAppRole(user?.role) === "company_admin" ? (
-                          <button
+                          <Button
                             type="button"
-                            className="btn-secondary px-4 py-2 text-xs"
+                            variant="secondary"
+                            className="h-auto px-4 py-2 text-xs"
                             disabled={pendingRole}
                             onClick={async () => {
                               setPendingRole(true);
@@ -238,11 +241,11 @@ function SettingsPage({ app }) {
                             }}
                           >
                             Växla till Hyresgäst
-                          </button>
+                          </Button>
                         ) : hasCompanyAdminRole || hasBrokerRole ? (
-                          <button
+                          <Button
                             type="button"
-                            className="btn-primary px-4 py-2 text-xs"
+                            className="h-auto px-4 py-2 text-xs"
                             disabled={pendingRole}
                             onClick={async () => {
                               setPendingRole(true);
@@ -259,7 +262,7 @@ function SettingsPage({ app }) {
                             }}
                           >
                             {hasCompanyAdminRole ? "Växla till Företag" : "Växla till Hyresvärd"}
-                          </button>
+                          </Button>
                         ) : null}
                       </div>
                     </div>
@@ -287,9 +290,9 @@ function SettingsPage({ app }) {
                         <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4">
                           <p className="text-sm font-semibold text-amber-800">Din identitet är inte verifierad ännu.</p>
                           <p className="mt-1 text-sm text-amber-700">Verifiera dig för ökad trygghet och bättre synlighet i plattformen.</p>
-                          <button
+                          <Button
                             type="button"
-                            className="btn-primary mt-3 px-4 py-2 text-xs"
+                            className="mt-3 h-auto px-4 py-2 text-xs"
                             disabled={pendingVerification}
                             onClick={async () => {
                               if (!updateProfile) return;
@@ -310,7 +313,7 @@ function SettingsPage({ app }) {
                             }}
                           >
                             {pendingVerification ? "Verifierar..." : "Verifiera med BankID"}
-                          </button>
+                          </Button>
                         </div>
                       )}
                     </div>
