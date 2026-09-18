@@ -42,6 +42,7 @@ import {
   XIcon
 } from "../../components/icons/UiIcons";
 import { Button } from "@/components/ui/button";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 
@@ -1110,34 +1111,26 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                       Området
                     </h2>
                   </div>
-                  <div className="inline-flex items-center gap-1 rounded-full border border-black/10 bg-[#ffffff] p-1.5">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      className={`h-auto min-h-[34px] gap-1 rounded-full px-3.5 text-xs font-semibold ${
-                        areaViewMode === "map"
-                          ? "bg-[#0b0a0e] text-white hover:bg-[#0b0a0e] hover:text-white"
-                          : "text-ink-700 hover:bg-[#ffffff]"
-                      }`}
-                      onClick={() => setAreaViewMode("map")}
-                      aria-pressed={areaViewMode === "map"}
+                  <ToggleGroup
+                    variant="ghost"
+                    spacing={1}
+                    value={[areaViewMode]}
+                    onValueChange={(next) => next[0] && setAreaViewMode(next[0])}
+                    className="rounded-full border border-black/10 bg-[#ffffff] p-1.5"
+                  >
+                    <ToggleGroupItem
+                      value="map"
+                      className="h-auto min-h-[34px] rounded-full px-3.5 text-xs font-semibold text-ink-700 data-[state=on]:bg-[#0b0a0e] data-[state=on]:text-white"
                     >
                       Karta
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      className={`h-auto min-h-[34px] gap-1 rounded-full px-3.5 text-xs font-semibold ${
-                        areaViewMode === "street"
-                          ? "bg-[#0b0a0e] text-white hover:bg-[#0b0a0e] hover:text-white"
-                          : "text-ink-700 hover:bg-[#ffffff]"
-                      }`}
-                      onClick={() => setAreaViewMode("street")}
-                      aria-pressed={areaViewMode === "street"}
+                    </ToggleGroupItem>
+                    <ToggleGroupItem
+                      value="street"
+                      className="h-auto min-h-[34px] rounded-full px-3.5 text-xs font-semibold text-ink-700 data-[state=on]:bg-[#0b0a0e] data-[state=on]:text-white"
                     >
                       Gatuvy
-                    </Button>
-                  </div>
+                    </ToggleGroupItem>
+                  </ToggleGroup>
                 </div>
                 <div className="mt-3">
                   {areaViewMode === "map" ? (

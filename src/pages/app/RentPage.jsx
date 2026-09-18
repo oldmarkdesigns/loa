@@ -21,6 +21,7 @@ import { districtOptions, listingTypes, listings as baseListingDataset } from ".
 import { PLATFORM_GOOGLE_MAP_STYLE } from "../../lib/googleMapStyles";
 import { navigateTo, normalizeAppRole } from "../../lib/router";
 import { Button } from "@/components/ui/button";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -3067,36 +3068,28 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
   ]);
 
   const viewToggleControl = (
-      <div className="view-toggle-group inline-flex items-center gap-1 rounded-full border border-black/10 bg-[#ffffff] p-1 xl:hidden">
-        <Button
-          type="button"
-          variant="ghost"
-          className={`h-auto min-h-[34px] gap-1.5 rounded-full px-3 text-xs font-semibold ${
-            resultViewMode === "list"
-              ? "bg-[#0b0a0e] text-white hover:bg-[#0b0a0e] hover:text-white"
-              : "text-ink-700 hover:bg-[#ffffff]"
-          }`}
-          onClick={() => setResultViewMode("list")}
-          aria-pressed={resultViewMode === "list"}
+      <ToggleGroup
+        variant="ghost"
+        spacing={1}
+        value={[resultViewMode]}
+        onValueChange={(next) => next[0] && setResultViewMode(next[0])}
+        className="rounded-full border border-black/10 bg-[#ffffff] p-1 xl:hidden"
+      >
+        <ToggleGroupItem
+          value="list"
+          className="h-auto min-h-[34px] gap-1.5 rounded-full px-3 text-xs font-semibold text-ink-700 data-[state=on]:bg-[#0b0a0e] data-[state=on]:text-white"
         >
           <ListIcon className="h-3.5 w-3.5" />
           Lista
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          className={`h-auto min-h-[34px] gap-1.5 rounded-full px-3 text-xs font-semibold ${
-            resultViewMode === "map"
-              ? "bg-[#0b0a0e] text-white hover:bg-[#0b0a0e] hover:text-white"
-              : "text-ink-700 hover:bg-[#ffffff]"
-          }`}
-          onClick={() => setResultViewMode("map")}
-          aria-pressed={resultViewMode === "map"}
+        </ToggleGroupItem>
+        <ToggleGroupItem
+          value="map"
+          className="h-auto min-h-[34px] gap-1.5 rounded-full px-3 text-xs font-semibold text-ink-700 data-[state=on]:bg-[#0b0a0e] data-[state=on]:text-white"
         >
           <MapIcon className="h-3.5 w-3.5" />
           Karta
-        </Button>
-      </div>
+        </ToggleGroupItem>
+      </ToggleGroup>
   );
 
   const sortControl = (
