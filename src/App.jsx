@@ -22,6 +22,7 @@ import SettingsPage from "./pages/app/SettingsPage";
 import ViewingsPage from "./pages/app/ViewingsPage";
 import { defaultAppPathForRole, defaultAppPathForUser, navigateTo, normalizeAppRole, usePathname } from "./lib/router";
 import { AppProvider, useAppState } from "./state/AppState";
+import { TooltipProvider } from "./components/ui/tooltip";
 
 function AppContent() {
   const pathname = usePathname();
@@ -462,7 +463,9 @@ function AppContent() {
 function App() {
   return (
     <AppProvider>
-      <AppContent />
+      <TooltipProvider>
+        <AppContent />
+      </TooltipProvider>
     </AppProvider>
   );
 }

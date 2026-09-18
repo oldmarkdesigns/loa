@@ -29,6 +29,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const districtMapLayout = {
   Solna: { x: 42, y: 18 },
@@ -3401,41 +3402,59 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
         <span>Visa alla filter</span>
       </Button>
       <span className="mx-0.5 h-6 w-px shrink-0 bg-black/10" />
-      <Button
-        type="button"
-        variant="outline"
-        size="icon"
-        aria-label="Spara sökning"
-        title="Spara sökning"
-        className="close-circle-button text-ink-600 hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
-        onClick={handleSaveSearchAction}
-      >
-        <StarIcon className="h-4 w-4" />
-      </Button>
-      <Button
-        type="button"
-        variant="outline"
-        size="icon"
-        aria-label="Bevaka sökning"
-        title="Bevaka sökning"
-        className="close-circle-button text-ink-600 hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
-        onClick={handleWatchSearchAction}
-      >
-        <EyeIcon className="h-4 w-4" />
-      </Button>
-      <Button
-        type="button"
-        variant="outline"
-        size="icon"
-        aria-label="Nollställ"
-        title="Nollställ"
-        className="close-circle-button text-ink-600 hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
-        onClick={() => {
-          void handleResetSearchResults();
-        }}
-      >
-        <ResetIcon className="h-4 w-4" />
-      </Button>
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              aria-label="Spara sökning"
+              className="close-circle-button text-ink-600 hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
+              onClick={handleSaveSearchAction}
+            />
+          }
+        >
+          <StarIcon className="h-4 w-4" />
+        </TooltipTrigger>
+        <TooltipContent>Spara sökning</TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              aria-label="Bevaka sökning"
+              className="close-circle-button text-ink-600 hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
+              onClick={handleWatchSearchAction}
+            />
+          }
+        >
+          <EyeIcon className="h-4 w-4" />
+        </TooltipTrigger>
+        <TooltipContent>Bevaka sökning</TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              aria-label="Nollställ"
+              className="close-circle-button text-ink-600 hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
+              onClick={() => {
+                void handleResetSearchResults();
+              }}
+            />
+          }
+        >
+          <ResetIcon className="h-4 w-4" />
+        </TooltipTrigger>
+        <TooltipContent>Nollställ</TooltipContent>
+      </Tooltip>
     </div>
   );
 

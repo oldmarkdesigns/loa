@@ -77,6 +77,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 export const ADMIN_NAV_ITEMS = [
   { key: "oversikt", label: "Översikt", path: "/app/admin", Icon: LayoutDashboardIcon },
@@ -1065,16 +1066,22 @@ function AdminListingsPage({ listings = [] }) {
                   </TableCell>
                   <TableCell className="px-4 py-3.5 text-right sm:px-5">
                     <div className="flex justify-end gap-1">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 rounded-full text-ink-600 hover:bg-[#ffffff]"
-                        title="Förhandsgranska i nytt fönster"
-                        onClick={() => previewListing(item.id)}
-                      >
-                        <ExternalLinkIcon className="h-4 w-4" />
-                      </Button>
+                      <Tooltip>
+                        <TooltipTrigger
+                          render={
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 rounded-full text-ink-600 hover:bg-[#ffffff]"
+                              onClick={() => previewListing(item.id)}
+                            />
+                          }
+                        >
+                          <ExternalLinkIcon className="h-4 w-4" />
+                        </TooltipTrigger>
+                        <TooltipContent>Förhandsgranska i nytt fönster</TooltipContent>
+                      </Tooltip>
                     </div>
                   </TableCell>
                 </TableRow>

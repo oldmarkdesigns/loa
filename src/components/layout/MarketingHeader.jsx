@@ -147,7 +147,6 @@ function MarketingHeader({
                           variant="outline"
                           className="h-11 w-11 overflow-hidden rounded-full p-0 text-sm font-semibold text-ink-700"
                           aria-label="Öppna profilmeny"
-                          title="Profil"
                         />
                       }
                     >
