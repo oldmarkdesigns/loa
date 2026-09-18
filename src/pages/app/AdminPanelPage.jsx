@@ -69,6 +69,7 @@ import {
   XIcon
 } from "../../components/icons/UiIcons";
 import { Button } from "@/components/ui/button";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -360,6 +361,13 @@ function statusClass(status) {
   if (status === "Aktiv") return "border-emerald-200 bg-emerald-50 text-emerald-700";
   if (status === "Väntande") return "border-amber-200 bg-amber-50 text-amber-700";
   return "border-slate-200 bg-slate-100 text-slate-700";
+}
+
+function statusToggleOnClass(status) {
+  if (status === "Alla") return "data-[state=on]:border-[#0b0a0e] data-[state=on]:bg-[#0b0a0e] data-[state=on]:text-white data-[state=on]:hover:bg-[#0b0a0e] data-[state=on]:hover:text-white";
+  if (status === "Aktiv") return "data-[state=on]:border-emerald-200 data-[state=on]:bg-emerald-50 data-[state=on]:text-emerald-700";
+  if (status === "Väntande") return "data-[state=on]:border-amber-200 data-[state=on]:bg-amber-50 data-[state=on]:text-amber-700";
+  return "data-[state=on]:border-slate-200 data-[state=on]:bg-slate-100 data-[state=on]:text-slate-700";
 }
 
 function deltaClass(tone) {
@@ -980,33 +988,30 @@ function AdminListingsPage({ listings = [] }) {
             <div>
               <h2 className="text-lg font-semibold text-ink-900">Alla annonser</h2>
               <p className="mt-1 text-sm text-ink-600">Överblick över status, visningar och förfrågningar.</p>
-              <div className="mt-3 flex flex-wrap gap-2">
+              <ToggleGroup
+                variant="outline"
+                spacing={2}
+                value={[selectedStatus]}
+                onValueChange={(next) => next[0] && setSelectedStatus(next[0])}
+                className="mt-3 flex-wrap justify-start"
+              >
                 {statusFilters.map((status) => {
                   const count = status === "Alla"
                     ? listingRows.length
                     : listingRows.filter((item) => item.status === status).length;
-                  const isActive = selectedStatus === status;
                   return (
-                    <Button
+                    <ToggleGroupItem
                       key={status}
-                      type="button"
-                      variant="outline"
-                      onClick={() => setSelectedStatus(status)}
-                      className={`h-auto gap-2 rounded-full px-3 py-1.5 text-sm font-semibold ${
-                        isActive
-                          ? status === "Alla"
-                            ? "border-[#0b0a0e] bg-[#0b0a0e] text-white hover:bg-[#0b0a0e] hover:text-white"
-                            : statusClass(status)
-                          : "border-black/10 text-ink-700 hover:bg-black/5"
-                      }`}
+                      value={status}
+                      className={`h-auto gap-2 rounded-full border-black/10 px-3 py-1.5 text-sm font-semibold text-ink-700 shadow-none hover:bg-black/5 ${statusToggleOnClass(status)}`}
                     >
                       <span className="font-medium">{status === "Alla" ? "Alla" : status === "Aktiv" ? "Aktiva" : status}</span>
                       <span className="font-medium -ml-1">:</span>
                       <span className="font-semibold">{count}</span>
-                    </Button>
+                    </ToggleGroupItem>
                   );
                 })}
-              </div>
+              </ToggleGroup>
             </div>
             <div className="flex items-center gap-2">
               <Button type="button" variant="outline" size="icon" className="h-9 w-9 rounded-full text-ink-700">
