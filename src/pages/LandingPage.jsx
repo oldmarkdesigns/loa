@@ -43,6 +43,7 @@ import {
 } from "../components/icons/UiIcons";
 import { districtOptions, listingTypes, listings as baseListingDataset } from "../data/mockData";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -1706,9 +1707,9 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
                 Vi vill se hur LOA kan hjälpa oss med uthyrningen.
               </div>
               <div className="flex items-end gap-3">
-                <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#0b0a0e] text-xs font-semibold text-white">
-                  L
-                </span>
+                <Avatar className="h-9 w-9 shrink-0">
+                  <AvatarFallback className="bg-[#0b0a0e] text-xs font-semibold text-white">L</AvatarFallback>
+                </Avatar>
                 <div className="rounded-2xl bg-white px-5 py-4 text-sm font-semibold leading-5 text-[#0b0a0e]">
                   Absolut. Lämna dina uppgifter så bokar vi in 20 minuter.
                 </div>

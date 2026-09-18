@@ -7,6 +7,8 @@ import MarketingHeader from "./MarketingHeader";
 import ProfileMenuDropdown from "./ProfileMenuDropdown";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import companyLogo from "../../../Assets/Logo/LOA-Logo.png";
 
 function initialsForName(name = "") {
@@ -228,9 +230,9 @@ function AppShell({
                     className="h-11 w-auto max-w-full gap-2 rounded-full pl-1.5 pr-3 text-left hover:border-[#0b0a0e]/25"
                     onClick={() => setAdminCompanyOpen((value) => !value)}
                   >
-                    <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0b0a0e] text-sm font-semibold text-white">
-                      {activeCompany.initials}
-                    </span>
+                    <Avatar className="h-8 w-8 shrink-0">
+                      <AvatarFallback className="bg-[#0b0a0e] text-sm font-semibold text-white">{activeCompany.initials}</AvatarFallback>
+                    </Avatar>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-base font-semibold text-ink-900">{activeCompany.name}</span>
                     </span>
@@ -261,9 +263,9 @@ function AppShell({
                                   }
                                 }}
                               >
-                                <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0b0a0e] text-xs font-semibold text-white">
-                                  {initialsForName(company.name)}
-                                </span>
+                                <Avatar className="h-8 w-8 shrink-0">
+                                  <AvatarFallback className="bg-[#0b0a0e] text-xs font-semibold text-white">{initialsForName(company.name)}</AvatarFallback>
+                                </Avatar>
                                 <span className="min-w-0 flex-1 truncate">{company.name}</span>
                               </Button>
                             );
@@ -328,9 +330,9 @@ function AppShell({
                 >
                   <BellIcon className="h-4 w-4" />
                   {!notificationOpen && unreadNotificationItems.length > 0 ? (
-                    <span className="absolute -right-0.5 -top-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-[#0b0a0e] px-1 text-[10px] font-semibold text-white">
+                    <Badge className="absolute -right-0.5 -top-0.5 h-4 min-w-4 rounded-full bg-[#0b0a0e] px-1 text-[10px] font-semibold text-white">
                       {unreadNotificationItems.length}
-                    </span>
+                    </Badge>
                   ) : null}
                 </Button>
               </div>
@@ -341,11 +343,15 @@ function AppShell({
                       type="button"
                       variant="outline"
                       aria-label="Profilmeny"
-                      className="h-11 w-11 rounded-full text-sm font-semibold text-[#0b0a0e] hover:border-[#0b0a0e]/25"
+                      className="h-11 w-11 rounded-full p-0 text-sm font-semibold text-[#0b0a0e] hover:border-[#0b0a0e]/25"
                     />
                   }
                 >
-                  {initialsForName(user?.name || user?.email || "Profil")}
+                  <Avatar className="h-full w-full">
+                    <AvatarFallback className="bg-transparent text-sm font-semibold text-[#0b0a0e]">
+                      {initialsForName(user?.name || user?.email || "Profil")}
+                    </AvatarFallback>
+                  </Avatar>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" sideOffset={8} className="w-[min(320px,calc(100vw-2rem))] rounded-2xl border border-black/10 p-3 shadow-[0_10px_28px_rgba(15,25,48,0.10)]">
                   <ProfileMenuDropdown

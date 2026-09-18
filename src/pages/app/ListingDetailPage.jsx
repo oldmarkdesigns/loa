@@ -42,6 +42,7 @@ import {
   XIcon
 } from "../../components/icons/UiIcons";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 const GOOGLE_MAPS_SCRIPT_ID = "google-maps-listing-detail-script";
@@ -1176,9 +1177,9 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                 <div className="mt-4 border-t border-black/10 pt-4">
                   <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Mäklare</p>
                   <div className="mt-2 flex items-center gap-3 rounded-2xl border border-black/10 bg-[#f8f8f7] p-3">
-                    <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#0b0a0e] text-sm font-semibold text-white">
-                      {brokerInitials}
-                    </span>
+                    <Avatar className="h-11 w-11 shrink-0">
+                      <AvatarFallback className="bg-[#0b0a0e] text-sm font-semibold text-white">{brokerInitials}</AvatarFallback>
+                    </Avatar>
                     <div className="min-w-0">
                       <p className="truncate text-base font-semibold text-ink-900">{brokerName}</p>
                       <p className="truncate text-xs text-ink-600">{ownerCompanyName}</p>
@@ -1406,9 +1407,9 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                   <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-4 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
                     <div className="flex flex-wrap items-center gap-3">
                       <div className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-[#ffffff] px-3 py-2">
-                        <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#84c4be] text-xs font-semibold text-white">
-                          {brokerInitials}
-                        </span>
+                        <Avatar className="h-8 w-8 shrink-0">
+                          <AvatarFallback className="bg-[#84c4be] text-xs font-semibold text-white">{brokerInitials}</AvatarFallback>
+                        </Avatar>
                         <span className="min-w-0">
                           <span className="block truncate text-sm font-semibold text-ink-900">{brokerName}</span>
                           <span className="block truncate text-xs text-ink-600">{ownerCompanyName || "Mäklarfirma AB"}</span>

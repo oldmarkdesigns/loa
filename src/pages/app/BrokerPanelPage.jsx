@@ -38,6 +38,7 @@ import ProspectCommentThread from "../../components/app/ProspectCommentThread";
 import ProspectVersionHistoryPanel from "../../components/app/ProspectVersionHistoryPanel";
 import ProspectShareSheet from "../../components/app/ProspectShareSheet";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -1342,9 +1343,9 @@ function BrokerLeadsSection({ app }) {
                   >
                     <TableCell className="whitespace-normal px-4 py-3.5 align-top sm:px-5">
                       <div className="flex items-center gap-3">
-                        <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#0b0a0e] text-sm font-semibold text-white">
-                          {initialsForName(renterName)}
-                        </span>
+                        <Avatar className="h-10 w-10 shrink-0">
+                          <AvatarFallback className="bg-[#0b0a0e] text-sm font-semibold text-white">{initialsForName(renterName)}</AvatarFallback>
+                        </Avatar>
                         <span className="min-w-0">
                           <span className="block truncate font-semibold text-ink-900">{renterName}</span>
                           <span className="block truncate text-xs text-ink-600">

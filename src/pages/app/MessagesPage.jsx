@@ -13,6 +13,8 @@ import {
 } from "../../components/icons/UiIcons";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 const MESSAGE_LISTING = {
@@ -370,11 +372,11 @@ function MessagesPage({ app }) {
                     }`}
                   >
                     <div className="flex flex-col items-center gap-2 pt-1">
-                      <span className={`inline-flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold ${
-                        active ? "bg-[#0b0a0e] text-white" : "bg-[#dbe6f3] text-[#0b0a0e]"
-                      }`}>
-                        {conversation.counterpartInitials}
-                      </span>
+                      <Avatar className="h-10 w-10">
+                        <AvatarFallback className={`text-sm font-semibold ${active ? "bg-[#0b0a0e] text-white" : "bg-[#dbe6f3] text-[#0b0a0e]"}`}>
+                          {conversation.counterpartInitials}
+                        </AvatarFallback>
+                      </Avatar>
                     </div>
 
                     <div className="min-w-0">
@@ -397,9 +399,9 @@ function MessagesPage({ app }) {
                     <div className="text-right">
                       <p className="text-[11px] font-semibold text-ink-400">{conversation.timestamp}</p>
                       {!isBrokerView && conversation.unreadCount > 0 ? (
-                        <span className="mt-2 inline-flex min-w-5 items-center justify-center rounded-full bg-[#0b0a0e] px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                        <Badge className="mt-2 min-w-5 rounded-full bg-[#0b0a0e] px-1.5 py-0.5 text-[10px] font-semibold text-white">
                           {conversation.unreadCount}
-                        </span>
+                        </Badge>
                       ) : null}
                     </div>
                   </button>
@@ -414,9 +416,9 @@ function MessagesPage({ app }) {
                 <header className="border-b border-black/10 bg-[#ffffff] px-4 py-4 sm:px-5">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-3">
-                      <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#0b0a0e] text-sm font-semibold text-white">
-                        {activeConversation.counterpartInitials}
-                      </span>
+                      <Avatar className="h-12 w-12 shrink-0">
+                        <AvatarFallback className="bg-[#0b0a0e] text-sm font-semibold text-white">{activeConversation.counterpartInitials}</AvatarFallback>
+                      </Avatar>
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
                           <h2 className="truncate text-lg font-semibold text-[#0b0a0e]">{activeConversation.counterpartName}</h2>

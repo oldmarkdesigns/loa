@@ -60,6 +60,8 @@ import {
   XIcon
 } from "../../components/icons/UiIcons";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -1332,9 +1334,9 @@ function AdminBrokersPage({ app }) {
                 <article key={broker.id} className="rounded-2xl border border-black/10 bg-[#ffffff] p-4 shadow-[0_1px_0_rgba(15,25,48,0.03)]">
                   <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                     <div className="flex min-w-0 items-start gap-3">
-                      <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#0b0a0e] text-xs font-semibold text-white">
-                        {initials}
-                      </span>
+                      <Avatar className="h-10 w-10 shrink-0">
+                        <AvatarFallback className="bg-[#0b0a0e] text-xs font-semibold text-white">{initials}</AvatarFallback>
+                      </Avatar>
                       <div className="min-w-0">
                         <p className="truncate text-sm font-semibold text-ink-900">{broker.name || broker.email}</p>
                         <p className="mt-0.5 truncate text-xs text-ink-600">{broker.email}</p>
@@ -1469,9 +1471,9 @@ function AdminBrokersPage({ app }) {
                 return (
                   <div key={broker.id} className="grid gap-3 px-4 py-3.5 md:grid-cols-[minmax(0,1.4fr)_170px_180px_auto] md:items-center">
                     <div className="flex min-w-0 items-center gap-3">
-                      <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#0b0a0e] text-xs font-semibold text-white">
-                        {initials}
-                      </span>
+                      <Avatar className="h-10 w-10 shrink-0">
+                        <AvatarFallback className="bg-[#0b0a0e] text-xs font-semibold text-white">{initials}</AvatarFallback>
+                      </Avatar>
                       <span className="min-w-0">
                         <span className="block truncate text-sm font-semibold text-ink-900">{broker.name || broker.email}</span>
                         <span className="block truncate text-xs text-ink-600">{broker.email}</span>
@@ -1653,9 +1655,9 @@ function AdminBrokersPage({ app }) {
                         className={`menu-hover-row h-auto w-full justify-start gap-3 px-3 py-2.5 text-left font-normal ${selected ? "bg-[#eef2f8] hover:bg-[#eef2f8]" : "bg-transparent"}`}
                         onClick={() => selectBrokerForEdit(broker)}
                       >
-                        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#0b0a0e] text-xs font-semibold text-white">
-                          {initials}
-                        </span>
+                        <Avatar className="h-9 w-9 shrink-0">
+                          <AvatarFallback className="bg-[#0b0a0e] text-xs font-semibold text-white">{initials}</AvatarFallback>
+                        </Avatar>
                         <span className="min-w-0">
                           <span className="block truncate text-sm font-semibold text-ink-900">{broker.name || broker.email}</span>
                           <span className="block truncate text-xs text-ink-600">{broker.email}</span>
@@ -1946,11 +1948,11 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                       isActive ? "bg-[#ffffff] shadow-[inset_3px_0_0_#0b0a0e]" : "hover:bg-[#ffffff]/80"
                     }`}
                   >
-                    <span className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${
-                      isActive ? "bg-[#0b0a0e] text-white" : "bg-[#dbe6f3] text-[#0b0a0e]"
-                    }`}>
-                      {renter.initials}
-                    </span>
+                    <Avatar className="h-11 w-11 shrink-0">
+                      <AvatarFallback className={`text-sm font-semibold ${isActive ? "bg-[#0b0a0e] text-white" : "bg-[#dbe6f3] text-[#0b0a0e]"}`}>
+                        {renter.initials}
+                      </AvatarFallback>
+                    </Avatar>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
@@ -1969,9 +1971,9 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                           </span>
                         ) : null}
                         {inquiry.unreadCount > 0 ? (
-                          <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-[#d96757] px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                          <Badge className="min-w-5 rounded-full bg-[#d96757] px-1.5 py-0.5 text-[10px] font-semibold text-white">
                             {inquiry.unreadCount}
-                          </span>
+                          </Badge>
                         ) : null}
                       </div>
                     </div>
@@ -1992,9 +1994,9 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                 <div className="border-b border-black/10 bg-[#ffffff] px-4 py-4 sm:px-5">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-3">
-                      <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#0b0a0e] text-sm font-semibold text-white">
-                        {activeRenter.initials}
-                      </span>
+                      <Avatar className="h-12 w-12 shrink-0">
+                        <AvatarFallback className="bg-[#0b0a0e] text-sm font-semibold text-white">{activeRenter.initials}</AvatarFallback>
+                      </Avatar>
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
                           <h3 className="truncate text-lg font-semibold text-[#0b0a0e]">{activeRenter.name}</h3>
@@ -2751,9 +2753,9 @@ function AdminLeadMatchesPage({ app }) {
                 >
                   <TableCell className="whitespace-normal px-4 py-3.5 align-top sm:px-5">
                     <div className="flex items-center gap-3">
-                      <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#0b0a0e] text-sm font-semibold text-white">
-                        {lead.renter.initials}
-                      </span>
+                      <Avatar className="h-10 w-10 shrink-0">
+                        <AvatarFallback className="bg-[#0b0a0e] text-sm font-semibold text-white">{lead.renter.initials}</AvatarFallback>
+                      </Avatar>
                       <span className="min-w-0">
                         <span className="block truncate font-semibold text-ink-900">{lead.renter.name}</span>
                         <span className="block truncate text-xs text-ink-600">{lead.renter.company}</span>
@@ -2880,9 +2882,9 @@ function AdminLeadMatchesPage({ app }) {
                 <article key={renter.id} className="rounded-2xl border border-black/10 bg-[#ffffff] p-4">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex min-w-0 items-center gap-2.5">
-                      <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#0b0a0e] text-sm font-semibold text-white">
-                        {renter.initials}
-                      </span>
+                      <Avatar className="h-10 w-10 shrink-0">
+                        <AvatarFallback className="bg-[#0b0a0e] text-sm font-semibold text-white">{renter.initials}</AvatarFallback>
+                      </Avatar>
                       <span className="min-w-0">
                         <span className="block truncate text-sm font-semibold text-ink-900">{renter.name}</span>
                         <span className="block truncate text-xs text-ink-600">{renter.company}</span>

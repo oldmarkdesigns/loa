@@ -21,6 +21,7 @@ import { districtOptions, listingTypes, listings as baseListingDataset } from ".
 import { PLATFORM_GOOGLE_MAP_STYLE } from "../../lib/googleMapStyles";
 import { navigateTo, normalizeAppRole } from "../../lib/router";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -3459,22 +3460,17 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
         void handleApplyLocalProgramFromQuickCard();
       }}
     >
-      {user?.profile?.avatarUrl ? (
-        <img
-          src={user.profile.avatarUrl}
-          alt={user?.name || "Profilbild"}
-          className="h-7 w-7 rounded-full border border-white object-cover"
-        />
-      ) : (
-        <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#0b1733] text-[10px] font-semibold text-white">
+      <Avatar className="h-7 w-7 border border-white">
+        <AvatarImage src={user?.profile?.avatarUrl} alt={user?.name || "Profilbild"} />
+        <AvatarFallback className="bg-[#0b1733] text-[10px] font-semibold text-white">
           {(user?.name || user?.email || "A")
             .split(" ")
             .filter(Boolean)
             .slice(0, 2)
             .map((part) => part[0]?.toUpperCase() || "")
             .join("")}
-        </span>
-      )}
+        </AvatarFallback>
+      </Avatar>
       Sök med lokalprogram
     </Button>
   ) : null;

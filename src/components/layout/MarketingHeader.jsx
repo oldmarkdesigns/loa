@@ -6,6 +6,7 @@ import MarketingNavLinks, { marketingPrimaryItems, marketingSectionItems } from 
 import ProfileMenuDropdown from "./ProfileMenuDropdown";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 function MarketingHeader({
   pathname,
@@ -144,21 +145,16 @@ function MarketingHeader({
                         <Button
                           type="button"
                           variant="outline"
-                          className="h-full w-11 overflow-hidden rounded-full text-sm font-semibold text-ink-700"
+                          className="h-11 w-11 overflow-hidden rounded-full p-0 text-sm font-semibold text-ink-700"
                           aria-label="Öppna profilmeny"
                           title="Profil"
                         />
                       }
                     >
-                      {user?.profile?.avatarUrl ? (
-                        <img
-                          src={user.profile.avatarUrl}
-                          alt={user?.name || "Profil"}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        initials
-                      )}
+                      <Avatar className="h-full w-full">
+                        <AvatarImage src={user?.profile?.avatarUrl} alt={user?.name || "Profil"} />
+                        <AvatarFallback className="bg-transparent text-sm font-semibold text-ink-700">{initials}</AvatarFallback>
+                      </Avatar>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" sideOffset={8} className="w-[min(320px,calc(100vw-2rem))] rounded-2xl border border-black/10 p-3 shadow-[0_10px_28px_rgba(15,25,48,0.10)]">
                       <ProfileMenuDropdown

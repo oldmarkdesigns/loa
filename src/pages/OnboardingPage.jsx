@@ -19,6 +19,7 @@ import {
   UserIcon,
 } from "../components/icons/UiIcons";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -2050,9 +2051,9 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                               return (
                                 <div key={`${member.email}-${member.name}`} className="flex items-center justify-between gap-3 border-b border-black/10 pb-3 last:border-b-0 last:pb-0">
                                   <div className="flex items-center gap-3">
-                                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#e6eefc] text-xs font-semibold text-[#2d4f83]">
-                                      {initials}
-                                    </span>
+                                    <Avatar className="h-9 w-9">
+                                      <AvatarFallback className="bg-[#e6eefc] text-xs font-semibold text-[#2d4f83]">{initials}</AvatarFallback>
+                                    </Avatar>
                                     <div>
                                       <p className="text-sm font-semibold text-ink-800">{member.name}</p>
                                       <p className="text-xs text-ink-500">{member.email}</p>
