@@ -42,6 +42,10 @@ import {
   WifiIcon
 } from "../components/icons/UiIcons";
 import { districtOptions, listingTypes, listings as baseListingDataset } from "../data/mockData";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 const HERO_GOOGLE_MAPS_SCRIPT_ID = "google-maps-hero-sdk-script";
@@ -893,13 +897,14 @@ function HeroMapWidget({
               <div className="absolute inset-0 grid place-items-center bg-[#ffffff]/75 p-4 text-center text-xs font-semibold text-rose-700">
                 <div className="space-y-2">
                   <p>{errorMessage || "Google Maps kunde inte laddas."}</p>
-                  <button
+                  <Button
                     type="button"
-                    className="mx-auto rounded-lg border border-rose-300 bg-[#ffffff] px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-50"
+                    variant="outline"
+                    className="h-auto mx-auto rounded-lg border-rose-300 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-50 hover:text-rose-700"
                     onClick={() => setRetryToken((value) => value + 1)}
                   >
                     Försök igen
-                  </button>
+                  </Button>
                 </div>
               </div>
             ) : null}
@@ -930,30 +935,36 @@ function HeroMapWidget({
                   </div>
                 </div>
                 <div className="pointer-events-auto flex flex-col gap-2">
-                  <button
+                  <Button
                     type="button"
+                    variant="outline"
+                    size="icon"
                     aria-label="Stäng objekt"
-                    className="close-circle-button inline-flex items-center justify-center rounded-full border border-black/10 bg-[#ffffff] text-lg font-semibold leading-none text-ink-700 hover:bg-[#eef3fa]"
+                    className="close-circle-button rounded-full text-lg font-semibold leading-none text-ink-700 hover:bg-[#eef3fa]"
                     onClick={() => setSelectedListing(null)}
                   >
                     ×
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
+                    variant="outline"
+                    size="icon"
                     aria-label="Föregående objekt"
-                    className="inline-flex h-9 w-9 min-h-9 min-w-9 aspect-square items-center justify-center rounded-full border border-black/10 bg-[#ffffff] p-0 text-base font-semibold leading-none text-ink-700 hover:bg-[#eef3fa]"
+                    className="h-9 w-9 rounded-full text-base font-semibold leading-none text-ink-700 hover:bg-[#eef3fa]"
                     onClick={() => handleCycleSelectedListing(-1)}
                   >
                     ‹
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
+                    variant="outline"
+                    size="icon"
                     aria-label="Nästa objekt"
-                    className="inline-flex h-9 w-9 min-h-9 min-w-9 aspect-square items-center justify-center rounded-full border border-black/10 bg-[#ffffff] p-0 text-base font-semibold leading-none text-ink-700 hover:bg-[#eef3fa]"
+                    className="h-9 w-9 rounded-full text-base font-semibold leading-none text-ink-700 hover:bg-[#eef3fa]"
                     onClick={() => handleCycleSelectedListing(1)}
                   >
                     ›
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -979,9 +990,6 @@ const accessHoursOptions = ["Alla", "24/7", "Kontorstid", "Kväll/helg"];
 const parkingTypeOptions = ["Alla", "Ingen parkering", "Garage", "Gatuparkering", "Laddplatser"];
 const layoutTypeOptions = ["Alla", "Öppet landskap", "Cellkontor", "Hybrid", "Showroom"];
 const advertiserOptions = ["Alla", "AMF Fastigheter", "Vasakronan", "Castellum", "Fabege", "Skandia Fastigheter"];
-
-const heroInputClass = "w-full rounded-2xl border border-black/10 bg-transparent px-3 py-3 text-sm text-ink-900 placeholder:text-ink-500 focus:border-[#0b0a0e] focus:outline-none";
-const heroSelectClass = "select-chevron w-full rounded-2xl border border-black/10 bg-transparent px-3 py-3 pr-10 text-sm text-ink-900 focus:border-[#0b0a0e] focus:outline-none";
 
 function HeroPillToggle({ checked, onToggle, ariaLabel }) {
   return (
@@ -1365,20 +1373,21 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
               </form>
 
               <div className="hero-load-actions mt-5 flex flex-wrap gap-3">
-                <button
+                <Button
                   type="button"
                   onClick={() => setDemoRequestOpen(true)}
-                  className="rounded-full bg-[#0b0a0e] px-7 py-4 text-sm font-semibold text-white hover:bg-[#191919]"
+                  className="h-auto rounded-full px-7 py-4 text-sm font-semibold hover:bg-[#191919]"
                 >
                   Boka en demo
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant="outline"
                   onClick={() => scrollToHashSection("#lokaler-just-nu", true)}
-                  className="rounded-full border border-black/10 bg-white px-7 py-4 text-sm font-semibold text-ink-900 hover:border-black/25"
+                  className="h-auto rounded-full px-7 py-4 text-sm font-semibold text-ink-900 hover:border-black/25"
                 >
                   Utforska lokaler
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -1464,14 +1473,14 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
             <span className="text-ink-400">Vill du få ut det mesta av våra funktioner? </span>
             <span className="text-[#0b0a0e]">Skapa ditt konto idag.</span>
           </h2>
-          <button
+          <Button
             type="button"
             onClick={() => openAuth("signup", "renter")}
-            className="mt-8 inline-flex h-6 items-center gap-2 rounded-full bg-[#0b0a0e] px-5 text-xs font-semibold text-white transition"
+            className="h-auto mt-8 gap-2 rounded-full px-5 text-xs font-semibold"
           >
             Skapa konto
             <UserIcon className="h-3.5 w-3.5" />
-          </button>
+          </Button>
         </div>
       </section>
 
@@ -1562,13 +1571,14 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
             <p className="mt-3 text-sm text-white/75">
               Publicera obegränsat antal annonser och testa hela plattformen kostnadsfritt under lanseringsperioden.
             </p>
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={() => openAuth("signup", "broker")}
-              className="mt-6 inline-flex items-center justify-center rounded-full border border-white px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-white hover:text-[#080d18]"
+              className="h-auto rounded-full border-white bg-transparent px-5 py-2.5 text-sm font-semibold text-white hover:bg-white hover:text-[#080d18]"
             >
               Börja publicera
-            </button>
+            </Button>
           </article>
 
           <article className="rounded-3xl border border-black/10 bg-[#ffffff] p-6 sm:p-7">
@@ -1609,14 +1619,15 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
                 Lediga lokaler just nu
               </h2>
             </div>
-            <button
+            <Button
               type="button"
-              className="inline-flex min-h-[40px] shrink-0 items-center gap-1.5 text-xs font-semibold text-ink-700 hover:text-black"
+              variant="ghost"
+              className="h-auto min-h-[40px] shrink-0 gap-1.5 px-0 text-xs font-semibold text-ink-700 hover:bg-transparent hover:text-black"
               onClick={() => navigateTo("/app/rent?view=available")}
             >
               Se alla lediga objekt
               <ArrowRightIcon className="h-4 w-4" />
-            </button>
+            </Button>
           </div>
 
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -1705,134 +1716,125 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
             </div>
           </div>
 
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={() => setDemoRequestOpen(true)}
-            className="flex w-full items-center justify-between !rounded-none border-t border-black/10 bg-transparent px-8 py-4 text-left text-base font-semibold text-[#080d18] transition hover:bg-white/35 sm:px-10"
+            className="h-auto w-full justify-between !rounded-none border-t border-black/10 px-8 py-4 text-left text-base font-semibold text-[#080d18] hover:bg-white/35 sm:px-10"
           >
             Boka en demo
             <ArrowRightIcon className="h-5 w-5" />
-          </button>
+          </Button>
         </article>
       </section>
 
-      {demoRequestOpen ? (
-        <div
-          className="fixed inset-0 z-[80] flex items-center justify-center bg-black/55 px-4 py-6"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="demo-request-title"
-        >
-          <button
-            type="button"
-            className="absolute inset-0 cursor-default"
-            aria-label="Stäng demoformulär"
-            onClick={closeDemoRequestOverlay}
-          />
-          <div className="relative w-full max-w-xl rounded-3xl bg-white p-6 shadow-[0_30px_90px_rgba(0,0,0,0.28)] sm:p-8">
-            <div className="flex items-start justify-between gap-5">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Boka en demo</p>
-                <h2
-                  id="demo-request-title"
-                  className="font-display-serif mt-2 text-[2.15rem] font-semibold leading-[0.95] text-[#0b0a0e] sm:text-[2.65rem]"
-                >
-                  Berätta hur vi når dig
-                </h2>
-              </div>
-              <button
+      <Dialog
+        open={demoRequestOpen}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) closeDemoRequestOverlay();
+          else setDemoRequestOpen(true);
+        }}
+      >
+        <DialogContent showCloseButton={false} className="max-w-xl rounded-3xl bg-white p-6 sm:p-8">
+          <div className="flex items-start justify-between gap-5">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Boka en demo</p>
+              <DialogTitle
+                className="font-display-serif mt-2 text-[2.15rem] font-semibold leading-[0.95] text-[#0b0a0e] sm:text-[2.65rem]"
+              >
+                Berätta hur vi når dig
+              </DialogTitle>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="!rounded-full text-[#0b0a0e] hover:border-black/25"
+              aria-label="Stäng"
+              onClick={closeDemoRequestOverlay}
+            >
+              <PlusIcon className="h-4 w-4 rotate-45" />
+            </Button>
+          </div>
+
+          {demoRequestSubmitted ? (
+            <div className="mt-7 rounded-2xl bg-[#F3F7F7] p-5">
+              <p className="text-lg font-semibold text-[#0b0a0e]">Tack, vi hör av oss.</p>
+              <p className="mt-2 text-sm leading-6 text-ink-600">
+                Vi återkommer med en tid för en kort genomgång av hur LOA kan användas för era objekt.
+              </p>
+              <Button
                 type="button"
-                className="inline-flex h-10 w-10 min-h-10 min-w-10 aspect-square shrink-0 items-center justify-center !rounded-full border border-black/10 p-0 text-[#0b0a0e] hover:border-black/25"
-                aria-label="Stäng"
+                className="h-auto mt-5 rounded-full px-6 py-3 text-sm font-semibold"
                 onClick={closeDemoRequestOverlay}
               >
-                <PlusIcon className="h-4 w-4 rotate-45" />
-              </button>
+                Stäng
+              </Button>
             </div>
-
-            {demoRequestSubmitted ? (
-              <div className="mt-7 rounded-2xl bg-[#F3F7F7] p-5">
-                <p className="text-lg font-semibold text-[#0b0a0e]">Tack, vi hör av oss.</p>
-                <p className="mt-2 text-sm leading-6 text-ink-600">
-                  Vi återkommer med en tid för en kort genomgång av hur LOA kan användas för era objekt.
-                </p>
-                <button
-                  type="button"
-                  className="mt-5 rounded-full bg-[#0b0a0e] px-6 py-3 text-sm font-semibold text-white"
-                  onClick={closeDemoRequestOverlay}
-                >
-                  Stäng
-                </button>
-              </div>
-            ) : (
-              <form className="mt-7 grid gap-4" onSubmit={submitDemoRequest}>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <label className="grid gap-2 text-xs font-semibold uppercase tracking-wide text-ink-500">
-                    Namn
-                    <input
-                      required
-                      type="text"
-                      value={demoRequestForm.name}
-                      onChange={(event) => updateDemoRequestField("name", event.target.value)}
-                      className={heroInputClass}
-                      placeholder="För- och efternamn"
-                    />
-                  </label>
-                  <label className="grid gap-2 text-xs font-semibold uppercase tracking-wide text-ink-500">
-                    Företag
-                    <input
-                      type="text"
-                      value={demoRequestForm.company}
-                      onChange={(event) => updateDemoRequestField("company", event.target.value)}
-                      className={heroInputClass}
-                      placeholder="Bolagsnamn"
-                    />
-                  </label>
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <label className="grid gap-2 text-xs font-semibold uppercase tracking-wide text-ink-500">
-                    E-post
-                    <input
-                      required
-                      type="email"
-                      value={demoRequestForm.email}
-                      onChange={(event) => updateDemoRequestField("email", event.target.value)}
-                      className={heroInputClass}
-                      placeholder="namn@foretag.se"
-                    />
-                  </label>
-                  <label className="grid gap-2 text-xs font-semibold uppercase tracking-wide text-ink-500">
-                    Telefon
-                    <input
-                      type="tel"
-                      value={demoRequestForm.phone}
-                      onChange={(event) => updateDemoRequestField("phone", event.target.value)}
-                      className={heroInputClass}
-                      placeholder="+46 70 000 00 00"
-                    />
-                  </label>
-                </div>
+          ) : (
+            <form className="mt-7 grid gap-4" onSubmit={submitDemoRequest}>
+              <div className="grid gap-4 sm:grid-cols-2">
                 <label className="grid gap-2 text-xs font-semibold uppercase tracking-wide text-ink-500">
-                  Vad vill ni se?
-                  <textarea
-                    rows={4}
-                    value={demoRequestForm.message}
-                    onChange={(event) => updateDemoRequestField("message", event.target.value)}
-                    className={`${heroInputClass} resize-none`}
-                    placeholder="Till exempel publicering, matchning eller lokalprogram."
+                  Namn
+                  <Input
+                    required
+                    type="text"
+                    value={demoRequestForm.name}
+                    onChange={(event) => updateDemoRequestField("name", event.target.value)}
+                    placeholder="För- och efternamn"
                   />
                 </label>
-                <button
-                  type="submit"
-                  className="mt-2 rounded-full bg-[#0b0a0e] px-7 py-4 text-sm font-semibold text-white hover:bg-[#191919]"
-                >
-                  Skicka förfrågan
-                </button>
-              </form>
-            )}
-          </div>
-        </div>
-      ) : null}
+                <label className="grid gap-2 text-xs font-semibold uppercase tracking-wide text-ink-500">
+                  Företag
+                  <Input
+                    type="text"
+                    value={demoRequestForm.company}
+                    onChange={(event) => updateDemoRequestField("company", event.target.value)}
+                    placeholder="Bolagsnamn"
+                  />
+                </label>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="grid gap-2 text-xs font-semibold uppercase tracking-wide text-ink-500">
+                  E-post
+                  <Input
+                    required
+                    type="email"
+                    value={demoRequestForm.email}
+                    onChange={(event) => updateDemoRequestField("email", event.target.value)}
+                    placeholder="namn@foretag.se"
+                  />
+                </label>
+                <label className="grid gap-2 text-xs font-semibold uppercase tracking-wide text-ink-500">
+                  Telefon
+                  <Input
+                    type="tel"
+                    value={demoRequestForm.phone}
+                    onChange={(event) => updateDemoRequestField("phone", event.target.value)}
+                    placeholder="+46 70 000 00 00"
+                  />
+                </label>
+              </div>
+              <label className="grid gap-2 text-xs font-semibold uppercase tracking-wide text-ink-500">
+                Vad vill ni se?
+                <Textarea
+                  rows={4}
+                  value={demoRequestForm.message}
+                  onChange={(event) => updateDemoRequestField("message", event.target.value)}
+                  className="resize-none"
+                  placeholder="Till exempel publicering, matchning eller lokalprogram."
+                />
+              </label>
+              <Button
+                type="submit"
+                className="h-auto mt-2 rounded-full px-7 py-4 text-sm font-semibold"
+              >
+                Skicka förfrågan
+              </Button>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <ViewingRequestModal
         listing={bookingListing}
@@ -1843,10 +1845,11 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
         }}
       />
 
-      <button
+      <Button
         type="button"
+        variant="outline"
         aria-label="Scrolla till toppen"
-        className={`fixed bottom-6 right-6 z-30 inline-flex min-h-0 flex-col items-center justify-center gap-0.5 rounded-full border border-black/20 bg-[#ffffff]/25 p-3 text-[#0b0a0e] shadow-[0_8px_24px_rgba(15,25,48,0.18)] backdrop-blur-md transition-all duration-250 ${
+        className={`h-auto fixed bottom-6 right-6 z-30 flex-col gap-0.5 rounded-full border-black/20 bg-[#ffffff]/25 p-3 text-[#0b0a0e] shadow-[0_8px_24px_rgba(15,25,48,0.18)] backdrop-blur-md transition-all duration-250 ${
           showScrollToTopButton
             ? "translate-y-0 scale-100 opacity-100 pointer-events-auto"
             : "translate-y-2 scale-95 opacity-0 pointer-events-none"
@@ -1855,7 +1858,7 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
       >
         <ArrowUpIcon className="h-4 w-4" />
         <MouseScrollIcon className="h-4 w-4" />
-      </button>
+      </Button>
 
       <footer id="kontakt" className="scroll-mt-24 bg-[#0b0a0e] pt-2">
         <div className="overflow-hidden bg-[#0b0a0e] px-6 py-12 text-white sm:px-10 sm:py-16">
@@ -1874,22 +1877,23 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
                 LOA samlar hyresgäst och hyresvärd i ett gemensamt flöde för snabbare matchning, visningar och affärer.
               </p>
               <div className="flex flex-wrap items-center gap-3">
-                <button
+                <Button
                   type="button"
-                  className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-xs font-semibold text-[#0b0a0e] transition hover:bg-white/90"
+                  className="h-auto gap-2 rounded-full bg-white px-5 py-2.5 text-xs font-semibold text-[#0b0a0e] hover:bg-white/90"
                   onClick={() => navigateTo("/signup?step=role")}
                 >
                   Skapa konto
                   <UserIcon className="h-3.5 w-3.5" />
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
-                  className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-5 py-2.5 text-xs font-semibold text-white transition hover:bg-white/10"
+                  variant="outline"
+                  className="h-auto gap-2 rounded-full border-white/20 bg-white/5 px-5 py-2.5 text-xs font-semibold text-white hover:bg-white/10 hover:text-white"
                   onClick={() => openAuth("login", "renter")}
                 >
                   Logga in
                   <LockIcon className="h-3.5 w-3.5" />
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -1918,9 +1922,9 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
                 <p>support@foretag.se</p>
                 <p>08-123 45 67</p>
                 <p>Vardagar 08:00-17:00</p>
-                <button type="button" className="text-left text-sm text-white/65 hover:text-white" onClick={() => navigateTo("/forgot-password")}>
+                <Button type="button" variant="link" className="h-auto justify-start p-0 text-sm text-white/65 hover:text-white" onClick={() => navigateTo("/forgot-password")}>
                   Glömt lösenord
-                </button>
+                </Button>
               </div>
             </div>
           </div>
