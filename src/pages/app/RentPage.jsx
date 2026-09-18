@@ -22,6 +22,7 @@ import { PLATFORM_GOOGLE_MAP_STYLE } from "../../lib/googleMapStyles";
 import { navigateTo, normalizeAppRole } from "../../lib/router";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -3183,12 +3184,12 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
               </p>
             </div>
             <div className="mt-3 flex flex-wrap gap-2">
-              <span className="inline-flex items-center gap-1 rounded-full border border-[#4f46e5]/35 bg-[#ffffff] px-3 py-1.5 text-[13px] font-semibold text-[#312e81]">
+              <Badge variant="outline" className="h-auto gap-1 rounded-full border-[#4f46e5]/35 bg-[#ffffff] px-3 py-1.5 text-[13px] font-semibold text-[#312e81]">
                 Föreslagen ändring: {visibleResultsSuggestion.suggestedChange}
-              </span>
-              <span className="rounded-full border border-[#4f46e5]/35 px-3 py-1.5 text-[13px] font-semibold text-[#312e81]">
+              </Badge>
+              <Badge variant="outline" className="h-auto rounded-full border-[#4f46e5]/35 px-3 py-1.5 text-[13px] font-semibold text-[#312e81]">
                 {visibleResultsSuggestion.count} träffar efter ändring
-              </span>
+              </Badge>
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <Button
@@ -3572,9 +3573,9 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
               >
                 <div className="flex items-start justify-between gap-2">
                   <span className="text-sm font-semibold text-ink-900">{suggestion.label}</span>
-                  <span className="shrink-0 rounded-full border border-black/10 bg-[#ffffff] px-2 py-0.5 text-xs font-semibold text-ink-700">
+                  <Badge variant="outline" className="h-auto shrink-0 rounded-full bg-[#ffffff] px-2 py-0.5 text-xs font-semibold text-ink-700">
                     {suggestion.count} träffar
-                  </span>
+                  </Badge>
                 </div>
                 <p className="mt-2 text-[11px] font-semibold uppercase tracking-wide text-ink-600">Ändrar</p>
                 <div className="mt-1.5 flex flex-wrap gap-1.5">

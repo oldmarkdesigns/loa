@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 
 const PREDEFINED_ORDER = ["overview", "description", "terms", "location", "contact", "materials"];
 
@@ -264,7 +265,7 @@ function AmenityChips({ amenities }) {
   return (
     <div className="flex flex-wrap gap-1.5">
       {amenities.map((amenity) => (
-        <span key={amenity} className="chip">{amenity}</span>
+        <Badge key={amenity} variant="outline" className="h-auto rounded-2xl border-ink-200 bg-[#ffffff] px-3 py-1 text-xs font-semibold text-ink-700">{amenity}</Badge>
       ))}
     </div>
   );
@@ -453,13 +454,13 @@ function SectionAttachments({ section, uploadingSectionId, uploadAttachment, rem
   return (
     <div className="mt-3 flex flex-wrap items-center gap-2">
       {(section.attachments || []).map((attachment, index) => (
-        <span key={`${attachment.storageId}-${index}`} className="chip inline-flex items-center gap-1.5">
+        <Badge key={`${attachment.storageId}-${index}`} variant="outline" className="h-auto gap-1.5 rounded-2xl border-ink-200 bg-[#ffffff] px-3 py-1 text-xs font-semibold text-ink-700">
           <PaperclipIcon className="h-3.5 w-3.5" />
           <span className="max-w-[160px] truncate">{attachment.fileName}</span>
           <Button type="button" variant="ghost" size="icon" className="h-4 w-4 hover:bg-transparent" aria-label="Ta bort bilaga" onClick={() => removeAttachment(section.id, index)}>
             <XIcon className="h-3 w-3" />
           </Button>
-        </span>
+        </Badge>
       ))}
       <Button type="button" variant="secondary" className="h-auto cursor-pointer px-3 py-1.5 text-xs" render={<label />}>
         <input

@@ -3,6 +3,7 @@ import { prospectCommentsApi, prospectsApi } from "../../api";
 import StatusPill from "../../components/app/StatusPill";
 import ProspectCommentThread from "../../components/app/ProspectCommentThread";
 import { PaperclipIcon } from "../../components/icons/UiIcons";
+import { Badge } from "@/components/ui/badge";
 
 function ProspectRenterPage({ prospectId }) {
   const [prospect, setProspect] = useState(null);
@@ -81,16 +82,15 @@ function ProspectRenterPage({ prospectId }) {
                 {section.attachments?.length > 0 ? (
                   <div className="mt-3 flex flex-wrap gap-2">
                     {section.attachments.map((attachment, index) => (
-                      <a
+                      <Badge
                         key={`${attachment.storageId}-${index}`}
-                        href={attachment.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="chip inline-flex items-center gap-1.5"
+                        variant="outline"
+                        className="h-auto gap-1.5 rounded-2xl border-ink-200 bg-[#ffffff] px-3 py-1 text-xs font-semibold text-ink-700 hover:bg-[#ffffff]"
+                        render={<a href={attachment.url} target="_blank" rel="noopener noreferrer" />}
                       >
                         <PaperclipIcon className="h-3.5 w-3.5" />
                         {attachment.fileName}
-                      </a>
+                      </Badge>
                     ))}
                   </div>
                 ) : null}

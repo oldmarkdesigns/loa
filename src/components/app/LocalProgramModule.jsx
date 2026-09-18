@@ -16,6 +16,8 @@ import {
   ChevronRightIcon
 } from "../icons/UiIcons";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 
 function listFromDelimitedValue(value) {
   if (Array.isArray(value)) return value.map((item) => String(item || "").trim()).filter(Boolean);
@@ -174,7 +176,7 @@ function LocalProgramModule({
                     <span className="flex flex-wrap items-center gap-2">
                       <span className="truncate text-base font-semibold text-[#0b0a0e]">{program.title || `Lokalprogram ${index + 1}`}</span>
                       {index === 0 ? (
-                        <span className="rounded-full border border-black/10 bg-[#f8fafc] px-2.5 py-1 text-[11px] font-semibold text-ink-600">Aktivt i sök</span>
+                        <Badge variant="outline" className="h-auto rounded-full bg-[#f8fafc] px-2.5 py-1 text-[11px] font-semibold text-ink-600">Aktivt i sök</Badge>
                       ) : null}
                     </span>
                     <span className="mt-1 block truncate text-sm text-ink-600">{programPreview(program)}</span>
@@ -192,9 +194,10 @@ function LocalProgramModule({
                         <p className="text-sm font-semibold text-ink-700">{progress.percent}% klart</p>
                         <p className="text-xs font-semibold text-ink-500">{progress.done} av {progress.total}</p>
                       </div>
-                      <div className="mt-2 h-3 overflow-hidden rounded-full border border-black/10 bg-[#eef2f8]">
-                        <div className="h-full rounded-full bg-[#0b0a0e] transition-all" style={{ width: `${progress.percent}%` }} />
-                      </div>
+                      <Progress
+                        value={progress.percent}
+                        className="mt-2 [&_[data-slot=progress-track]]:h-3 [&_[data-slot=progress-track]]:border [&_[data-slot=progress-track]]:border-black/10 [&_[data-slot=progress-track]]:bg-[#eef2f8] [&_[data-slot=progress-indicator]]:bg-[#0b0a0e]"
+                      />
                     </div>
 
                     <div className="mt-4 grid gap-x-6 gap-y-4 sm:grid-cols-2">

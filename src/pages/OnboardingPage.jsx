@@ -20,6 +20,7 @@ import {
 } from "../components/icons/UiIcons";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -2059,9 +2060,9 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                                       <p className="text-xs text-ink-500">{member.email}</p>
                                     </div>
                                   </div>
-                                  <span className="inline-flex items-center rounded-full bg-[#f9edbe] px-2.5 py-1 text-[11px] font-semibold text-[#8a6b13]">
+                                  <Badge className="h-auto rounded-full bg-[#f9edbe] px-2.5 py-1 text-[11px] font-semibold text-[#8a6b13]">
                                     {member.status}
-                                  </span>
+                                  </Badge>
                                 </div>
                               );
                             })}
@@ -2212,9 +2213,9 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                     <p className="mt-1 text-sm text-ink-600">{account.email || "-"}</p>
                     <p className="mt-0.5 text-sm text-ink-600">{account.phone || "Telefon ej angivet"}</p>
                   </div>
-                  <span className="inline-flex items-center rounded-full border border-black/10 bg-[#ffffff] px-3 py-1.5 text-xs font-semibold text-ink-700">
+                  <Badge variant="outline" className="h-auto rounded-full bg-[#ffffff] px-3 py-1.5 text-xs font-semibold text-ink-700">
                     {primaryRole === "broker" ? "Mäklare" : primaryRole === "company_admin" ? "Bolagsadmin" : "Hyresgäst"}
-                  </span>
+                  </Badge>
                 </div>
                 <div className="my-0 border-t border-black/10" />
 

@@ -728,9 +728,9 @@ function ExtendedStatCard({ item }) {
           <p className="text-[12px] font-semibold text-ink-600">{item.label}</p>
           <p className="mt-2 text-[30px] font-semibold leading-none tracking-[-0.04em] text-[#0b0a0e]">{item.value}</p>
         </div>
-        <span className="shrink-0 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
+        <Badge variant="outline" className="h-auto shrink-0 rounded-full border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
           {item.delta}
-        </span>
+        </Badge>
       </div>
       <p className="mt-2 text-[11px] text-ink-500">{item.meta}</p>
       <div className="mt-4">{visual}</div>
@@ -771,9 +771,9 @@ function KpiCardsSection({ showMatchLink = false, cards = kpiCards, sparklineSer
           <article key={card.key} className="surface p-4">
             <div className="flex items-start justify-between gap-3">
               <p className="text-sm text-ink-600">{card.label}</p>
-              <span className={`rounded-full border px-2 py-0.5 text-xs font-semibold ${deltaClass(card.deltaTone)}`}>
+              <Badge variant="outline" className={`h-auto rounded-full px-2 py-0.5 text-xs font-semibold ${deltaClass(card.deltaTone)}`}>
                 {card.delta}
-              </span>
+              </Badge>
             </div>
             <p className="mt-3 text-[30px] font-semibold leading-none text-[#0b0a0e]">{card.value}</p>
             {showMatchLink && card.key === "matches" ? (
@@ -1049,7 +1049,7 @@ function AdminListingsPage({ listings = [] }) {
                     </div>
                   </TableCell>
                   <TableCell className="px-4 py-3.5 align-top">
-                    <span className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-semibold ${statusClass(item.status)}`}>{item.status}</span>
+                    <Badge variant="outline" className={`h-auto rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusClass(item.status)}`}>{item.status}</Badge>
                   </TableCell>
                   <TableCell className="px-4 py-3.5 text-right font-semibold text-ink-800">{item.views.toLocaleString("sv-SE")}</TableCell>
                   <TableCell className="px-4 py-3.5 text-right font-semibold text-ink-800">{item.inquiries}</TableCell>
@@ -1133,9 +1133,9 @@ function AdminNotificationsPage({ app }) {
             <h1 className="mt-1 text-2xl font-semibold text-ink-900">Notifikationer</h1>
             <p className="mt-1 text-sm text-ink-600">Samlad vy för nya händelser, publiceringar och teamaktivitet.</p>
           </div>
-          <span className="inline-flex items-center rounded-full border border-black/10 bg-[#f7f7f7] px-3 py-1 text-xs font-semibold text-ink-700">
+          <Badge variant="outline" className="h-auto rounded-full bg-[#f7f7f7] px-3 py-1 text-xs font-semibold text-ink-700">
             {notificationItems.length} nya
-          </span>
+          </Badge>
         </div>
       </header>
 
@@ -1315,9 +1315,9 @@ function AdminBrokersPage({ app }) {
                 Mäklare som har begärt verifiering för {app?.adminCompany?.organizationNumber || "ert organisationsnummer"}.
               </p>
             </div>
-            <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
+            <Badge variant="outline" className="h-auto rounded-full border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
               {pendingBrokerRequests.length} väntar
-            </span>
+            </Badge>
           </div>
 
           <div className="mt-4 grid gap-3">
@@ -1921,11 +1921,11 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                       }`}
                     >
                       {tab.label}
-                      <span className={`inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] ${
+                      <Badge className={`h-auto min-w-5 rounded-full px-1.5 py-0.5 text-[10px] ${
                         active ? "bg-[#ffffff]/15 text-white" : "bg-[#eef3f8] text-[#476a99]"
                       }`}>
                         {tab.count}
-                      </span>
+                      </Badge>
                     </Button>
                   );
                 })}
@@ -1963,12 +1963,12 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                       </div>
                       <p className="mt-2 text-sm leading-snug text-ink-700">{latestMessage.text}</p>
                       <div className="mt-2 flex flex-wrap items-center gap-2">
-                        <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold ${inquiryStatusClass(inquiry.status)}`}>{inquiry.status}</span>
-                        <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold ${inquiryPriorityClass(inquiry.priority)}`}>{inquiry.priority}</span>
+                        <Badge variant="outline" className={`h-auto rounded-full px-2 py-0.5 text-[10px] font-semibold ${inquiryStatusClass(inquiry.status)}`}>{inquiry.status}</Badge>
+                        <Badge variant="outline" className={`h-auto rounded-full px-2 py-0.5 text-[10px] font-semibold ${inquiryPriorityClass(inquiry.priority)}`}>{inquiry.priority}</Badge>
                         {inquiryNeedsResponse(inquiry) ? (
-                          <span className="inline-flex rounded-full bg-[#eef3f8] px-2 py-0.5 text-[10px] font-semibold text-[#476a99]">
+                          <Badge className="h-auto rounded-full bg-[#eef3f8] px-2 py-0.5 text-[10px] font-semibold text-[#476a99]">
                             Svar krävs
-                          </span>
+                          </Badge>
                         ) : null}
                         {inquiry.unreadCount > 0 ? (
                           <Badge className="min-w-5 rounded-full bg-[#d96757] px-1.5 py-0.5 text-[10px] font-semibold text-white">
@@ -2000,20 +2000,20 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
                           <h3 className="truncate text-lg font-semibold text-[#0b0a0e]">{activeRenter.name}</h3>
-                          <span className={`inline-flex rounded-full border px-2 py-0.5 text-[11px] font-semibold ${inquiryStatusClass(activeInquiry.status)}`}>{activeInquiry.status}</span>
+                          <Badge variant="outline" className={`h-auto rounded-full px-2 py-0.5 text-[11px] font-semibold ${inquiryStatusClass(activeInquiry.status)}`}>{activeInquiry.status}</Badge>
                         </div>
                         <p className="truncate text-sm text-ink-600">{activeRenter.company} · {activeSummary}</p>
                         <p className="mt-1 text-xs text-ink-500">Ansvarig mäklare: {activeInquiry.assignedBroker} · Senast aktiv {activeInquiry.receivedAt}</p>
                       </div>
                     </div>
                     <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold text-ink-500">
-                      <span className="inline-flex items-center gap-1 rounded-full border border-black/10 bg-[#fbfbfa] px-2.5 py-1">
+                      <Badge variant="outline" className="h-auto gap-1 rounded-full bg-[#fbfbfa] px-2.5 py-1 text-sm font-normal">
                         <CalendarIcon className="h-3.5 w-3.5" />
                         {activeInquiry.stage}
-                      </span>
-                      <span className={`inline-flex rounded-full border px-2.5 py-1 ${inquiryPriorityClass(activeInquiry.priority)}`}>
+                      </Badge>
+                      <Badge variant="outline" className={`h-auto rounded-full px-2.5 py-1 ${inquiryPriorityClass(activeInquiry.priority)}`}>
                         {activeInquiry.priority}
-                      </span>
+                      </Badge>
                     </div>
                   </div>
                 </div>
@@ -2175,11 +2175,11 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                         className="h-auto block w-full rounded-3xl border-black/10 bg-[#fbfbfa] p-3 text-left font-normal hover:border-[#bfd0e3] hover:bg-[#ffffff]"
                       >
                         <div className="flex items-center justify-between gap-2">
-                          <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+                          <Badge className={`h-auto rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
                             prompt.kind === "question" ? "bg-[#e8f0fa] text-[#476a99]" : "bg-[#f3ebe6] text-[#9b5d3f]"
                           }`}>
                             {prompt.kind === "question" ? "Fråga" : "Svar"}
-                          </span>
+                          </Badge>
                           <span className="text-[11px] font-semibold text-ink-400">{prompt.label}</span>
                         </div>
                         <p className="mt-2 text-sm leading-relaxed text-ink-800">{prompt.text}</p>
@@ -2197,11 +2197,11 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                           <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">{item.label}</p>
                           <p className="mt-1 text-sm font-semibold text-ink-900">{item.value}</p>
                         </div>
-                        <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                        <Badge className={`h-auto rounded-full px-2 py-0.5 text-[10px] font-semibold ${
                           item.status === "match" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"
                         }`}>
                           {item.status === "match" ? "Match" : "Delvis"}
-                        </span>
+                        </Badge>
                       </div>
                     ))}
                   </div>
@@ -2721,9 +2721,9 @@ function AdminLeadMatchesPage({ app }) {
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">LEADS</p>
-                <span className="rounded-full bg-black/10 px-2 py-0.5 text-[11px] font-semibold text-ink-700">
+                <Badge variant="outline" className="h-auto rounded-full bg-black/10 px-2 py-0.5 text-[11px] font-semibold text-ink-700">
                   {leadRows.length} nya
-                </span>
+                </Badge>
               </div>
               <p className="mt-1 text-sm text-ink-600">Hyresgäster som aktivt visat intresse för era lokaler</p>
             </div>
@@ -2764,9 +2764,9 @@ function AdminLeadMatchesPage({ app }) {
                   </TableCell>
                   <TableCell className="px-4 py-3.5 align-top font-semibold text-ink-800">{lead.listing.title}</TableCell>
                   <TableCell className="whitespace-normal px-4 py-3.5 align-top">
-                    <span className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-semibold ${interestClass(lead.interest)}`}>
+                    <Badge variant="outline" className={`h-auto rounded-full px-2.5 py-0.5 text-xs font-semibold ${interestClass(lead.interest)}`}>
                       {lead.interest}
-                    </span>
+                    </Badge>
                   </TableCell>
                   <TableCell className={`px-4 py-3.5 text-right font-semibold ${matchScoreClass(lead.score)}`}>
                     {lead.score}%
@@ -2823,9 +2823,9 @@ function AdminLeadMatchesPage({ app }) {
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">MATCHNINGAR</p>
-              <span className="rounded-full bg-black/10 px-2 py-0.5 text-[11px] font-semibold text-ink-700">
+              <Badge variant="outline" className="h-auto rounded-full bg-black/10 px-2 py-0.5 text-[11px] font-semibold text-ink-700">
                 {suggestedMatches.length} föreslagna
-              </span>
+              </Badge>
             </div>
             <p className="mt-1 text-sm text-ink-600">Hyresgäster vars sökprofil matchar era lokaler — de har inte kontaktat er än</p>
           </div>
@@ -2906,9 +2906,9 @@ function AdminLeadMatchesPage({ app }) {
                       <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">Match</p>
                       <p className={`mt-1 text-3xl font-semibold leading-none ${matchScoreClass(renter.score)}`}>{renter.score}%</p>
                     </div>
-                    <span className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-semibold ${matchScoreBadgeClass(renter.score)}`}>
+                    <Badge variant="outline" className={`h-auto rounded-full px-2.5 py-0.5 text-xs font-semibold ${matchScoreBadgeClass(renter.score)}`}>
                       {renter.preferredType}
-                    </span>
+                    </Badge>
                   </div>
 
                   <div className="mt-4 grid grid-cols-3 gap-3 border-t border-black/10 pt-3">
@@ -3143,9 +3143,9 @@ function AdminOverview({ app }) {
                       </div>
                     </TableCell>
                     <TableCell className="px-4 py-3.5 align-top">
-                      <span className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-semibold ${statusClass(item.status)}`}>
+                      <Badge variant="outline" className={`h-auto rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusClass(item.status)}`}>
                         {item.status}
-                      </span>
+                      </Badge>
                     </TableCell>
                     <TableCell className="px-4 py-3.5 text-right font-semibold text-ink-800">{item.views.toLocaleString("sv-SE")}</TableCell>
                     <TableCell className="px-4 py-3.5 text-right font-semibold text-ink-800">{item.inquiries}</TableCell>
@@ -3482,7 +3482,7 @@ function AdminProspectsPage({ app }) {
               <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Prospekt</p>
               <p className="mt-1 text-sm text-ink-600">Skapande och redigering sker i respektive mäklares egen panel.</p>
             </div>
-            <span className="rounded-full bg-black/10 px-2 py-0.5 text-[11px] font-semibold text-ink-700">{prospects.length} rader</span>
+            <Badge variant="outline" className="h-auto rounded-full bg-black/10 px-2 py-0.5 text-[11px] font-semibold text-ink-700">{prospects.length} rader</Badge>
           </div>
         </div>
 

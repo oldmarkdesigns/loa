@@ -1,6 +1,7 @@
 import { parseAmenities } from "../../lib/formatters";
 import { amenityIconFor } from "../../lib/propertyAmenityIcons";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 
 function mergeAmenities(draft) {
   const textAmenities = parseAmenities(draft.additionalAmenities);
@@ -16,7 +17,7 @@ function mergeAmenities(draft) {
 function ListingPreview({ draft }) {
   const mergedAmenities = mergeAmenities(draft);
   const coverImage = draft.images?.[0]?.src || "/object-images/object-1.jpeg";
-  const amenityChipClass = "inline-flex min-h-[42px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-black/10 bg-[#ffffff] px-3 py-1.5 text-[0.875rem] font-semibold leading-5 text-ink-700";
+  const amenityChipClass = "h-auto min-h-[42px] shrink-0 gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-[0.875rem] font-semibold leading-5 text-ink-700";
 
   return (
     <article className="overflow-hidden rounded-2xl border border-black/10 bg-[#ffffff]">
@@ -29,7 +30,7 @@ function ListingPreview({ draft }) {
         <div>
           <div className="flex items-start justify-between gap-2">
             <p className="text-lg font-semibold">{draft.title || "Rubrik saknas"}</p>
-            <span className="chip shrink-0">{draft.type || "-"}</span>
+            <Badge variant="outline" className="h-auto shrink-0 rounded-2xl border-ink-200 bg-[#ffffff] px-3 py-1 text-xs font-semibold text-ink-700">{draft.type || "-"}</Badge>
           </div>
           <p className="mt-2 text-sm text-ink-600">{draft.district || "Område saknas"} • {draft.address || "Adress saknas"}</p>
         </div>
@@ -61,10 +62,10 @@ function ListingPreview({ draft }) {
           {mergedAmenities.slice(0, 8).map((amenity) => {
             const Icon = amenityIconFor(amenity);
             return (
-              <span key={amenity} className={amenityChipClass}>
+              <Badge key={amenity} variant="outline" className={amenityChipClass}>
                 <Icon className="h-3.5 w-3.5 shrink-0 text-ink-700" />
                 {amenity}
-              </span>
+              </Badge>
             );
           })}
         </div>

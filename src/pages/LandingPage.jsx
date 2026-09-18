@@ -44,6 +44,7 @@ import {
 import { districtOptions, listingTypes, listings as baseListingDataset } from "../data/mockData";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -124,9 +125,9 @@ function ProcessStepSearchMockup() {
         <div className="h-2 w-full rounded-full bg-black/10" />
         <div className="h-2 w-2/3 rounded-full bg-black/10" />
       </div>
-      <span className="absolute -top-3 right-1 inline-flex items-center gap-1.5 rounded-full border border-[#4f46e5]/25 bg-white px-3 py-1.5 text-xs font-semibold text-[#4f46e5] shadow-md">
+      <Badge variant="outline" className="h-auto absolute -top-3 right-1 gap-1.5 border-[#4f46e5]/25 bg-white px-3 py-1.5 text-xs font-semibold text-[#4f46e5] shadow-md">
         <SearchIcon className="h-3 w-3" /> AI-sök
-      </span>
+      </Badge>
     </div>
   );
 }
@@ -253,8 +254,8 @@ function LokalprogramCreateMockup({ isActive }) {
         </div>
 
         <div className="mt-4 flex justify-end gap-2 border-t border-black/10 pt-3.5">
-          <span className="rounded-full border border-black/10 px-3 py-1.5 text-[10px] font-semibold text-ink-600">Avbryt</span>
-          <span className="rounded-full bg-[#0b0a0e] px-3 py-1.5 text-[10px] font-semibold text-white">Spara ändringar</span>
+          <Badge variant="outline" className="h-auto rounded-full px-3 py-1.5 text-[10px] font-semibold text-ink-600">Avbryt</Badge>
+          <Badge className="h-auto rounded-full bg-[#0b0a0e] px-3 py-1.5 text-[10px] font-semibold text-white">Spara ändringar</Badge>
         </div>
       </div>
     </div>
@@ -282,16 +283,16 @@ function LokalprogramProfileMockup({ isActive }) {
             </div>
             <div>
               <span className="block h-8 w-64 rounded-full bg-[#edf1f1]" aria-label="Namn maskerat" />
-              <span className="mt-5 inline-flex items-center gap-2 rounded-full border border-black/10 px-4 py-2 text-sm font-semibold text-ink-500">
+              <Badge variant="outline" className="h-auto mt-5 gap-2 rounded-full px-4 py-2 text-sm font-semibold text-ink-500">
                 <CheckBadgeIcon className="h-4 w-4 text-ink-400" />
                 ID verifierad
-              </span>
+              </Badge>
             </div>
           </div>
-          <span className="inline-flex shrink-0 items-center gap-2 rounded-full border border-black/10 px-5 py-3 text-sm font-semibold text-ink-500">
+          <Badge variant="outline" className="h-auto shrink-0 gap-2 rounded-full px-5 py-3 text-sm font-semibold text-ink-500">
             <PencilIcon className="h-4 w-4" />
             Hantera profil
-          </span>
+          </Badge>
         </div>
 
         <div className="mt-8 grid grid-cols-[minmax(0,1fr)_0.38fr] gap-6">
@@ -304,10 +305,10 @@ function LokalprogramProfileMockup({ isActive }) {
                     Flera behov kan sparas separat för olika team, lägen eller tidslinjer.
                   </p>
                 </div>
-                <span className="inline-flex items-center gap-2 rounded-full bg-[#0b0a0e] px-5 py-3 text-sm font-semibold text-white">
+                <Badge className="h-auto gap-2 rounded-full bg-[#0b0a0e] px-5 py-3 text-sm font-semibold text-white">
                   <PlusIcon className="h-4 w-4" />
                   Lägg till
-                </span>
+                </Badge>
               </div>
 
               <div className={`mt-6 origin-left rounded-2xl border border-[#4f46e5]/20 bg-white p-5 ${elevateClass}`}>
@@ -315,9 +316,9 @@ function LokalprogramProfileMockup({ isActive }) {
                   <div className="min-w-0">
                     <div className="flex items-center gap-3">
                       <p className="text-base font-semibold text-ink-900">Lokalprogram 1</p>
-                      <span className="rounded-full border border-black/10 px-3 py-1 text-xs font-semibold text-ink-500">
+                      <Badge variant="outline" className="h-auto rounded-full px-3 py-1 text-xs font-semibold text-ink-500">
                         Aktivt i sök
-                      </span>
+                      </Badge>
                     </div>
                     <p className="mt-3 text-sm font-medium text-ink-500">
                       {primaryListing.district} · {primaryListing.type} · max {primaryListing.priceMonthly.toLocaleString("sv-SE")} kr
@@ -406,12 +407,12 @@ function LokalprogramSearchMockup({ isActive }) {
             <div className="mt-5 flex items-center justify-between gap-4">
               <p className="text-2xl font-semibold text-[#0b0a0e]">Lediga lokaler</p>
               <div className="flex items-center gap-3">
-                <span className={`inline-flex origin-center items-center gap-2 rounded-full border border-black/10 bg-white py-2 pl-2 pr-4 text-sm font-semibold text-ink-900 ${elevateClass}`}>
+                <Badge variant="outline" className={`h-auto origin-center gap-2 bg-white py-2 pl-2 pr-4 text-sm font-semibold text-ink-900 ${elevateClass}`}>
                   <span className="h-7 w-7 overflow-hidden rounded-full">
                     <img src="/object-images/object-6.jpeg" alt="" className="h-full w-full object-cover" />
                   </span>
                   Sök med lokalprogram
-                </span>
+                </Badge>
               </div>
             </div>
 
@@ -439,9 +440,9 @@ function LokalprogramSearchMockup({ isActive }) {
             </div>
 
             <div className="mt-5 flex items-center justify-between gap-4">
-              <span className="inline-flex h-11 items-center rounded-full border border-black/10 px-4 text-sm font-semibold text-ink-800">
+              <Badge variant="outline" className="h-11 rounded-full px-4 text-sm font-semibold text-ink-800">
                 26 lediga lokaler
-              </span>
+              </Badge>
               <div className="flex items-center gap-3">
                 <span className="text-sm font-semibold text-ink-600">Sortera</span>
                 <span className="inline-flex h-11 items-center gap-8 rounded-2xl border border-black/10 px-4 text-sm font-semibold text-ink-700">
@@ -511,13 +512,13 @@ function LokalprogramSearchMockup({ isActive }) {
                 <p className="mt-4 text-sm font-medium text-ink-600">Fastighetsägare: Demo Hyresvärd</p>
 
                 <div className="mt-5 flex items-center justify-between gap-4">
-                  <span className="inline-flex items-center gap-2 rounded-full border border-black/10 px-5 py-3 text-sm font-semibold text-ink-800">
+                  <Badge variant="outline" className="h-auto gap-2 rounded-full px-5 py-3 text-sm font-semibold text-ink-800">
                     <CalendarIcon className="h-4 w-4" />
                     Boka visning
-                  </span>
-                  <span className="rounded-full border border-black/10 px-5 py-3 text-sm font-semibold text-ink-500">
+                  </Badge>
+                  <Badge variant="outline" className="h-auto rounded-full px-5 py-3 text-sm font-semibold text-ink-500">
                     HYRESVÄRD
-                  </span>
+                  </Badge>
                 </div>
               </div>
             </div>
@@ -1559,10 +1560,10 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
           <h2 className="font-display-serif mt-4 text-4xl font-semibold leading-[0.95] text-[#0b0a0e] sm:text-5xl">
             Gratis att komma igång, betala bara för extra synlighet
           </h2>
-          <span className="mx-auto mt-5 inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs font-semibold text-emerald-800">
+          <Badge variant="outline" className="h-auto mx-auto mt-5 gap-2 border-emerald-200 bg-emerald-50 px-4 py-2 text-xs font-semibold text-emerald-800">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
             Gratis under hela lanseringsperioden
-          </span>
+          </Badge>
         </div>
 
         <div className="mx-auto mt-14 grid max-w-5xl gap-6 sm:grid-cols-2">

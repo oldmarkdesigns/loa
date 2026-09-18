@@ -26,6 +26,8 @@ import { navigateTo } from "../../lib/router";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
@@ -423,17 +425,18 @@ function PanelProfileSection({ app, basePath, forcedTab }) {
             <div className="space-y-5">
               {showProfileSetupCard ? (
                 <article className="rounded-3xl border border-black/10 bg-[#ffffff] p-5 sm:p-6">
-                  <button
+                  <Button
                     type="button"
-                    className="flex w-full items-center justify-between gap-3 text-left"
+                    variant="ghost"
+                    className="h-auto w-full justify-between gap-3 text-left font-normal hover:bg-transparent"
                     onClick={() => setIsProfileSetupCollapsed((prev) => !prev)}
                     aria-expanded={!isProfileSetupCollapsed}
                   >
                     <h2 className="text-2xl font-semibold text-[#0b0a0e]">Slutför din profil</h2>
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-black/20 bg-[#ffffff] px-4 py-2 text-xs font-semibold text-ink-700 transition hover:border-[#0b0a0e] hover:text-[#0b0a0e]">
+                    <Badge variant="outline" className="h-auto gap-1.5 rounded-full px-4 py-2 text-xs font-semibold text-ink-700 hover:border-[#0b0a0e] hover:text-[#0b0a0e]">
                       {isProfileSetupCollapsed ? "Visa" : "Dölj"}
-                    </span>
-                  </button>
+                    </Badge>
+                  </Button>
 
                   <div
                     className={`overflow-hidden transition-all duration-300 ease-in-out ${
@@ -444,12 +447,10 @@ function PanelProfileSection({ app, basePath, forcedTab }) {
 
                     <div className="mt-4">
                       <p className="text-sm font-semibold text-ink-700">{profileSetupProgress.percent}% klart</p>
-                      <div className="mt-2 h-3 overflow-hidden rounded-full border border-black/10 bg-[#eef2f8]">
-                        <div
-                          className="h-full rounded-full bg-[#0b0a0e] transition-all"
-                          style={{ width: `${profileSetupProgress.percent}%` }}
-                        />
-                      </div>
+                      <Progress
+                        value={profileSetupProgress.percent}
+                        className="mt-2 [&_[data-slot=progress-track]]:h-3 [&_[data-slot=progress-track]]:border [&_[data-slot=progress-track]]:border-black/10 [&_[data-slot=progress-track]]:bg-[#eef2f8] [&_[data-slot=progress-indicator]]:bg-[#0b0a0e]"
+                      />
                     </div>
 
                     <p className="mt-3 text-sm text-ink-600">
@@ -507,9 +508,9 @@ function PanelProfileSection({ app, basePath, forcedTab }) {
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                   {mockRenterMatches.map((renter) => (
                     <article key={renter.id} className="relative rounded-3xl border border-black/10 bg-[#ffffff] p-4 sm:p-5">
-                      <span className="absolute right-3.5 top-3.5 rounded-full border border-[#0b0a0e]/20 bg-[#f8fafc] px-3 py-1 text-sm font-semibold text-[#0b0a0e]">
+                      <Badge variant="outline" className="h-auto absolute right-3.5 top-3.5 rounded-full border-[#0b0a0e]/20 bg-[#f8fafc] px-3 py-1 text-sm font-semibold text-[#0b0a0e]">
                         {renter.matchPercent}%
-                      </span>
+                      </Badge>
                       <div className="h-5" />
                       <div className="mx-auto mt-3 flex h-28 w-28 items-center justify-center rounded-2xl border border-[#0b0a0e]/15 bg-[#f8fafc] text-3xl font-semibold tracking-wide text-[#0b0a0e]">
                         {renter.logo}
@@ -659,9 +660,9 @@ function PanelProfileSection({ app, basePath, forcedTab }) {
               <h2 className="text-xl font-semibold">Sparade objekt</h2>
               <p className="mt-1 text-sm text-ink-600">Objekt du har sparat för uppföljning.</p>
             </div>
-            <span className="rounded-full border border-black/10 bg-[#ffffff] px-3 py-1 text-xs font-semibold text-ink-700">
+            <Badge variant="outline" className="h-auto rounded-full bg-[#ffffff] px-3 py-1 text-xs font-semibold text-ink-700">
               {favoriteListings.length} sparade
-            </span>
+            </Badge>
           </div>
           {favoriteListings.length === 0 ? (
             <p className="mt-3 rounded-2xl border border-black/10 bg-[#fafafa] px-3 py-3 text-sm text-ink-600">Inga sparade objekt ännu.</p>
@@ -689,9 +690,9 @@ function PanelProfileSection({ app, basePath, forcedTab }) {
               <h2 className="text-xl font-semibold">Sparade sökningar</h2>
               <p className="mt-1 text-sm text-ink-600">Sökningar du har sparat för uppföljning.</p>
             </div>
-            <span className="rounded-full border border-black/10 bg-[#ffffff] px-3 py-1 text-xs font-semibold text-ink-700">
+            <Badge variant="outline" className="h-auto rounded-full bg-[#ffffff] px-3 py-1 text-xs font-semibold text-ink-700">
               {filterPresets.length} sparade
-            </span>
+            </Badge>
           </div>
           {filterPresets.length === 0 ? (
             <p className="mt-3 rounded-2xl border border-black/10 bg-[#fafafa] px-3 py-3 text-sm text-ink-600">Inga sparade sökningar ännu.</p>

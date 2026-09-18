@@ -43,6 +43,7 @@ import {
 } from "../../components/icons/UiIcons";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 const GOOGLE_MAPS_SCRIPT_ID = "google-maps-listing-detail-script";
@@ -1164,9 +1165,9 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                     <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Tillgänglighet</p>
                     <p className="mt-1 text-sm font-semibold text-ink-900">{listing.availability || "Efter överenskommelse"}</p>
                   </div>
-                  <span className="rounded-full border border-black/10 bg-[#ffffff] px-2.5 py-1 text-[11px] font-semibold text-ink-700">
+                  <Badge variant="outline" className="h-auto rounded-full bg-[#ffffff] px-2.5 py-1 text-[11px] font-semibold text-ink-700">
                     {listing.term || "Flexibelt avtal"}
-                  </span>
+                  </Badge>
                 </div>
 
                 <div className="mt-4 border-t border-black/10 pt-4">

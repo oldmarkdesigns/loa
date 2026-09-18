@@ -346,11 +346,11 @@ function MessagesPage({ app }) {
                       onClick={() => setFilter(tab.key)}
                     >
                       {tab.label}
-                      <span className={`inline-flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] ${
+                      <Badge className={`h-auto min-w-5 rounded-full px-1.5 py-0.5 text-[10px] ${
                         active ? "bg-[#ffffff]/15 text-white" : "bg-[#eef3f8] text-[#476a99]"
                       }`}>
                         {tab.count}
-                      </span>
+                      </Badge>
                     </Button>
                   );
                 })}
@@ -384,9 +384,9 @@ function MessagesPage({ app }) {
                         <div className="flex items-center gap-2">
                           <p className="truncate text-sm font-semibold text-ink-900">{conversation.counterpartName}</p>
                           {isBrokerView ? (
-                            <span className={`shrink-0 inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold ${pipelineToneClass(conversation.pipelineTone)}`}>
+                            <Badge variant="outline" className={`h-auto shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${pipelineToneClass(conversation.pipelineTone)}`}>
                               {conversation.pipelineLabel}
-                            </span>
+                            </Badge>
                           ) : null}
                         </div>
                         <p className="truncate text-xs text-ink-500">{conversation.company}</p>
@@ -423,9 +423,9 @@ function MessagesPage({ app }) {
                         <div className="flex flex-wrap items-center gap-2">
                           <h2 className="truncate text-lg font-semibold text-[#0b0a0e]">{activeConversation.counterpartName}</h2>
                           {isBrokerView ? (
-                            <span className="inline-flex rounded-full border border-black/10 bg-[#eef3f8] px-2 py-0.5 text-[11px] font-semibold text-[#476a99]">{activeConversation.stage}</span>
+                            <Badge variant="outline" className="h-auto rounded-full bg-[#eef3f8] px-2 py-0.5 text-[11px] font-semibold text-[#476a99]">{activeConversation.stage}</Badge>
                           ) : (
-                            <span className="inline-flex rounded-full border border-black/10 bg-[#eef3f8] px-2 py-0.5 text-[11px] font-semibold text-[#476a99]">{BROKER_PROFILE.role}</span>
+                            <Badge variant="outline" className="h-auto rounded-full bg-[#eef3f8] px-2 py-0.5 text-[11px] font-semibold text-[#476a99]">{BROKER_PROFILE.role}</Badge>
                           )}
                         </div>
                         <p className="truncate text-sm text-ink-600">
@@ -551,9 +551,9 @@ function MessagesPage({ app }) {
                               className="message-suggestion-card w-full border border-black/10 bg-[#fbfbfa] p-3 text-left transition hover:bg-[#ffffff]"
                             >
                               <div className="flex items-center justify-between gap-2">
-                                <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide ${suggestionToneClass(suggestion.tone)}`}>
+                                <Badge variant="outline" className={`h-auto rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide ${suggestionToneClass(suggestion.tone)}`}>
                                   {suggestion.tag}
-                                </span>
+                                </Badge>
                                 <span className="text-[11px] text-ink-500">{suggestion.label}</span>
                               </div>
                               <p className="mt-2 text-sm leading-relaxed text-ink-800">{suggestion.text}</p>

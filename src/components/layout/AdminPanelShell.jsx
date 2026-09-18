@@ -3,6 +3,7 @@ import { navigateTo, routeMatches } from "../../lib/router";
 import { LogoutIcon, PanelLeftIcon, XIcon } from "../icons/UiIcons";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Badge } from "@/components/ui/badge";
 
 function PanelSidebarNav({ pathname, navItems, rootPath, onNavigate, badges, collapsed = false }) {
   const navRef = useRef(null);
@@ -67,9 +68,9 @@ function PanelSidebarNav({ pathname, navItems, rootPath, onNavigate, badges, col
                 <>
                   <span className="min-w-0 flex-1 truncate">{item.label}</span>
                   {badgeValue ? (
-                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${active ? "bg-[#ffffff]/20 text-white" : "bg-black/10 text-ink-700"}`}>
+                    <Badge className={`h-auto rounded-full px-2 py-0.5 text-[11px] font-semibold ${active ? "bg-[#ffffff]/20 text-white" : "bg-black/10 text-ink-700"}`}>
                       {badgeValue}
-                    </span>
+                    </Badge>
                   ) : null}
                 </>
               ) : null}

@@ -21,6 +21,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -735,9 +736,9 @@ function PublishPage({ app, pathname = "/app/publish" }) {
                             <div className="relative">
                               <img src={image.src} alt={image.name || `Bild ${index + 1}`} className="h-32 w-full rounded-xl border border-black/10 object-cover" />
                               {index === 0 ? (
-                                <span className="absolute left-2 top-2 rounded-full border border-[#0b0a0e] bg-[#0b0a0e] px-2 py-0.5 text-[10px] font-semibold text-white">
+                                <Badge className="h-auto absolute left-2 top-2 rounded-full bg-[#0b0a0e] px-2 py-0.5 text-[10px] font-semibold text-white">
                                   Omslagsfoto
-                                </span>
+                                </Badge>
                               ) : null}
                             </div>
                             <div className="mt-2 space-y-1.5">
@@ -942,9 +943,9 @@ function PublishPage({ app, pathname = "/app/publish" }) {
                         <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Förhandsgranskning</p>
                         <h3 className="mt-1 text-xl font-semibold text-[#0b0a0e]">Publicerad annons</h3>
                       </div>
-                      <span className="rounded-full border border-black/10 bg-[#ffffff] px-3 py-1 text-xs font-semibold text-ink-700">
+                      <Badge variant="outline" className="h-auto rounded-full bg-[#ffffff] px-3 py-1 text-xs font-semibold text-ink-700">
                         Kvalitet {qualityScore}
-                      </span>
+                      </Badge>
                     </div>
                     <ListingPreview draft={draft} />
                   </article>

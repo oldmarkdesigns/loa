@@ -384,9 +384,9 @@ function AppShell({
         <div ref={notificationPanelRef} className="fixed right-4 top-[72px] z-[60] w-[min(360px,calc(100vw-2rem))] rounded-2xl border border-black/10 bg-[#ffffff] p-3 shadow-[0_10px_28px_rgba(15,25,48,0.10)]">
           <div className="mb-2 flex items-center justify-between">
             <p className="text-sm font-semibold text-ink-900">Notiser</p>
-            <span className="rounded-full border border-black/10 bg-[#f7f7f7] px-2 py-0.5 text-xs font-semibold text-ink-700">
+            <Badge variant="outline" className="h-auto rounded-full bg-[#f7f7f7] px-2 py-0.5 text-xs font-semibold text-ink-700">
               {notificationItems.length}
-            </span>
+            </Badge>
           </div>
           <div className="space-y-2">
             {notificationItems.map((item) => (

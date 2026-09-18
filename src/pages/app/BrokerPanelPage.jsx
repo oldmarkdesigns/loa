@@ -39,6 +39,7 @@ import ProspectVersionHistoryPanel from "../../components/app/ProspectVersionHis
 import ProspectShareSheet from "../../components/app/ProspectShareSheet";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -132,9 +133,9 @@ function SparkKpiCard({ card, series }) {
     <article className="surface p-4">
       <div className="flex items-start justify-between gap-3">
         <p className="text-sm text-ink-600">{card.label}</p>
-        <span className="rounded-full border border-black/10 bg-[#ffffff] px-2 py-0.5 text-xs font-semibold text-ink-700">
+        <Badge variant="outline" className="h-auto rounded-full bg-[#ffffff] px-2 py-0.5 text-xs font-semibold text-ink-700">
           {card.delta}
-        </span>
+        </Badge>
       </div>
       <p className="mt-3 text-[30px] font-semibold leading-none text-[#0b0a0e]">{card.value}</p>
       <p className="mt-2 text-xs text-ink-500">{card.meta}</p>
@@ -548,7 +549,7 @@ function BrokerListingsSection({ app }) {
               <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Hantera objekt</p>
               <p className="mt-1 text-sm text-ink-600">Klicka på en rad för att öppna objektet.</p>
             </div>
-            <span className="rounded-full bg-black/10 px-2 py-0.5 text-[11px] font-semibold text-ink-700">{filteredListings.length} rader</span>
+            <Badge variant="outline" className="h-auto rounded-full bg-black/10 px-2 py-0.5 text-[11px] font-semibold text-ink-700">{filteredListings.length} rader</Badge>
           </div>
           <div className="mt-3 grid gap-2 sm:grid-cols-[280px_170px]">
             <Input
@@ -975,7 +976,7 @@ function BrokerProspectsSection({ app }) {
                 <p className="mt-1 text-sm text-ink-600">Du har inga objekt än.</p>
               )}
             </div>
-            <span className="shrink-0 rounded-full bg-black/10 px-2 py-0.5 text-[11px] font-semibold text-ink-700">{prospects.length} rader</span>
+            <Badge variant="outline" className="h-auto shrink-0 rounded-full bg-black/10 px-2 py-0.5 text-[11px] font-semibold text-ink-700">{prospects.length} rader</Badge>
           </div>
         </div>
 
@@ -1204,9 +1205,9 @@ function LeadDetailPanel({ lead, app, onClose }) {
           <section className="mt-6 border-t border-black/10 pt-5">
             <div className="mb-3 flex items-center justify-between gap-3">
               <h3 className="text-lg font-semibold">Aktivitetslogg</h3>
-              <span className="rounded-full border border-black/10 bg-[#f7f7f7] px-2 py-0.5 text-xs font-semibold text-ink-700">
+              <Badge variant="outline" className="h-auto rounded-full bg-[#f7f7f7] px-2 py-0.5 text-xs font-semibold text-ink-700">
                 {activities.length}
-              </span>
+              </Badge>
             </div>
 
             <form className="rounded-2xl border border-black/10 bg-[#fafafa] p-3" onSubmit={addActivity}>
@@ -1313,7 +1314,7 @@ function BrokerLeadsSection({ app }) {
               <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Intresseanmälningar</p>
               <p className="mt-1 text-sm text-ink-600">Klicka på en rad för status, anteckningar, uppföljning och logg.</p>
             </div>
-            <span className="rounded-full bg-black/10 px-2 py-0.5 text-[11px] font-semibold text-ink-700">{rows.length} rader</span>
+            <Badge variant="outline" className="h-auto rounded-full bg-black/10 px-2 py-0.5 text-[11px] font-semibold text-ink-700">{rows.length} rader</Badge>
           </div>
         </div>
 
@@ -1359,9 +1360,9 @@ function BrokerLeadsSection({ app }) {
                       <div className="flex flex-wrap items-center gap-2">
                         <StatusPill status={lead.status} />
                         {overdue ? (
-                          <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-800">
+                          <Badge variant="outline" className="h-auto rounded-full border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-800">
                             Förfallen
-                          </span>
+                          </Badge>
                         ) : null}
                       </div>
                     </TableCell>
