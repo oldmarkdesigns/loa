@@ -1572,9 +1572,6 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
     setShowSearchSummaryCard(false);
     setAnimateSearchSummaryIn(false);
     setShowAdvancedSearchEditor(false);
-    setShowAdvancedSearchOverlay(false);
-    setIsAdvancedSearchOverlayActive(false);
-    setIsClosingAdvancedSearchOverlay(false);
     setShowEditorAiPanel(false);
     setSidePanelMode("filter");
     setIsSwitchingSidePanel(false);
