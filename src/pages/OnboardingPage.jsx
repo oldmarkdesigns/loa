@@ -18,6 +18,11 @@ import {
   SparklesIcon,
   UserIcon,
 } from "../components/icons/UiIcons";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const RENTER_STEPS = ["program-core", "review"];
 const BROKER_WITH_PROGRAM_STEPS = ["program-core", "publisher-profile", "review"];
@@ -1059,20 +1064,21 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                   Vill du sätta upp en ny företagsprofil nu? Då öppnar vi bolagsadmin-onboardingen direkt.
                 </p>
                 <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-end">
-                  <button
+                  <Button
                     type="button"
-                    className="inline-flex min-h-0 items-center justify-center rounded-full border border-black/15 bg-[#ffffff] px-5 py-3 text-sm font-semibold text-ink-800"
+                    variant="outline"
+                    className="h-auto rounded-full px-5 py-3 text-sm font-semibold text-ink-800"
                     onClick={skipCompanyProfileSetup}
                   >
                     Inte nu
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
-                    className="inline-flex min-h-0 items-center justify-center rounded-full border border-[#0b0a0e] bg-[#0b0a0e] px-5 py-3 text-sm font-semibold text-white"
+                    className="h-auto rounded-full px-5 py-3 text-sm font-semibold"
                     onClick={startCompanyProfileSetup}
                   >
                     Sätt upp företagsprofil
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -1091,14 +1097,16 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                 <section className="space-y-8 pb-1">
                   {showProgramInfoCard ? (
                     <div className="relative rounded-2xl border border-[#0b0a0e]/15 bg-[#f8fafc] px-4 py-4 sm:px-5">
-                      <button
+                      <Button
                         type="button"
+                        variant="outline"
+                        size="icon"
                         aria-label="Stäng information om lokalprogram"
-                        className="absolute right-3 top-3 inline-flex min-h-0 min-w-0 h-8 w-8 items-center justify-center rounded-full border border-black/15 bg-[#ffffff] p-0 text-lg leading-none text-ink-700"
+                        className="absolute right-3 top-3 h-8 w-8 rounded-full text-lg leading-none text-ink-700"
                         onClick={() => setShowProgramInfoCard(false)}
                       >
                         ×
-                      </button>
+                      </Button>
                       <div className="pr-10">
                         <p className="text-[1.65rem] font-semibold leading-tight text-[#0b0a0e]">Hitta rätt lokal snabbare</p>
                       </div>
@@ -1109,13 +1117,14 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                         <li className="flex items-start gap-2"><span className="mt-1 inline-block h-2 w-2 rounded-full bg-[#0b0a0e]" />Ni kan alltid ändra lokalprogrammet senare i Profil.</li>
                       </ul>
                       <div className="mt-4">
-                        <button
+                        <Button
                           type="button"
-                          className="inline-flex min-h-0 items-center justify-center rounded-full border border-black/20 bg-[#ffffff] px-4 py-2 text-xs font-semibold text-ink-700"
+                          variant="outline"
+                          className="h-auto rounded-full px-4 py-2 text-xs font-semibold text-ink-700"
                           onClick={goNext}
                         >
                           Hoppa över lokalprogram
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   ) : null}
@@ -1127,16 +1136,17 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                       {typeOptions.map((type) => {
                         const active = Array.isArray(renterProgram.type) && renterProgram.type.includes(type);
                         return (
-                          <button
+                          <Button
                             key={type}
                             type="button"
-                            className={`inline-flex items-center justify-center gap-2 !rounded-2xl border px-3 py-3 text-sm font-semibold transition ${
-                              active ? "border-[#0b0a0e] bg-[#0b0a0e] text-white" : "border-black/15 bg-[#ffffff] text-ink-700 hover:bg-black/5"
+                            variant="outline"
+                            className={`h-auto justify-center gap-2 !rounded-2xl px-3 py-3 text-sm font-semibold ${
+                              active ? "border-[#0b0a0e] bg-[#0b0a0e] text-white hover:bg-[#0b0a0e] hover:text-white" : "border-black/15 text-ink-700 hover:bg-black/5"
                             }`}
                             onClick={() => toggleProgramType(type)}
                           >
                             {type}
-                          </button>
+                          </Button>
                         );
                       })}
                     </div>
@@ -1152,16 +1162,17 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                           ? selectedDistricts.length === 1 && selectedDistricts[0] === "Alla"
                           : selectedDistricts.includes(district);
                         return (
-                          <button
+                          <Button
                             key={district}
                             type="button"
-                            className={`inline-flex items-center !rounded-2xl border px-3 py-1.5 text-xs font-semibold transition ${
-                              active ? "border-[#0b0a0e] bg-[#0b0a0e] text-white" : "border-black/10 bg-[#ffffff] text-ink-700 hover:bg-black/5"
+                            variant="outline"
+                            className={`h-auto !rounded-2xl px-3 py-1.5 text-xs font-semibold ${
+                              active ? "border-[#0b0a0e] bg-[#0b0a0e] text-white hover:bg-[#0b0a0e] hover:text-white" : "border-black/10 text-ink-700 hover:bg-black/5"
                             }`}
                             onClick={() => toggleProgramDistrict(district)}
                           >
                             {district}
-                          </button>
+                          </Button>
                         );
                       })}
                     </div>
@@ -1228,9 +1239,10 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                                 Rekommenderad yta: {recommendedSizeRange.min}-{recommendedSizeRange.max} kvm
                                 {" "}({recommendedSizeRange.sqmPerPerson} kvm/person).
                               </p>
-                              <button
+                              <Button
                                 type="button"
-                                className="inline-flex items-center gap-1.5 !rounded-2xl border border-[#4f46e5]/35 bg-[#ffffff] px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-black/5"
+                                variant="outline"
+                                className="h-auto gap-1.5 !rounded-2xl border-[#4f46e5]/35 px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-black/5"
                                 onClick={() => {
                                   setRenterProgram((prev) => ({
                                     ...prev,
@@ -1242,7 +1254,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                               >
                                 <SparklesIcon className="h-3.5 w-3.5 text-[#4f46e5]" />
                                 Använd rekommenderad yta
-                              </button>
+                              </Button>
                             </div>
                           ) : (
                             <p className="inline-flex min-h-[30px] items-center gap-1.5 text-sm leading-none text-ink-600">
@@ -1261,7 +1273,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                     <div className="mt-3 grid gap-3 sm:grid-cols-3">
                       <label className="grid gap-1">
                         <span className="text-xs font-semibold text-ink-600">Önskad inflyttning</span>
-                        <input className="field" type="date" value={renterProgram.moveInDate} onChange={(event) => setRenterProgram((prev) => ({ ...prev, moveInDate: event.target.value }))} />
+                        <Input type="date" value={renterProgram.moveInDate} onChange={(event) => setRenterProgram((prev) => ({ ...prev, moveInDate: event.target.value }))} />
                       </label>
                       <label className="grid gap-1">
                         <span className="text-xs font-semibold text-ink-600">Beräknad flytt inom</span>
@@ -1279,9 +1291,12 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                       </label>
                       <label className="grid gap-1">
                         <span className="text-xs font-semibold text-ink-600">Avtalsflexibilitet</span>
-                        <select className="field select-chevron" value={renterProgram.contractFlex || "Alla"} onChange={(event) => setRenterProgram((prev) => ({ ...prev, contractFlex: event.target.value === "Alla" ? "" : event.target.value }))}>
-                          {contractOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-                        </select>
+                        <Select value={renterProgram.contractFlex || "Alla"} onValueChange={(value) => setRenterProgram((prev) => ({ ...prev, contractFlex: value === "Alla" ? "" : value }))}>
+                          <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {contractOptions.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
                       </label>
                     </div>
                     <div className="mt-3 grid gap-3 sm:grid-cols-3">
@@ -1323,27 +1338,39 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                     <div className="mt-3 grid gap-3 sm:grid-cols-3">
                       <label className="grid gap-1">
                         <span className="text-xs font-semibold text-ink-600">Kollektivtrafik</span>
-                        <select className="field select-chevron" value={renterProgram.transitDistance || "Alla"} onChange={(event) => setRenterProgram((prev) => ({ ...prev, transitDistance: event.target.value === "Alla" ? "" : event.target.value }))}>
-                          {transitOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-                        </select>
+                        <Select value={renterProgram.transitDistance || "Alla"} onValueChange={(value) => setRenterProgram((prev) => ({ ...prev, transitDistance: value === "Alla" ? "" : value }))}>
+                          <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {transitOptions.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
                       </label>
                       <label className="grid gap-1">
                         <span className="text-xs font-semibold text-ink-600">Tillgång</span>
-                        <select className="field select-chevron" value={renterProgram.accessHours || "Alla"} onChange={(event) => setRenterProgram((prev) => ({ ...prev, accessHours: event.target.value === "Alla" ? "" : event.target.value }))}>
-                          {accessOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-                        </select>
+                        <Select value={renterProgram.accessHours || "Alla"} onValueChange={(value) => setRenterProgram((prev) => ({ ...prev, accessHours: value === "Alla" ? "" : value }))}>
+                          <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {accessOptions.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
                       </label>
                       <label className="grid gap-1">
                         <span className="text-xs font-semibold text-ink-600">Parkering</span>
-                        <select className="field select-chevron" value={renterProgram.parkingType || "Alla"} onChange={(event) => setRenterProgram((prev) => ({ ...prev, parkingType: event.target.value === "Alla" ? "" : event.target.value }))}>
-                          {parkingOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-                        </select>
+                        <Select value={renterProgram.parkingType || "Alla"} onValueChange={(value) => setRenterProgram((prev) => ({ ...prev, parkingType: value === "Alla" ? "" : value }))}>
+                          <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {parkingOptions.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
                       </label>
                       <label className="grid gap-1">
                         <span className="text-xs font-semibold text-ink-600">Planlösning</span>
-                        <select className="field select-chevron" value={renterProgram.layoutType || "Alla"} onChange={(event) => setRenterProgram((prev) => ({ ...prev, layoutType: event.target.value === "Alla" ? "" : event.target.value }))}>
-                          {layoutOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-                        </select>
+                        <Select value={renterProgram.layoutType || "Alla"} onValueChange={(value) => setRenterProgram((prev) => ({ ...prev, layoutType: value === "Alla" ? "" : value }))}>
+                          <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {layoutOptions.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
                       </label>
                     </div>
 
@@ -1351,29 +1378,23 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                       <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-700">Särskilda krav</p>
                       <div className="mt-2 grid grid-cols-1 gap-2">
                         <label className="inline-flex items-center gap-2 text-sm text-ink-700">
-                          <input
-                            type="checkbox"
+                          <Checkbox
                             checked={Boolean(renterProgram.includeOperatingCosts)}
-                            onChange={(event) => setRenterProgram((prev) => ({ ...prev, includeOperatingCosts: event.target.checked }))}
-                            className="h-4 w-4 rounded border-black/20"
+                            onCheckedChange={(checked) => setRenterProgram((prev) => ({ ...prev, includeOperatingCosts: Boolean(checked) }))}
                           />
                           Inkludera driftkostnader
                         </label>
                         <label className="inline-flex items-center gap-2 text-sm text-ink-700">
-                          <input
-                            type="checkbox"
+                          <Checkbox
                             checked={Boolean(renterProgram.accessibilityAdapted)}
-                            onChange={(event) => setRenterProgram((prev) => ({ ...prev, accessibilityAdapted: event.target.checked }))}
-                            className="h-4 w-4 rounded border-black/20"
+                            onCheckedChange={(checked) => setRenterProgram((prev) => ({ ...prev, accessibilityAdapted: Boolean(checked) }))}
                           />
                           Tillgänglighetsanpassat
                         </label>
                         <label className="inline-flex items-center gap-2 text-sm text-ink-700">
-                          <input
-                            type="checkbox"
+                          <Checkbox
                             checked={Boolean(renterProgram.ecoCertified)}
-                            onChange={(event) => setRenterProgram((prev) => ({ ...prev, ecoCertified: event.target.checked }))}
-                            className="h-4 w-4 rounded border-black/20"
+                            onCheckedChange={(checked) => setRenterProgram((prev) => ({ ...prev, ecoCertified: Boolean(checked) }))}
                           />
                           Miljöcertifierat
                         </label>
@@ -1387,17 +1408,18 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                         const Icon = option.icon;
                         const active = selectedProgramAmenities.some((item) => normalizeAmenity(item) === normalizeAmenity(option.value));
                         return (
-                          <button
+                          <Button
                             key={option.value}
                             type="button"
-                            className={`inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border px-3.5 py-2.5 text-sm font-semibold transition ${
-                              active ? "border-[#0b0a0e] bg-[#0b0a0e] text-white" : "border-black/10 bg-[#ffffff] text-ink-700 hover:bg-[#ffffff]"
+                            variant="outline"
+                            className={`h-auto shrink-0 gap-2 whitespace-nowrap rounded-full px-3.5 py-2.5 text-sm font-semibold ${
+                              active ? "border-[#0b0a0e] bg-[#0b0a0e] text-white hover:bg-[#0b0a0e] hover:text-white" : "border-black/10 text-ink-700 hover:bg-[#ffffff]"
                             }`}
                             onClick={() => toggleProgramAmenity(option.value)}
                           >
                             <Icon className="h-[18px] w-[18px] shrink-0" />
                             {option.label}
-                          </button>
+                          </Button>
                         );
                       })}
                       </div>
@@ -1430,16 +1452,16 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                         När bolagsadmin godkänner dig får du behörighet att arbeta som mäklare för bolaget. Du kan fortsätta använda plattformen som hyresgäst medan förfrågan väntar på godkännande.
                       </p>
                     </div>
-                    <button
+                    <Button
                       type="button"
-                      className="inline-flex min-h-0 items-center justify-center rounded-full border border-[#0b0a0e] bg-[#0b0a0e] px-6 py-3 text-sm font-semibold text-white"
+                      className="h-auto rounded-full px-6 py-3 text-sm font-semibold"
                       onClick={() => {
                         window.sessionStorage.removeItem("office_onboarding_completion_screen");
                         navigateTo("/app/profile");
                       }}
                     >
                       Gå till profil
-                    </button>
+                    </Button>
                   </div>
                 ) : (
                 <>
@@ -1461,8 +1483,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                   <div className="grid gap-4">
                     <div className="grid max-w-[75%] gap-1.5">
                       <span className="text-sm font-semibold text-ink-700">Organisationsnummer</span>
-                      <input
-                        className="field"
+                      <Input
                         inputMode="numeric"
                         value={publisherProfile.organizationNumber}
                         placeholder="556123-4567"
@@ -1477,26 +1498,28 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                     <div className="grid gap-4 md:grid-cols-2 md:items-start">
                       <label className="grid gap-1.5">
                         <span className="text-sm font-semibold text-ink-700">Typ av lokal</span>
-                        <select
-                          className="field select-chevron"
+                        <Select
                           value={publisherProfile.propertyType}
-                          onChange={(event) => setPublisherProfile((prev) => ({ ...prev, propertyType: event.target.value }))}
+                          onValueChange={(value) => setPublisherProfile((prev) => ({ ...prev, propertyType: value }))}
                         >
-                          <option value="">Välj typ</option>
-                          {typeOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-                        </select>
+                          <SelectTrigger className="w-full"><SelectValue placeholder="Välj typ" /></SelectTrigger>
+                          <SelectContent>
+                            {typeOptions.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
                       </label>
 
                       <label className="grid gap-1.5">
                         <span className="text-sm font-semibold text-ink-700">Portföljstorlek</span>
-                        <select
-                          className="field select-chevron"
+                        <Select
                           value={publisherProfile.portfolioSize}
-                          onChange={(event) => setPublisherProfile((prev) => ({ ...prev, portfolioSize: event.target.value }))}
+                          onValueChange={(value) => setPublisherProfile((prev) => ({ ...prev, portfolioSize: value }))}
                         >
-                          <option value="">Antal objekt du hanterar</option>
-                          {publisherPortfolioOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-                        </select>
+                          <SelectTrigger className="w-full"><SelectValue placeholder="Antal objekt du hanterar" /></SelectTrigger>
+                          <SelectContent>
+                            {publisherPortfolioOptions.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
                       </label>
                     </div>
                   </div>
@@ -1506,8 +1529,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                   <div className="space-y-5">
                     <div className="grid gap-1.5">
                       <span className="text-sm font-semibold text-ink-700">Fastighetsmäklarnummer (FMI)</span>
-                      <input
-                        className="field"
+                      <Input
                         value={publisherProfile.fmiNumber}
                         onChange={(event) => setPublisherProfile((prev) => ({ ...prev, fmiNumber: event.target.value }))}
                         placeholder="t.ex. 20230456"
@@ -1529,29 +1551,26 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                 {publisherFlowStep === 2 ? (
                   <div className="space-y-4 pt-1">
                     <label className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        className="h-5 w-5 shrink-0 rounded border-black/20"
+                      <Checkbox
+                        className="h-5 w-5 shrink-0"
                         checked={publisherProfile.termsEmployerAuthority}
-                        onChange={(event) => setPublisherProfile((prev) => ({ ...prev, termsEmployerAuthority: event.target.checked }))}
+                        onCheckedChange={(checked) => setPublisherProfile((prev) => ({ ...prev, termsEmployerAuthority: Boolean(checked) }))}
                       />
                       <span className="text-[0.88rem] leading-snug text-ink-700">Jag intygar att jag arbetar för bolaget jag angivit och att min förfrågan får skickas till bolagsadmin för godkännande.</span>
                     </label>
                     <label className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        className="h-5 w-5 shrink-0 rounded border-black/20"
+                      <Checkbox
+                        className="h-5 w-5 shrink-0"
                         checked={publisherProfile.termsPublishingRules}
-                        onChange={(event) => setPublisherProfile((prev) => ({ ...prev, termsPublishingRules: event.target.checked }))}
+                        onCheckedChange={(checked) => setPublisherProfile((prev) => ({ ...prev, termsPublishingRules: Boolean(checked) }))}
                       />
-                      <span className="flex-1 text-[0.88rem] leading-snug text-ink-700">Jag har läst och godkänner plattformens <button type="button" className="font-semibold text-[#0b0a0e] underline underline-offset-2">publiceringsregler</button> och <button type="button" className="font-semibold text-[#0b0a0e] underline underline-offset-2">användarvillkor</button>.</span>
+                      <span className="flex-1 text-[0.88rem] leading-snug text-ink-700">Jag har läst och godkänner plattformens <Button type="button" variant="link" className="h-auto p-0 align-baseline font-semibold text-[#0b0a0e] underline underline-offset-2">publiceringsregler</Button> och <Button type="button" variant="link" className="h-auto p-0 align-baseline font-semibold text-[#0b0a0e] underline underline-offset-2">användarvillkor</Button>.</span>
                     </label>
                     <label className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        className="h-5 w-5 shrink-0 rounded border-black/20"
+                      <Checkbox
+                        className="h-5 w-5 shrink-0"
                         checked={publisherProfile.termsSuspensionAware}
-                        onChange={(event) => setPublisherProfile((prev) => ({ ...prev, termsSuspensionAware: event.target.checked }))}
+                        onCheckedChange={(checked) => setPublisherProfile((prev) => ({ ...prev, termsSuspensionAware: Boolean(checked) }))}
                       />
                       <span className="text-[0.88rem] leading-snug text-ink-700">Jag förstår att mitt konto kan spärras av bolagsadmin eller plattformen om reglerna inte följs.</span>
                     </label>
@@ -1559,14 +1578,15 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                 ) : null}
 
                 <div className="flex items-center justify-between border-t border-black/10 pt-5">
-                  <button
+                  <Button
                     type="button"
-                    className="inline-flex min-h-0 min-w-[132px] items-center justify-center rounded-full border border-black/20 bg-[#ffffff] px-4 py-2 text-xs font-semibold text-ink-700 disabled:opacity-50"
+                    variant="outline"
+                    className="h-auto min-w-[132px] rounded-full px-4 py-2 text-xs font-semibold text-ink-700"
                     onClick={goBack}
                     disabled={pending}
                   >
                     Föregående
-                  </button>
+                  </Button>
 
                   <div className="flex items-center gap-2">
                     {publisherStepDots.map((dot) => (
@@ -1574,14 +1594,14 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                     ))}
                   </div>
 
-                  <button
+                  <Button
                     type="button"
-                    className="inline-flex min-h-0 min-w-[132px] items-center justify-center rounded-full border border-[#0b0a0e] bg-[#0b0a0e] px-4 py-2 text-xs font-semibold text-white disabled:opacity-50"
+                    className="h-auto min-w-[132px] rounded-full px-4 py-2 text-xs font-semibold"
                     onClick={publisherFlowStep === 2 ? () => gotoStep("review") : goNext}
                     disabled={pending || !canAdvancePublisherFlow}
                   >
                     Nästa
-                  </button>
+                  </Button>
                 </div>
                 </>
                 )}
@@ -1606,26 +1626,27 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                       </p>
                     </div>
                     <div className="mx-auto flex w-full max-w-[640px] flex-col gap-3">
-                      <button
+                      <Button
                         type="button"
-                        className="btn-primary w-full py-3 text-base"
+                        className="h-auto w-full py-3 text-base"
                         onClick={() => {
                           window.sessionStorage.removeItem("office_onboarding_completion_screen");
                           navigateTo("/app/admin/profil");
                         }}
                       >
                         Slutför profil
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         type="button"
-                        className="btn-secondary w-full py-3 text-base"
+                        variant="secondary"
+                        className="h-auto w-full py-3 text-base"
                         onClick={() => {
                           window.sessionStorage.removeItem("office_onboarding_completion_screen");
                           navigateTo("/app/admin");
                         }}
                       >
                         Gå till admin-panelen
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 ) : (
@@ -1654,13 +1675,14 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                           </p>
                         </div>
                         {companyAdminFlowStep === 2 ? (
-                          <button
+                          <Button
                             type="button"
-                            className="inline-flex min-h-0 shrink-0 items-center justify-center rounded-full border border-black/15 bg-[#ffffff] px-4 py-2 text-xs font-semibold text-ink-700 hover:bg-[#f8fafc]"
+                            variant="outline"
+                            className="h-auto shrink-0 rounded-full px-4 py-2 text-xs font-semibold text-ink-700 hover:bg-[#f8fafc]"
                             onClick={() => setCompanyAdminFlowStep(3)}
                           >
                             Hoppa över nu
-                          </button>
+                          </Button>
                         ) : null}
                       </div>
                     </div>
@@ -1669,8 +1691,8 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                       <div className="grid gap-4">
                         <label className="grid gap-1.5">
                           <span className="text-sm font-semibold text-ink-700">Företagsnamn</span>
-                          <input
-                            className={`field ${companyProfileLocked ? "cursor-not-allowed bg-[#f3f4f6] text-ink-700" : ""}`}
+                          <Input
+                            className={companyProfileLocked ? "cursor-not-allowed bg-[#f3f4f6] text-ink-700" : ""}
                             value={companyAdminProfile.legalEntity}
                             readOnly={companyProfileLocked}
                             onChange={(event) => setCompanyAdminProfile((prev) => ({
@@ -1684,8 +1706,8 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
 
                         <label className="grid gap-1.5">
                           <span className="text-sm font-semibold text-ink-700">Organisations-/personnummer (10 siffror)</span>
-                          <input
-                            className={`field ${companyProfileLocked ? "cursor-not-allowed bg-[#f3f4f6] text-ink-700" : ""}`}
+                          <Input
+                            className={companyProfileLocked ? "cursor-not-allowed bg-[#f3f4f6] text-ink-700" : ""}
                             value={companyAdminProfile.organizationNumber}
                             readOnly={companyProfileLocked}
                             onChange={(event) => setCompanyAdminProfile((prev) => ({ ...prev, organizationNumber: event.target.value }))}
@@ -1696,8 +1718,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                         <div className="grid gap-4 md:grid-cols-2">
                           <label className="grid gap-1.5">
                             <span className="text-sm font-semibold text-ink-700">Kontaktperson förnamn</span>
-                            <input
-                              className="field"
+                            <Input
                               value={companyAdminProfile.contactFirstName}
                               onChange={(event) => setCompanyAdminProfile((prev) => ({ ...prev, contactFirstName: event.target.value }))}
                             />
@@ -1705,8 +1726,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
 
                           <label className="grid gap-1.5">
                             <span className="text-sm font-semibold text-ink-700">Kontaktperson efternamn</span>
-                            <input
-                              className="field"
+                            <Input
                               value={companyAdminProfile.contactLastName}
                               onChange={(event) => setCompanyAdminProfile((prev) => ({ ...prev, contactLastName: event.target.value }))}
                             />
@@ -1715,8 +1735,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
 
                         <label className="grid gap-1.5">
                           <span className="text-sm font-semibold text-ink-700">Telefonnummer</span>
-                          <input
-                            className="field"
+                          <Input
                             value={companyAdminProfile.contactPhone}
                             onChange={(event) => setCompanyAdminProfile((prev) => ({ ...prev, contactPhone: event.target.value }))}
                           />
@@ -1724,8 +1743,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
 
                         <label className="grid gap-1.5">
                           <span className="text-sm font-semibold text-ink-700">Gatuadress</span>
-                          <input
-                            className="field"
+                          <Input
                             value={companyAdminProfile.streetAddress}
                             onChange={(event) => setCompanyAdminProfile((prev) => ({ ...prev, streetAddress: event.target.value }))}
                           />
@@ -1734,8 +1752,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                         <div className="grid gap-4 md:grid-cols-[180px_1fr]">
                           <label className="grid gap-1.5">
                             <span className="text-sm font-semibold text-ink-700">Postnummer</span>
-                            <input
-                              className="field"
+                            <Input
                               value={companyAdminProfile.postalCode}
                               onChange={(event) => setCompanyAdminProfile((prev) => ({ ...prev, postalCode: event.target.value }))}
                             />
@@ -1743,8 +1760,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
 
                           <label className="grid gap-1.5">
                             <span className="text-sm font-semibold text-ink-700">Postort</span>
-                            <input
-                              className="field"
+                            <Input
                               value={companyAdminProfile.city}
                               onChange={(event) => setCompanyAdminProfile((prev) => ({ ...prev, city: event.target.value }))}
                             />
@@ -1753,8 +1769,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
 
                         <label className="grid gap-1.5">
                           <span className="text-sm font-semibold text-ink-700">E-post</span>
-                          <input
-                            className="field"
+                          <Input
                             type="email"
                             value={companyAdminProfile.contactEmail}
                             onChange={(event) => setCompanyAdminProfile((prev) => ({ ...prev, contactEmail: event.target.value }))}
@@ -1764,8 +1779,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
 
                         <label className="grid gap-1.5">
                           <span className="text-sm font-semibold text-ink-700">Webbplats</span>
-                          <input
-                            className="field"
+                          <Input
                             value={companyAdminProfile.websiteUrl}
                             onChange={(event) => setCompanyAdminProfile((prev) => ({ ...prev, websiteUrl: event.target.value }))}
                             placeholder="https://foretag.se"
@@ -1777,26 +1791,28 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                         <div className="grid gap-4 md:grid-cols-2">
                           <label className="grid gap-1.5">
                             <span className="text-sm font-semibold text-ink-700">Typ av fastighetsbolag</span>
-                            <select
-                              className="field select-chevron"
+                            <Select
                               value={companyAdminProfile.companyType}
-                              onChange={(event) => setCompanyAdminProfile((prev) => ({ ...prev, companyType: event.target.value }))}
+                              onValueChange={(value) => setCompanyAdminProfile((prev) => ({ ...prev, companyType: value }))}
                             >
-                              <option value="">Välj typ</option>
-                              {companyAdminCompanyTypeOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-                            </select>
+                              <SelectTrigger className="w-full"><SelectValue placeholder="Välj typ" /></SelectTrigger>
+                              <SelectContent>
+                                {companyAdminCompanyTypeOptions.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
                           </label>
 
                           <label className="grid gap-1.5">
                             <span className="text-sm font-semibold text-ink-700">Antal fastigheter i portföljen</span>
-                            <select
-                              className="field select-chevron"
+                            <Select
                               value={companyAdminProfile.portfolioSize}
-                              onChange={(event) => setCompanyAdminProfile((prev) => ({ ...prev, portfolioSize: event.target.value }))}
+                              onValueChange={(value) => setCompanyAdminProfile((prev) => ({ ...prev, portfolioSize: value }))}
                             >
-                              <option value="">Ungefärlig storlek</option>
-                              {companyAdminPortfolioOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-                            </select>
+                              <SelectTrigger className="w-full"><SelectValue placeholder="Ungefärlig storlek" /></SelectTrigger>
+                              <SelectContent>
+                                {companyAdminPortfolioOptions.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
                           </label>
                         </div>
                       </div>
@@ -1855,23 +1871,24 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
 	                            </p>
 	                          ) : null}
 	                          {companyAdminProfile.logoUrl ? (
-	                            <button
+	                            <Button
 	                              type="button"
-	                              className="justify-self-start text-sm font-semibold text-ink-700 underline decoration-black/20 underline-offset-4"
+	                              variant="link"
+	                              className="h-auto justify-self-start p-0 text-sm font-semibold text-ink-700 underline decoration-black/20 underline-offset-4"
 	                              onClick={() => {
 	                                setLogoUploadError("");
 	                                setCompanyAdminProfile((prev) => ({ ...prev, logoUrl: "" }));
 	                              }}
 	                            >
 	                              Ta bort logotyp
-	                            </button>
+	                            </Button>
 	                          ) : null}
                         </div>
 
                         <label className="grid gap-1.5">
                           <span className="text-sm font-semibold text-ink-700">Bolagsbeskrivning</span>
-                          <textarea
-                            className="field min-h-28 resize-none py-3"
+                          <Textarea
+                            className="min-h-28 resize-none"
                             value={companyAdminProfile.companyDescription}
                             onChange={(event) => setCompanyAdminProfile((prev) => ({ ...prev, companyDescription: event.target.value }))}
                             placeholder="Kort beskrivning av ert bolag och er verksamhet..."
@@ -1881,31 +1898,28 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
 
                         <div className="space-y-4 rounded-2xl border border-black/10 bg-[#f8fafc] p-4">
                           <label className="flex items-center gap-3">
-                            <input
-                              type="checkbox"
-                              className="h-5 w-5 shrink-0 rounded border-black/20"
+                            <Checkbox
+                              className="h-5 w-5 shrink-0"
                               checked={companyAdminProfile.hasSeparateBillingAddress}
-                              onChange={(event) => setCompanyAdminProfile((prev) => ({ ...prev, hasSeparateBillingAddress: event.target.checked }))}
+                              onCheckedChange={(checked) => setCompanyAdminProfile((prev) => ({ ...prev, hasSeparateBillingAddress: Boolean(checked) }))}
                             />
                             <span className="text-[0.95rem] leading-snug text-ink-700">Annan fakturaadress</span>
                           </label>
 
                           <label className="flex items-center gap-3">
-                            <input
-                              type="checkbox"
-                              className="h-5 w-5 shrink-0 rounded border-black/20"
+                            <Checkbox
+                              className="h-5 w-5 shrink-0"
                               checked={companyAdminProfile.wantsNewsletter}
-                              onChange={(event) => setCompanyAdminProfile((prev) => ({ ...prev, wantsNewsletter: event.target.checked }))}
+                              onCheckedChange={(checked) => setCompanyAdminProfile((prev) => ({ ...prev, wantsNewsletter: Boolean(checked) }))}
                             />
                             <span className="text-[0.95rem] leading-snug text-ink-700">Jag vill ha nyhetsbrev</span>
                           </label>
 
                           <label className="flex items-center gap-3">
-                            <input
-                              type="checkbox"
-                              className="h-5 w-5 shrink-0 rounded border-black/20"
+                            <Checkbox
+                              className="h-5 w-5 shrink-0"
                               checked={companyAdminProfile.termsPlatformRules}
-                              onChange={(event) => setCompanyAdminProfile((prev) => ({ ...prev, termsPlatformRules: event.target.checked }))}
+                              onCheckedChange={(checked) => setCompanyAdminProfile((prev) => ({ ...prev, termsPlatformRules: Boolean(checked) }))}
                             />
                             <span className="text-[0.95rem] leading-snug text-ink-700">Jag godkänner personuppgiftspolicy och allmänna villkor.</span>
                           </label>
@@ -1921,8 +1935,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
 
                         <label className="grid gap-1.5">
                           <span className="text-sm font-semibold text-ink-700">Godkänd e-postdomän</span>
-                          <input
-                            className="field"
+                          <Input
                             value={companyAdminProfile.approvedEmailDomain}
                             onChange={(event) => setCompanyAdminProfile((prev) => ({ ...prev, approvedEmailDomain: event.target.value }))}
                             placeholder="@rikshem.se"
@@ -1938,9 +1951,10 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                               <p className="mt-1 text-sm text-ink-500">Dela med era mäklare via e-post eller internt system.</p>
                             </div>
                             <div className="flex shrink-0 items-center gap-2">
-                              <button
+                              <Button
                                 type="button"
-                                className="btn-secondary px-3 py-1.5 text-xs"
+                                variant="secondary"
+                                className="h-auto px-3 py-1.5 text-xs"
                                 onClick={async () => {
                                   try {
                                     await navigator.clipboard.writeText(companyAdminProfile.inviteCode);
@@ -1964,17 +1978,18 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                                   )}
                                   {companyAdminInviteCodeCopied ? "Kopierad" : "Kopiera"}
                                 </span>
-                              </button>
-                              <button
+                              </Button>
+                              <Button
                                 type="button"
-                                className="btn-secondary px-3 py-1.5 text-xs"
+                                variant="secondary"
+                                className="h-auto px-3 py-1.5 text-xs"
                                 onClick={() => setCompanyAdminProfile((prev) => ({ ...prev, inviteCode: buildInviteCode(`${prev.legalEntity}-${Date.now()}`) }))}
                               >
                                 <span className="inline-flex items-center gap-1.5">
                                   <span aria-hidden="true" className="text-sm leading-none">+</span>
                                   Ny kod
                                 </span>
-                              </button>
+                              </Button>
                             </div>
                           </div>
                         </div>
@@ -1982,16 +1997,15 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                         <div className="border-t border-black/10 pt-5">
                           <p className="text-sm font-semibold text-ink-700">Bjud in direkt via e-post</p>
                           <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_160px]">
-                            <input
-                              className="field"
+                            <Input
                               type="email"
                               value={companyAdminProfile.inviteEmail}
                               onChange={(event) => setCompanyAdminProfile((prev) => ({ ...prev, inviteEmail: event.target.value }))}
                               placeholder="kollega@rikshem.se"
                             />
-                            <button
+                            <Button
                               type="button"
-                              className="btn-primary inline-flex w-full items-center justify-center rounded-2xl px-4 py-2.5 text-sm font-semibold leading-none"
+                              className="h-auto w-full rounded-2xl px-4 py-2.5 text-sm font-semibold leading-none"
                               onClick={() => {
                                 const email = String(companyAdminProfile.inviteEmail || "").trim();
                                 if (!email) return;
@@ -2018,7 +2032,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                                 <span aria-hidden="true" className="text-base leading-none">+</span>
                                 Bjud in
                               </span>
-                            </button>
+                            </Button>
                           </div>
                         </div>
 
@@ -2074,10 +2088,11 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                             ].map((option) => {
                               const active = companyAdminProfile.approvalFlow === option.key;
                               return (
-                                <button
+                                <Button
                                   key={option.key}
                                   type="button"
-                                  className={`flex w-full items-center gap-3 !rounded-2xl border px-4 py-3 text-left transition ${active ? "border-[#0b0a0e] bg-[#f8fafc]" : "border-black/10 bg-[#ffffff] hover:bg-black/5"}`}
+                                  variant="outline"
+                                  className={`h-auto w-full justify-start gap-3 !rounded-2xl px-4 py-3 text-left font-normal ${active ? "border-[#0b0a0e] bg-[#f8fafc]" : "border-black/10 hover:bg-black/5"}`}
                                   onClick={() => setCompanyAdminProfile((prev) => ({ ...prev, approvalFlow: option.key }))}
                                 >
                                   <span className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${active ? "border-[#0b0a0e]" : "border-black/20"}`}>
@@ -2087,7 +2102,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                                     <span className="block text-[0.92rem] font-semibold leading-tight text-[#0b0a0e]">{option.title}</span>
                                     <span className="mt-1 block text-[0.8rem] leading-snug text-ink-600">{option.description}</span>
                                   </span>
-                                </button>
+                                </Button>
                               );
                             })}
                           </div>
@@ -2110,10 +2125,11 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                             ].map((option) => {
                               const active = companyAdminProfile.listingModeration === option.key;
                               return (
-                                <button
+                                <Button
                                   key={option.key}
                                   type="button"
-                                  className={`flex w-full items-center gap-3 !rounded-2xl border px-4 py-3 text-left transition ${active ? "border-[#0b0a0e] bg-[#f8fafc]" : "border-black/10 bg-[#ffffff] hover:bg-black/5"}`}
+                                  variant="outline"
+                                  className={`h-auto w-full justify-start gap-3 !rounded-2xl px-4 py-3 text-left font-normal ${active ? "border-[#0b0a0e] bg-[#f8fafc]" : "border-black/10 hover:bg-black/5"}`}
                                   onClick={() => setCompanyAdminProfile((prev) => ({ ...prev, listingModeration: option.key }))}
                                 >
                                   <span className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${active ? "border-[#0b0a0e]" : "border-black/20"}`}>
@@ -2123,7 +2139,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                                     <span className="block text-[0.92rem] font-semibold leading-tight text-[#0b0a0e]">{option.title}</span>
                                     <span className="mt-1 block text-[0.8rem] leading-snug text-ink-600">{option.description}</span>
                                   </span>
-                                </button>
+                                </Button>
                               );
                             })}
                           </div>
@@ -2132,22 +2148,20 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                         <div className="border-t border-black/10 pt-5">
                           <div className="space-y-4">
                             <label className="flex items-center gap-3">
-                              <input
-                                type="checkbox"
-                                className="h-5 w-5 shrink-0 rounded border-black/20"
+                              <Checkbox
+                                className="h-5 w-5 shrink-0"
                                 checked={companyAdminProfile.termsAdminAuthority}
-                                onChange={(event) => setCompanyAdminProfile((prev) => ({ ...prev, termsAdminAuthority: event.target.checked }))}
+                                onCheckedChange={(checked) => setCompanyAdminProfile((prev) => ({ ...prev, termsAdminAuthority: Boolean(checked) }))}
                               />
                               <span className="text-[0.88rem] leading-snug text-ink-700">Jag bekräftar att jag har rätt att representera bolaget på plattformen.</span>
                             </label>
                             <label className="flex items-center gap-3">
-                              <input
-                                type="checkbox"
-                                className="h-5 w-5 shrink-0 rounded border-black/20"
+                              <Checkbox
+                                className="h-5 w-5 shrink-0"
                                 checked={companyAdminProfile.termsPlatformRules}
-                                onChange={(event) => setCompanyAdminProfile((prev) => ({ ...prev, termsPlatformRules: event.target.checked }))}
+                                onCheckedChange={(checked) => setCompanyAdminProfile((prev) => ({ ...prev, termsPlatformRules: Boolean(checked) }))}
                               />
-                              <span className="flex-1 text-[0.88rem] leading-snug text-ink-700">Jag har läst och godkänner <button type="button" className="font-semibold text-[#0b0a0e] underline underline-offset-2">användarvillkoren</button> och <button type="button" className="font-semibold text-[#0b0a0e] underline underline-offset-2">publiceringsreglerna</button>.</span>
+                              <span className="flex-1 text-[0.88rem] leading-snug text-ink-700">Jag har läst och godkänner <Button type="button" variant="link" className="h-auto p-0 align-baseline font-semibold text-[#0b0a0e] underline underline-offset-2">användarvillkoren</Button> och <Button type="button" variant="link" className="h-auto p-0 align-baseline font-semibold text-[#0b0a0e] underline underline-offset-2">publiceringsreglerna</Button>.</span>
                             </label>
                           </div>
                         </div>
@@ -2155,14 +2169,15 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                     ) : null}
 
                     <div className="flex items-center justify-between border-t border-black/10 pt-5">
-                      <button
+                      <Button
                         type="button"
-                        className="inline-flex min-h-0 min-w-[132px] items-center justify-center rounded-full border border-black/20 bg-[#ffffff] px-4 py-2 text-xs font-semibold text-ink-700 disabled:opacity-50"
+                        variant="outline"
+                        className="h-auto min-w-[132px] rounded-full px-4 py-2 text-xs font-semibold text-ink-700"
                         onClick={goBack}
                         disabled={pending}
                       >
                         Föregående
-                      </button>
+                      </Button>
 
                       <div className="flex items-center gap-2">
                         {companyAdminStepDots.map((dot) => (
@@ -2170,14 +2185,14 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                         ))}
                       </div>
 
-                      <button
+                      <Button
                         type="button"
-                        className="inline-flex min-h-0 min-w-[132px] items-center justify-center rounded-full border border-[#0b0a0e] bg-[#0b0a0e] px-4 py-2 text-xs font-semibold text-white disabled:opacity-50"
+                        className="h-auto min-w-[132px] rounded-full px-4 py-2 text-xs font-semibold"
                         onClick={companyAdminFlowStep === 3 ? finish : goNext}
                         disabled={pending || !canAdvanceCompanyAdminFlow}
                       >
                         {companyAdminFlowStep === 3 ? (pending ? "Aktiverar..." : "Aktivera konto") : "Nästa"}
-                      </button>
+                      </Button>
                     </div>
                   </>
                 )}
@@ -2272,33 +2287,34 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
           {error ? <p className="mt-3 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">{error}</p> : null}
 
           <div className={`mt-6 flex items-center justify-between ${currentStep === "publisher-profile" || currentStep === "company-admin-profile" ? "hidden" : ""}`}>
-            <button
+            <Button
               type="button"
-              className="inline-flex min-h-0 items-center justify-center rounded-full border border-black/20 bg-[#ffffff] px-4 py-2 text-xs font-semibold text-ink-700 disabled:opacity-50"
+              variant="outline"
+              className="h-auto rounded-full px-4 py-2 text-xs font-semibold text-ink-700"
               onClick={goBack}
               disabled={pending}
             >
               Föregående
-            </button>
+            </Button>
 
             {currentStep === "review" ? (
-              <button
+              <Button
                 type="button"
-                className="inline-flex min-h-0 items-center justify-center rounded-full border border-[#0b0a0e] bg-[#0b0a0e] px-4 py-2 text-xs font-semibold text-white"
+                className="h-auto rounded-full px-4 py-2 text-xs font-semibold"
                 onClick={finish}
                 disabled={pending}
               >
                 {pending ? "Sparar..." : "Slutför profil"}
-              </button>
+              </Button>
             ) : (
-              <button
+              <Button
                 type="button"
-                className="inline-flex min-h-0 items-center justify-center rounded-full border border-[#0b0a0e] bg-[#0b0a0e] px-4 py-2 text-xs font-semibold text-white"
+                className="h-auto rounded-full px-4 py-2 text-xs font-semibold"
                 onClick={goNext}
                 disabled={pending}
               >
                 Nästa
-              </button>
+              </Button>
             )}
           </div>
         </section>
