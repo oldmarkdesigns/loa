@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 const MESSAGE_LISTING = {
   id: "msg-listing-1",
@@ -330,20 +331,20 @@ function MessagesPage({ app }) {
                   onChange={(event) => setSearchQuery(event.target.value)}
                 />
               </label>
-              <div className="mt-3 flex flex-nowrap gap-2 overflow-x-auto pb-1">
+              <ToggleGroup
+                variant="outline"
+                spacing={2}
+                value={[filter]}
+                onValueChange={(next) => next[0] && setFilter(next[0])}
+                className="mt-3 flex-nowrap gap-2 overflow-x-auto pb-1"
+              >
                 {filterTabs.map((tab) => {
                   const active = filter === tab.key;
                   return (
-                    <Button
+                    <ToggleGroupItem
                       key={tab.key}
-                      type="button"
-                      variant="outline"
-                      className={`h-auto gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold ${
-                        active
-                          ? "border-transparent bg-[#0b0a0e] text-white hover:bg-[#0b0a0e]/90"
-                          : "border-black/10 text-ink-700 hover:border-[#0b0a0e] hover:bg-transparent"
-                      }`}
-                      onClick={() => setFilter(tab.key)}
+                      value={tab.key}
+                      className="h-auto gap-1.5 rounded-full border-black/10 px-3 py-1.5 text-[11px] font-semibold text-ink-700 shadow-none hover:border-[#0b0a0e] hover:bg-transparent data-[state=on]:border-transparent data-[state=on]:bg-[#0b0a0e] data-[state=on]:text-white data-[state=on]:hover:bg-[#0b0a0e]/90"
                     >
                       {tab.label}
                       <Badge className={`h-auto min-w-5 rounded-full px-1.5 py-0.5 text-[10px] ${
@@ -351,10 +352,10 @@ function MessagesPage({ app }) {
                       }`}>
                         {tab.count}
                       </Badge>
-                    </Button>
+                    </ToggleGroupItem>
                   );
                 })}
-              </div>
+              </ToggleGroup>
             </div>
 
             <div className="max-h-[360px] overflow-y-auto px-3 py-3 lg:min-h-0 lg:max-h-none lg:flex-1">
