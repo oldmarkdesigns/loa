@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 
 const publishSteps = [
   { id: "basic", label: "Grundinfo" },
@@ -979,55 +980,45 @@ function PublishPage({ app, pathname = "/app/publish" }) {
 
             {!publishedListing ? (
             <article className="surface p-4">
-              <button
-                type="button"
-                className="flex w-full items-center justify-between text-left"
-                onClick={() => setShowFaqTips((value) => !value)}
-                aria-expanded={showFaqTips}
-                aria-controls="publish-faq-tips-content"
+              <Accordion
+                value={showFaqTips ? ["faq-tips"] : []}
+                onValueChange={(next) => setShowFaqTips(next.length > 0)}
               >
-                <h3 className="text-base font-semibold">FAQ och tips</h3>
-                <span
-                  aria-hidden="true"
-                  className={`ui-chevron transition-transform duration-200 ${
-                    showFaqTips ? "rotate-180" : ""
-                  }`}
-                />
-              </button>
-
-              <div
-                id="publish-faq-tips-content"
-                className={`grid overflow-hidden transition-[grid-template-rows,opacity,margin] duration-300 ease-out ${
-                  showFaqTips ? "mt-3 opacity-100" : "mt-0 opacity-0"
-                }`}
-                style={{ gridTemplateRows: showFaqTips ? "1fr" : "0fr" }}
-              >
-                <div className="min-h-0">
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    {publishFaqItems.slice(0, 4).map((item) => (
-                      <div key={item.q} className="rounded-xl border border-black/10 bg-[#ffffff] px-3 py-2.5">
-                        <p className="text-xs font-semibold text-ink-900">{item.q}</p>
-                        <p className="mt-1 text-xs text-ink-600">{item.a}</p>
+                <AccordionItem value="faq-tips" className="border-b-0">
+                  <AccordionTrigger className="items-center p-0 hover:no-underline [&>svg]:hidden">
+                    <h3 className="text-base font-semibold">FAQ och tips</h3>
+                    <span
+                      aria-hidden="true"
+                      className="ui-chevron transition-transform duration-200 group-aria-expanded/accordion-trigger:rotate-180"
+                    />
+                  </AccordionTrigger>
+                  <AccordionContent className="p-0">
+                    <div className="grid gap-3 pt-3 sm:grid-cols-2">
+                      {publishFaqItems.slice(0, 4).map((item) => (
+                        <div key={item.q} className="rounded-xl border border-black/10 bg-[#ffffff] px-3 py-2.5">
+                          <p className="text-xs font-semibold text-ink-900">{item.q}</p>
+                          <p className="mt-1 text-xs text-ink-600">{item.a}</p>
+                        </div>
+                      ))}
+                      <div className="rounded-xl border border-black/10 bg-[#ffffff] px-3 py-2.5">
+                        <p className="text-xs font-semibold text-ink-900">{publishFaqItems[4].q}</p>
+                        <p className="mt-1 text-xs text-ink-600">{publishFaqItems[4].a}</p>
                       </div>
-                    ))}
-                    <div className="rounded-xl border border-black/10 bg-[#ffffff] px-3 py-2.5">
-                      <p className="text-xs font-semibold text-ink-900">{publishFaqItems[4].q}</p>
-                      <p className="mt-1 text-xs text-ink-600">{publishFaqItems[4].a}</p>
+                      <div className="rounded-xl border border-black/10 bg-[#ffffff] px-3 py-2.5">
+                        <p className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-ink-700">
+                          Snabba tips
+                          <LightbulbIcon className="h-4 w-4 text-[#0b0a0e]" />
+                        </p>
+                        <ul className="mt-2 space-y-1.5 text-xs text-ink-600">
+                          {publishTips.map((tip) => (
+                            <li key={tip}>{tip}</li>
+                          ))}
+                        </ul>
+                      </div>
                     </div>
-                    <div className="rounded-xl border border-black/10 bg-[#ffffff] px-3 py-2.5">
-                      <p className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-ink-700">
-                        Snabba tips
-                        <LightbulbIcon className="h-4 w-4 text-[#0b0a0e]" />
-                      </p>
-                      <ul className="mt-2 space-y-1.5 text-xs text-ink-600">
-                        {publishTips.map((tip) => (
-                          <li key={tip}>{tip}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
             </article>
             ) : null}
           </div>
