@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { prospectSharingApi } from "../../api";
 import { PlusIcon, TrashIcon, UserPlusIcon } from "../icons/UiIcons";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 function ProspectShareSheet({ prospectId, listingId, prospect, app }) {
   const [collaborators, setCollaborators] = useState([]);
@@ -103,9 +105,9 @@ function ProspectShareSheet({ prospectId, listingId, prospect, app }) {
           {collaborators.map((collab) => (
             <div key={collab.id} className="flex items-center justify-between rounded-xl border border-black/10 px-3 py-2 text-sm">
               <span className="truncate text-ink-800">{renterNameById.get(collab.userId) || collab.userId}</span>
-              <button type="button" onClick={() => removeCollaborator(collab.userId)} disabled={pending} className="text-ink-500 hover:text-rose-600">
+              <Button type="button" variant="ghost" size="icon" onClick={() => removeCollaborator(collab.userId)} disabled={pending} className="h-auto w-auto text-ink-500 hover:bg-transparent hover:text-rose-600">
                 <TrashIcon className="h-4 w-4" />
-              </button>
+              </Button>
             </div>
           ))}
         </div>
@@ -115,35 +117,38 @@ function ProspectShareSheet({ prospectId, listingId, prospect, app }) {
             {listingLeads
               .filter((lead) => !collaboratorUserIds.has(lead.renterId))
               .map((lead) => (
-                <button
+                <Button
                   key={lead.id}
                   type="button"
-                  className="btn-secondary px-3 py-1.5 text-xs"
+                  variant="secondary"
+                  className="h-auto px-3 py-1.5 text-xs"
                   onClick={() => addCollaborator(lead.renterId)}
                   disabled={pending || !canShare}
                 >
                   <UserPlusIcon className="mr-1.5 h-3.5 w-3.5" />
                   {lead.renter?.name || lead.renter?.email || "Hyresgäst"}
-                </button>
+                </Button>
               ))}
           </div>
         ) : null}
 
         <div className="mt-3 flex gap-2">
-          <input
-            className="field text-sm"
+          <Input
+            className="text-sm"
             placeholder="Användar-id (t.ex. u-renter-demo)"
             value={manualUserId}
             onChange={(event) => setManualUserId(event.target.value)}
           />
-          <button
+          <Button
             type="button"
-            className="btn-secondary shrink-0 px-3 text-sm"
+            variant="secondary"
+            size="icon"
+            className="shrink-0"
             onClick={() => addCollaborator(manualUserId.trim())}
             disabled={pending || !canShare}
           >
             <PlusIcon className="h-4 w-4" />
-          </button>
+          </Button>
         </div>
       </section>
 
@@ -159,27 +164,28 @@ function ProspectShareSheet({ prospectId, listingId, prospect, app }) {
                   <span className="text-xs font-semibold text-rose-600">Återkallad</span>
                 ) : (
                   <div className="flex shrink-0 gap-3">
-                    <button type="button" className="text-xs font-semibold text-ink-700 underline" onClick={() => copyGuestLink(link.token)}>
+                    <Button type="button" variant="link" className="h-auto p-0 text-xs font-semibold text-ink-700 underline" onClick={() => copyGuestLink(link.token)}>
                       Kopiera
-                    </button>
-                    <button type="button" className="text-xs font-semibold text-rose-600" onClick={() => revokeGuestLink(link.id)} disabled={pending}>
+                    </Button>
+                    <Button type="button" variant="link" className="h-auto p-0 text-xs font-semibold text-rose-600 no-underline hover:no-underline" onClick={() => revokeGuestLink(link.id)} disabled={pending}>
                       Återkalla
-                    </button>
+                    </Button>
                   </div>
                 )}
               </div>
             </div>
           ))}
         </div>
-        <button
+        <Button
           type="button"
-          className="btn-secondary mt-3 w-full justify-center px-4 py-2 text-sm"
+          variant="secondary"
+          className="mt-3 h-auto w-full justify-center px-4 py-2 text-sm"
           onClick={createGuestLink}
           disabled={pending || !canShare}
         >
           <PlusIcon className="mr-1.5 h-4 w-4" />
           Skapa gästlänk
-        </button>
+        </Button>
       </section>
     </div>
   );
