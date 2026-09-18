@@ -49,6 +49,7 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 const HERO_GOOGLE_MAPS_SCRIPT_ID = "google-maps-hero-sdk-script";
@@ -1336,42 +1337,45 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
                 <div className="grid w-full gap-3 sm:inline-grid sm:w-auto sm:grid-cols-[170px_220px_56px] sm:gap-0 sm:overflow-hidden sm:rounded-full sm:border sm:border-black/10 sm:bg-white sm:p-1 sm:shadow-[0_18px_50px_-30px_rgba(11,10,14,0.35)]">
                   <div className="grid grid-cols-2 overflow-hidden rounded-full border border-black/10 bg-white shadow-[0_18px_50px_-30px_rgba(11,10,14,0.35)] sm:contents">
                     <label className="flex min-w-0 items-center border-r border-black/10 px-4 py-3 sm:border-b-0 sm:py-0">
-                      <input
+                      <Input
                         type="number"
                         min="1"
                         value={heroFilters.teamSize}
                         onChange={(event) => setHeroFilters((prev) => ({ ...prev, teamSize: event.target.value }))}
-                        className="min-w-0 flex-1 bg-transparent text-sm text-ink-900 placeholder:text-ink-500 focus:outline-none"
+                        className="h-auto min-w-0 flex-1 rounded-none border-0 bg-transparent p-0 text-sm text-ink-900 shadow-none placeholder:text-ink-500 focus-visible:ring-0"
                         placeholder="Antal platser"
                       />
                       <span className="ml-2 text-sm font-medium text-ink-700">st</span>
                     </label>
 
                     <label className="min-w-0 px-4 py-3 sm:border-b-0 sm:py-0">
-                      <select
+                      <Select
                         value={heroFilters.district}
-                        onChange={(event) => setHeroFilters((prev) => ({ ...prev, district: event.target.value }))}
-                        className="select-chevron h-full w-full min-w-0 bg-transparent text-sm text-ink-900 focus:outline-none"
-                        style={{ paddingRight: "28px", backgroundPosition: "right 0.5rem center" }}
+                        onValueChange={(value) => setHeroFilters((prev) => ({ ...prev, district: value }))}
                       >
-                        <option value="Alla" className="text-black">Alla områden</option>
-                        {districtOptions.map((district) => (
-                          <option key={district} value={district} className="text-black">
-                            {district}
-                          </option>
-                        ))}
-                      </select>
+                        <SelectTrigger className="h-full w-full min-w-0 justify-between rounded-none border-0 bg-transparent p-0 text-sm text-ink-900 shadow-none focus-visible:ring-0">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Alla">Alla områden</SelectItem>
+                          {districtOptions.map((district) => (
+                            <SelectItem key={district} value={district}>
+                              {district}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </label>
                   </div>
 
-                  <button
+                  <Button
                     type="submit"
                     aria-label="Sök lokaler"
-                    className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#0b0a0e] text-sm font-semibold text-white sm:h-[48px] sm:w-[48px] sm:place-self-center"
+                    className="h-12 w-full gap-2 rounded-full bg-[#0b0a0e] text-sm font-semibold text-white hover:bg-[#0b0a0e]/90 sm:h-[48px] sm:w-[48px] sm:place-self-center"
                   >
                     <SearchIcon className="h-5 w-5" />
                     <span className="sm:hidden">Sök lokaler</span>
-                  </button>
+                  </Button>
                 </div>
               </form>
 
