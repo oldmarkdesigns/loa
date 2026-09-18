@@ -571,22 +571,24 @@ function MyListingsPage({ app }) {
         <div className="mb-4 shrink-0">
           <div>
             <div className="mb-2 flex flex-wrap items-center gap-5">
-              <button
+              <Button
                 type="button"
-                className="tab-underline-button inline-flex items-center gap-1.5 border-b-2 border-[#0b0a0e] pb-1 text-sm font-semibold text-[#0b0a0e]"
+                variant="ghost"
+                className="tab-underline-button h-auto gap-1.5 rounded-none border-b-2 border-[#0b0a0e] px-0 pb-1 text-sm font-semibold text-[#0b0a0e] hover:bg-transparent"
                 onClick={() => navigateTo("/app/my-listings")}
               >
                 <Icon name="building" className="h-3.5 w-3.5" />
                 Dina objekt
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
-                className="tab-underline-button inline-flex items-center gap-1.5 border-b-2 border-transparent pb-1 text-sm font-semibold text-ink-600 hover:text-black"
+                variant="ghost"
+                className="tab-underline-button h-auto gap-1.5 rounded-none border-b-2 border-transparent px-0 pb-1 text-sm font-semibold text-ink-600 hover:bg-transparent hover:text-black"
                 onClick={() => navigateTo("/app/leads")}
               >
                 <Icon name="calendar" className="h-3.5 w-3.5" />
                 Intresse och visningar
-              </button>
+              </Button>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-3xl font-semibold">Dina objekt</h1>
