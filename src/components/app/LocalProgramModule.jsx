@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 
 function listFromDelimitedValue(value) {
   if (Array.isArray(value)) return value.map((item) => String(item || "").trim()).filter(Boolean);
@@ -159,19 +160,18 @@ function LocalProgramModule({
           <PlusIcon className="h-5 w-5 shrink-0 text-[#0b0a0e]" />
         </Button>
       ) : (
-        <div className="mt-5 space-y-3">
+        <Accordion
+          value={Array.from(expandedProgramIds)}
+          onValueChange={(next) => setExpandedProgramIds(new Set(next))}
+          className="mt-5 space-y-3"
+        >
           {programs.map((program, index) => {
             const expanded = expandedProgramIds.has(program.id);
             const progress = programProgress(program);
             const amenities = listFromDelimitedValue(program.amenities);
             return (
-              <section key={program.id} className="rounded-2xl border border-black/10 bg-[#ffffff]">
-                <button
-                  type="button"
-                  className="flex w-full items-center justify-between gap-3 p-4 text-left"
-                  onClick={() => toggleExpanded(program.id)}
-                  aria-expanded={expanded}
-                >
+              <AccordionItem key={program.id} value={program.id} className="rounded-2xl border border-b-0 border-black/10 bg-[#ffffff]">
+                <AccordionTrigger className="items-center gap-3 p-4 hover:no-underline [&>svg]:hidden">
                   <span className="min-w-0">
                     <span className="flex flex-wrap items-center gap-2">
                       <span className="truncate text-base font-semibold text-[#0b0a0e]">{program.title || `Lokalprogram ${index + 1}`}</span>
@@ -185,9 +185,9 @@ function LocalProgramModule({
                     <span className="hidden text-xs font-semibold text-ink-500 sm:inline">{progress.percent}%</span>
                     <ChevronRightIcon className={`h-5 w-5 text-ink-600 transition-transform ${expanded ? "rotate-90" : ""}`} />
                   </span>
-                </button>
+                </AccordionTrigger>
 
-                <div className={`overflow-hidden transition-all duration-300 ${expanded ? "max-h-[980px] opacity-100" : "max-h-0 opacity-0"}`}>
+                <AccordionContent className="p-0">
                   <div className="border-t border-black/10 p-4 pt-3">
                     <div className="rounded-2xl border border-black/10 bg-[#f8fafc] p-3">
                       <div className="flex items-center justify-between gap-3">
@@ -255,11 +255,11 @@ function LocalProgramModule({
                       </div>
                     ) : null}
                   </div>
-                </div>
-              </section>
+                </AccordionContent>
+              </AccordionItem>
             );
           })}
-        </div>
+        </Accordion>
       )}
     </article>
   );
