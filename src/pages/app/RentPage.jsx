@@ -20,6 +20,12 @@ import { listingApi } from "../../api";
 import { districtOptions, listingTypes, listings as baseListingDataset } from "../../data/mockData";
 import { PLATFORM_GOOGLE_MAP_STYLE } from "../../lib/googleMapStyles";
 import { navigateTo, normalizeAppRole } from "../../lib/router";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const districtMapLayout = {
   Solna: { x: 42, y: 18 },
@@ -59,9 +65,6 @@ const amenityAliasesByValue = {
   garage: ["garage", "parkering"],
   säkerhetsdörr: ["säkerhetsdörr", "säkerhet", "secure", "security", "säker entré", "säker entre"]
 };
-
-const heroInputClass = "w-full rounded-2xl border border-black/10 bg-transparent px-3 py-3 text-sm text-ink-900 placeholder:text-ink-500 focus:border-[#0b0a0e] focus:outline-none";
-const heroSelectClass = "select-chevron w-full rounded-2xl border border-black/10 bg-transparent px-3 py-3 pr-10 text-sm text-ink-900 focus:border-[#0b0a0e] focus:outline-none";
 
 function parseAmenityTerms(value) {
   return String(value || "")
@@ -498,13 +501,14 @@ function GoogleListingsMap({
               Kontrollera att `Maps JavaScript API` + billing är aktiverat och att referrer tillåter
               `http://localhost:5173/*` samt `http://127.0.0.1:5173/*`.
             </p>
-            <button
+            <Button
               type="button"
-              className="mx-auto rounded-lg border border-rose-300 bg-[#ffffff] px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-50"
+              variant="outline"
+              className="h-auto mx-auto rounded-lg border-rose-300 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-50 hover:text-rose-700"
               onClick={() => setRetryToken((value) => value + 1)}
             >
               Försök igen
-            </button>
+            </Button>
           </div>
         </div>
       ) : null}
@@ -522,30 +526,36 @@ function GoogleListingsMap({
               />
             </div>
             <div className="pointer-events-auto flex flex-col gap-2">
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                size="icon"
                 aria-label="Stäng objekt"
-                className="close-circle-button inline-flex items-center justify-center rounded-full border border-black/10 bg-[#ffffff] text-lg font-semibold leading-none text-ink-700 hover:bg-[#eef3fa]"
+                className="close-circle-button text-lg font-semibold leading-none text-ink-700 hover:bg-[#eef3fa]"
                 onClick={() => onCloseSelectedListing?.()}
               >
                 ×
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="outline"
+                size="icon"
                 aria-label="Föregående objekt"
-                className="inline-flex h-9 w-9 min-h-9 min-w-9 aspect-square items-center justify-center rounded-full border border-black/10 bg-[#ffffff] p-0 text-base font-semibold leading-none text-ink-700 hover:bg-[#eef3fa]"
+                className="h-9 w-9 rounded-full text-base font-semibold leading-none text-ink-700 hover:bg-[#eef3fa]"
                 onClick={() => handleCycleSelectedListing(-1)}
               >
                 ‹
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="outline"
+                size="icon"
                 aria-label="Nästa objekt"
-                className="inline-flex h-9 w-9 min-h-9 min-w-9 aspect-square items-center justify-center rounded-full border border-black/10 bg-[#ffffff] p-0 text-base font-semibold leading-none text-ink-700 hover:bg-[#eef3fa]"
+                className="h-9 w-9 rounded-full text-base font-semibold leading-none text-ink-700 hover:bg-[#eef3fa]"
                 onClick={() => handleCycleSelectedListing(1)}
               >
                 ›
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -583,47 +593,44 @@ function MapCanvas({ listings, onMarkerClick, dense = false }) {
 }
 
 function AuthPromptModal({ mode, onClose, onRequireAuth }) {
-  if (!mode) {
-    return null;
-  }
-
   const message = mode === "save"
     ? "Logga in eller skapa konto för att spara objekt och bygga en lista med sparade objekt."
     : "Logga in eller skapa konto för att boka visning och skicka förfrågan till hyresvärd.";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-transparent p-4 sm:items-center" onClick={onClose}>
-      <div className="surface w-full max-w-md p-5" onClick={(event) => event.stopPropagation()}>
+    <Dialog open={Boolean(mode)} onOpenChange={(nextOpen) => { if (!nextOpen) onClose?.(); }}>
+      <DialogContent showCloseButton={false} className="max-w-md rounded-2xl p-5">
         <p className="text-xs font-semibold uppercase tracking-wide text-brand-700">Konto krävs</p>
-        <h3 className="mt-1 text-xl font-semibold text-ink-900">Fortsätt med konto</h3>
-        <p className="mt-2 text-sm text-ink-600">{message}</p>
+        <DialogTitle className="mt-1 text-xl font-semibold text-ink-900">Fortsätt med konto</DialogTitle>
+        <DialogDescription className="mt-2 text-sm text-ink-600">{message}</DialogDescription>
         <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <button
+          <Button
             type="button"
-            className="btn-secondary"
+            variant="secondary"
+            className="h-auto py-2"
             onClick={() => {
               onClose?.();
               onRequireAuth?.("login");
             }}
           >
             Logga in
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            className="btn-primary"
+            className="h-auto py-2"
             onClick={() => {
               onClose?.();
               onRequireAuth?.("signup", "renter");
             }}
           >
             Skapa konto
-          </button>
+          </Button>
         </div>
-        <button type="button" className="mt-3 w-full rounded-xl border border-black/10 bg-[#ffffff] px-3 py-2 text-xs font-semibold text-ink-700" onClick={onClose}>
+        <Button type="button" variant="outline" className="h-auto mt-3 w-full px-3 py-2 text-xs font-semibold text-ink-700" onClick={onClose}>
           Fortsätt söka som gäst
-        </button>
-      </div>
-    </div>
+        </Button>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -3059,11 +3066,12 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
 
   const viewToggleControl = (
       <div className="view-toggle-group inline-flex items-center gap-1 rounded-full border border-black/10 bg-[#ffffff] p-1 xl:hidden">
-        <button
+        <Button
           type="button"
-          className={`view-toggle-option inline-flex min-h-[34px] items-center gap-1.5 rounded-full px-3 text-xs font-semibold transition ${
+          variant="ghost"
+          className={`h-auto min-h-[34px] gap-1.5 rounded-full px-3 text-xs font-semibold ${
             resultViewMode === "list"
-              ? "bg-[#0b0a0e] text-white"
+              ? "bg-[#0b0a0e] text-white hover:bg-[#0b0a0e] hover:text-white"
               : "text-ink-700 hover:bg-[#ffffff]"
           }`}
           onClick={() => setResultViewMode("list")}
@@ -3071,12 +3079,13 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
         >
           <ListIcon className="h-3.5 w-3.5" />
           Lista
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
-          className={`view-toggle-option inline-flex min-h-[34px] items-center gap-1.5 rounded-full px-3 text-xs font-semibold transition ${
+          variant="ghost"
+          className={`h-auto min-h-[34px] gap-1.5 rounded-full px-3 text-xs font-semibold ${
             resultViewMode === "map"
-              ? "bg-[#0b0a0e] text-white"
+              ? "bg-[#0b0a0e] text-white hover:bg-[#0b0a0e] hover:text-white"
               : "text-ink-700 hover:bg-[#ffffff]"
           }`}
           onClick={() => setResultViewMode("map")}
@@ -3084,24 +3093,25 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
         >
           <MapIcon className="h-3.5 w-3.5" />
           Karta
-        </button>
+        </Button>
       </div>
   );
 
   const sortControl = (
       <div className="inline-flex items-center gap-2">
         <label className="text-xs font-semibold text-ink-700">Sortera</label>
-        <select
-          className="select-chevron min-h-[40px] min-w-[132px] rounded-full border border-black/10 bg-[#ffffff] px-4 text-xs font-semibold text-ink-800 focus:border-[#0b0a0e] focus:outline-none"
-          value={sortBy}
-          onChange={(event) => setSortBy(event.target.value)}
-        >
-          <option value="relevance">Relevans</option>
-          <option value="price_asc">Hyra: lägst först</option>
-          <option value="price_desc">Hyra: högst först</option>
-          <option value="size_asc">Yta: minst först</option>
-          <option value="size_desc">Yta: störst först</option>
-        </select>
+        <Select value={sortBy} onValueChange={setSortBy}>
+          <SelectTrigger className="min-h-[40px] min-w-[132px] rounded-full text-xs font-semibold text-ink-800">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="relevance">Relevans</SelectItem>
+            <SelectItem value="price_asc">Hyra: lägst först</SelectItem>
+            <SelectItem value="price_desc">Hyra: högst först</SelectItem>
+            <SelectItem value="size_asc">Yta: minst först</SelectItem>
+            <SelectItem value="size_desc">Yta: störst först</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
   );
 
@@ -3133,17 +3143,18 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
         </div>
         <div className="hidden xl:flex shrink-0 items-center gap-2">
           <label className="text-xs font-semibold text-ink-700">Sortera</label>
-          <select
-            className="select-chevron min-h-[40px] min-w-[132px] rounded-full border border-black/10 bg-[#ffffff] px-4 text-xs font-semibold text-ink-800 focus:border-[#0b0a0e] focus:outline-none"
-            value={sortBy}
-            onChange={(event) => setSortBy(event.target.value)}
-          >
-            <option value="relevance">Relevans</option>
-            <option value="price_asc">Hyra: lägst först</option>
-            <option value="price_desc">Hyra: högst först</option>
-            <option value="size_asc">Yta: minst först</option>
-            <option value="size_desc">Yta: störst först</option>
-          </select>
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="min-h-[40px] min-w-[132px] rounded-full text-xs font-semibold text-ink-800">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="relevance">Relevans</SelectItem>
+              <SelectItem value="price_asc">Hyra: lägst först</SelectItem>
+              <SelectItem value="price_desc">Hyra: högst först</SelectItem>
+              <SelectItem value="size_asc">Yta: minst först</SelectItem>
+              <SelectItem value="size_desc">Yta: störst först</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
       {!isLocalProgramResultsTransitioning && summaryResultCount <= 3 ? (
@@ -3179,24 +3190,25 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
               </span>
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              <button
+              <Button
                 type="button"
-                className="inline-flex h-[40px] items-center gap-1.5 rounded-xl bg-[#0b0a0e] px-3 text-xs font-semibold text-white"
+                className="h-[40px] gap-1.5 rounded-xl px-3 text-xs font-semibold"
                 onClick={() => void applyResultsSuggestion(visibleResultsSuggestion)}
               >
                 <SparklesIcon className="h-3.5 w-3.5" />
                 Redigera med AI
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
-                className="inline-flex h-[40px] items-center gap-1.5 rounded-xl border border-black/10 bg-[#ffffff] px-3 text-xs font-semibold text-ink-700 hover:bg-[#ffffff]"
+                variant="outline"
+                className="h-[40px] gap-1.5 rounded-xl px-3 text-xs font-semibold text-ink-700 hover:bg-[#ffffff]"
                 onClick={() => {
                   setShowEditorAiPanel(false);
                   setShowAdvancedSearchEditor(true);
                 }}
               >
                 Redigera manuellt
-              </button>
+              </Button>
             </div>
           </div>
         ) : null
@@ -3212,14 +3224,15 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
   ];
 
   const aiSearchTriggerControl = (
-    <button
+    <Button
       type="button"
+      variant="outline"
       onClick={() => setShowEditorAiPanel(true)}
-      className="inline-flex h-[44px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-[#4f46e5]/15 bg-[#f5f4ff] px-4 text-sm font-semibold text-[#4f46e5] transition hover:bg-[#efeeff]"
+      className="h-[44px] shrink-0 gap-1.5 whitespace-nowrap rounded-full border-[#4f46e5]/15 bg-[#f5f4ff] px-4 text-sm font-semibold text-[#4f46e5] hover:bg-[#efeeff]"
     >
       <SparklesIcon className="h-3.5 w-3.5" />
       Sök
-    </button>
+    </Button>
   );
 
   const aiSearchOverlay = showEditorAiPanel ? (
@@ -3238,14 +3251,15 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
             </span>
             AI-sök
           </span>
-          <button
+          <Button
             type="button"
-            className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-[#ffffff] px-3 py-1.5 text-xs font-semibold text-ink-700 transition hover:border-[#0b0a0e]/30"
+            variant="outline"
+            className="h-auto gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-ink-700 hover:border-[#0b0a0e]/30"
             onClick={() => setAiPromptDraft("")}
           >
             <ResetIcon className="h-3.5 w-3.5" />
             Ny start
-          </button>
+          </Button>
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-6 py-10 text-center">
@@ -3260,15 +3274,16 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
           </p>
           <div className="mx-auto mt-3 flex max-w-xs flex-col gap-2">
             {aiSearchPromptSuggestions.map((suggestion) => (
-              <button
+              <Button
                 key={suggestion}
                 type="button"
-                className="rounded-2xl border border-black/10 bg-[#ffffff] px-4 py-3 text-left text-sm text-ink-700 transition hover:border-[#0b0a0e]/30 hover:bg-[#fafafa] disabled:opacity-40"
+                variant="outline"
+                className="h-auto justify-start rounded-2xl px-4 py-3 text-left text-sm font-normal text-ink-700 hover:border-[#0b0a0e]/30 hover:bg-[#fafafa]"
                 onClick={() => submitAiChatPrompt(suggestion)}
                 disabled={isAiSearchPending}
               >
                 {suggestion}
-              </button>
+              </Button>
             ))}
           </div>
         </div>
@@ -3295,14 +3310,15 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
               className="max-h-28 min-h-[40px] flex-1 resize-none bg-transparent px-2 py-2 text-sm text-ink-900 placeholder:text-ink-500 focus:outline-none"
               disabled={isAiSearchPending}
             />
-            <button
+            <Button
               type="submit"
-              className="close-circle-button inline-flex items-center justify-center rounded-full bg-[#0b0a0e] text-white transition disabled:opacity-40"
+              size="icon"
+              className="close-circle-button"
               disabled={isAiSearchPending || !aiPromptDraft.trim()}
               aria-label="Skicka"
             >
               <SendHorizontalIcon className="h-4 w-4" />
-            </button>
+            </Button>
           </div>
         </form>
       </div>
@@ -3330,23 +3346,25 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
             </label>
             <label>
               <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Område</span>
-              <select
-                value={filters.district}
-                onChange={(event) => setFilters((prev) => ({ ...prev, district: event.target.value }))}
-                className={heroSelectClass}
-              >
-                <option value="Alla" className="text-black">Alla områden</option>
-                {districtOptions.map((district) => <option key={district} value={district} className="text-black">{district}</option>)}
-              </select>
+              <Select value={filters.district} onValueChange={(value) => setFilters((prev) => ({ ...prev, district: value }))}>
+                <SelectTrigger className="h-[48px] w-full rounded-2xl">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Alla">Alla områden</SelectItem>
+                  {districtOptions.map((district) => <SelectItem key={district} value={district}>{district}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </label>
-            <button
+            <Button
               type="button"
-              className="inline-flex h-[48px] w-auto justify-center justify-self-start self-end items-center gap-1.5 rounded-2xl border border-black/10 bg-[#ffffff] px-4 text-xs font-semibold text-ink-700 hover:bg-[#ffffff]"
+              variant="outline"
+              className="h-[48px] w-auto justify-center justify-self-start self-end gap-1.5 rounded-2xl px-4 text-xs font-semibold text-ink-700 hover:bg-[#ffffff]"
               onClick={() => setShowAdvancedSearchEditor(true)}
             >
               <FilterIcon className="h-3.5 w-3.5" />
               <span>Visa alla filter</span>
-            </button>
+            </Button>
           </div>
         </div>
       </form>
@@ -3378,51 +3396,59 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
           {districtOptions.map((district) => <option key={district} value={district}>{district}</option>)}
         </select>
       </label>
-      <button
+      <Button
         type="button"
-        className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full border border-black/10 bg-[#fbfbfa] px-3 text-xs font-semibold text-ink-700 hover:bg-[#ffffff]"
+        variant="outline"
+        className="h-10 shrink-0 gap-1.5 rounded-full bg-[#fbfbfa] px-3 text-xs font-semibold text-ink-700 hover:bg-[#ffffff]"
         onClick={() => setShowAdvancedSearchEditor(true)}
       >
         <FilterIcon className="h-3.5 w-3.5" />
         <span>Visa alla filter</span>
-      </button>
+      </Button>
       <span className="mx-0.5 h-6 w-px shrink-0 bg-black/10" />
-      <button
+      <Button
         type="button"
+        variant="outline"
+        size="icon"
         aria-label="Spara sökning"
         title="Spara sökning"
-        className="close-circle-button inline-flex items-center justify-center rounded-full border border-black/10 text-ink-600 transition hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
+        className="close-circle-button text-ink-600 hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
         onClick={handleSaveSearchAction}
       >
         <StarIcon className="h-4 w-4" />
-      </button>
-      <button
+      </Button>
+      <Button
         type="button"
+        variant="outline"
+        size="icon"
         aria-label="Bevaka sökning"
         title="Bevaka sökning"
-        className="close-circle-button inline-flex items-center justify-center rounded-full border border-black/10 text-ink-600 transition hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
+        className="close-circle-button text-ink-600 hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
         onClick={handleWatchSearchAction}
       >
         <EyeIcon className="h-4 w-4" />
-      </button>
-      <button
+      </Button>
+      <Button
         type="button"
+        variant="outline"
+        size="icon"
         aria-label="Nollställ"
         title="Nollställ"
-        className="close-circle-button inline-flex items-center justify-center rounded-full border border-black/10 text-ink-600 transition hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
+        className="close-circle-button text-ink-600 hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
         onClick={() => {
           void handleResetSearchResults();
         }}
       >
         <ResetIcon className="h-4 w-4" />
-      </button>
+      </Button>
     </div>
   );
 
   const primaryHeaderAction = !hideLocalProgramQuickCard && hasRenterRole && !hasCompanyAdminRole ? (
-    <button
+    <Button
       type="button"
-      className={`inline-flex h-[38px] items-center justify-center gap-1.5 rounded-full border border-[#0b0a0e]/15 bg-gradient-to-r from-[#f8fafc] to-white pl-1.5 pr-3 text-xs font-semibold text-ink-900 transition hover:border-[#0b0a0e] hover:text-[#0b0a0e] ${
+      variant="outline"
+      className={`h-[38px] justify-center gap-1.5 rounded-full border-[#0b0a0e]/15 bg-gradient-to-r from-[#f8fafc] to-white pl-1.5 pr-3 text-xs font-semibold text-ink-900 hover:border-[#0b0a0e] hover:text-[#0b0a0e] ${
         isLocalProgramQuickCardDissolving ? "pointer-events-none opacity-0" : "opacity-100"
       }`}
       onClick={() => {
@@ -3450,37 +3476,40 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
         </span>
       )}
       Sök med lokalprogram
-    </button>
+    </Button>
   ) : null;
 
   const secondaryHeaderActions = hideLocalProgramQuickCard ? (
     <div className="flex flex-wrap items-center gap-2">
-      <button
+      <Button
         type="button"
-        className="group inline-flex min-h-0 items-center gap-1 rounded-full border border-black/10 px-2.5 py-1 text-xs font-semibold text-ink-700 transition hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
+        variant="outline"
+        className="group h-auto gap-1 rounded-full px-2.5 py-1 text-xs font-semibold text-ink-700 hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
         onClick={handleSaveSearchAction}
       >
         <StarIcon className="h-4 w-4 shrink-0 transition group-hover:text-[#0b0a0e]" />
         Spara sökning
-      </button>
-      <button
+      </Button>
+      <Button
         type="button"
-        className="group inline-flex min-h-0 items-center gap-1 rounded-full border border-black/10 px-2.5 py-1 text-xs font-semibold text-ink-700 transition hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
+        variant="outline"
+        className="group h-auto gap-1 rounded-full px-2.5 py-1 text-xs font-semibold text-ink-700 hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
         onClick={handleWatchSearchAction}
       >
         <EyeIcon className="h-4 w-4 shrink-0 transition group-hover:text-[#0b0a0e]" />
         Bevaka sökning
-      </button>
-      <button
+      </Button>
+      <Button
         type="button"
-        className="group inline-flex min-h-0 items-center gap-1 rounded-full border border-black/10 px-2.5 py-1 text-xs font-semibold text-ink-700 transition hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
+        variant="outline"
+        className="group h-auto gap-1 rounded-full px-2.5 py-1 text-xs font-semibold text-ink-700 hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
         onClick={() => {
           void handleResetSearchResults();
         }}
       >
         <ResetIcon className="h-4 w-4 shrink-0 transition group-hover:text-[#0b0a0e]" />
         Nollställ
-      </button>
+      </Button>
     </div>
   ) : null;
 
@@ -3538,10 +3567,11 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
             const visibleChanges = changeItems.slice(0, 3);
             const extraChanges = Math.max(changeItems.length - visibleChanges.length, 0);
             return (
-              <button
+              <Button
                 key={suggestion.id}
                 type="button"
-                className="group rounded-[24px] border border-black/10 bg-[#ffffff] p-3 text-left transition hover:border-[#0b0a0e]/35 hover:bg-[#ffffff]"
+                variant="outline"
+                className="group h-auto block w-full rounded-[24px] p-3 text-left font-normal hover:border-[#0b0a0e]/35 hover:bg-[#ffffff]"
                 onClick={() => void applyNoMatchSuggestion(suggestion)}
               >
                 <div className="flex items-start justify-between gap-2">
@@ -3563,7 +3593,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                     </span>
                   ) : null}
                 </div>
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -3765,14 +3795,16 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
           >
             <div className="flex items-center justify-between gap-3 border-b border-black/10 px-6 py-4">
               <h3 className="text-lg font-semibold text-ink-900">Alla filter</h3>
-              <button
+              <Button
                 type="button"
-                className="close-circle-button inline-flex items-center justify-center rounded-full border border-black/10 text-lg font-semibold leading-none text-ink-700 hover:bg-[#ffffff]"
+                variant="outline"
+                size="icon"
+                className="close-circle-button text-lg font-semibold leading-none text-ink-700 hover:bg-[#ffffff]"
                 onClick={closeAdvancedSearchOverlay}
                 aria-label="Stäng filter"
               >
                 ×
-              </button>
+              </Button>
             </div>
 
             <form
@@ -3787,24 +3819,24 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                   <label>
                     <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Typ</span>
-                    <select
+                    <Select
                       value={Array.isArray(filters.type) && filters.type.length > 0 ? filters.type[0] : "Alla"}
-                      onChange={(event) => {
-                        const nextType = event.target.value;
-                        setFilters((prev) => ({ ...prev, type: nextType === "Alla" ? [] : [nextType] }));
+                      onValueChange={(value) => {
+                        setFilters((prev) => ({ ...prev, type: value === "Alla" ? [] : [value] }));
                       }}
-                      className={heroSelectClass}
                     >
-                      <option value="Alla" className="text-black">Alla typer</option>
-                      {listingTypes.map((type) => <option key={type} value={type} className="text-black">{type}</option>)}
-                    </select>
+                      <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Alla">Alla typer</SelectItem>
+                        {listingTypes.map((type) => <SelectItem key={type} value={type}>{type}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
                   </label>
                   <label>
                     <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Min yta</span>
-                    <input
+                    <Input
                       value={filters.minSize}
                       onChange={(event) => setFilters((prev) => ({ ...prev, minSize: event.target.value }))}
-                      className={heroInputClass}
                       placeholder="Min kvm"
                       type="number"
                       min="0"
@@ -3812,10 +3844,9 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                   </label>
                   <label>
                     <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Max yta</span>
-                    <input
+                    <Input
                       value={filters.maxSize}
                       onChange={(event) => setFilters((prev) => ({ ...prev, maxSize: event.target.value }))}
-                      className={heroInputClass}
                       placeholder="Max kvm"
                       type="number"
                       min="0"
@@ -3823,10 +3854,9 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                   </label>
                   <label>
                     <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Inflyttning</span>
-                    <input
+                    <Input
                       value={filters.moveInDate || ""}
                       onChange={(event) => setFilters((prev) => ({ ...prev, moveInDate: event.target.value }))}
-                      className={`${heroInputClass} h-[48px] py-0`}
                       type="date"
                     />
                   </label>
@@ -3840,26 +3870,27 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                   </div>
                   <label>
                     <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Hyresvärd</span>
-                    <select
+                    <Select
                       value={filters.advertiser || "Alla"}
-                      onChange={(event) => setFilters((prev) => ({ ...prev, advertiser: event.target.value }))}
-                      className={heroSelectClass}
+                      onValueChange={(value) => setFilters((prev) => ({ ...prev, advertiser: value }))}
                     >
-                      <option value="Alla" className="text-black">Alla</option>
-                      {advertiserOptions.map((option) => (
-                        <option key={option} value={option} className="text-black">{option}</option>
-                      ))}
-                    </select>
+                      <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Alla">Alla</SelectItem>
+                        {advertiserOptions.map((option) => (
+                          <SelectItem key={option} value={option}>{option}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </label>
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2">
                   <label>
                     <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Min budget</span>
-                    <input
+                    <Input
                       value={filters.minBudget}
                       onChange={(event) => setFilters((prev) => ({ ...prev, minBudget: event.target.value }))}
-                      className={heroInputClass}
                       placeholder="0 kr"
                       type="number"
                       min="0"
@@ -3867,10 +3898,9 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                   </label>
                   <label>
                     <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Max budget</span>
-                    <input
+                    <Input
                       value={filters.maxBudget}
                       onChange={(event) => setFilters((prev) => ({ ...prev, maxBudget: event.target.value }))}
-                      className={heroInputClass}
                       placeholder="250000 kr"
                       type="number"
                       min="0"
@@ -3881,39 +3911,45 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                 <div className="grid gap-4 md:grid-cols-3">
                   <label>
                     <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Avtal</span>
-                    <select
-                      value={filters.contractFlex || ""}
-                      onChange={(event) => setFilters((prev) => ({ ...prev, contractFlex: event.target.value }))}
-                      className={heroSelectClass}
+                    <Select
+                      value={filters.contractFlex || "Alla"}
+                      onValueChange={(value) => setFilters((prev) => ({ ...prev, contractFlex: value === "Alla" ? "" : value }))}
                     >
-                      {contractFlexOptions.map((option) => (
-                        <option key={option} value={option === "Alla" ? "" : option} className="text-black">{option}</option>
-                      ))}
-                    </select>
+                      <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {contractFlexOptions.map((option) => (
+                          <SelectItem key={option} value={option}>{option}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </label>
                   <label>
                     <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Kommunaltrafik</span>
-                    <select
-                      value={filters.transitDistance || ""}
-                      onChange={(event) => setFilters((prev) => ({ ...prev, transitDistance: event.target.value }))}
-                      className={heroSelectClass}
+                    <Select
+                      value={filters.transitDistance || "Alla"}
+                      onValueChange={(value) => setFilters((prev) => ({ ...prev, transitDistance: value === "Alla" ? "" : value }))}
                     >
-                      {transitDistanceOptions.map((option) => (
-                        <option key={option} value={option === "Alla" ? "" : option} className="text-black">{option}</option>
-                      ))}
-                    </select>
+                      <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {transitDistanceOptions.map((option) => (
+                          <SelectItem key={option} value={option}>{option}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </label>
                   <label>
                     <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Planlösning</span>
-                    <select
-                      value={filters.layoutType || ""}
-                      onChange={(event) => setFilters((prev) => ({ ...prev, layoutType: event.target.value }))}
-                      className={heroSelectClass}
+                    <Select
+                      value={filters.layoutType || "Alla"}
+                      onValueChange={(value) => setFilters((prev) => ({ ...prev, layoutType: value === "Alla" ? "" : value }))}
                     >
-                      {layoutTypeOptions.map((option) => (
-                        <option key={option} value={option === "Alla" ? "" : option} className="text-black">{option}</option>
-                      ))}
-                    </select>
+                      <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {layoutTypeOptions.map((option) => (
+                          <SelectItem key={option} value={option}>{option}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </label>
                 </div>
 
@@ -3921,29 +3957,23 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-700">Särskilda krav</p>
                   <div className="mt-3 grid gap-2 md:grid-cols-3">
                     <label className="inline-flex items-center gap-2 text-sm text-ink-700">
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         checked={Boolean(filters.includeOperatingCosts)}
-                        onChange={(event) => setFilters((prev) => ({ ...prev, includeOperatingCosts: event.target.checked }))}
-                        className="h-4 w-4 rounded border-black/20"
+                        onCheckedChange={(checked) => setFilters((prev) => ({ ...prev, includeOperatingCosts: Boolean(checked) }))}
                       />
                       Driftkostnad ingår
                     </label>
                     <label className="inline-flex items-center gap-2 text-sm text-ink-700">
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         checked={Boolean(filters.accessibilityAdapted)}
-                        onChange={(event) => setFilters((prev) => ({ ...prev, accessibilityAdapted: event.target.checked }))}
-                        className="h-4 w-4 rounded border-black/20"
+                        onCheckedChange={(checked) => setFilters((prev) => ({ ...prev, accessibilityAdapted: Boolean(checked) }))}
                       />
                       Tillgänglighetsanpassad
                     </label>
                     <label className="inline-flex items-center gap-2 text-sm text-ink-700">
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         checked={Boolean(filters.ecoCertified)}
-                        onChange={(event) => setFilters((prev) => ({ ...prev, ecoCertified: event.target.checked }))}
-                        className="h-4 w-4 rounded border-black/20"
+                        onCheckedChange={(checked) => setFilters((prev) => ({ ...prev, ecoCertified: Boolean(checked) }))}
                       />
                       Miljöcertifierad
                     </label>
@@ -3957,17 +3987,18 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                       const Icon = option.icon;
                       const active = isAmenitySelected(option.value);
                       return (
-                        <button
+                        <Button
                           key={option.value}
                           type="button"
-                          className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition ${
-                            active ? "border-[#0b0a0e] bg-[#0b0a0e] text-white" : "border-black/10 bg-[#ffffff] text-ink-700 hover:bg-[#ffffff]"
+                          variant="outline"
+                          className={`h-auto gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold ${
+                            active ? "border-transparent bg-[#0b0a0e] text-white hover:bg-[#0b0a0e] hover:text-white" : "border-black/10 text-ink-700 hover:bg-[#ffffff]"
                           }`}
                           onClick={() => toggleAmenity(option.value)}
                         >
                           <Icon className="h-3.5 w-3.5 shrink-0" />
                           {option.label}
-                        </button>
+                        </Button>
                       );
                     })}
                   </div>
@@ -3975,9 +4006,10 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
               </div>
 
               <div className="mt-6 flex items-center justify-between gap-3 border-t border-black/10 pt-4">
-                <button
+                <Button
                   type="button"
-                  className="rounded-2xl border border-black/10 bg-[#ffffff] px-4 py-3 text-sm font-semibold text-ink-700 hover:bg-[#ffffff]"
+                  variant="outline"
+                  className="h-auto rounded-2xl px-4 py-3 text-sm font-semibold text-ink-700 hover:bg-[#ffffff]"
                   onClick={() => {
                     setFilters(savedFilters);
                     setAmenityQuery("");
@@ -3986,10 +4018,10 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                   }}
                 >
                   Återställ
-                </button>
-                <button type="submit" className="rounded-2xl border border-[#0b0a0e] bg-[#0b0a0e] px-5 py-3 text-sm font-semibold text-white">
+                </Button>
+                <Button type="submit" className="h-auto rounded-2xl px-5 py-3 text-sm font-semibold">
                   Visa {visibleListings.length} resultat
-                </button>
+                </Button>
               </div>
             </form>
           </div>
@@ -4021,14 +4053,16 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
       {showEditorAiInfo ? (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-transparent p-4" onClick={() => setShowEditorAiInfo(false)}>
           <div className="relative w-full max-w-lg rounded-2xl border border-black/10 bg-[#ffffff] p-5 shadow-[0_24px_64px_rgba(15,25,48,0.28)]" onClick={(event) => event.stopPropagation()}>
-            <button
+            <Button
               type="button"
-              className="close-circle-button absolute right-3 top-3 inline-flex items-center justify-center rounded-full border border-black/10 text-lg font-semibold leading-none text-ink-700 hover:bg-[#ffffff]"
+              variant="outline"
+              size="icon"
+              className="close-circle-button absolute right-3 top-3 text-lg font-semibold leading-none text-ink-700 hover:bg-[#ffffff]"
               onClick={() => setShowEditorAiInfo(false)}
               aria-label="Stäng"
             >
               ×
-            </button>
+            </Button>
             <h3 className="pr-10 text-lg font-semibold text-ink-900">Om AI-sök</h3>
             <p className="mt-2 text-sm text-ink-700">
               AI-sök analyserar din text och fyller relevanta filter automatiskt, som område, lokaltyp, teamstorlek,
