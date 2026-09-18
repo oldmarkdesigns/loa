@@ -362,13 +362,14 @@ function MessagesPage({ app }) {
               {filteredConversations.map((conversation) => {
                 const active = conversation.id === activeConversation?.id;
                 return (
-                  <button
+                  <Button
                     key={conversation.id}
                     type="button"
+                    variant="ghost"
                     onClick={() => setActiveConversationId(conversation.id)}
-                    className={`message-list-row mb-2 grid w-full grid-cols-[auto,1fr,auto] gap-3 rounded-[26px] px-4 py-4 text-left transition ${
+                    className={`message-list-row mb-2 grid h-auto w-full grid-cols-[auto,1fr,auto] gap-3 rounded-[26px] px-4 py-4 text-left font-normal transition ${
                       active
-                        ? "rounded-[26px] bg-[#efefee]"
+                        ? "bg-[#efefee] hover:bg-[#efefee]"
                         : "bg-transparent hover:bg-[#efefee]"
                     }`}
                   >
@@ -405,7 +406,7 @@ function MessagesPage({ app }) {
                         </Badge>
                       ) : null}
                     </div>
-                  </button>
+                  </Button>
                 );
               })}
             </div>
@@ -542,14 +543,15 @@ function MessagesPage({ app }) {
                         <p className="mt-1 px-1 text-xs text-ink-600">Baserat på senaste meddelandet</p>
                         <div className="mt-2 space-y-2">
                           {activeConversation?.suggestions?.length ? activeConversation.suggestions.map((suggestion) => (
-                            <button
+                            <Button
                               key={suggestion.id}
                               type="button"
+                              variant="ghost"
                               onClick={() => {
                                 useSuggestion(suggestion.text);
                                 setShowSuggestions(false);
                               }}
-                              className="message-suggestion-card w-full border border-black/10 bg-[#fbfbfa] p-3 text-left transition hover:bg-[#ffffff]"
+                              className="message-suggestion-card block h-auto w-full whitespace-normal border border-black/10 bg-[#fbfbfa] p-3 text-left font-normal transition hover:bg-[#ffffff]"
                             >
                               <div className="flex items-center justify-between gap-2">
                                 <Badge variant="outline" className={`h-auto rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide ${suggestionToneClass(suggestion.tone)}`}>
@@ -558,7 +560,7 @@ function MessagesPage({ app }) {
                                 <span className="text-[11px] text-ink-500">{suggestion.label}</span>
                               </div>
                               <p className="mt-2 text-sm leading-relaxed text-ink-800">{suggestion.text}</p>
-                            </button>
+                            </Button>
                           )) : (
                             <p className="px-1 py-2 text-sm text-ink-500">Inga förslag just nu.</p>
                           )}
