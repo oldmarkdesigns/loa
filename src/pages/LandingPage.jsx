@@ -45,6 +45,7 @@ import { districtOptions, listingTypes, listings as baseListingDataset } from ".
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -1653,44 +1654,29 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
           Vanliga frågor
         </h2>
 
-        <div className="mt-8 border-y border-black/10">
-          {faqItems.map((item, index) => {
-            const isOpen = openFaqIndex === index;
-            return (
-              <article key={item.q} className="border-b border-black/10 last:border-b-0">
-                <button
-                  type="button"
-                  className={`flex w-full items-center justify-between gap-6 pt-5 text-left sm:pt-6 ${
-                    isOpen ? "pb-2 sm:pb-2.5" : "pb-5 sm:pb-6"
-                  }`}
-                  aria-expanded={isOpen}
-                  onClick={() => setOpenFaqIndex(isOpen ? null : index)}
-                >
-                  <span className="text-base font-semibold leading-tight text-[#0b0a0e] sm:text-[1.08rem]">{item.q}</span>
-                  <span
-                    className={`inline-flex h-7 w-7 shrink-0 items-center justify-center text-ink-400 transition-transform duration-300 ${
-                      isOpen ? "rotate-180" : ""
-                    }`}
-                  >
-                    <ChevronRightIcon className="h-4 w-4 rotate-90" />
-                  </span>
-                </button>
-                <div
-                  className="grid overflow-hidden transition-[grid-template-rows,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
-                  style={{ gridTemplateRows: isOpen ? "1fr" : "0fr", opacity: isOpen ? 1 : 0 }}
-                >
-                  <p
-                    className={`max-w-3xl overflow-hidden text-sm leading-6 text-[#0b0a0e] ${
-                      isOpen ? "pb-4 sm:pb-5" : "pb-0"
-                    }`}
-                  >
-                    {item.a}
-                  </p>
-                </div>
-              </article>
-            );
-          })}
-        </div>
+        <Accordion
+          className="mt-8 border-y border-black/10"
+          value={openFaqIndex !== null ? [faqItems[openFaqIndex].q] : []}
+          onValueChange={(next) => {
+            const q = next[next.length - 1];
+            const index = q === undefined ? null : faqItems.findIndex((item) => item.q === q);
+            setOpenFaqIndex(index === -1 ? null : index);
+          }}
+        >
+          {faqItems.map((item) => (
+            <AccordionItem key={item.q} value={item.q} className="border-b border-black/10 last:border-b-0">
+              <AccordionTrigger className="gap-6 rounded-none py-5 text-base font-semibold leading-tight text-[#0b0a0e] hover:no-underline sm:py-6 sm:text-[1.08rem] [&>svg]:hidden">
+                {item.q}
+                <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center text-ink-400 transition-transform duration-300 group-aria-expanded/accordion-trigger:rotate-180">
+                  <ChevronRightIcon className="h-4 w-4 rotate-90" />
+                </span>
+              </AccordionTrigger>
+              <AccordionContent className="max-w-3xl pb-5 text-sm leading-6 text-[#0b0a0e] sm:pb-6">
+                {item.a}
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
 
         <article className="mt-14 overflow-hidden rounded-2xl bg-[#F3F7F7]">
           <div className="grid gap-8 px-8 py-9 sm:px-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
