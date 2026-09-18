@@ -1951,12 +1951,13 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                 if (!renter || !listing || !latestMessage) return null;
                 const isActive = inquiry.id === activeInquiry?.id;
                 return (
-                  <button
+                  <Button
                     key={inquiry.id}
                     type="button"
+                    variant="ghost"
                     onClick={() => selectInquiry(inquiry.id)}
-                    className={`flex w-full items-start gap-3 border-b border-black/5 px-4 py-4 text-left transition ${
-                      isActive ? "bg-[#ffffff] shadow-[inset_3px_0_0_#0b0a0e]" : "hover:bg-[#ffffff]/80"
+                    className={`h-auto flex w-full items-start gap-3 border-b border-black/5 px-4 py-4 text-left font-normal transition ${
+                      isActive ? "bg-[#ffffff] shadow-[inset_3px_0_0_#0b0a0e] hover:bg-[#ffffff]" : "hover:bg-[#ffffff]/80"
                     }`}
                   >
                     <Avatar className="h-11 w-11 shrink-0">
@@ -1988,7 +1989,7 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                         ) : null}
                       </div>
                     </div>
-                  </button>
+                  </Button>
                 );
               })}
               {filteredInquiries.length === 0 ? (
