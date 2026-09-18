@@ -576,10 +576,11 @@ function BrokerListingsSection({ app }) {
 
         <div className="divide-y divide-black/10">
           {filteredListings.map((listing) => (
-            <button
+            <Button
               key={listing.id}
               type="button"
-              className="flex w-full items-center gap-4 px-4 py-3.5 text-left transition hover:bg-[#fafafa] sm:grid sm:grid-cols-[minmax(0,1fr)_100px_96px_72px_84px] sm:px-5"
+              variant="ghost"
+              className="h-auto flex w-full items-center gap-4 px-4 py-3.5 text-left font-normal transition hover:bg-[#fafafa] sm:grid sm:grid-cols-[minmax(0,1fr)_100px_96px_72px_84px] sm:px-5"
               onClick={() => setSelectedListingId(listing.id)}
             >
               <div className="flex min-w-0 items-center gap-3">
@@ -599,7 +600,7 @@ function BrokerListingsSection({ app }) {
               <span className="hidden text-right text-sm font-semibold text-ink-800 sm:block">{listing.views.toLocaleString("sv-SE")}</span>
               <span className="hidden text-right text-sm font-semibold text-ink-800 sm:block">{listing.listingLeads}</span>
               <span className="hidden text-right text-xs font-semibold text-ink-500 sm:block">{listing.sizeSqm} kvm</span>
-            </button>
+            </Button>
           ))}
           {!isLoadingListings && filteredListings.length === 0 ? (
             <div className="px-4 py-10 text-center sm:px-5">
