@@ -26,6 +26,7 @@ import PremiumPromoCard from "../../components/shared/PremiumPromoCard";
 import { navigateTo, normalizeAppRole } from "../../lib/router";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -539,26 +540,22 @@ function ProfilePage({ app }) {
     <section className="relative flex h-full min-h-0 flex-col">
       {activeTab === "favorites" || activeTab === "history" ? (
         <div className="shrink-0 border-b border-black/10 bg-[#ffffff] px-4 py-2 sm:px-6">
-          <nav className="mx-auto flex w-full max-w-[1240px] flex-wrap items-center justify-start gap-5">
-            {[
-              { key: "favorites", label: "Sparade objekt" },
-              { key: "history", label: "Sparade sökningar" }
-            ].map((tab) => {
-              const active = activeTab === tab.key;
-              return (
-                <button
-                  key={tab.key}
-                  type="button"
-                  className={`tab-underline-button border-b-2 pb-0.5 text-sm font-semibold transition ${
-                    active ? "border-[#0b0a0e] text-[#0b0a0e]" : "border-transparent text-[#0b0a0e]/85 hover:text-[#0b0a0e]"
-                  }`}
-                  onClick={() => activateTab(tab.key)}
-                >
-                  {tab.label}
-                </button>
-              );
-            })}
-          </nav>
+          <Tabs value={activeTab} onValueChange={activateTab} className="mx-auto w-full max-w-[1240px]">
+            <TabsList variant="line" className="h-auto w-fit justify-start gap-5 bg-transparent p-0">
+              <TabsTrigger
+                value="favorites"
+                className="h-auto rounded-none border-b-2 border-transparent px-0 pb-0.5 text-sm font-semibold text-[#0b0a0e]/85 shadow-none transition after:hidden hover:bg-transparent hover:text-[#0b0a0e] data-active:border-[#0b0a0e] data-active:bg-transparent data-active:text-[#0b0a0e] data-active:shadow-none"
+              >
+                Sparade objekt
+              </TabsTrigger>
+              <TabsTrigger
+                value="history"
+                className="h-auto rounded-none border-b-2 border-transparent px-0 pb-0.5 text-sm font-semibold text-[#0b0a0e]/85 shadow-none transition after:hidden hover:bg-transparent hover:text-[#0b0a0e] data-active:border-[#0b0a0e] data-active:bg-transparent data-active:text-[#0b0a0e] data-active:shadow-none"
+              >
+                Sparade sökningar
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
       ) : null}
       <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">
