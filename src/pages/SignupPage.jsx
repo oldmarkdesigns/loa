@@ -1,9 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@workos-inc/authkit-react";
+import { RadioGroup as RadioGroupPrimitive } from "@base-ui/react/radio-group";
+import { Radio as RadioPrimitive } from "@base-ui/react/radio";
 import { defaultAppPathForUser, navigateTo } from "../lib/router";
 import AuthFlowNav from "../components/layout/AuthFlowNav";
 import { BuildingIcon, UserIcon } from "../components/icons/UiIcons";
 import { hasConvexConfig, hasWorkosConfig } from "../lib/convex";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const SIGNUP_DRAFT_STORAGE_KEY = "office_rental_signup_draft";
 const STEP_INTENT = 2;
@@ -522,7 +528,12 @@ function SignupPage({ onCheckCompanyByOrganizationNumber, onCompleteSignup, curr
   function renderIntentStep() {
     return (
       <div className="mt-1">
-        <div className="grid grid-cols-2 gap-3" role="radiogroup" aria-label="Välj riktning">
+        <RadioGroupPrimitive
+          value={form.intentSelection}
+          onValueChange={applyIntentSelection}
+          aria-label="Välj riktning"
+          className="grid grid-cols-2 gap-3"
+        >
           {[
             { value: "rent", label: "Jag vill hyra", Icon: UserIcon },
             { value: "lease-out", label: "Jag vill hyra ut", Icon: BuildingIcon }
@@ -530,13 +541,10 @@ function SignupPage({ onCheckCompanyByOrganizationNumber, onCompleteSignup, curr
             const selected = form.intentSelection === option.value;
             const Icon = option.Icon;
             return (
-              <button
+              <RadioPrimitive.Root
                 key={option.value}
-                type="button"
-                role="radio"
-                aria-checked={selected}
-                onClick={() => applyIntentSelection(option.value)}
-                className={`role-option-button flex flex-col items-center gap-3 border px-4 py-6 text-center transition ${
+                value={option.value}
+                className={`flex flex-col items-center gap-3 rounded-xl border px-4 py-6 text-center outline-none transition focus-visible:ring-3 focus-visible:ring-ring/50 ${
                   selected ? "border-[#0b0a0e] bg-[#ffffff] text-[#0b0a0e] shadow-[0_0_0_1px_rgba(15,25,48,0.2)]" : "border-black/15 bg-[#ffffff] text-ink-700"
                 }`}
               >
@@ -548,10 +556,10 @@ function SignupPage({ onCheckCompanyByOrganizationNumber, onCompleteSignup, curr
                   <Icon className="h-5 w-5" />
                 </span>
                 <span className="text-sm font-medium leading-tight">{option.label}</span>
-              </button>
+              </RadioPrimitive.Root>
             );
           })}
-        </div>
+        </RadioGroupPrimitive>
       </div>
     );
   }
@@ -562,31 +570,33 @@ function SignupPage({ onCheckCompanyByOrganizationNumber, onCompleteSignup, curr
         <p className="mb-2 text-sm font-semibold text-ink-700">
           För att hyra ut
         </p>
-        <div className="grid grid-cols-1 gap-2.5" role="radiogroup" aria-label="Välj roll">
+        <RadioGroupPrimitive
+          value={form.roleSelection}
+          onValueChange={(value) => applySelection(form.intentSelection, value)}
+          aria-label="Välj roll"
+          className="grid grid-cols-1 gap-2.5"
+        >
           {[
             { value: "company_admin", label: "Hyresvärd" },
             { value: "broker", label: "Mäklare" }
           ].map((option) => {
             const selected = form.roleSelection === option.value;
             return (
-              <button
+              <RadioPrimitive.Root
                 key={option.value}
-                type="button"
-                role="radio"
-                aria-checked={selected}
-                onClick={() => applySelection(form.intentSelection, option.value)}
-                className={`role-option-button flex w-full items-center justify-between border px-4 py-3 text-left transition ${
+                value={option.value}
+                className={`flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left outline-none transition focus-visible:ring-3 focus-visible:ring-ring/50 ${
                   selected ? "border-[#0b0a0e] bg-[#ffffff] text-[#0b0a0e] shadow-[0_0_0_1px_rgba(15,25,48,0.2)]" : "border-black/15 bg-[#ffffff] text-ink-700"
                 }`}
               >
                 <span className="text-sm font-medium leading-tight">{option.label}</span>
                 <span className={`inline-flex h-5 w-5 items-center justify-center rounded-full border ${selected ? "border-[#0b0a0e]" : "border-black/20"}`}>
-                  <span className={`h-2 w-2 rounded-full ${selected ? "bg-[#0b0a0e]" : "bg-transparent"}`} />
+                  <RadioPrimitive.Indicator className="h-2 w-2 rounded-full bg-[#0b0a0e]" />
                 </span>
-              </button>
+              </RadioPrimitive.Root>
             );
           })}
-        </div>
+        </RadioGroupPrimitive>
       </div>
     );
   }
@@ -598,18 +608,17 @@ function SignupPage({ onCheckCompanyByOrganizationNumber, onCompleteSignup, curr
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <label className="block">
               <span className="mb-1 block text-xs font-semibold text-ink-700">Förnamn</span>
-              <input className="field" value={form.firstName} onChange={(e) => setForm((p) => ({ ...p, firstName: e.target.value }))} required />
+              <Input value={form.firstName} onChange={(e) => setForm((p) => ({ ...p, firstName: e.target.value }))} required />
             </label>
             <label className="block">
               <span className="mb-1 block text-xs font-semibold text-ink-700">Efternamn</span>
-              <input className="field" value={form.lastName} onChange={(e) => setForm((p) => ({ ...p, lastName: e.target.value }))} required />
+              <Input value={form.lastName} onChange={(e) => setForm((p) => ({ ...p, lastName: e.target.value }))} required />
             </label>
           </div>
         ) : null}
         <label className="block">
           <span className="mb-1 block text-xs font-semibold text-ink-700">E-post</span>
-          <input
-            className="field"
+          <Input
             type="email"
             value={form.email}
             onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
@@ -621,8 +630,7 @@ function SignupPage({ onCheckCompanyByOrganizationNumber, onCompleteSignup, curr
           <span className="mb-1 block text-xs font-semibold text-ink-700">
             Organisationsnummer {requiresOrganizationNumber ? "" : "(valfritt)"}
           </span>
-          <input
-            className="field"
+          <Input
             inputMode="numeric"
             value={form.organizationNumber}
             onChange={(e) => {
@@ -654,14 +662,15 @@ function SignupPage({ onCheckCompanyByOrganizationNumber, onCompleteSignup, curr
         <label className="block">
           <span className="mb-1 block text-xs font-semibold text-ink-700">Telefon (valfritt)</span>
           <div className="grid grid-cols-[152px_1fr] gap-2">
-            <select className="field select-chevron" value={phoneCountryCode} onChange={(e) => setPhoneCountryCode(e.target.value)}>
-              {countryCodeOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            <input className="field" value={form.phone} onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))} placeholder="70 123 45 67" />
+            <Select value={phoneCountryCode} onValueChange={setPhoneCountryCode}>
+              <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {countryCodeOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Input value={form.phone} onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))} placeholder="70 123 45 67" />
           </div>
         </label>
       </>
@@ -689,65 +698,49 @@ function SignupPage({ onCheckCompanyByOrganizationNumber, onCompleteSignup, curr
   return (
     <main className="grid min-h-screen place-items-center bg-[#ffffff] px-4 pb-8 pt-20">
       <AuthFlowNav />
-      {companyConfirmPromptOpen && pendingCompanyLookup?.company ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0b0a0e]/50 px-4">
-          <div className="w-full max-w-[520px] rounded-[28px] border border-black/10 bg-[#ffffff] p-6 shadow-[0_24px_60px_rgba(15,25,48,0.24)]">
-            <h2 className="text-[1.5rem] font-semibold leading-tight text-[#0b0a0e]">Bekräfta företaget</h2>
-            <p className="mt-2 text-sm leading-relaxed text-ink-600">
+      <Dialog open={companyConfirmPromptOpen && Boolean(pendingCompanyLookup?.company)} onOpenChange={(open) => { if (!open) rejectMatchedCompany(); }}>
+        <DialogContent showCloseButton={false} className="max-w-[520px] rounded-[28px] border border-black/10 bg-[#ffffff] p-6">
+          <DialogHeader className="text-left">
+            <DialogTitle className="text-[1.5rem] font-semibold leading-tight text-[#0b0a0e]">Bekräfta företaget</DialogTitle>
+            <DialogDescription className="text-sm leading-relaxed text-ink-600">
               Vi hittade ett registrerat företag för organisationsnumret. Kontrollera att uppgifterna stämmer innan du går vidare.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="rounded-2xl border border-[#d7e2ee] bg-[#f8fafc] px-4 py-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Företag</p>
+            <p className="mt-1 text-lg font-semibold text-[#0b0a0e]">{pendingCompanyLookup?.company?.name}</p>
+            <p className="mt-1 text-sm font-semibold text-[#0b0a0e]">
+              {pendingCompanyLookup?.company?.organizationNumber || pendingFormattedOrganizationNumber}
             </p>
-            <div className="mt-4 rounded-2xl border border-[#d7e2ee] bg-[#f8fafc] px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Företag</p>
-              <p className="mt-1 text-lg font-semibold text-[#0b0a0e]">{pendingCompanyLookup.company.name}</p>
-              <p className="mt-1 text-sm font-semibold text-[#0b0a0e]">
-                {pendingCompanyLookup.company.organizationNumber || pendingFormattedOrganizationNumber}
-              </p>
-            </div>
-            <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-end">
-              <button
-                type="button"
-                className="inline-flex min-h-0 items-center justify-center rounded-full border border-black/15 bg-[#ffffff] px-5 py-3 text-sm font-semibold text-ink-800"
-                onClick={rejectMatchedCompany}
-              >
-                Nej, ändra orgnummer
-              </button>
-              <button
-                type="button"
-                className="inline-flex min-h-0 items-center justify-center rounded-full border border-[#0b0a0e] bg-[#0b0a0e] px-5 py-3 text-sm font-semibold text-white"
-                onClick={confirmMatchedCompany}
-              >
-                Ja, fortsätt
-              </button>
-            </div>
           </div>
-        </div>
-      ) : null}
-      {companySetupPromptOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0b0a0e]/50 px-4">
-          <div className="w-full max-w-[520px] rounded-[28px] border border-black/10 bg-[#ffffff] p-6 shadow-[0_24px_60px_rgba(15,25,48,0.24)]">
-            <h2 className="text-[1.5rem] font-semibold leading-tight text-[#0b0a0e]">Företaget finns inte registrerat</h2>
-            <p className="mt-2 text-sm leading-relaxed text-ink-600">
+          <DialogFooter>
+            <Button type="button" variant="outline" className="h-auto rounded-full px-5 py-3 text-sm font-semibold text-ink-800" onClick={rejectMatchedCompany}>
+              Nej, ändra orgnummer
+            </Button>
+            <Button type="button" className="h-auto rounded-full px-5 py-3 text-sm font-semibold" onClick={confirmMatchedCompany}>
+              Ja, fortsätt
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={companySetupPromptOpen} onOpenChange={(open) => { if (!open) cancelCompanySetup(); }}>
+        <DialogContent showCloseButton={false} className="max-w-[520px] rounded-[28px] border border-black/10 bg-[#ffffff] p-6">
+          <DialogHeader className="text-left">
+            <DialogTitle className="text-[1.5rem] font-semibold leading-tight text-[#0b0a0e]">Företaget finns inte registrerat</DialogTitle>
+            <DialogDescription className="text-sm leading-relaxed text-ink-600">
               Organisationsnumret finns inte på plattformen. Vill du sätta upp ett nytt företag nu?
-            </p>
-            <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-end">
-              <button
-                type="button"
-                className="inline-flex min-h-0 items-center justify-center rounded-full border border-black/15 bg-[#ffffff] px-5 py-3 text-sm font-semibold text-ink-800"
-                onClick={cancelCompanySetup}
-              >
-                Inte nu
-              </button>
-              <button
-                type="button"
-                className="inline-flex min-h-0 items-center justify-center rounded-full border border-[#0b0a0e] bg-[#0b0a0e] px-5 py-3 text-sm font-semibold text-white"
-                onClick={confirmCompanySetup}
-              >
-                Sätt upp nytt företag
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="outline" className="h-auto rounded-full px-5 py-3 text-sm font-semibold text-ink-800" onClick={cancelCompanySetup}>
+              Inte nu
+            </Button>
+            <Button type="button" className="h-auto rounded-full px-5 py-3 text-sm font-semibold" onClick={confirmCompanySetup}>
+              Sätt upp nytt företag
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <div className="mx-auto w-full">
         <div ref={cardWrapRef} className="mx-auto w-full max-w-[460px] rounded-[30px] border border-black/10 bg-[#ffffff] px-6 py-7 sm:px-7 sm:py-8">
           <h1 className="text-[1.95rem] font-semibold leading-tight text-[#0b0a0e]">
@@ -768,7 +761,7 @@ function SignupPage({ onCheckCompanyByOrganizationNumber, onCompleteSignup, curr
               {error ? <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">{error}</p> : null}
 
               <div className={`flex flex-col gap-3 ${detailsStep === STEP_PROFILE_EXTRA ? "pt-2" : "mt-6"}`}>
-                <button type="submit" className="inline-flex items-center justify-center gap-1.5 rounded-full border border-[#0b0a0e] bg-[#0b0a0e] px-5 py-3 text-sm font-semibold text-white" disabled={pending || isLoading}>
+                <Button type="submit" className="h-auto gap-1.5 rounded-full px-5 py-3 text-sm font-semibold" disabled={pending || isLoading}>
                   {submitLabel}
                   {showSubmitLoadingDots ? (
                     <span className="button-loading-dots inline-flex items-center gap-0.5" aria-hidden="true">
@@ -777,24 +770,25 @@ function SignupPage({ onCheckCompanyByOrganizationNumber, onCompleteSignup, curr
                       <span />
                     </span>
                   ) : null}
-                </button>
+                </Button>
                 {detailsStep !== STEP_INTENT ? (
-                  <button
+                  <Button
                     type="button"
-                    className="rounded-full border border-black/15 bg-[#ffffff] px-5 py-3 text-sm font-semibold text-ink-800 hover:bg-[#f8fafc]"
+                    variant="outline"
+                    className="h-auto rounded-full px-5 py-3 text-sm font-semibold text-ink-800 hover:bg-[#f8fafc]"
                     onClick={goBackFromDetails}
                     disabled={pending}
                   >
                     Tillbaka
-                  </button>
+                  </Button>
                 ) : null}
 
                 {detailsStep !== STEP_PROFILE_EXTRA ? (
                   <>
                     <p className="text-center text-xs text-ink-600">Har du redan konto?</p>
-                    <button type="button" className="mx-auto inline-flex items-center justify-center rounded-full border border-black/15 bg-[#ffffff] px-5 py-3 text-sm font-semibold text-ink-800 hover:bg-[#f8fafc]" onClick={startLoginFromSignup} disabled={pending}>
+                    <Button type="button" variant="outline" className="mx-auto h-auto rounded-full px-5 py-3 text-sm font-semibold text-ink-800 hover:bg-[#f8fafc]" onClick={startLoginFromSignup} disabled={pending}>
                       Logga in
-                    </button>
+                    </Button>
                   </>
                 ) : null}
               </div>
