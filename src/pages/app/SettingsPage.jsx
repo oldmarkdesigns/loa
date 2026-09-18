@@ -4,6 +4,7 @@ import PremiumPromoCard from "../../components/shared/PremiumPromoCard";
 import { navigateTo, normalizeAppRole } from "../../lib/router";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 
 const settingsSections = [
   { key: "personal", title: "Personligt", subtitle: "Din personliga information och hur vi kontaktar dig." },
@@ -18,24 +19,20 @@ const settingsSections = [
 
 function SettingsRow({ title, subtitle, open, onToggle, children, isLast = false }) {
   return (
-    <article className={isLast ? "" : "border-b border-black/10"}>
-      <button
-        type="button"
-        className="-mx-6 flex w-[calc(100%+3rem)] items-center justify-between gap-4 !rounded-[14px] px-6 py-6 text-left transition hover:bg-black/5"
-        onClick={onToggle}
-        aria-expanded={open}
-      >
-        <div>
-          <h3 className="text-xl font-semibold leading-tight text-[#0b0a0e]">{title}</h3>
-          <p className="mt-2.5 text-sm text-ink-600">{subtitle}</p>
-        </div>
-        <span className={`inline-flex h-10 w-10 items-center justify-center rounded-full border border-black/15 text-ink-700 transition ${open ? "rotate-90" : ""}`}>
-          <Icon name="arrowRight" className="h-4 w-4" />
-        </span>
-      </button>
-
-      {open ? <div className="pb-6 pt-4">{children}</div> : null}
-    </article>
+    <Accordion value={open ? ["section"] : []} onValueChange={onToggle} className={isLast ? "" : "border-b border-black/10"}>
+      <AccordionItem value="section" className="border-b-0">
+        <AccordionTrigger className="-mx-6 w-[calc(100%+3rem)] gap-4 !rounded-[14px] px-6 py-6 hover:bg-black/5 hover:no-underline [&>svg]:hidden">
+          <div>
+            <h3 className="text-xl font-semibold leading-tight text-[#0b0a0e]">{title}</h3>
+            <p className="mt-2.5 text-sm text-ink-600">{subtitle}</p>
+          </div>
+          <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-black/15 text-ink-700 transition group-aria-expanded/accordion-trigger:rotate-90">
+            <Icon name="arrowRight" className="h-4 w-4" />
+          </span>
+        </AccordionTrigger>
+        <AccordionContent className="pb-6 pt-4">{children}</AccordionContent>
+      </AccordionItem>
+    </Accordion>
   );
 }
 
