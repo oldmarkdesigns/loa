@@ -46,6 +46,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 const GOOGLE_MAPS_SCRIPT_ID = "google-maps-listing-detail-script";
@@ -830,30 +831,22 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
           <div className="grid grid-cols-1 items-center gap-3 border-b border-black/10 pb-3 sm:grid-cols-[1fr_auto_1fr]">
             <div />
 
-            <div className="inline-flex items-center justify-center gap-6 justify-self-center">
-              <button
-                type="button"
-                className={`tab-underline-button border-b-2 pb-0.5 text-xs font-semibold transition ${
-                  galleryTab === "images"
-                    ? "border-[#0b0a0e] text-[#0b0a0e]"
-                    : "border-transparent text-ink-600 hover:text-black"
-                }`}
-                onClick={() => setGalleryTab("images")}
-              >
-                Bilder
-              </button>
-              <button
-                type="button"
-                className={`tab-underline-button border-b-2 pb-0.5 text-xs font-semibold transition ${
-                  galleryTab === "street"
-                    ? "border-[#0b0a0e] text-[#0b0a0e]"
-                    : "border-transparent text-ink-600 hover:text-black"
-                }`}
-                onClick={() => setGalleryTab("street")}
-              >
-                Gatuvy
-              </button>
-            </div>
+            <Tabs value={galleryTab} onValueChange={setGalleryTab} className="justify-self-center">
+              <TabsList variant="line" className="h-auto gap-6 bg-transparent p-0">
+                <TabsTrigger
+                  value="images"
+                  className="h-auto rounded-none border-b-2 border-transparent px-0 pb-0.5 text-xs font-semibold text-ink-600 shadow-none transition after:hidden hover:bg-transparent hover:text-black data-active:border-[#0b0a0e] data-active:bg-transparent data-active:text-[#0b0a0e] data-active:shadow-none"
+                >
+                  Bilder
+                </TabsTrigger>
+                <TabsTrigger
+                  value="street"
+                  className="h-auto rounded-none border-b-2 border-transparent px-0 pb-0.5 text-xs font-semibold text-ink-600 shadow-none transition after:hidden hover:bg-transparent hover:text-black data-active:border-[#0b0a0e] data-active:bg-transparent data-active:text-[#0b0a0e] data-active:shadow-none"
+                >
+                  Gatuvy
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
 
             <div className="flex flex-wrap items-center justify-start gap-2 sm:justify-end">
               <Button type="button" variant="outline" className={`h-auto ${actionButtonClass}`} onClick={handleExportPdf}>
@@ -865,7 +858,6 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                 variant="outline"
                 className={`h-auto ${saveActionButtonClass}`}
                 onClick={handleToggleSave}
-                title={isSaved ? "Sparad" : "Spara"}
                 aria-label={isSaved ? "Sparad" : "Spara"}
               >
                 <StarIcon className={`h-3.5 w-3.5 ${isSaved ? "fill-current text-[#0b0a0e]" : ""}`} />
@@ -924,10 +916,17 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
           <div className="grid gap-6">
             <div className="relative h-72 overflow-hidden rounded-3xl border border-black/10 bg-[#ffffff] sm:h-[420px]">
               <div className="grid h-full grid-cols-2 gap-0.5 bg-[#ffffff]">
-                <button
-                  type="button"
-                  className="gallery-mosaic-tile relative block h-full w-full overflow-hidden text-left"
+                <div
+                  role="button"
+                  tabIndex={0}
+                  className="gallery-mosaic-tile relative block h-full w-full cursor-pointer overflow-hidden text-left"
                   onClick={() => openGalleryOverlay(0)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      openGalleryOverlay(0);
+                    }
+                  }}
                 >
                   <img src={images[0]} alt={listing.title} className="h-full w-full object-cover" />
                   <div className="pointer-events-auto absolute right-4 top-4 z-20 flex flex-wrap items-center justify-end gap-2">
@@ -940,7 +939,6 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                       variant="outline"
                       className={`h-auto ${saveActionButtonClass}`}
                       onClick={(event) => { event.stopPropagation(); handleToggleSave(); }}
-                      title={isSaved ? "Sparad" : "Spara"}
                       aria-label={isSaved ? "Sparad" : "Spara"}
                     >
                       <StarIcon className={`h-3.5 w-3.5 ${isSaved ? "fill-current text-[#0b0a0e]" : ""}`} />
@@ -972,18 +970,19 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                       Se alla bilder
                     </span>
                   </div>
-                </button>
+                </div>
 
                 <div className="grid h-full min-h-0 grid-cols-2 gap-0.5">
                   {galleryPreviewImages.map((image, index) => (
-                    <button
+                    <Button
                       key={`gallery-side-${image}-${index}`}
                       type="button"
-                      className="gallery-mosaic-tile relative block h-full w-full min-h-0 overflow-hidden bg-[#ffffff] p-0 text-left"
+                      variant="ghost"
+                      className="gallery-mosaic-tile relative block h-full w-full min-h-0 overflow-hidden bg-[#ffffff] p-0 text-left hover:bg-[#ffffff]"
                       onClick={() => openGalleryOverlay(index + 1)}
                     >
                       <img src={image} alt={`${listing.title} forhandsbild ${index + 2}`} className="absolute inset-0 h-full w-full object-cover" />
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </div>
@@ -1263,30 +1262,22 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                       Stäng
                     </Button>
 
-                    <div className="inline-flex items-center justify-center gap-6 justify-self-center">
-                      <button
-                        type="button"
-                        className={`tab-underline-button border-b-2 pb-0.5 text-sm font-semibold transition ${
-                          galleryTab === "images"
-                            ? "border-[#0b0a0e] text-[#0b0a0e]"
-                            : "border-transparent text-ink-600 hover:text-black"
-                        }`}
-                        onClick={() => setGalleryTab("images")}
-                      >
-                        Galleri
-                      </button>
-                      <button
-                        type="button"
-                        className={`tab-underline-button border-b-2 pb-0.5 text-sm font-semibold transition ${
-                          galleryTab === "street"
-                            ? "border-[#0b0a0e] text-[#0b0a0e]"
-                            : "border-transparent text-ink-600 hover:text-black"
-                        }`}
-                        onClick={() => setGalleryTab("street")}
-                      >
-                        Gatuvy
-                      </button>
-                    </div>
+                    <Tabs value={galleryTab} onValueChange={setGalleryTab} className="justify-self-center">
+                      <TabsList variant="line" className="h-auto gap-6 bg-transparent p-0">
+                        <TabsTrigger
+                          value="images"
+                          className="h-auto rounded-none border-b-2 border-transparent px-0 pb-0.5 text-sm font-semibold text-ink-600 shadow-none transition after:hidden hover:bg-transparent hover:text-black data-active:border-[#0b0a0e] data-active:bg-transparent data-active:text-[#0b0a0e] data-active:shadow-none"
+                        >
+                          Galleri
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value="street"
+                          className="h-auto rounded-none border-b-2 border-transparent px-0 pb-0.5 text-sm font-semibold text-ink-600 shadow-none transition after:hidden hover:bg-transparent hover:text-black data-active:border-[#0b0a0e] data-active:bg-transparent data-active:text-[#0b0a0e] data-active:shadow-none"
+                        >
+                          Gatuvy
+                        </TabsTrigger>
+                      </TabsList>
+                    </Tabs>
 
                     <div className="flex flex-wrap items-center justify-start gap-2 sm:justify-end">
                       <Button type="button" variant="outline" className={`h-auto ${actionButtonClass}`} onClick={handleExportPdf}>
@@ -1298,7 +1289,6 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                         variant="outline"
                         className={`h-auto ${saveActionButtonClass}`}
                         onClick={handleToggleSave}
-                        title={isSaved ? "Sparad" : "Spara"}
                         aria-label={isSaved ? "Sparad" : "Spara"}
                       >
                         <StarIcon className={`h-3.5 w-3.5 ${isSaved ? "fill-current text-[#0b0a0e]" : ""}`} />
