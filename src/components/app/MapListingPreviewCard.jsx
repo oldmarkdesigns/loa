@@ -1,4 +1,5 @@
 import { Icon } from "../icons/Icon";
+import { Button } from "@/components/ui/button";
 
 function buildAddress(listing) {
   const parts = [listing.address, listing.district].filter(Boolean);
@@ -23,9 +24,9 @@ function MapListingPreviewCard({ listing, onOpen, className = "" }) {
   }
 
   return (
-    <button type="button" onClick={() => onOpen(listing)} className="block w-full text-left">
+    <Button type="button" variant="ghost" onClick={() => onOpen(listing)} className="h-auto block w-full p-0 text-left hover:bg-transparent">
       {content}
-    </button>
+    </Button>
   );
 }
 

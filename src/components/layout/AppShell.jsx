@@ -6,6 +6,7 @@ import AppFooter from "./AppFooter";
 import MarketingHeader from "./MarketingHeader";
 import ProfileMenuDropdown from "./ProfileMenuDropdown";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 import companyLogo from "../../../Assets/Logo/LOA-Logo.png";
 
 function initialsForName(name = "") {
@@ -221,9 +222,10 @@ function AppShell({
             <div className="flex min-w-0 items-center gap-3">
               {isAdminContext || isBrokerPanelContext ? (
                 <div ref={adminCompanyButtonRef} className="relative inline-block max-w-full">
-                  <button
+                  <Button
                     type="button"
-                    className="inline-flex h-11 w-auto max-w-full items-center gap-2 rounded-full border border-black/10 bg-[#ffffff] pl-1.5 pr-3 text-left transition hover:border-[#0b0a0e]/25"
+                    variant="outline"
+                    className="h-11 w-auto max-w-full gap-2 rounded-full pl-1.5 pr-3 text-left hover:border-[#0b0a0e]/25"
                     onClick={() => setAdminCompanyOpen((value) => !value)}
                   >
                     <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0b0a0e] text-sm font-semibold text-white">
@@ -236,7 +238,7 @@ function AppShell({
                       aria-hidden="true"
                       className={`ui-chevron h-3.5 w-3.5 shrink-0 opacity-70 transition-transform ${adminCompanyOpen ? "rotate-180" : ""}`}
                     />
-                  </button>
+                  </Button>
 
                   {adminCompanyOpen ? (
                     <div ref={adminCompanyPanelRef} className="absolute left-0 top-[calc(100%+0.4rem)] z-[62] w-[280px] rounded-2xl border border-black/10 bg-[#ffffff] p-2 shadow-[0_10px_28px_rgba(15,25,48,0.12)]">
@@ -245,11 +247,12 @@ function AppShell({
                           myCompanyOptions.map((company) => {
                             const isActive = String(company.companyId) === String(user?.profile?.companyId || "");
                             return (
-                              <button
+                              <Button
                                 key={company.companyId}
                                 type="button"
-                                className={`menu-hover-row flex w-full items-center gap-2.5 px-2.5 py-2 text-left text-sm font-semibold transition ${
-                                  isActive ? "bg-[#eef2f8] text-[#0b0a0e]" : "text-ink-700 hover:bg-black/5"
+                                variant="ghost"
+                                className={`menu-hover-row h-auto w-full justify-start gap-2.5 px-2.5 py-2 text-left text-sm font-semibold ${
+                                  isActive ? "bg-[#eef2f8] text-[#0b0a0e] hover:bg-[#eef2f8]" : "text-ink-700 hover:bg-black/5"
                                 }`}
                                 onClick={async () => {
                                   setAdminCompanyOpen(false);
@@ -262,47 +265,50 @@ function AppShell({
                                   {initialsForName(company.name)}
                                 </span>
                                 <span className="min-w-0 flex-1 truncate">{company.name}</span>
-                              </button>
+                              </Button>
                             );
                           })
                         ) : (
-                          <button
+                          <Button
                             type="button"
-                            className="menu-hover-row w-full bg-[#eef2f8] px-2.5 py-2 text-left text-sm font-semibold text-[#0b0a0e]"
+                            variant="ghost"
+                            className="menu-hover-row h-auto w-full justify-start bg-[#eef2f8] px-2.5 py-2 text-left text-sm font-semibold text-[#0b0a0e] hover:bg-[#eef2f8]"
                             onClick={() => setAdminCompanyOpen(false)}
                           >
                             {activeCompany.name}
-                          </button>
+                          </Button>
                         )}
                       </div>
                     </div>
                   ) : null}
                 </div>
               ) : (
-                <button
+                <Button
                   type="button"
-                  className="inline-flex h-11 items-center gap-2 rounded-full border border-black/10 bg-[#ffffff] pl-2 pr-4 text-left transition hover:border-[#0b0a0e]/25"
+                  variant="outline"
+                  className="h-11 gap-2 rounded-full pl-2 pr-4 text-left hover:border-[#0b0a0e]/25"
                   onClick={() => navigateTo("/")}
                 >
                   <img src={companyLogo} alt="LOA" className="h-7 w-7 rounded-full object-contain ring-4 ring-[#eef2f8]" />
                   <span className="text-base font-semibold text-ink-900">LOA</span>
-                </button>
+                </Button>
               )}
             </div>
             <div className="flex items-center justify-self-end gap-4">
               {isPanelContext ? (
-                <button
+                <Button
                   type="button"
-                  className="btn-primary inline-flex h-11 items-center gap-1.5 px-4 text-xs"
+                  className="h-11 gap-1.5 px-4 text-xs"
                   onClick={() => navigateTo(isAdminContext ? "/app/admin/annonser" : "/app/broker/objekt")}
                 >
                   <span aria-hidden="true" className="text-sm leading-none">+</span>
                   <span>Publicera annons</span>
-                </button>
+                </Button>
               ) : null}
-                <button
+                <Button
                   type="button"
-                  className="btn-secondary inline-flex h-11 items-center gap-1.5 px-4 text-xs"
+                  variant="secondary"
+                  className="h-11 gap-1.5 px-4 text-xs"
                   onClick={() => {
                     navigateTo("/app/rent");
                     void onSwitchRole?.("broker");
@@ -310,12 +316,14 @@ function AppShell({
                 >
                   <SwitchHorizontalIcon className="h-4 w-4" />
                   Växla till sökläge
-                </button>
+                </Button>
               <div ref={notificationButtonRef} className="relative inline-flex h-11 items-center self-center">
-                <button
+                <Button
                   type="button"
+                  variant="outline"
+                  size="icon"
                   aria-label="Notiser"
-                  className="relative inline-flex h-full w-11 items-center justify-center rounded-full border border-black/20 bg-[#ffffff] text-ink-700"
+                  className="relative h-full w-11 rounded-full text-ink-700"
                   onClick={() => setNotificationOpen((value) => !value)}
                 >
                   <BellIcon className="h-4 w-4" />
@@ -324,15 +332,16 @@ function AppShell({
                       {unreadNotificationItems.length}
                     </span>
                   ) : null}
-                </button>
+                </Button>
               </div>
               <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
                 <DropdownMenuTrigger
                   render={
-                    <button
+                    <Button
                       type="button"
+                      variant="outline"
                       aria-label="Profilmeny"
-                      className="inline-flex h-11 w-11 min-h-0 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] text-sm font-semibold text-[#0b0a0e] transition hover:border-[#0b0a0e]/25"
+                      className="h-11 w-11 rounded-full text-sm font-semibold text-[#0b0a0e] hover:border-[#0b0a0e]/25"
                     />
                   }
                 >
@@ -375,10 +384,11 @@ function AppShell({
           </div>
           <div className="space-y-2">
             {notificationItems.map((item) => (
-              <button
+              <Button
                 key={item.id}
                 type="button"
-                className="notification-card-button block w-full rounded-[10px] border border-black/10 bg-[#ffffff] px-3 py-2 text-left transition hover:border-[#0b0a0e]/25 hover:bg-[#f8fafc]"
+                variant="outline"
+                className="notification-card-button h-auto block w-full px-3 py-2 text-left font-normal hover:border-[#0b0a0e]/25 hover:bg-[#f8fafc]"
                 onClick={() => {
                   setNotificationOpen(false);
                   navigateTo(item.actionPath || (isAdminContext ? "/app/admin/notifikationer" : isBrokerPanelContext ? "/app/broker/profil" : "/app/profile"));
@@ -391,20 +401,21 @@ function AppShell({
                   </div>
                   <p className="shrink-0 whitespace-nowrap text-[11px] font-medium text-ink-500">{item.time}</p>
                 </div>
-              </button>
+              </Button>
             ))}
           </div>
           {isAdminContext ? (
-            <button
+            <Button
               type="button"
-              className="btn-secondary mt-3 w-full min-h-0 justify-center py-2 text-xs"
+              variant="secondary"
+              className="h-auto mt-3 w-full justify-center py-2 text-xs"
               onClick={() => {
                 setNotificationOpen(false);
                 navigateTo("/app/admin/notifikationer");
               }}
             >
               Visa alla notifikationer
-            </button>
+            </Button>
           ) : null}
         </div>
       ) : null}
@@ -412,11 +423,12 @@ function AppShell({
       <section ref={contentRef} className="min-h-0 flex-1 overflow-hidden">{children}</section>
       <AppFooter />
 
-      <button
+      <Button
         type="button"
+        variant="outline"
         aria-label="Scrolla till toppen"
         onClick={handleScrollToTop}
-        className={`fixed bottom-6 z-30 inline-flex min-h-0 flex-col items-center justify-center gap-0.5 rounded-full border border-black/20 bg-[#ffffff]/25 p-3 text-[#0b0a0e] shadow-[0_8px_24px_rgba(15,25,48,0.18)] backdrop-blur-md transition-all duration-250 ${
+        className={`h-auto fixed bottom-6 z-30 flex-col gap-0.5 rounded-full border-black/20 bg-[#ffffff]/25 p-3 text-[#0b0a0e] shadow-[0_8px_24px_rgba(15,25,48,0.18)] backdrop-blur-md transition-all duration-250 ${
           showScrollToTopButton
             ? "pointer-events-auto translate-y-0 opacity-100"
             : "pointer-events-none translate-y-3 opacity-0"
@@ -424,7 +436,7 @@ function AppShell({
       >
         <ArrowUpIcon className="h-4 w-4" />
         <MouseScrollIcon className="h-4 w-4" />
-      </button>
+      </Button>
 
       {showLeaveSearchConfirm ? (
         <div
@@ -440,23 +452,24 @@ function AppShell({
               Din nuvarande sökning försvinner om du går vidare till Lediga lokaler-flödet.
             </p>
             <div className="mt-5 flex items-center justify-end gap-2">
-              <button
+              <Button
                 type="button"
-                className="rounded-xl border border-black/10 bg-[#ffffff] px-4 py-2 text-sm font-semibold text-ink-700 hover:bg-[#ffffff]"
+                variant="outline"
+                className="h-auto rounded-xl px-4 py-2 text-sm font-semibold text-ink-700 hover:bg-[#ffffff]"
                 onClick={() => setShowLeaveSearchConfirm(false)}
               >
                 Avbryt
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
-                className="rounded-xl border border-[#0b0a0e] bg-[#0b0a0e] px-4 py-2 text-sm font-semibold text-white"
+                className="h-auto rounded-xl px-4 py-2 text-sm font-semibold"
                 onClick={() => {
                   setShowLeaveSearchConfirm(false);
                   navigateTo("/app/rent?view=available");
                 }}
               >
                 Fortsätt
-              </button>
+              </Button>
             </div>
           </article>
         </div>

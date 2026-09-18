@@ -1,4 +1,5 @@
 import { navigateTo } from "../../lib/router";
+import { Button } from "@/components/ui/button";
 
 function AppFooter() {
   return (
@@ -6,8 +7,8 @@ function AppFooter() {
       <div className="mx-auto flex w-full max-w-[1240px] flex-wrap items-center justify-between gap-2">
         <p className="text-xs text-ink-500">© {new Date().getFullYear()} Lokalflöde Stockholm</p>
         <div className="flex flex-wrap items-center gap-3 text-xs text-ink-500">
-          <button type="button" className="min-h-0 p-0 hover:text-black" onClick={() => navigateTo("/#faq")}>FAQ</button>
-          <button type="button" className="min-h-0 p-0 hover:text-black" onClick={() => navigateTo("/#kontakt")}>Kontakt</button>
+          <Button type="button" variant="link" className="h-auto p-0 text-xs text-ink-500 hover:text-black" onClick={() => navigateTo("/#faq")}>FAQ</Button>
+          <Button type="button" variant="link" className="h-auto p-0 text-xs text-ink-500 hover:text-black" onClick={() => navigateTo("/#kontakt")}>Kontakt</Button>
           <span>Integritet</span>
           <span>Villkor</span>
         </div>

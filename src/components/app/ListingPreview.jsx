@@ -1,5 +1,6 @@
 import { parseAmenities } from "../../lib/formatters";
 import { amenityIconFor } from "../../lib/propertyAmenityIcons";
+import { Input } from "@/components/ui/input";
 
 function mergeAmenities(draft) {
   const textAmenities = parseAmenities(draft.additionalAmenities);
@@ -36,19 +37,19 @@ function ListingPreview({ draft }) {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-ink-500">Yta</p>
-            <input
+            <Input
               readOnly
               aria-label="Storlek"
-              className="field py-2 text-sm"
+              className="text-sm"
               value={`${draft.sizeSqm || "-"} kvm`}
             />
           </div>
           <div>
             <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-ink-500">Platser</p>
-            <input
+            <Input
               readOnly
               aria-label="Kapacitet"
-              className="field py-2 text-sm"
+              className="text-sm"
               value={`${draft.capacity || "-"} platser`}
             />
           </div>

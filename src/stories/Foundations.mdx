@@ -69,20 +69,19 @@ Semantic tones used by `StatusPill` for lead / listing / prospect status — see
 ## Shared component classes
 
 Defined once in `src/index.css` under `@layer components` and reused across the app instead of
-repeating utility strings.
+repeating utility strings. Buttons, inputs, selects, and textareas are shadcn/ui primitives
+(`Button`, `Input`, `Select`, `Textarea`) rather than shared classes — see their own stories.
 
 <div className="flex flex-wrap items-center gap-3 my-4">
-  <button type="button" className="btn-primary">.btn-primary</button>
-  <button type="button" className="btn-secondary">.btn-secondary</button>
   <span className="chip">.chip</span>
-  <input className="field" placeholder=".field" readOnly style={{ maxWidth: 160 }} />
 </div>
 
 <div className="surface my-4 p-5 max-w-sm">.surface — rounded-3xl card shell used by most panels</div>
 
 ## Shape rule
 
-A global override in `src/index.css` forces every `button`, `[role="button"]`, `.btn-primary`
-and `.btn-secondary` to `border-radius: 0.75rem` regardless of Tailwind rounding classes —
-this is why buttons across the app share one corner radius even when a component author reaches
-for `rounded-full`.
+A global override in `src/index.css` forces every `button` and `[role="button"]` to
+`border-radius: 0.75rem` regardless of Tailwind rounding classes — this is why buttons across
+the app share one corner radius even when a component author reaches for `rounded-full`. Some
+components (e.g. `close-circle-button`, `gallery-thumb-button`) opt out with their own
+`!important` rule.

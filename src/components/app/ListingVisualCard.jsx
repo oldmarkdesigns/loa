@@ -7,6 +7,7 @@ import {
   StarIcon,
 } from "../icons/UiIcons";
 import { Icon } from "../icons/Icon";
+import { Button } from "@/components/ui/button";
 
 function formatCapacity(value) {
   if (value === null || value === undefined || value === "") return "Kapacitet saknas";
@@ -64,17 +65,19 @@ function ListingVisualCard({
               <BuildingIcon className="h-3.5 w-3.5 text-ink-700" />
               {listing.type || "Lokal"}
             </span>
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="icon"
               aria-label={shortlisted ? "Ta bort sparad" : "Spara"}
-              className="absolute right-3 top-3 inline-flex h-9 w-9 min-h-9 min-w-9 aspect-square shrink-0 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] p-0 text-ink-700 transition hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
+              className="absolute right-3 top-3 h-9 w-9 shrink-0 rounded-full text-ink-700 hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
               onClick={(event) => {
                 event.stopPropagation();
                 onToggleShortlist(listing.id);
               }}
             >
               <StarIcon className={`h-4 w-4 ${shortlisted ? "fill-current text-[#0b0a0e]" : ""}`} />
-            </button>
+            </Button>
           </div>
           <div className="px-4 pb-4 pt-3.5">
             <h3 className="text-base leading-tight font-medium text-black">{listing.title}</h3>
@@ -136,17 +139,19 @@ function ListingVisualCard({
                       <span>{listing.score || 0}% match</span>
                     </div>
                   ) : null}
-                  <button
+                  <Button
                     type="button"
+                    variant="outline"
+                    size="icon"
                     aria-label={shortlisted ? "Ta bort sparad" : "Spara"}
-                    className="inline-flex h-10 w-10 min-h-10 min-w-10 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] p-0 text-ink-700 transition hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
+                    className="h-10 w-10 rounded-full text-ink-700 hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
                     onClick={(event) => {
                       event.stopPropagation();
                       onToggleShortlist(listing.id);
                     }}
                   >
                     <StarIcon className={`h-4 w-4 ${shortlisted ? "fill-current text-[#0b0a0e]" : ""}`} />
-                  </button>
+                  </Button>
                 </div>
               </div>
               <div className="grid min-h-0 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-px border-t border-black/10 bg-black/10">
@@ -206,9 +211,10 @@ function ListingVisualCard({
             </p>
 
             <div className="mt-2 flex items-center justify-between gap-3">
-              <button
+              <Button
                 type="button"
-                className="inline-flex min-h-[38px] items-center gap-1.5 rounded-full border border-[#0b0a0e]/15 px-6 text-sm font-medium text-ink-900 transition hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
+                variant="outline"
+                className="h-auto min-h-[38px] gap-1.5 rounded-full border-[#0b0a0e]/15 px-6 text-sm font-medium text-ink-900 hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
                 onClick={(event) => {
                   event.stopPropagation();
                   onBookViewing?.(listing);
@@ -216,7 +222,7 @@ function ListingVisualCard({
               >
                 <CalendarIcon className="h-4 w-4" />
                 Boka visning
-              </button>
+              </Button>
               <div className="inline-flex items-center rounded-xl border border-black/10 bg-[#f8f8f8] px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-ink-600">
                 Hyresvärd
               </div>
@@ -260,17 +266,19 @@ function ListingVisualCard({
               <span>{listing.score || 0}% match</span>
             </div>
           ) : null}
-          <button
+          <Button
             type="button"
+            variant="outline"
+            size="icon"
             aria-label={shortlisted ? "Ta bort sparad" : "Spara"}
-            className="inline-flex h-10 w-10 min-h-10 min-w-10 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] p-0 text-ink-700 transition hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
+            className="h-10 w-10 rounded-full text-ink-700 hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
             onClick={(event) => {
               event.stopPropagation();
               onToggleShortlist(listing.id);
             }}
           >
             <StarIcon className={`h-4 w-4 ${shortlisted ? "fill-current text-[#0b0a0e]" : ""}`} />
-          </button>
+          </Button>
         </div>
 
         <div className="flex flex-1 flex-col gap-3 p-5">
@@ -306,9 +314,10 @@ function ListingVisualCard({
           </p>
 
           <div className="mt-2 flex items-center justify-between gap-3">
-            <button
+            <Button
               type="button"
-              className="inline-flex min-h-[38px] items-center gap-1.5 rounded-full border border-[#0b0a0e]/15 px-6 text-sm font-medium text-ink-900 transition hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
+              variant="outline"
+              className="h-auto min-h-[38px] gap-1.5 rounded-full border-[#0b0a0e]/15 px-6 text-sm font-medium text-ink-900 hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
               onClick={(event) => {
                 event.stopPropagation();
                 onBookViewing?.(listing);
@@ -316,7 +325,7 @@ function ListingVisualCard({
             >
               <CalendarIcon className="h-4 w-4" />
               Boka visning
-            </button>
+            </Button>
             <div className="inline-flex items-center rounded-xl border border-black/10 bg-[#f8f8f8] px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-ink-600">
               Hyresvärd
             </div>

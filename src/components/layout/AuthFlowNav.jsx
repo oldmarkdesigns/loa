@@ -6,6 +6,7 @@ import { deriveNavbarRoleState } from "../../lib/navbarRoles";
 import { LockIcon, MessageSquareIcon, UserIcon } from "../icons/UiIcons";
 import ProfileMenuDropdown from "./ProfileMenuDropdown";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 
 function loginReturnTo() {
   const requested = new URLSearchParams(window.location.search).get("returnTo");
@@ -28,14 +29,14 @@ function AuthFlowNav({ user, onSwitchRole, onLogout }) {
       <header className="fixed inset-x-0 top-0 z-40 border-b border-black/10 bg-[#ffffff]/95 backdrop-blur-md">
         <div className="grid w-full grid-cols-[auto_1fr_auto] items-center gap-4 px-4 py-3 sm:px-6">
           <div className="flex min-w-0 items-center gap-4">
-            <button type="button" className="justify-self-start text-left" onClick={() => navigateTo("/")}>
+            <Button type="button" variant="ghost" className="h-auto justify-self-start p-0 text-left hover:bg-transparent" onClick={() => navigateTo("/")}>
               <span className="inline-flex items-center gap-2 rounded-xl border border-black/10 bg-[#ffffff] px-2.5 py-1.5">
                 <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-dashed border-black/30 bg-[#ffffff] text-[9px] font-semibold uppercase tracking-wide text-ink-500">
                   LOGGA
                 </span>
                 <span className="text-sm font-semibold text-ink-800">LOA</span>
               </span>
-            </button>
+            </Button>
           </div>
 
           <nav className="hidden items-center justify-self-start gap-7 lg:flex">
@@ -46,22 +47,25 @@ function AuthFlowNav({ user, onSwitchRole, onLogout }) {
             {user?.id ? (
               <>
                 {!hasCompanyAdminRole ? (
-                  <button
+                  <Button
                     type="button"
+                    variant="outline"
+                    size="icon"
                     aria-label="Meddelanden"
-                    className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-black/20 bg-[#ffffff] text-ink-700"
+                    className="h-11 w-11 rounded-full text-ink-700"
                     onClick={() => navigateTo("/app/messages")}
                   >
                     <MessageSquareIcon className="h-4 w-4" />
-                  </button>
+                  </Button>
                 ) : null}
                 {!hasCompanyAdminRole ? (
                   <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
                     <DropdownMenuTrigger
                       render={
-                        <button
+                        <Button
                           type="button"
-                          className="inline-flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-black/20 bg-[#ffffff] text-sm font-semibold text-ink-700"
+                          variant="outline"
+                          className="h-11 w-11 overflow-hidden rounded-full text-sm font-semibold text-ink-700"
                           aria-label="Öppna profilmeny"
                         />
                       }
@@ -83,17 +87,18 @@ function AuthFlowNav({ user, onSwitchRole, onLogout }) {
               </>
             ) : (
               <>
-                <button
+                <Button
                   type="button"
-                  className="inline-flex h-6 items-center gap-2 rounded-full bg-[#0b0a0e] px-5 text-sm font-semibold text-white transition"
+                  className="h-auto gap-2 rounded-full px-5 text-sm font-semibold"
                   onClick={() => navigateTo("/signup")}
                 >
                   Skapa konto
                   <UserIcon className="h-3.5 w-3.5" />
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
-                  className="inline-flex h-6 items-center gap-2 rounded-full bg-black/5 px-5 text-sm font-semibold text-ink-800 transition hover:bg-black/10"
+                  variant="secondary"
+                  className="h-auto gap-2 rounded-full bg-black/5 px-5 text-sm font-semibold text-ink-800 hover:bg-black/10"
                   onClick={() => {
                     const returnTo = loginReturnTo();
                     signIn({ state: { returnTo } }).catch(() => {
@@ -103,7 +108,7 @@ function AuthFlowNav({ user, onSwitchRole, onLogout }) {
                 >
                   Logga in
                   <LockIcon className="h-3.5 w-3.5" />
-                </button>
+                </Button>
               </>
             )}
           </div>

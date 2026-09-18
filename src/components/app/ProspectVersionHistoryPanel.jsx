@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { formatDate } from "../../lib/formatters";
 import { prospectsApi } from "../../api";
 import { HistoryIcon } from "../icons/UiIcons";
+import { Button } from "@/components/ui/button";
 
 function ProspectVersionHistoryPanel({ prospectId, app, onRestored }) {
   const [versions, setVersions] = useState([]);
@@ -56,14 +57,15 @@ function ProspectVersionHistoryPanel({ prospectId, app, onRestored }) {
             <span className="text-xs text-ink-500">{formatDate(version.createdAt)}</span>
           </div>
           {version.changeSummary ? <p className="mt-1 text-sm text-ink-700">{version.changeSummary}</p> : null}
-          <button
+          <Button
             type="button"
-            className="btn-secondary mt-2 px-3 py-1.5 text-xs"
+            variant="secondary"
+            className="h-auto mt-2 px-3 py-1.5 text-xs"
             onClick={() => restore(version.versionNumber)}
             disabled={restoringVersion === version.versionNumber}
           >
             {restoringVersion === version.versionNumber ? "Återställer..." : "Återställ till utkast"}
-          </button>
+          </Button>
         </div>
       ))}
     </div>

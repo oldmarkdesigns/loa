@@ -44,15 +44,16 @@ function PanelSidebarNav({ pathname, navItems, rootPath, onNavigate, badges, col
           : routeMatches(pathname, item.path);
         const badgeValue = badges[item.key] > 0 ? badges[item.key] : null;
         return (
-          <button
+          <Button
             key={item.key}
             type="button"
+            variant="ghost"
             data-active={active ? "true" : "false"}
             title={collapsed ? item.label : undefined}
             aria-label={item.label}
-            className={`admin-nav-row menu-hover-row relative z-[1] w-full text-left text-sm font-semibold ${
+            className={`admin-nav-row menu-hover-row h-auto relative z-[1] w-full justify-start text-left text-sm font-semibold ${
               collapsed ? "flex justify-center px-0 py-2.5" : "px-3 py-2.5"
-            } ${active ? "text-white" : "text-ink-700 hover:bg-black/5"}`}
+            } ${active ? "text-white hover:bg-transparent hover:text-white" : "text-ink-700 hover:bg-black/5"}`}
             onClick={() => onNavigate(item.path)}
           >
             <span className={`flex items-center ${collapsed ? "justify-center" : "gap-2"}`}>
@@ -73,7 +74,7 @@ function PanelSidebarNav({ pathname, navItems, rootPath, onNavigate, badges, col
                 </>
               ) : null}
             </span>
-          </button>
+          </Button>
         );
       })}
       </div>
@@ -111,28 +112,30 @@ function PanelSidebar({ pathname, navItems, bottomNavItems, onNavigate, onLogout
             {bottomNavItems.map((item) => {
               const active = routeMatches(pathname, item.path);
               return (
-                <button
+                <Button
                   key={item.key}
                   type="button"
+                  variant="ghost"
                   title={collapsed ? item.label : undefined}
                   aria-label={item.label}
-                  className={`admin-nav-row menu-hover-row w-full text-left text-sm font-semibold ${
+                  className={`admin-nav-row menu-hover-row h-auto w-full justify-start text-left text-sm font-semibold ${
                     collapsed ? "flex justify-center px-0 py-2.5" : "px-3 py-2.5"
-                  } ${active ? "admin-nav-row--active bg-[#0b0a0e] text-white" : "text-ink-700 hover:bg-black/5"}`}
+                  } ${active ? "admin-nav-row--active bg-[#0b0a0e] text-white hover:bg-[#0b0a0e] hover:text-white" : "text-ink-700 hover:bg-black/5"}`}
                   onClick={() => onNavigate(item.path)}
                 >
                   <span className={`flex items-center ${collapsed ? "justify-center" : "gap-2"}`}>
                     <item.Icon className="h-[18px] w-[18px] shrink-0" />
                     {!collapsed ? <span className="min-w-0 flex-1 truncate">{item.label}</span> : null}
                   </span>
-                </button>
+                </Button>
               );
             })}
-            <button
+            <Button
               type="button"
+              variant="ghost"
               title={collapsed ? "Logga ut" : undefined}
               aria-label="Logga ut"
-              className={`admin-nav-row menu-hover-row w-full text-left text-sm font-semibold text-ink-700 hover:bg-black/5 ${
+              className={`admin-nav-row menu-hover-row h-auto w-full justify-start text-left text-sm font-semibold text-ink-700 hover:bg-black/5 ${
                 collapsed ? "flex justify-center px-0 py-2.5" : "px-3 py-2.5"
               }`}
               onClick={async () => {
@@ -144,7 +147,7 @@ function PanelSidebar({ pathname, navItems, bottomNavItems, onNavigate, onLogout
                 <LogoutIcon className="h-[18px] w-[18px] shrink-0" />
                 {!collapsed ? <span className="min-w-0 flex-1 truncate">Logga ut</span> : null}
               </span>
-            </button>
+            </Button>
           </div>
         </div>
       </div>

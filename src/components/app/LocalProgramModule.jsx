@@ -15,6 +15,7 @@ import {
   UserIcon,
   ChevronRightIcon
 } from "../icons/UiIcons";
+import { Button } from "@/components/ui/button";
 
 function listFromDelimitedValue(value) {
   if (Array.isArray(value)) return value.map((item) => String(item || "").trim()).filter(Boolean);
@@ -131,21 +132,22 @@ function LocalProgramModule({
           <p className="mt-1 text-sm text-ink-600">Flera behov kan sparas separat för olika team, lägen eller tidslinjer.</p>
         </div>
         {canEdit ? (
-          <button
+          <Button
             type="button"
-            className="inline-flex items-center gap-2 rounded-full border border-[#0b0a0e] bg-[#0b0a0e] px-4 py-2 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60"
+            className="h-auto gap-2 rounded-full px-4 py-2 text-sm font-semibold"
             onClick={onAddProgram}
           >
             <PlusIcon className="h-4 w-4" />
             Lägg till
-          </button>
+          </Button>
         ) : null}
       </div>
 
       {programs.length === 0 ? (
-        <button
+        <Button
           type="button"
-          className="mt-5 flex w-full items-center justify-between gap-4 rounded-2xl border border-dashed border-black/20 bg-[#f8fafc] p-4 text-left transition hover:border-[#0b0a0e]/40"
+          variant="outline"
+          className="h-auto mt-5 w-full justify-between gap-4 rounded-2xl border-dashed border-black/20 bg-[#f8fafc] p-4 text-left font-normal hover:border-[#0b0a0e]/40"
           onClick={onAddProgram}
         >
           <span>
@@ -153,7 +155,7 @@ function LocalProgramModule({
             <span className="mt-0.5 block text-sm text-ink-600">Lägg till första programmet för bättre matchning.</span>
           </span>
           <PlusIcon className="h-5 w-5 shrink-0 text-[#0b0a0e]" />
-        </button>
+        </Button>
       ) : (
         <div className="mt-5 space-y-3">
           {programs.map((program, index) => {
@@ -227,24 +229,26 @@ function LocalProgramModule({
 
                     {canEdit ? (
                       <div className="mt-4 flex flex-wrap justify-end gap-2">
-                        <button
+                        <Button
                           type="button"
-                          className="inline-flex items-center gap-1.5 rounded-full border border-black/20 bg-[#ffffff] px-3.5 py-2 text-xs font-semibold text-ink-700 transition hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
+                          variant="outline"
+                          className="h-auto gap-1.5 rounded-full px-3.5 py-2 text-xs font-semibold text-ink-700 hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
                           onClick={() => onEditProgram(program.id)}
                         >
                           <PencilIcon className="h-3.5 w-3.5" />
                           Redigera
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           type="button"
-                          className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-[#ffffff] px-3.5 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50"
+                          variant="outline"
+                          className="h-auto gap-1.5 rounded-full border-rose-200 px-3.5 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-50 hover:text-rose-700"
                           onClick={() => onDeleteProgram(program.id)}
                           disabled={programs.length <= 1}
                           title={programs.length <= 1 ? "Minst ett lokalprogram behövs" : "Radera lokalprogram"}
                         >
                           <TrashIcon className="h-3.5 w-3.5" />
                           Radera
-                        </button>
+                        </Button>
                       </div>
                     ) : null}
                   </div>

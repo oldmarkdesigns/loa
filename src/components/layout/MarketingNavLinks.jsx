@@ -1,4 +1,5 @@
 import { navigateTo } from "../../lib/router";
+import { Button } from "@/components/ui/button";
 
 export const marketingPrimaryItems = [
   { label: "Lediga lokaler", href: "/app/rent?view=available" },
@@ -52,14 +53,15 @@ function MarketingNavLinks({ hrefPrefix = "", onSectionLinkClick, onPublish, onP
         );
       })}
       {showPublish ? (
-        <button
+        <Button
           type="button"
-          className="inline-flex items-center gap-1.5 rounded-xl border border-[#0b0a0e] px-2.5 py-1.5 text-xs font-semibold text-[#0b0a0e] transition hover:bg-[#0b0a0e] hover:text-white"
+          variant="outline"
+          className="h-auto gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-[#0b0a0e] hover:bg-[#0b0a0e] hover:text-white"
           onClick={onPublish}
         >
           <span aria-hidden="true" className="text-sm leading-none">+</span>
           <span>Publicera annons</span>
-        </button>
+        </Button>
       ) : null}
     </>
   );
