@@ -18,6 +18,11 @@ import {
   SaveIcon,
   UploadIcon,
 } from "../../components/icons/UiIcons";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const publishSteps = [
   { id: "basic", label: "Grundinfo" },
@@ -264,21 +269,22 @@ function StepPills({ currentIndex, onSelect }) {
         const active = currentIndex === index;
         const complete = index < currentIndex;
         return (
-          <button
+          <Button
             key={step.id}
             type="button"
-            className={`step-pill-button rounded-2xl border px-3 py-2 text-left text-xs font-semibold transition ${
+            variant="outline"
+            className={`h-auto flex-col items-start rounded-2xl px-3 py-2 text-left text-xs font-semibold ${
               active
-                ? "border-[#0b0a0e] bg-[#0b0a0e] text-white"
+                ? "border-[#0b0a0e] bg-[#0b0a0e] text-white hover:bg-[#0b0a0e]/90"
                 : complete
-                  ? "border-[#c8d1de] bg-[#ffffff] text-ink-800"
-                  : "border-black/10 bg-[#ffffff] text-ink-600 hover:bg-[#ffffff]"
+                  ? "border-[#c8d1de] text-ink-800"
+                  : "border-black/10 text-ink-600"
             }`}
             onClick={() => onSelect(index)}
           >
             <span className="opacity-80">Steg {index + 1}</span>
             <p className="mt-0.5">{step.label}</p>
-          </button>
+          </Button>
         );
       })}
     </div>
@@ -521,14 +527,15 @@ function PublishPage({ app, pathname = "/app/publish" }) {
     >
       <div className="space-y-5">
         <header className="px-1 py-1">
-          <button
+          <Button
             type="button"
-            className="mb-2 inline-flex items-center gap-1.5 text-sm font-semibold text-ink-700 transition hover:text-[#0b0a0e]"
+            variant="ghost"
+            className="mb-2 h-auto gap-1.5 px-0 text-sm font-semibold text-ink-700 hover:bg-transparent hover:text-[#0b0a0e]"
             onClick={() => navigateTo(myListingsPath)}
           >
             <ArrowLeftIcon className="h-4 w-4" />
             Tillbaka till mina lokaler
-          </button>
+          </Button>
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Annonsflöde</p>
@@ -569,23 +576,29 @@ function PublishPage({ app, pathname = "/app/publish" }) {
                   <div className="grid gap-4 sm:grid-cols-2">
                     <label className="sm:col-span-2">
                       <FieldLabel required>Rubrik</FieldLabel>
-                      <input className="field" value={draft.title} onChange={(event) => updateField("title", event.target.value)} placeholder="Ex. Modernt kontor nära T-centralen" />
+                      <Input value={draft.title} onChange={(event) => updateField("title", event.target.value)} placeholder="Ex. Modernt kontor nära T-centralen" />
                     </label>
                     <label>
                       <FieldLabel required>Område</FieldLabel>
-                      <select className="field" value={draft.district} onChange={(event) => updateField("district", event.target.value)}>
-                        {districtOptions.map((district) => <option key={district} value={district}>{district}</option>)}
-                      </select>
+                      <Select value={draft.district} onValueChange={(value) => updateField("district", value)}>
+                        <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {districtOptions.map((district) => <SelectItem key={district} value={district}>{district}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
                     </label>
                     <label>
                       <FieldLabel required>Typ</FieldLabel>
-                      <select className="field" value={draft.type} onChange={(event) => updateField("type", event.target.value)}>
-                        {listingTypes.map((type) => <option key={type} value={type}>{type}</option>)}
-                      </select>
+                      <Select value={draft.type} onValueChange={(value) => updateField("type", value)}>
+                        <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {listingTypes.map((type) => <SelectItem key={type} value={type}>{type}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
                     </label>
                     <label className="sm:col-span-2">
                       <FieldLabel required>Adress</FieldLabel>
-                      <input className="field" value={draft.address} onChange={(event) => updateField("address", event.target.value)} placeholder="Ex. Kungsgatan 12, Stockholm" />
+                      <Input value={draft.address} onChange={(event) => updateField("address", event.target.value)} placeholder="Ex. Kungsgatan 12, Stockholm" />
                     </label>
                   </div>
                 ) : null}
@@ -595,82 +608,103 @@ function PublishPage({ app, pathname = "/app/publish" }) {
                     <div className="grid gap-4 sm:grid-cols-3">
                       <label>
                         <FieldLabel required>Månadshyra</FieldLabel>
-                        <input className="field" type="number" min="0" value={draft.priceMonthly} onChange={(event) => updateField("priceMonthly", event.target.value)} placeholder="Ex. 75000" />
+                        <Input type="number" min="0" value={draft.priceMonthly} onChange={(event) => updateField("priceMonthly", event.target.value)} placeholder="Ex. 75000" />
                       </label>
                       <label>
                         <FieldLabel required>Storlek (kvm)</FieldLabel>
-                        <input className="field" type="number" min="0" value={draft.sizeSqm} onChange={(event) => updateField("sizeSqm", event.target.value)} placeholder="Ex. 180" />
+                        <Input type="number" min="0" value={draft.sizeSqm} onChange={(event) => updateField("sizeSqm", event.target.value)} placeholder="Ex. 180" />
                       </label>
                       <label>
                         <FieldLabel required>Team / platser</FieldLabel>
-                        <input className="field" type="number" min="1" value={draft.capacity} onChange={(event) => updateField("capacity", event.target.value)} placeholder="Ex. 16" />
+                        <Input type="number" min="1" value={draft.capacity} onChange={(event) => updateField("capacity", event.target.value)} placeholder="Ex. 16" />
                       </label>
                       <label>
                         <FieldLabel required>Avtalstid</FieldLabel>
-                        <select className="field" value={draft.term} onChange={(event) => updateField("term", event.target.value)}>
-                          {termOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-                        </select>
+                        <Select value={draft.term} onValueChange={(value) => updateField("term", value)}>
+                          <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {termOptions.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
                       </label>
                       <label>
                         <FieldLabel required>Tillgänglighet</FieldLabel>
-                        <select className="field" value={draft.availability} onChange={(event) => updateField("availability", event.target.value)}>
-                          {availabilityOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-                        </select>
+                        <Select value={draft.availability} onValueChange={(value) => updateField("availability", value)}>
+                          <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {availabilityOptions.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
                       </label>
                       <label>
                         <FieldLabel>Svarstid (timmar)</FieldLabel>
-                        <input className="field" type="number" min="1" value={draft.responseHours} onChange={(event) => updateField("responseHours", event.target.value)} placeholder="Ex. 2" />
+                        <Input type="number" min="1" value={draft.responseHours} onChange={(event) => updateField("responseHours", event.target.value)} placeholder="Ex. 2" />
                       </label>
                     </div>
 
                     <div className="grid gap-4 sm:grid-cols-3">
                       <label>
                         <FieldLabel>Inflyttning</FieldLabel>
-                        <input className="field" type="date" value={draft.moveInDate || ""} onChange={(event) => updateField("moveInDate", event.target.value)} />
+                        <Input type="date" value={draft.moveInDate || ""} onChange={(event) => updateField("moveInDate", event.target.value)} />
                       </label>
                       <label>
                         <FieldLabel>Kommunaltrafik</FieldLabel>
-                        <select className="field" value={draft.transitDistance || "Alla"} onChange={(event) => updateField("transitDistance", event.target.value === "Alla" ? "" : event.target.value)}>
-                          {transitDistanceOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-                        </select>
+                        <Select value={draft.transitDistance || "Alla"} onValueChange={(value) => updateField("transitDistance", value === "Alla" ? "" : value)}>
+                          <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {transitDistanceOptions.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
                       </label>
                       <label>
                         <FieldLabel>Avtalsflex</FieldLabel>
-                        <select className="field" value={draft.contractFlex || "Alla"} onChange={(event) => updateField("contractFlex", event.target.value === "Alla" ? "" : event.target.value)}>
-                          {contractFlexOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-                        </select>
+                        <Select value={draft.contractFlex || "Alla"} onValueChange={(value) => updateField("contractFlex", value === "Alla" ? "" : value)}>
+                          <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {contractFlexOptions.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
                       </label>
                       <label>
                         <FieldLabel>Access</FieldLabel>
-                        <select className="field" value={draft.accessHours || "Alla"} onChange={(event) => updateField("accessHours", event.target.value === "Alla" ? "" : event.target.value)}>
-                          {accessHoursOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-                        </select>
+                        <Select value={draft.accessHours || "Alla"} onValueChange={(value) => updateField("accessHours", value === "Alla" ? "" : value)}>
+                          <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {accessHoursOptions.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
                       </label>
                       <label>
                         <FieldLabel>Parkering</FieldLabel>
-                        <select className="field" value={draft.parkingType || "Alla"} onChange={(event) => updateField("parkingType", event.target.value === "Alla" ? "" : event.target.value)}>
-                          {parkingTypeOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-                        </select>
+                        <Select value={draft.parkingType || "Alla"} onValueChange={(value) => updateField("parkingType", value === "Alla" ? "" : value)}>
+                          <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {parkingTypeOptions.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
                       </label>
                       <label>
                         <FieldLabel>Planlösning</FieldLabel>
-                        <select className="field" value={draft.layoutType || "Alla"} onChange={(event) => updateField("layoutType", event.target.value === "Alla" ? "" : event.target.value)}>
-                          {layoutTypeOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-                        </select>
+                        <Select value={draft.layoutType || "Alla"} onValueChange={(value) => updateField("layoutType", value === "Alla" ? "" : value)}>
+                          <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {layoutTypeOptions.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
                       </label>
                     </div>
 
                     <div className="grid gap-2 sm:grid-cols-3">
                       <label className="inline-flex h-[46px] items-center gap-2 rounded-2xl border border-black/10 bg-[#ffffff] px-3 text-xs font-semibold text-ink-700">
-                        <input type="checkbox" checked={Boolean(draft.includeOperatingCosts)} onChange={(event) => updateField("includeOperatingCosts", event.target.checked)} />
+                        <Checkbox checked={Boolean(draft.includeOperatingCosts)} onCheckedChange={(checked) => updateField("includeOperatingCosts", Boolean(checked))} />
                         Driftkostn. ingår
                       </label>
                       <label className="inline-flex h-[46px] items-center gap-2 rounded-2xl border border-black/10 bg-[#ffffff] px-3 text-xs font-semibold text-ink-700">
-                        <input type="checkbox" checked={Boolean(draft.accessibilityAdapted)} onChange={(event) => updateField("accessibilityAdapted", event.target.checked)} />
+                        <Checkbox checked={Boolean(draft.accessibilityAdapted)} onCheckedChange={(checked) => updateField("accessibilityAdapted", Boolean(checked))} />
                         Tillgänglighetsanp.
                       </label>
                       <label className="inline-flex h-[46px] items-center gap-2 rounded-2xl border border-black/10 bg-[#ffffff] px-3 text-xs font-semibold text-ink-700">
-                        <input type="checkbox" checked={Boolean(draft.ecoCertified)} onChange={(event) => updateField("ecoCertified", event.target.checked)} />
+                        <Checkbox checked={Boolean(draft.ecoCertified)} onCheckedChange={(checked) => updateField("ecoCertified", Boolean(checked))} />
                         Miljöcertifierad
                       </label>
                     </div>
@@ -681,11 +715,11 @@ function PublishPage({ app, pathname = "/app/publish" }) {
                   <div className="space-y-4">
                     <div className="rounded-2xl border border-black/10 bg-[#ffffff] p-3">
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <label className="btn-secondary min-h-0 cursor-pointer gap-1.5 px-3 py-2 text-xs">
+                        <Button type="button" variant="secondary" className="h-auto cursor-pointer gap-1.5 px-3 py-2 text-xs" render={<label />}>
                           <UploadIcon className="h-4 w-4" />
                           Ladda upp bilder
                           <input type="file" accept="image/*" multiple className="hidden" onChange={(event) => void handleAddImages(event)} />
-                        </label>
+                        </Button>
                         <div className="flex items-center gap-2 text-xs">
                           <span className="text-ink-600">{draft.images.length}/{MAX_IMAGES} bilder</span>
                           {uploadingImages ? <span className="font-semibold text-ink-700">Bearbetar bilder...</span> : null}
@@ -709,26 +743,26 @@ function PublishPage({ app, pathname = "/app/publish" }) {
                             <div className="mt-2 space-y-1.5">
                               <div className="flex flex-wrap gap-1.5">
                                 {index !== 0 ? (
-                                  <button type="button" className="min-h-0 rounded-xl border border-black/10 bg-[#ffffff] px-2.5 py-1 text-[11px] font-semibold text-ink-700" onClick={() => setCoverImage(index)}>
+                                  <Button type="button" variant="outline" className="h-auto rounded-xl px-2.5 py-1 text-[11px] font-semibold text-ink-700" onClick={() => setCoverImage(index)}>
                                     Sätt som omslag
-                                  </button>
+                                  </Button>
                                 ) : null}
 
-                                <label className="min-h-0 cursor-pointer rounded-xl border border-black/10 bg-[#ffffff] px-2.5 py-1 text-[11px] font-semibold text-ink-700">
+                                <Button type="button" variant="outline" className="h-auto cursor-pointer rounded-xl px-2.5 py-1 text-[11px] font-semibold text-ink-700" render={<label />}>
                                   Ersätt bild
                                   <input type="file" accept="image/*" className="hidden" onChange={(event) => void handleReplaceImage(index, event)} />
-                                </label>
+                                </Button>
                               </div>
                               <div className="flex flex-wrap gap-1.5">
-                                <button type="button" className="min-h-0 rounded-xl border border-black/10 bg-[#ffffff] px-2.5 py-1 text-[11px] font-semibold text-ink-700" onClick={() => moveImage(index, -1)} disabled={index === 0}>
+                                <Button type="button" variant="outline" className="h-auto rounded-xl px-2.5 py-1 text-[11px] font-semibold text-ink-700" onClick={() => moveImage(index, -1)} disabled={index === 0}>
                                   Flytta vänster
-                                </button>
-                                <button type="button" className="min-h-0 rounded-xl border border-black/10 bg-[#ffffff] px-2.5 py-1 text-[11px] font-semibold text-ink-700" onClick={() => moveImage(index, 1)} disabled={index === draft.images.length - 1}>
+                                </Button>
+                                <Button type="button" variant="outline" className="h-auto rounded-xl px-2.5 py-1 text-[11px] font-semibold text-ink-700" onClick={() => moveImage(index, 1)} disabled={index === draft.images.length - 1}>
                                   Flytta höger
-                                </button>
-                                <button type="button" className="min-h-0 rounded-xl border border-rose-200 bg-rose-50 px-2.5 py-1 text-[11px] font-semibold text-rose-700" onClick={() => removeImage(index)}>
+                                </Button>
+                                <Button type="button" variant="outline" className="h-auto rounded-xl border-rose-200 bg-rose-50 px-2.5 py-1 text-[11px] font-semibold text-rose-700 hover:bg-rose-100 hover:text-rose-700" onClick={() => removeImage(index)}>
                                   Radera
-                                </button>
+                                </Button>
                               </div>
                             </div>
                           </article>
@@ -747,8 +781,7 @@ function PublishPage({ app, pathname = "/app/publish" }) {
                       </div>
                       <label>
                         <FieldLabel>Egna nyckelord (komma-separerat)</FieldLabel>
-                        <input
-                          className="field"
+                        <Input
                           value={draft.additionalAmenities}
                           onChange={(event) => updateField("additionalAmenities", event.target.value)}
                           placeholder="Ex. showroom, takterrass, säkerhetsdörr"
@@ -763,13 +796,14 @@ function PublishPage({ app, pathname = "/app/publish" }) {
                           const active = draft.amenities.includes(amenity.value);
                           const Icon = amenity.icon;
                           return (
-                            <button
+                            <Button
                               key={amenity.value}
                               type="button"
-                              className={`rounded-xl border px-3 py-2 text-xs font-semibold transition ${
+                              variant="outline"
+                              className={`h-auto rounded-xl px-3 py-2 text-xs font-semibold ${
                                 active
-                                  ? "border-[#0b0a0e] bg-[#0b0a0e] text-white"
-                                  : "border-black/10 bg-[#ffffff] text-ink-700 hover:bg-[#ffffff]"
+                                  ? "border-[#0b0a0e] bg-[#0b0a0e] text-white hover:bg-[#0b0a0e]/90"
+                                  : "border-black/10 text-ink-700"
                               }`}
                               onClick={() => toggleAmenity(amenity.value)}
                             >
@@ -777,7 +811,7 @@ function PublishPage({ app, pathname = "/app/publish" }) {
                                 <Icon className="h-4 w-4 shrink-0" />
                                 {amenity.label}
                               </span>
-                            </button>
+                            </Button>
                           );
                         })}
                       </div>
@@ -785,8 +819,8 @@ function PublishPage({ app, pathname = "/app/publish" }) {
 
                     <label className="mt-2 block">
                       <FieldLabel required>Beskrivning</FieldLabel>
-                      <textarea
-                        className="field min-h-32"
+                      <Textarea
+                        className="min-h-32"
                         value={draft.description}
                         onChange={(event) => updateField("description", event.target.value)}
                         placeholder="Beskriv lokalen, planlösning, vad som ingår och varför den passar rätt hyresgäst."
@@ -846,31 +880,32 @@ function PublishPage({ app, pathname = "/app/publish" }) {
 
                 <div className="flex flex-wrap items-center justify-between gap-2 border-t border-black/10 pt-4">
                   {stepIndex > 0 ? (
-                    <button
+                    <Button
                       type="button"
-                      className="btn-secondary px-4"
+                      variant="secondary"
+                      className="h-auto px-4"
                       onClick={() => setStepIndex((index) => Math.max(0, index - 1))}
                       disabled={pending}
                     >
                       Föregående
-                    </button>
+                    </Button>
                   ) : null}
 
                   <div className="ml-auto flex flex-wrap gap-2">
-                    <button type="button" className="btn-secondary px-4" onClick={() => void saveDraft()} disabled={pending || uploadingImages}>
+                    <Button type="button" variant="secondary" className="h-auto px-4" onClick={() => void saveDraft()} disabled={pending || uploadingImages}>
                       <SaveIcon className="mr-1.5 h-4 w-4" />
                       {pending ? "Sparar..." : "Spara utkast"}
-                    </button>
+                    </Button>
 
                     {currentStep.id !== "review" ? (
-                      <button type="button" className="btn-primary px-4" onClick={handleNextStep} disabled={pending || uploadingImages}>
+                      <Button type="button" className="h-auto px-4" onClick={handleNextStep} disabled={pending || uploadingImages}>
                         Nästa steg
-                      </button>
+                      </Button>
                     ) : (
-                      <button type="button" className="btn-primary px-4" onClick={() => void handlePublish()} disabled={pending || uploadingImages}>
+                      <Button type="button" className="h-auto px-4" onClick={() => void handlePublish()} disabled={pending || uploadingImages}>
                         <BuildingIcon className="mr-1.5 h-4 w-4" />
                         {pending ? "Publicerar..." : "Publicera annons"}
-                      </button>
+                      </Button>
                     )}
                   </div>
                 </div>
@@ -890,14 +925,14 @@ function PublishPage({ app, pathname = "/app/publish" }) {
                       </p>
                     </div>
                   </div>
-                  <button
+                  <Button
                     type="button"
-                    className="btn-primary shrink-0 px-5"
+                    className="h-auto shrink-0 px-5"
                     onClick={() => navigateTo(`/app/listings/${encodeURIComponent(publishedListing.id)}`)}
                   >
                     Visa annons live
                     <ExternalLinkIcon className="ml-1.5 h-4 w-4" />
-                  </button>
+                  </Button>
                 </div>
 
                 <div className="grid gap-4 lg:grid-cols-[minmax(0,0.95fr)_minmax(280px,0.45fr)]">
@@ -921,19 +956,19 @@ function PublishPage({ app, pathname = "/app/publish" }) {
                       Du kan öppna den publika sidan, gå tillbaka till dina objekt eller skapa en ny annons.
                     </p>
                     <div className="mt-5 grid gap-2">
-                      <button
+                      <Button
                         type="button"
-                        className="btn-primary w-full px-4"
+                        className="h-auto w-full px-4"
                         onClick={() => navigateTo(`/app/listings/${encodeURIComponent(publishedListing.id)}`)}
                       >
                         Visa annons live
-                      </button>
-                      <button type="button" className="btn-secondary w-full px-4" onClick={() => navigateTo(myListingsPath)}>
+                      </Button>
+                      <Button type="button" variant="secondary" className="h-auto w-full px-4" onClick={() => navigateTo(myListingsPath)}>
                         Gå till mina objekt
-                      </button>
-                      <button type="button" className="btn-secondary w-full px-4" onClick={resetFlow}>
+                      </Button>
+                      <Button type="button" variant="secondary" className="h-auto w-full px-4" onClick={resetFlow}>
                         Publicera ytterligare annons
-                      </button>
+                      </Button>
                     </div>
                   </aside>
                 </div>
