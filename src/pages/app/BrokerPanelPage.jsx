@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Area, AreaChart, ResponsiveContainer, Tooltip } from "recharts";
+import { Area, AreaChart } from "recharts";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { leadActivitiesApi, listingApi, prospectCommentsApi, prospectsApi } from "../../api";
 import { formatDate } from "../../lib/formatters";
 import { navigateTo } from "../../lib/router";
@@ -141,34 +142,28 @@ function SparkKpiCard({ card, series }) {
       <p className="mt-2 text-xs text-ink-500">{card.meta}</p>
       <div className="mt-3 h-16">
         {data.length > 0 ? (
-          <ResponsiveContainer width="100%" height="100%">
+          <ChartContainer config={{ y: { label: card.label, color: "#0b0a0e" } }} className="h-full w-full">
             <AreaChart data={data} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id={`broker-kpi-${card.key}`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#0b0a0e" stopOpacity={0.22} />
-                  <stop offset="100%" stopColor="#0b0a0e" stopOpacity={0.03} />
+                  <stop offset="0%" stopColor="var(--color-y)" stopOpacity={0.22} />
+                  <stop offset="100%" stopColor="var(--color-y)" stopOpacity={0.03} />
                 </linearGradient>
               </defs>
               <Area
                 type="monotone"
                 dataKey="y"
-                stroke="#0b0a0e"
+                stroke="var(--color-y)"
                 strokeWidth={1.7}
                 fill={`url(#broker-kpi-${card.key})`}
                 fillOpacity={1}
               />
-              <Tooltip
+              <ChartTooltip
                 cursor={{ stroke: "#0b0a0e", strokeOpacity: 0.18, strokeWidth: 1 }}
-                contentStyle={{
-                  borderRadius: "12px",
-                  border: "1px solid rgba(15,25,48,0.12)",
-                  background: "#fff",
-                  boxShadow: "0 8px 24px rgba(15,25,48,0.10)"
-                }}
-                formatter={(value) => [Number(value).toLocaleString("sv-SE"), ""]}
+                content={<ChartTooltipContent hideLabel />}
               />
             </AreaChart>
-          </ResponsiveContainer>
+          </ChartContainer>
         ) : (
           <div className="grid h-full place-items-center rounded-xl border border-dashed border-black/15 bg-[#fafafa] text-xs font-semibold text-ink-500">
             Ingen data

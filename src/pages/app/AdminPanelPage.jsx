@@ -12,7 +12,6 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
-  Legend,
   Line,
   LineChart,
   PolarAngleAxis,
@@ -20,13 +19,13 @@ import {
   PolarRadiusAxis,
   Radar,
   RadarChart,
-  ResponsiveContainer,
-  Tooltip,
   XAxis,
   YAxis
 } from "recharts";
 import BarInteractive from "../../components/charts/bar-interactive";
 import TypeDistributionDonut from "../../components/charts/type-distribution-donut";
+import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
+import { Progress } from "@/components/ui/progress";
 import {
   ArrowUpIcon,
   BarChart3Icon,
@@ -789,35 +788,28 @@ function KpiCardsSection({ showMatchLink = false, cards = kpiCards, sparklineSer
             <p className="mt-2 text-xs text-ink-500">{card.meta}</p>
             <div className="mt-3 h-16">
               {series.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
+                <ChartContainer config={{ y: { label: card.label, color: "#0b0a0e" } }} className="h-full w-full">
                   <AreaChart data={series} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
                     <defs>
                       <linearGradient id={`kpi-gradient-${card.key}`} x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#0b0a0e" stopOpacity={0.22} />
-                        <stop offset="100%" stopColor="#0b0a0e" stopOpacity={0.03} />
+                        <stop offset="0%" stopColor="var(--color-y)" stopOpacity={0.22} />
+                        <stop offset="100%" stopColor="var(--color-y)" stopOpacity={0.03} />
                       </linearGradient>
                     </defs>
                     <Area
                       type="monotone"
                       dataKey="y"
-                      stroke="#0b0a0e"
+                      stroke="var(--color-y)"
                       strokeWidth={1.7}
                       fill={`url(#kpi-gradient-${card.key})`}
                       fillOpacity={1}
                     />
-                    <Tooltip
+                    <ChartTooltip
                       cursor={{ stroke: "#0b0a0e", strokeOpacity: 0.18, strokeWidth: 1 }}
-                      contentStyle={{
-                        borderRadius: "12px",
-                        border: "1px solid rgba(15,25,48,0.12)",
-                        background: "#fff",
-                        boxShadow: "0 8px 24px rgba(15,25,48,0.10)"
-                      }}
-                      labelFormatter={(label) => `X: ${label}`}
-                      formatter={(value) => [`Y: ${Number(value).toLocaleString("sv-SE")} ${card.unit}`, ""]}
+                      content={<ChartTooltipContent hideLabel />}
                     />
                   </AreaChart>
-                </ResponsiveContainer>
+                </ChartContainer>
               ) : (
                 <div className="grid h-full place-items-center rounded-xl border border-dashed border-black/15 bg-[#fafafa] text-xs font-semibold text-ink-500">
                   Ingen data
@@ -2442,17 +2434,23 @@ function AdminStatistics({ app }) {
                 <h3 className="text-lg font-semibold text-ink-900">Prestanda per område</h3>
                 <p className="mt-1 text-sm text-ink-600">Visningar och förfrågningar för era starkaste delmarknader</p>
                 <div className="mt-4 h-[280px]">
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ChartContainer
+                    config={{
+                      views: { label: "Visningar", color: "#0b0a0e" },
+                      inquiries: { label: "Förfrågningar", color: "#7ea1cc" }
+                    }}
+                    className="h-full w-full"
+                  >
                     <BarChart data={statsDistrictPerformance} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(15,25,48,0.12)" />
                       <XAxis dataKey="district" tick={{ fontSize: 11, fill: "#6f7a86" }} />
                       <YAxis tick={{ fontSize: 11, fill: "#6f7a86" }} />
-                      <Tooltip />
-                      <Legend />
-                      <Bar dataKey="views" name="Visningar" fill="#0b0a0e" radius={[6, 6, 0, 0]} />
-                      <Bar dataKey="inquiries" name="Förfrågningar" fill="#7ea1cc" radius={[6, 6, 0, 0]} />
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <ChartLegend content={<ChartLegendContent />} />
+                      <Bar dataKey="views" fill="var(--color-views)" radius={[6, 6, 0, 0]} />
+                      <Bar dataKey="inquiries" fill="var(--color-inquiries)" radius={[6, 6, 0, 0]} />
                     </BarChart>
-                  </ResponsiveContainer>
+                  </ChartContainer>
                 </div>
               </article>
             ) : (
@@ -2474,9 +2472,10 @@ function AdminStatistics({ app }) {
                       <span className="font-semibold text-ink-700">{step.stage}</span>
                       <span className="text-ink-600">{step.count.toLocaleString("sv-SE")} · {step.conversion}%</span>
                     </div>
-                    <div className="h-2.5 overflow-hidden rounded-full border border-black/10 bg-[#eef2f8]">
-                      <div className="h-full rounded-full bg-[#0b0a0e]" style={{ width: `${Math.max(step.conversion, 6)}%` }} />
-                    </div>
+                    <Progress
+                      value={Math.max(step.conversion, 6)}
+                      className="[&_[data-slot=progress-track]]:h-2.5 [&_[data-slot=progress-track]]:border [&_[data-slot=progress-track]]:border-black/10 [&_[data-slot=progress-track]]:bg-[#eef2f8] [&_[data-slot=progress-indicator]]:bg-[#0b0a0e]"
+                    />
                   </div>
                 ))}
               </div>
@@ -2498,22 +2497,27 @@ function AdminStatistics({ app }) {
               <h3 className="text-lg font-semibold text-ink-900">Mäklarprestanda</h3>
               <p className="mt-1 text-sm text-ink-600">Jämförelse av teamets nyckelområden (index)</p>
               <div className="mt-4 h-[280px]">
-                <ResponsiveContainer width="100%" height="100%">
+                <ChartContainer
+                  config={Object.fromEntries(
+                    Object.keys(brokerPerformanceRadar[0] || {})
+                      .filter((key) => key !== "metric")
+                      .map((key, index) => [key, { label: key, color: ["#0b0a0e", "#476a99", "#7ea1cc"][index % 3] }])
+                  )}
+                  className="h-full w-full"
+                >
                   <RadarChart data={brokerPerformanceRadar}>
                     <PolarGrid stroke="rgba(15,25,48,0.2)" />
                     <PolarAngleAxis dataKey="metric" tick={{ fontSize: 11, fill: "#6f7a86" }} />
                     <PolarRadiusAxis tick={{ fontSize: 10, fill: "#6f7a86" }} />
-                    <Tooltip />
-                    <Legend />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <ChartLegend content={<ChartLegendContent />} />
                     {Object.keys(brokerPerformanceRadar[0] || {})
                       .filter((key) => key !== "metric")
-                      .map((key, index) => {
-                        const colors = ["#0b0a0e", "#476a99", "#7ea1cc"];
-                        const color = colors[index % colors.length];
-                        return <Radar key={key} name={key} dataKey={key} stroke={color} fill={color} fillOpacity={0.18} />;
-                      })}
+                      .map((key) => (
+                        <Radar key={key} name={key} dataKey={key} stroke={`var(--color-${key})`} fill={`var(--color-${key})`} fillOpacity={0.18} />
+                      ))}
                   </RadarChart>
-                </ResponsiveContainer>
+                </ChartContainer>
               </div>
             </article>
             ) : (
@@ -2537,18 +2541,25 @@ function AdminStatistics({ app }) {
           <h3 className="text-lg font-semibold text-ink-900">Trend per lokaltyp</h3>
           <p className="mt-1 text-sm text-ink-600">Utveckling av efterfrågan i respektive segment</p>
           <div className="mt-4 h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
+            <ChartContainer
+              config={{
+                kontor: { label: "Kontor", color: "#0b0a0e" },
+                butik: { label: "Butik", color: "#476a99" },
+                lager: { label: "Lager", color: "#7ea1cc" }
+              }}
+              className="h-full w-full"
+            >
               <LineChart data={segmentTrend} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(15,25,48,0.12)" />
                 <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#6f7a86" }} />
                 <YAxis tick={{ fontSize: 11, fill: "#6f7a86" }} />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="kontor" stroke="#0b0a0e" strokeWidth={2} dot={{ r: 2 }} />
-                <Line type="monotone" dataKey="butik" stroke="#476a99" strokeWidth={2} dot={{ r: 2 }} />
-                <Line type="monotone" dataKey="lager" stroke="#7ea1cc" strokeWidth={2} dot={{ r: 2 }} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <ChartLegend content={<ChartLegendContent />} />
+                <Line type="monotone" dataKey="kontor" stroke="var(--color-kontor)" strokeWidth={2} dot={{ r: 2 }} />
+                <Line type="monotone" dataKey="butik" stroke="var(--color-butik)" strokeWidth={2} dot={{ r: 2 }} />
+                <Line type="monotone" dataKey="lager" stroke="var(--color-lager)" strokeWidth={2} dot={{ r: 2 }} />
               </LineChart>
-            </ResponsiveContainer>
+            </ChartContainer>
           </div>
           </section>
           ) : (

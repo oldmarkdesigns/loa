@@ -7,6 +7,7 @@ import {
   XAxis
 } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "../ui/chart";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 const rangeOptions = ["7d", "30d", "90d"];
 const chartConfig = {
@@ -42,25 +43,23 @@ function BarInteractive({
           <h3 className="text-lg font-semibold text-ink-900">{title}</h3>
           <p className="mt-1 text-sm text-ink-600">{subtitle}</p>
         </div>
-        <div className="inline-flex items-center gap-1 rounded-full border border-black/10 bg-[#ffffff] p-1">
-          {rangeOptions.map((option) => {
-            const active = option === range;
-            return (
-              <button
-                key={option}
-                type="button"
-                className={`min-h-0 rounded-full px-2.5 py-1 text-xs font-semibold transition ${
-                  active
-                    ? "bg-[#0b0a0e] text-white"
-                    : "text-ink-600 hover:text-ink-900"
-                }`}
-                onClick={() => setRange(option)}
-              >
-                {option}
-              </button>
-            );
-          })}
-        </div>
+        <ToggleGroup
+          variant="outline"
+          spacing={0}
+          value={[range]}
+          onValueChange={(next) => next[0] && setRange(next[0])}
+          className="rounded-full border border-black/10 bg-[#ffffff] p-1"
+        >
+          {rangeOptions.map((option) => (
+            <ToggleGroupItem
+              key={option}
+              value={option}
+              className="h-auto rounded-full border-0 px-2.5 py-1 text-xs font-semibold shadow-none data-[state=on]:bg-[#0b0a0e] data-[state=on]:text-white"
+            >
+              {option}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
       </div>
 
       <div className="mt-4">
