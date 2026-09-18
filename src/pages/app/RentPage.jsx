@@ -1376,9 +1376,6 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
   const [showSearchEditor, setShowSearchEditor] = useState(false);
   const [isClosingSearchEditor, setIsClosingSearchEditor] = useState(false);
   const [showAdvancedSearchEditor, setShowAdvancedSearchEditor] = useState(false);
-  const [showAdvancedSearchOverlay, setShowAdvancedSearchOverlay] = useState(false);
-  const [isAdvancedSearchOverlayActive, setIsAdvancedSearchOverlayActive] = useState(false);
-  const [isClosingAdvancedSearchOverlay, setIsClosingAdvancedSearchOverlay] = useState(false);
   const [showEditorAiPanel, setShowEditorAiPanel] = useState(false);
   const [sidePanelMode, setSidePanelMode] = useState("filter");
   const [isSwitchingSidePanel, setIsSwitchingSidePanel] = useState(false);
@@ -1458,7 +1455,6 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
   const resetToAvailableTimerRef = useRef(null);
   const sidePanelSwitchTimerRef = useRef(null);
   const advancedFiltersTimerRef = useRef(null);
-  const advancedSearchOverlayTimerRef = useRef(null);
   const localProgramQuickCardTimerRef = useRef(null);
   const localProgramResultsAnimationTimerRef = useRef(null);
   const liveFilterTimerRef = useRef(null);
@@ -1613,9 +1609,6 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
       if (advancedFiltersTimerRef.current) {
         clearTimeout(advancedFiltersTimerRef.current);
       }
-      if (advancedSearchOverlayTimerRef.current) {
-        clearTimeout(advancedSearchOverlayTimerRef.current);
-      }
       if (localProgramQuickCardTimerRef.current) {
         clearTimeout(localProgramQuickCardTimerRef.current);
       }
@@ -1711,9 +1704,6 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
 
   useEffect(() => {
     if (showAdvancedSearchEditor) {
-      setShowAdvancedSearchOverlay(true);
-      setIsAdvancedSearchOverlayActive(false);
-      setIsClosingAdvancedSearchOverlay(false);
       if (advancedFiltersTimerRef.current) {
         clearTimeout(advancedFiltersTimerRef.current);
         advancedFiltersTimerRef.current = null;
@@ -1731,36 +1721,8 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
     }, 320);
   }, [showAdvancedSearchEditor, showAdvancedFiltersContent]);
 
-  useEffect(() => {
-    if (!showAdvancedSearchOverlay || isAdvancedSearchOverlayActive || isClosingAdvancedSearchOverlay) return;
-    if (advancedSearchOverlayTimerRef.current) {
-      clearTimeout(advancedSearchOverlayTimerRef.current);
-    }
-    advancedSearchOverlayTimerRef.current = setTimeout(() => {
-      setIsAdvancedSearchOverlayActive(true);
-      advancedSearchOverlayTimerRef.current = null;
-    }, 16);
-    return () => {
-      if (advancedSearchOverlayTimerRef.current) {
-        clearTimeout(advancedSearchOverlayTimerRef.current);
-        advancedSearchOverlayTimerRef.current = null;
-      }
-    };
-  }, [showAdvancedSearchOverlay, isAdvancedSearchOverlayActive, isClosingAdvancedSearchOverlay]);
-
   function closeAdvancedSearchOverlay() {
-    if (!showAdvancedSearchOverlay || !isAdvancedSearchOverlayActive) return;
-    setIsClosingAdvancedSearchOverlay(true);
-    setIsAdvancedSearchOverlayActive(false);
     setShowAdvancedSearchEditor(false);
-    if (advancedSearchOverlayTimerRef.current) {
-      clearTimeout(advancedSearchOverlayTimerRef.current);
-    }
-    advancedSearchOverlayTimerRef.current = setTimeout(() => {
-      setShowAdvancedSearchOverlay(false);
-      setIsClosingAdvancedSearchOverlay(false);
-      advancedSearchOverlayTimerRef.current = null;
-    }, 240);
   }
 
   function transitionFromAvailableToResults() {
@@ -3231,14 +3193,16 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
     </Button>
   );
 
-  const aiSearchOverlay = showEditorAiPanel ? (
-    <div
-      className="fixed inset-0 z-[85] flex items-start justify-center bg-black/20 px-4 pb-4 pt-24 backdrop-blur-[2px]"
-      onClick={() => setShowEditorAiPanel(false)}
+  const aiSearchOverlay = (
+    <Dialog
+      open={showEditorAiPanel}
+      onOpenChange={(open) => {
+        if (!open) setShowEditorAiPanel(false);
+      }}
     >
-      <div
-        className="flex max-h-[80vh] w-full max-w-xl flex-col overflow-hidden rounded-3xl border border-black/10 bg-[#ffffff] shadow-[0_24px_64px_rgba(15,25,48,0.28)]"
-        onClick={(event) => event.stopPropagation()}
+      <DialogContent
+        showCloseButton={false}
+        className="top-24 z-[85] flex max-h-[80vh] w-full max-w-xl translate-y-0 flex-col gap-0 overflow-hidden rounded-3xl border border-black/10 bg-[#ffffff] p-0 shadow-[0_24px_64px_rgba(15,25,48,0.28)] ring-0"
       >
         <div className="flex shrink-0 items-center justify-between border-b border-black/10 px-5 py-4">
           <span className="inline-flex items-center gap-2 text-sm font-semibold text-ink-700">
@@ -3317,9 +3281,9 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
             </Button>
           </div>
         </form>
-      </div>
-    </div>
-  ) : null;
+      </DialogContent>
+    </Dialog>
+  );
 
   const sideFilterPanel = (
     <div className="space-y-3">
@@ -3787,21 +3751,16 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
         )}
       </div>
 
-      {showAdvancedSearchOverlay ? (
-        <div
-          className={`fixed inset-0 z-[72] flex items-center justify-center p-4 backdrop-blur-[2px] transition-all duration-200 ${
-            isAdvancedSearchOverlayActive ? "bg-[#ffffff]/0 opacity-100" : "bg-[#ffffff]/0 opacity-0"
-          }`}
-          onClick={closeAdvancedSearchOverlay}
+      <Dialog
+        open={showAdvancedSearchEditor}
+        onOpenChange={(open) => {
+          if (!open) closeAdvancedSearchOverlay();
+        }}
+      >
+        <DialogContent
+          showCloseButton={false}
+          className="relative z-[72] w-full max-w-4xl gap-0 rounded-[32px] border border-black/10 bg-[#ffffff] p-0 shadow-[0_16px_40px_rgba(15,25,48,0.12)] ring-0"
         >
-          <div
-            className={`relative w-full max-w-4xl rounded-[32px] border border-black/10 bg-[#ffffff] shadow-[0_16px_40px_rgba(15,25,48,0.12)] transition-all duration-200 ${
-              isAdvancedSearchOverlayActive
-                ? "translate-y-0 scale-100 opacity-100"
-                : "translate-y-2 scale-[0.985] opacity-0"
-            }`}
-            onClick={(event) => event.stopPropagation()}
-          >
             <div className="flex items-center justify-between gap-3 border-b border-black/10 px-6 py-4">
               <h3 className="text-lg font-semibold text-ink-900">Alla filter</h3>
               <Button
@@ -4033,9 +3992,8 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                 </Button>
               </div>
             </form>
-          </div>
-        </div>
-      ) : null}
+        </DialogContent>
+      </Dialog>
 
       <ViewingRequestModal
         listing={bookingListing}
@@ -4059,30 +4017,36 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
 
       {aiSearchOverlay}
 
-      {showEditorAiInfo ? (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-transparent p-4" onClick={() => setShowEditorAiInfo(false)}>
-          <div className="relative w-full max-w-lg rounded-2xl border border-black/10 bg-[#ffffff] p-5 shadow-[0_24px_64px_rgba(15,25,48,0.28)]" onClick={(event) => event.stopPropagation()}>
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              className="close-circle-button absolute right-3 top-3 text-lg font-semibold leading-none text-ink-700 hover:bg-[#ffffff]"
-              onClick={() => setShowEditorAiInfo(false)}
-              aria-label="Stäng"
-            >
-              ×
-            </Button>
-            <h3 className="pr-10 text-lg font-semibold text-ink-900">Om AI-sök</h3>
-            <p className="mt-2 text-sm text-ink-700">
-              AI-sök analyserar din text och fyller relevanta filter automatiskt, som område, lokaltyp, teamstorlek,
-              budget och bekvämligheter.
-            </p>
-            <p className="mt-2 text-sm text-ink-700">
-              Skriv gärna tydliga önskemål för bättre resultat, till exempel: <span className="font-semibold">"Möblerat kontor för 10 personer nära tunnelbana med budget under 70 000 kr."</span>
-            </p>
-          </div>
-        </div>
-      ) : null}
+      <Dialog
+        open={showEditorAiInfo}
+        onOpenChange={(open) => {
+          if (!open) setShowEditorAiInfo(false);
+        }}
+      >
+        <DialogContent
+          showCloseButton={false}
+          className="z-[70] w-full max-w-lg rounded-2xl border border-black/10 bg-[#ffffff] p-5 shadow-[0_24px_64px_rgba(15,25,48,0.28)] ring-0"
+        >
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="close-circle-button absolute right-3 top-3 text-lg font-semibold leading-none text-ink-700 hover:bg-[#ffffff]"
+            onClick={() => setShowEditorAiInfo(false)}
+            aria-label="Stäng"
+          >
+            ×
+          </Button>
+          <h3 className="pr-10 text-lg font-semibold text-ink-900">Om AI-sök</h3>
+          <p className="mt-2 text-sm text-ink-700">
+            AI-sök analyserar din text och fyller relevanta filter automatiskt, som område, lokaltyp, teamstorlek,
+            budget och bekvämligheter.
+          </p>
+          <p className="mt-2 text-sm text-ink-700">
+            Skriv gärna tydliga önskemål för bättre resultat, till exempel: <span className="font-semibold">"Möblerat kontor för 10 personer nära tunnelbana med budget under 70 000 kr."</span>
+          </p>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }

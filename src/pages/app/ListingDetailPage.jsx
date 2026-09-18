@@ -45,6 +45,7 @@ import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 const GOOGLE_MAPS_SCRIPT_ID = "google-maps-listing-detail-script";
@@ -622,8 +623,6 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
   const [activeGalleryIndex, setActiveGalleryIndex] = useState(0);
   const [areaViewMode, setAreaViewMode] = useState("map");
   const [aboutOverlayVisible, setAboutOverlayVisible] = useState(false);
-  const [aboutOverlayOpen, setAboutOverlayOpen] = useState(false);
-  const [isClosingAboutOverlay, setIsClosingAboutOverlay] = useState(false);
   const [bookingListing, setBookingListing] = useState(null);
   const isGalleryView = initialView === "gallery";
   const source = useMemo(() => {
@@ -678,7 +677,6 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
     if (base.length <= 240) return base;
     return `${base.slice(0, 237).trim()}...`;
   }, [shortDescription, longDescription]);
-  const aboutOverlayTimerRef = useRef(null);
 
   const googleMapsHref = useMemo(
     () => `https://www.google.com/maps?q=${encodeURIComponent(`${insight.center.lat},${insight.center.lng}`)}`,
@@ -741,32 +739,6 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
   }, [listingId, isGalleryView]);
 
   useEffect(() => {
-    return () => {
-      if (aboutOverlayTimerRef.current) {
-        clearTimeout(aboutOverlayTimerRef.current);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!aboutOverlayVisible || aboutOverlayOpen || isClosingAboutOverlay) return;
-    if (aboutOverlayTimerRef.current) {
-      clearTimeout(aboutOverlayTimerRef.current);
-    }
-    aboutOverlayTimerRef.current = setTimeout(() => {
-      setAboutOverlayOpen(true);
-      aboutOverlayTimerRef.current = null;
-    }, 16);
-    return () => {
-      if (aboutOverlayTimerRef.current) {
-        clearTimeout(aboutOverlayTimerRef.current);
-        aboutOverlayTimerRef.current = null;
-      }
-    };
-  }, [aboutOverlayVisible, aboutOverlayOpen, isClosingAboutOverlay]);
-
-
-  useEffect(() => {
     if (!listing?.id || isGalleryView) return;
     trackListingViewed({
       listing_id: String(listing.id),
@@ -808,27 +780,11 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
   }
 
   function openAboutOverlay() {
-    if (aboutOverlayTimerRef.current) {
-      clearTimeout(aboutOverlayTimerRef.current);
-      aboutOverlayTimerRef.current = null;
-    }
     setAboutOverlayVisible(true);
-    setAboutOverlayOpen(false);
-    setIsClosingAboutOverlay(false);
   }
 
   function closeAboutOverlay() {
-    if (!aboutOverlayVisible || !aboutOverlayOpen) return;
-    setIsClosingAboutOverlay(true);
-    setAboutOverlayOpen(false);
-    if (aboutOverlayTimerRef.current) {
-      clearTimeout(aboutOverlayTimerRef.current);
-    }
-    aboutOverlayTimerRef.current = setTimeout(() => {
-      setAboutOverlayVisible(false);
-      setIsClosingAboutOverlay(false);
-      aboutOverlayTimerRef.current = null;
-    }, 240);
+    setAboutOverlayVisible(false);
   }
 
 
@@ -1214,88 +1170,82 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
         </div>
 
 
-        {aboutOverlayVisible ? (
-          <div
-            className={`fixed inset-0 z-[72] flex items-center justify-center p-4 backdrop-blur-[2px] transition-all duration-200 sm:p-5 ${
-              aboutOverlayOpen ? "bg-[#ffffff]/0 opacity-100" : "bg-[#ffffff]/0 opacity-0"
-            }`}
-            onClick={closeAboutOverlay}
+        <Dialog
+          open={aboutOverlayVisible}
+          onOpenChange={(open) => {
+            if (!open) closeAboutOverlay();
+          }}
+        >
+          <DialogContent
+            showCloseButton={false}
+            className="z-[72] flex max-h-[calc(100vh-2rem)] w-full max-w-2xl flex-col gap-0 overflow-hidden rounded-3xl border border-black/10 bg-[#ffffff] p-0 shadow-[0_16px_40px_rgba(15,25,48,0.12)] ring-0 sm:max-h-[calc(100vh-2.5rem)]"
           >
-            <div
-              className={`flex max-h-[calc(100vh-2rem)] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-black/10 bg-[#ffffff] shadow-[0_16px_40px_rgba(15,25,48,0.12)] transition-all duration-200 sm:max-h-[calc(100vh-2.5rem)] ${
-                aboutOverlayOpen
-                  ? "translate-y-0 scale-100 opacity-100"
-                  : "translate-y-2 scale-[0.985] opacity-0"
-              }`}
-              onClick={(event) => event.stopPropagation()}
-            >
-              <div className="flex items-start justify-between gap-4 px-6 pb-0 pt-6 sm:px-7 sm:pt-7">
-                <div>
-                  <h3 className="text-2xl font-semibold text-ink-900">{listing.title}</h3>
-                  <p className="mt-1 inline-flex items-center gap-1.5 text-sm text-ink-500">
-                    <PinIcon className="h-4 w-4" />
-                    {listing.district} • {listing.address}
-                  </p>
-                </div>
+            <div className="flex items-start justify-between gap-4 px-6 pb-0 pt-6 sm:px-7 sm:pt-7">
+              <div>
+                <h3 className="text-2xl font-semibold text-ink-900">{listing.title}</h3>
+                <p className="mt-1 inline-flex items-center gap-1.5 text-sm text-ink-500">
+                  <PinIcon className="h-4 w-4" />
+                  {listing.district} • {listing.address}
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="close-circle-button rounded-full text-xl leading-none text-ink-700 hover:border-[#0b0a0e]/25 hover:text-[#0b0a0e]"
+                onClick={closeAboutOverlay}
+                aria-label="Stäng"
+              >
+                ×
+              </Button>
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-8 pt-5 sm:px-7 sm:pb-10">
+              <div className="space-y-3 text-sm leading-relaxed text-ink-700">
+                {longDescription.map((paragraph) => (
+                  <p key={`overlay-${paragraph}`}>{paragraph}</p>
+                ))}
+              </div>
+
+              <div className="mt-6 border-t border-black/10 pt-5">
+                <h4 className="text-base font-semibold text-ink-900">Bekvämligheter</h4>
+                <ul className="mt-3 flex flex-wrap gap-2">
+                  {displayAmenities.map((amenity) => {
+                    const Icon = amenityIconFor(amenity);
+                    return (
+                      <li
+                        key={`overlay-amenity-${amenity}`}
+                        className="inline-flex min-h-[42px] items-center gap-1.5 rounded-full border border-black/10 bg-[#ffffff] px-3 py-1.5 text-[0.875rem] font-semibold leading-5 text-ink-700"
+                      >
+                        <Icon className="h-3.5 w-3.5 shrink-0 text-ink-700" />
+                        {amenity}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+
+              <div className="mt-6 border-t border-black/10 pt-5">
+                <h4 className="text-base font-semibold text-ink-900">Service i området</h4>
+                <ul className="mt-3 space-y-1.5 text-sm text-ink-700">
+                  {insight.services.map((item) => (
+                    <li key={`overlay-service-${item}`} className="leading-relaxed">• {item}</li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="mt-6 flex justify-center border-t border-black/10 pt-5">
                 <Button
                   type="button"
                   variant="outline"
-                  size="icon"
-                  className="close-circle-button rounded-full text-xl leading-none text-ink-700 hover:border-[#0b0a0e]/25 hover:text-[#0b0a0e]"
+                  className="h-auto rounded-full px-4 py-2.5 text-sm font-semibold text-ink-700 hover:border-[#0b0a0e]/25 hover:text-[#0b0a0e]"
                   onClick={closeAboutOverlay}
-                  aria-label="Stäng"
                 >
-                  ×
+                  Stäng
                 </Button>
               </div>
-              <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-8 pt-5 sm:px-7 sm:pb-10">
-                <div className="space-y-3 text-sm leading-relaxed text-ink-700">
-                  {longDescription.map((paragraph) => (
-                    <p key={`overlay-${paragraph}`}>{paragraph}</p>
-                  ))}
-                </div>
-
-                <div className="mt-6 border-t border-black/10 pt-5">
-                  <h4 className="text-base font-semibold text-ink-900">Bekvämligheter</h4>
-                  <ul className="mt-3 flex flex-wrap gap-2">
-                    {displayAmenities.map((amenity) => {
-                      const Icon = amenityIconFor(amenity);
-                      return (
-                        <li
-                          key={`overlay-amenity-${amenity}`}
-                          className="inline-flex min-h-[42px] items-center gap-1.5 rounded-full border border-black/10 bg-[#ffffff] px-3 py-1.5 text-[0.875rem] font-semibold leading-5 text-ink-700"
-                        >
-                          <Icon className="h-3.5 w-3.5 shrink-0 text-ink-700" />
-                          {amenity}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-
-                <div className="mt-6 border-t border-black/10 pt-5">
-                  <h4 className="text-base font-semibold text-ink-900">Service i området</h4>
-                  <ul className="mt-3 space-y-1.5 text-sm text-ink-700">
-                    {insight.services.map((item) => (
-                      <li key={`overlay-service-${item}`} className="leading-relaxed">• {item}</li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="mt-6 flex justify-center border-t border-black/10 pt-5">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="h-auto rounded-full px-4 py-2.5 text-sm font-semibold text-ink-700 hover:border-[#0b0a0e]/25 hover:text-[#0b0a0e]"
-                    onClick={closeAboutOverlay}
-                  >
-                    Stäng
-                  </Button>
-                </div>
-              </div>
             </div>
-          </div>
-        ) : null}
+          </DialogContent>
+        </Dialog>
 
         {galleryOverlayOpen && typeof document !== "undefined"
           ? createPortal(

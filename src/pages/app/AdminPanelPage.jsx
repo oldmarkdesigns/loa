@@ -36,6 +36,7 @@ import {
   AlertDialogCancel,
   AlertDialogAction
 } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
   ArrowUpIcon,
   BarChart3Icon,
@@ -1527,46 +1528,52 @@ function AdminBrokersPage({ app }) {
         </div>
       </section>
 
-      {activityOverlayOpen ? (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-[#0b0a0e]/45 px-4 py-6">
-          <div className="w-full max-w-[720px] overflow-hidden rounded-[28px] border border-black/10 bg-[#ffffff] shadow-[0_24px_70px_rgba(15,25,48,0.25)]">
-            <div className="flex items-start justify-between gap-4 border-b border-black/10 px-5 py-4">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Mäklarteam</p>
-                <h2 className="mt-1 text-xl font-semibold text-ink-900">All teamaktivitet</h2>
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                className="close-circle-button leading-none text-ink-700 hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
-                aria-label="Stäng"
-                onClick={() => setActivityOverlayOpen(false)}
-              >
-                <XIcon className="h-4 w-4" />
-              </Button>
+      <Dialog
+        open={activityOverlayOpen}
+        onOpenChange={(open) => {
+          if (!open) setActivityOverlayOpen(false);
+        }}
+      >
+        <DialogContent
+          showCloseButton={false}
+          className="z-[80] w-full max-w-[720px] gap-0 overflow-hidden rounded-[28px] border border-black/10 bg-[#ffffff] p-0 shadow-[0_24px_70px_rgba(15,25,48,0.25)] ring-0"
+        >
+          <div className="flex items-start justify-between gap-4 border-b border-black/10 px-5 py-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Mäklarteam</p>
+              <h2 className="mt-1 text-xl font-semibold text-ink-900">All teamaktivitet</h2>
             </div>
-            <div className="max-h-[68vh] overflow-y-auto p-5">
-              <ul className="space-y-4">
-                {activityItems.filter((item) => item.type === "team" || item.type === "inquiry").map((item, index, list) => {
-                  const Icon = activityIcon(item.type);
-                  const hasNext = index < list.length - 1;
-                  return (
-                    <li key={item.id} className="relative pl-10">
-                      <span className="absolute left-0 top-0 inline-flex h-8 w-8 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] text-ink-700">
-                        <Icon className="h-4 w-4" />
-                      </span>
-                      {hasNext ? <span className="absolute left-[15px] top-8 h-[calc(100%+1rem)] w-px bg-black/10" /> : null}
-                      <p className="text-sm font-semibold text-ink-800">{item.text}</p>
-                      <p className="mt-0.5 text-xs text-ink-500">{item.timestamp}</p>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="close-circle-button leading-none text-ink-700 hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
+              aria-label="Stäng"
+              onClick={() => setActivityOverlayOpen(false)}
+            >
+              <XIcon className="h-4 w-4" />
+            </Button>
           </div>
-        </div>
-      ) : null}
+          <div className="max-h-[68vh] overflow-y-auto p-5">
+            <ul className="space-y-4">
+              {activityItems.filter((item) => item.type === "team" || item.type === "inquiry").map((item, index, list) => {
+                const Icon = activityIcon(item.type);
+                const hasNext = index < list.length - 1;
+                return (
+                  <li key={item.id} className="relative pl-10">
+                    <span className="absolute left-0 top-0 inline-flex h-8 w-8 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] text-ink-700">
+                      <Icon className="h-4 w-4" />
+                    </span>
+                    {hasNext ? <span className="absolute left-[15px] top-8 h-[calc(100%+1rem)] w-px bg-black/10" /> : null}
+                    <p className="text-sm font-semibold text-ink-800">{item.text}</p>
+                    <p className="mt-0.5 text-xs text-ink-500">{item.timestamp}</p>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog
         open={Boolean(deleteBrokerCandidate)}
@@ -1613,125 +1620,131 @@ function AdminBrokersPage({ app }) {
         </AlertDialogContent>
       </AlertDialog>
 
-      {brokerManagerOpen ? (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-[#0b0a0e]/45 px-4 py-6">
-          <div className="w-full max-w-[880px] overflow-hidden rounded-[28px] border border-black/10 bg-[#ffffff] shadow-[0_24px_70px_rgba(15,25,48,0.25)]">
-            <div className="flex items-start justify-between gap-4 border-b border-black/10 px-5 py-4">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Mäklarteam</p>
-                <h2 className="mt-1 text-xl font-semibold text-ink-900">Hantera mäklare</h2>
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                className="close-circle-button leading-none text-ink-700 hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
-                aria-label="Stäng"
-                onClick={() => setBrokerManagerOpen(false)}
-              >
-                <XIcon className="h-4 w-4" />
-              </Button>
+      <Dialog
+        open={brokerManagerOpen}
+        onOpenChange={(open) => {
+          if (!open) setBrokerManagerOpen(false);
+        }}
+      >
+        <DialogContent
+          showCloseButton={false}
+          className="z-[80] w-full max-w-[880px] gap-0 overflow-hidden rounded-[28px] border border-black/10 bg-[#ffffff] p-0 shadow-[0_24px_70px_rgba(15,25,48,0.25)] ring-0"
+        >
+          <div className="flex items-start justify-between gap-4 border-b border-black/10 px-5 py-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Mäklarteam</p>
+              <h2 className="mt-1 text-xl font-semibold text-ink-900">Hantera mäklare</h2>
             </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="close-circle-button leading-none text-ink-700 hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
+              aria-label="Stäng"
+              onClick={() => setBrokerManagerOpen(false)}
+            >
+              <XIcon className="h-4 w-4" />
+            </Button>
+          </div>
 
-            <div className="grid max-h-[72vh] min-h-[420px] overflow-hidden md:grid-cols-[280px_1fr]">
-              <aside className="overflow-y-auto border-b border-black/10 p-3 md:border-b-0 md:border-r">
-                <div className="space-y-2">
-                  {activeBrokers.map((broker) => {
-                    const initials = String(broker.name || broker.email || "AA")
-                      .split(" ")
-                      .filter(Boolean)
-                      .slice(0, 2)
-                      .map((part) => part[0])
-                      .join("")
-                      .toUpperCase();
-                    const selected = broker.userId === selectedBroker?.userId;
-                    return (
-                      <Button
-                        key={broker.userId}
-                        type="button"
-                        variant="ghost"
-                        className={`menu-hover-row h-auto w-full justify-start gap-3 px-3 py-2.5 text-left font-normal ${selected ? "bg-[#eef2f8] hover:bg-[#eef2f8]" : "bg-transparent"}`}
-                        onClick={() => selectBrokerForEdit(broker)}
-                      >
-                        <Avatar className="h-9 w-9 shrink-0">
-                          <AvatarFallback className="bg-[#0b0a0e] text-xs font-semibold text-white">{initials}</AvatarFallback>
-                        </Avatar>
-                        <span className="min-w-0">
-                          <span className="block truncate text-sm font-semibold text-ink-900">{broker.name || broker.email}</span>
-                          <span className="block truncate text-xs text-ink-600">{broker.email}</span>
-                        </span>
+          <div className="grid max-h-[72vh] min-h-[420px] overflow-hidden md:grid-cols-[280px_1fr]">
+            <aside className="overflow-y-auto border-b border-black/10 p-3 md:border-b-0 md:border-r">
+              <div className="space-y-2">
+                {activeBrokers.map((broker) => {
+                  const initials = String(broker.name || broker.email || "AA")
+                    .split(" ")
+                    .filter(Boolean)
+                    .slice(0, 2)
+                    .map((part) => part[0])
+                    .join("")
+                    .toUpperCase();
+                  const selected = broker.userId === selectedBroker?.userId;
+                  return (
+                    <Button
+                      key={broker.userId}
+                      type="button"
+                      variant="ghost"
+                      className={`menu-hover-row h-auto w-full justify-start gap-3 px-3 py-2.5 text-left font-normal ${selected ? "bg-[#eef2f8] hover:bg-[#eef2f8]" : "bg-transparent"}`}
+                      onClick={() => selectBrokerForEdit(broker)}
+                    >
+                      <Avatar className="h-9 w-9 shrink-0">
+                        <AvatarFallback className="bg-[#0b0a0e] text-xs font-semibold text-white">{initials}</AvatarFallback>
+                      </Avatar>
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-semibold text-ink-900">{broker.name || broker.email}</span>
+                        <span className="block truncate text-xs text-ink-600">{broker.email}</span>
+                      </span>
+                    </Button>
+                  );
+                })}
+              </div>
+            </aside>
+
+            <form className="overflow-y-auto p-5" onSubmit={saveBrokerChanges}>
+              {selectedBroker ? (
+                <div className="space-y-5">
+                  <div>
+                    <h3 className="text-lg font-semibold text-ink-900">{selectedBroker.name || selectedBroker.email}</h3>
+                    <p className="mt-1 text-sm text-ink-600">Uppdatera mäklarinformation eller ta bort behörigheten från bolaget.</p>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <label className="block">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-ink-500">Namn</span>
+                      <Input
+                        className="mt-1.5"
+                        value={brokerDraft.name}
+                        onChange={(event) => setBrokerDraft((current) => ({ ...current, name: event.target.value }))}
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-ink-500">Telefon</span>
+                      <Input
+                        className="mt-1.5"
+                        value={brokerDraft.phone}
+                        onChange={(event) => setBrokerDraft((current) => ({ ...current, phone: event.target.value }))}
+                        placeholder="Telefonnummer"
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-ink-500">Mäklarnummer (FMI)</span>
+                      <Input
+                        className="mt-1.5"
+                        value={brokerDraft.fmiNumber}
+                        onChange={(event) => setBrokerDraft((current) => ({ ...current, fmiNumber: event.target.value }))}
+                        placeholder="Ex. 2024001234"
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-ink-500">E-post</span>
+                      <Input className="mt-1.5 bg-[#f7f7f7] text-ink-600" value={selectedBroker.email || ""} disabled />
+                    </label>
+                  </div>
+
+                  <div className="flex flex-col gap-3 border-t border-black/10 pt-5 sm:flex-row sm:items-center sm:justify-end">
+                    <div className="flex gap-2 sm:justify-end">
+                      <Button type="button" variant="secondary" className="h-auto px-4 py-2 text-sm" onClick={() => setBrokerManagerOpen(false)}>
+                        Avbryt
                       </Button>
-                    );
-                  })}
-                </div>
-              </aside>
-
-              <form className="overflow-y-auto p-5" onSubmit={saveBrokerChanges}>
-                {selectedBroker ? (
-                  <div className="space-y-5">
-                    <div>
-                      <h3 className="text-lg font-semibold text-ink-900">{selectedBroker.name || selectedBroker.email}</h3>
-                      <p className="mt-1 text-sm text-ink-600">Uppdatera mäklarinformation eller ta bort behörigheten från bolaget.</p>
-                    </div>
-
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <label className="block">
-                        <span className="text-xs font-semibold uppercase tracking-wide text-ink-500">Namn</span>
-                        <Input
-                          className="mt-1.5"
-                          value={brokerDraft.name}
-                          onChange={(event) => setBrokerDraft((current) => ({ ...current, name: event.target.value }))}
-                        />
-                      </label>
-                      <label className="block">
-                        <span className="text-xs font-semibold uppercase tracking-wide text-ink-500">Telefon</span>
-                        <Input
-                          className="mt-1.5"
-                          value={brokerDraft.phone}
-                          onChange={(event) => setBrokerDraft((current) => ({ ...current, phone: event.target.value }))}
-                          placeholder="Telefonnummer"
-                        />
-                      </label>
-                      <label className="block">
-                        <span className="text-xs font-semibold uppercase tracking-wide text-ink-500">Mäklarnummer (FMI)</span>
-                        <Input
-                          className="mt-1.5"
-                          value={brokerDraft.fmiNumber}
-                          onChange={(event) => setBrokerDraft((current) => ({ ...current, fmiNumber: event.target.value }))}
-                          placeholder="Ex. 2024001234"
-                        />
-                      </label>
-                      <label className="block">
-                        <span className="text-xs font-semibold uppercase tracking-wide text-ink-500">E-post</span>
-                        <Input className="mt-1.5 bg-[#f7f7f7] text-ink-600" value={selectedBroker.email || ""} disabled />
-                      </label>
-                    </div>
-
-                    <div className="flex flex-col gap-3 border-t border-black/10 pt-5 sm:flex-row sm:items-center sm:justify-end">
-                      <div className="flex gap-2 sm:justify-end">
-                        <Button type="button" variant="secondary" className="h-auto px-4 py-2 text-sm" onClick={() => setBrokerManagerOpen(false)}>
-                          Avbryt
-                        </Button>
-                        <Button
-                          type="submit"
-                          className="h-auto px-4 py-2 text-sm"
-                          disabled={savingBrokerId === selectedBroker.userId}
-                        >
-                          {savingBrokerId === selectedBroker.userId ? "Sparar..." : "Spara ändringar"}
-                        </Button>
-                      </div>
+                      <Button
+                        type="submit"
+                        className="h-auto px-4 py-2 text-sm"
+                        disabled={savingBrokerId === selectedBroker.userId}
+                      >
+                        {savingBrokerId === selectedBroker.userId ? "Sparar..." : "Spara ändringar"}
+                      </Button>
                     </div>
                   </div>
-                ) : (
-                  <p className="rounded-2xl border border-black/10 bg-[#fafafa] px-4 py-4 text-sm text-ink-600">
-                    Inga aktiva mäklare att hantera.
-                  </p>
-                )}
-              </form>
-            </div>
+                </div>
+              ) : (
+                <p className="rounded-2xl border border-black/10 bg-[#fafafa] px-4 py-4 text-sm text-ink-600">
+                  Inga aktiva mäklare att hantera.
+                </p>
+              )}
+            </form>
           </div>
-        </div>
-      ) : null}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -2241,7 +2254,6 @@ function AdminStatistics({ app }) {
   const statsDistributionData = adminStats.distributionData;
   const statsDistrictPerformance = adminStats.districtPerformance;
   const [customizeOpen, setCustomizeOpen] = useState(false);
-  const [customizeClosing, setCustomizeClosing] = useState(false);
   const rootRef = useRef(null);
   const [visibleModules, setVisibleModules] = useState({
     kpi: true,
@@ -2264,11 +2276,7 @@ function AdminStatistics({ app }) {
   const [activeSectionId, setActiveSectionId] = useState("stats-kpi");
 
   function closeCustomize() {
-    setCustomizeClosing(true);
-    window.setTimeout(() => {
-      setCustomizeOpen(false);
-      setCustomizeClosing(false);
-    }, 180);
+    setCustomizeOpen(false);
   }
 
   const displayedExtendedCards = extendedStatCards.filter((item) => visibleExtendedCards[item.id] !== false);
@@ -2591,75 +2599,73 @@ function AdminStatistics({ app }) {
           </section>
         ) : null}
 
-        {customizeOpen ? (
-          <div
-            className={`fixed inset-0 z-[95] flex items-center justify-center bg-[#ffffff]/0 p-4 backdrop-blur-[2px] transition-all duration-200 ${
-              customizeClosing ? "opacity-0" : "opacity-100"
-            }`}
-            onClick={closeCustomize}
+        <Dialog
+          open={customizeOpen}
+          onOpenChange={(open) => {
+            if (!open) closeCustomize();
+          }}
+        >
+          <DialogContent
+            showCloseButton={false}
+            className="z-[95] w-full max-w-2xl rounded-3xl border border-black/10 bg-[#ffffff] p-5 shadow-[0_24px_64px_rgba(15,25,48,0.22)] ring-0"
           >
-            <div
-              className={`w-full max-w-2xl rounded-3xl border border-black/10 bg-[#ffffff] p-5 shadow-[0_24px_64px_rgba(15,25,48,0.22)] transition ${customizeClosing ? "translate-y-2 opacity-0" : "translate-y-0 opacity-100"}`}
-              onClick={(event) => event.stopPropagation()}
-            >
-              <div className="mb-4 flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Anpassa statistik</p>
-                  <h3 className="mt-1 text-xl font-semibold text-ink-900">Välj vilka nyckeltal som ska visas</h3>
-                </div>
-                <Button type="button" variant="outline" size="icon" className="close-circle-button text-xl leading-none text-ink-700" onClick={closeCustomize}>
-                  ×
-                </Button>
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Anpassa statistik</p>
+                <h3 className="mt-1 text-xl font-semibold text-ink-900">Välj vilka nyckeltal som ska visas</h3>
               </div>
+              <Button type="button" variant="outline" size="icon" className="close-circle-button text-xl leading-none text-ink-700" onClick={closeCustomize}>
+                ×
+              </Button>
+            </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="rounded-2xl border border-black/10 bg-[#ffffff] p-3">
-                  <p className="text-sm font-semibold text-ink-800">Diagramsektioner</p>
-                  <div className="mt-3 space-y-2 text-sm">
-                    {[
-                      { key: "kpi", label: "KPI-kort" },
-                      { key: "extended", label: "Fördjupade nyckeltal" },
-                      { key: "trend", label: "Visningar & förfrågningar" },
-                      { key: "distribution", label: "Fördelning (donut)" },
-                      { key: "district", label: "Prestanda per område" },
-                      { key: "funnel", label: "Konverteringstratt" },
-                      { key: "brokerRadar", label: "Mäklarprestanda (radar)" },
-                      { key: "heatmap", label: "Veckoaktivitet (heatmap)" },
-                      { key: "segment", label: "Trend per lokaltyp" }
-                    ].map((item) => (
-                      <label key={item.key} className="flex items-center gap-2 text-ink-700">
-                        <Checkbox
-                          checked={Boolean(visibleModules[item.key])}
-                          onCheckedChange={(checked) => setVisibleModules((prev) => ({ ...prev, [item.key]: Boolean(checked) }))}
-                        />
-                        <span>{item.label}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-black/10 bg-[#ffffff] p-3">
-                  <p className="text-sm font-semibold text-ink-800">Fördjupade nyckeltal</p>
-                  <div className="mt-3 max-h-[280px] space-y-2 overflow-y-auto pr-1 text-sm">
-                    {extendedStatCards.map((item) => (
-                      <label key={item.id} className="flex items-center gap-2 text-ink-700">
-                        <Checkbox
-                          checked={visibleExtendedCards[item.id] !== false}
-                          onCheckedChange={(checked) => setVisibleExtendedCards((prev) => ({ ...prev, [item.id]: Boolean(checked) }))}
-                        />
-                        <span>{item.label}</span>
-                      </label>
-                    ))}
-                  </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="rounded-2xl border border-black/10 bg-[#ffffff] p-3">
+                <p className="text-sm font-semibold text-ink-800">Diagramsektioner</p>
+                <div className="mt-3 space-y-2 text-sm">
+                  {[
+                    { key: "kpi", label: "KPI-kort" },
+                    { key: "extended", label: "Fördjupade nyckeltal" },
+                    { key: "trend", label: "Visningar & förfrågningar" },
+                    { key: "distribution", label: "Fördelning (donut)" },
+                    { key: "district", label: "Prestanda per område" },
+                    { key: "funnel", label: "Konverteringstratt" },
+                    { key: "brokerRadar", label: "Mäklarprestanda (radar)" },
+                    { key: "heatmap", label: "Veckoaktivitet (heatmap)" },
+                    { key: "segment", label: "Trend per lokaltyp" }
+                  ].map((item) => (
+                    <label key={item.key} className="flex items-center gap-2 text-ink-700">
+                      <Checkbox
+                        checked={Boolean(visibleModules[item.key])}
+                        onCheckedChange={(checked) => setVisibleModules((prev) => ({ ...prev, [item.key]: Boolean(checked) }))}
+                      />
+                      <span>{item.label}</span>
+                    </label>
+                  ))}
                 </div>
               </div>
 
-              <div className="mt-4 flex justify-end gap-2">
-                <Button type="button" className="h-auto px-4 py-2" onClick={closeCustomize}>Spara</Button>
+              <div className="rounded-2xl border border-black/10 bg-[#ffffff] p-3">
+                <p className="text-sm font-semibold text-ink-800">Fördjupade nyckeltal</p>
+                <div className="mt-3 max-h-[280px] space-y-2 overflow-y-auto pr-1 text-sm">
+                  {extendedStatCards.map((item) => (
+                    <label key={item.id} className="flex items-center gap-2 text-ink-700">
+                      <Checkbox
+                        checked={visibleExtendedCards[item.id] !== false}
+                        onCheckedChange={(checked) => setVisibleExtendedCards((prev) => ({ ...prev, [item.id]: Boolean(checked) }))}
+                      />
+                      <span>{item.label}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
-        ) : null}
+
+            <div className="mt-4 flex justify-end gap-2">
+              <Button type="button" className="h-auto px-4 py-2" onClick={closeCustomize}>Spara</Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
