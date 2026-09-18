@@ -1508,26 +1508,29 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
                   {localProgramBenefits.map((item, index) => {
                     const isActive = index === activeProgramIndex;
                     return (
-                      <button
+                      <Button
                         key={item.title}
                         type="button"
+                        variant="ghost"
                         onClick={() => scrollToProgramStep(index)}
-                        className={`!rounded-none border-b border-white/10 py-5 text-left transition-colors duration-300 ${
+                        className={`h-auto w-full !rounded-none justify-start border-b border-white/10 px-0 py-5 text-left font-normal transition-colors duration-300 hover:bg-transparent ${
                           isActive ? "text-white" : "text-white/40"
                         }`}
                       >
-                        <span className="block text-xl font-semibold leading-tight">{item.title}</span>
-                        <span
-                          className="grid overflow-hidden transition-[grid-template-rows,opacity,margin-top] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
-                          style={{
-                            gridTemplateRows: isActive ? "1fr" : "0fr",
-                            opacity: isActive ? 1 : 0,
-                            marginTop: isActive ? "0.75rem" : "0"
-                          }}
-                        >
-                          <span className="max-w-[28ch] overflow-hidden text-sm font-medium text-white/60">{item.body}</span>
+                        <span className="flex flex-col items-start">
+                          <span className="block text-xl font-semibold leading-tight">{item.title}</span>
+                          <span
+                            className="grid overflow-hidden transition-[grid-template-rows,opacity,margin-top] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
+                            style={{
+                              gridTemplateRows: isActive ? "1fr" : "0fr",
+                              opacity: isActive ? 1 : 0,
+                              marginTop: isActive ? "0.75rem" : "0"
+                            }}
+                          >
+                            <span className="max-w-[28ch] overflow-hidden text-sm font-medium text-white/60">{item.body}</span>
+                          </span>
                         </span>
-                      </button>
+                      </Button>
                     );
                   })}
                 </div>
