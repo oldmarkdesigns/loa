@@ -59,6 +59,12 @@ import {
   UserIcon,
   XIcon
 } from "../../components/icons/UiIcons";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export const ADMIN_NAV_ITEMS = [
   { key: "oversikt", label: "Översikt", path: "/app/admin", Icon: LayoutDashboardIcon },
@@ -747,9 +753,9 @@ function KpiCardsSection({ showMatchLink = false, cards = kpiCards, sparklineSer
                   </h2>
                   <p className="mt-2 text-xs text-ink-600">Avancerad analys, API-tillgång och prioriterad support.</p>
                 </div>
-                <button type="button" className="btn-secondary w-fit px-4">
+                <Button type="button" variant="secondary" className="h-auto w-fit px-4 py-2">
                   Se planer
-                </button>
+                </Button>
               </div>
             </article>
           );
@@ -769,13 +775,14 @@ function KpiCardsSection({ showMatchLink = false, cards = kpiCards, sparklineSer
             </div>
             <p className="mt-3 text-[30px] font-semibold leading-none text-[#0b0a0e]">{card.value}</p>
             {showMatchLink && card.key === "matches" ? (
-              <button
+              <Button
                 type="button"
-                className="mt-2 min-h-0 p-0 text-xs font-semibold text-[#0b0a0e]"
+                variant="link"
+                className="h-auto mt-2 p-0 text-xs font-semibold text-[#0b0a0e]"
                 onClick={() => navigateTo("/app/admin/leads#matchningar")}
               >
                 ↗ Visa alla matchningar
-              </button>
+              </Button>
             ) : null}
             <p className="mt-2 text-xs text-ink-500">{card.meta}</p>
             <div className="mt-3 h-16">
@@ -951,14 +958,14 @@ function AdminListingsPage({ listings = [] }) {
             <p className="mt-1 text-sm text-ink-600">Hantera aktiva annonser, utkast och publiceringar.</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <button type="button" className="btn-secondary px-4">
+            <Button type="button" variant="secondary" className="h-auto px-4 py-2">
               <FilterIcon className="mr-1.5 h-4 w-4" />
               Filter
-            </button>
-            <button type="button" className="btn-primary px-4" onClick={() => navigateTo("/app/publish")}>
+            </Button>
+            <Button type="button" className="h-auto px-4 py-2" onClick={() => navigateTo("/app/publish")}>
               <PlusIcon className="mr-1.5 h-4 w-4" />
               Ny annons
-            </button>
+            </Button>
           </div>
         </div>
       </header>
@@ -976,38 +983,39 @@ function AdminListingsPage({ listings = [] }) {
                     : listingRows.filter((item) => item.status === status).length;
                   const isActive = selectedStatus === status;
                   return (
-                    <button
+                    <Button
                       key={status}
                       type="button"
+                      variant="outline"
                       onClick={() => setSelectedStatus(status)}
-                      className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-semibold transition ${
+                      className={`h-auto gap-2 rounded-full px-3 py-1.5 text-sm font-semibold ${
                         isActive
                           ? status === "Alla"
-                            ? "border-[#0b0a0e] bg-[#0b0a0e] text-white"
+                            ? "border-[#0b0a0e] bg-[#0b0a0e] text-white hover:bg-[#0b0a0e] hover:text-white"
                             : statusClass(status)
-                          : "border-black/10 bg-[#ffffff] text-ink-700 hover:bg-black/5"
+                          : "border-black/10 text-ink-700 hover:bg-black/5"
                       }`}
                     >
                       <span className="font-medium">{status === "Alla" ? "Alla" : status === "Aktiv" ? "Aktiva" : status}</span>
                       <span className="font-medium -ml-1">:</span>
                       <span className="font-semibold">{count}</span>
-                    </button>
+                    </Button>
                   );
                 })}
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <button type="button" className="inline-flex h-9 w-9 min-h-0 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] text-ink-700">
+              <Button type="button" variant="outline" size="icon" className="h-9 w-9 rounded-full text-ink-700">
                 <FilterIcon className="h-4 w-4" />
-              </button>
-              <button type="button" className="inline-flex h-9 w-9 min-h-0 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] text-ink-700">
+              </Button>
+              <Button type="button" variant="outline" size="icon" className="h-9 w-9 rounded-full text-ink-700">
                 <SearchIcon className="h-4 w-4" />
-              </button>
+              </Button>
             </div>
           </div>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[880px] table-fixed text-sm">
+          <Table className="min-w-[880px] table-fixed">
             <colgroup>
               <col className="w-[46%]" />
               <col className="w-[14%]" />
@@ -1016,20 +1024,20 @@ function AdminListingsPage({ listings = [] }) {
               <col className="w-[16%]" />
               <col className="w-[6%]" />
             </colgroup>
-            <thead className="bg-[#fafafa] text-[11px] uppercase tracking-wide text-ink-500">
-              <tr>
-                <th className="px-4 py-3 text-left font-semibold sm:px-5">Annons</th>
-                <th className="px-4 py-3 text-left font-semibold">Status</th>
-                <th className="px-4 py-3 text-right font-semibold">Visningar</th>
-                <th className="px-4 py-3 text-right font-semibold">Förfr.</th>
-                <th className="px-4 py-3 text-left font-semibold">Ansvarig</th>
-                <th className="px-4 py-3 text-right font-semibold sm:px-5" />
-              </tr>
-            </thead>
-            <tbody>
+            <TableHeader className="bg-[#fafafa] text-[11px] uppercase tracking-wide text-ink-500">
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="px-4 py-3 sm:px-5">Annons</TableHead>
+                <TableHead className="px-4 py-3">Status</TableHead>
+                <TableHead className="px-4 py-3 text-right">Visningar</TableHead>
+                <TableHead className="px-4 py-3 text-right">Förfr.</TableHead>
+                <TableHead className="px-4 py-3">Ansvarig</TableHead>
+                <TableHead className="px-4 py-3 text-right sm:px-5" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {filteredListings.map((item) => (
-                <tr key={item.id} className="border-t border-black/10">
-                  <td className="px-4 py-3.5 align-top sm:px-5">
+                <TableRow key={item.id} className="border-t border-black/10">
+                  <TableCell className="whitespace-normal px-4 py-3.5 align-top sm:px-5">
                     <div className="flex items-center gap-3">
                       <img src={item.image} alt={item.title} className="h-11 w-16 shrink-0 rounded-lg border border-black/10 object-cover" loading="lazy" />
                       <div className="min-w-0">
@@ -1037,38 +1045,40 @@ function AdminListingsPage({ listings = [] }) {
                         <p className="mt-1 text-xs text-ink-600">{item.district} · {item.size} m² · {formatSek(item.priceMonthly)}/mån</p>
                       </div>
                     </div>
-                  </td>
-                  <td className="px-4 py-3.5 align-top">
+                  </TableCell>
+                  <TableCell className="px-4 py-3.5 align-top">
                     <span className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-semibold ${statusClass(item.status)}`}>{item.status}</span>
-                  </td>
-                  <td className="px-4 py-3.5 text-right font-semibold text-ink-800">{item.views.toLocaleString("sv-SE")}</td>
-                  <td className="px-4 py-3.5 text-right font-semibold text-ink-800">{item.inquiries}</td>
-                  <td className="px-4 py-3.5 text-xs text-ink-700">
+                  </TableCell>
+                  <TableCell className="px-4 py-3.5 text-right font-semibold text-ink-800">{item.views.toLocaleString("sv-SE")}</TableCell>
+                  <TableCell className="px-4 py-3.5 text-right font-semibold text-ink-800">{item.inquiries}</TableCell>
+                  <TableCell className="px-4 py-3.5 text-xs text-ink-700">
                     <span className="block truncate">{item.responsible}</span>
-                  </td>
-                  <td className="px-4 py-3.5 text-right sm:px-5">
+                  </TableCell>
+                  <TableCell className="px-4 py-3.5 text-right sm:px-5">
                     <div className="flex justify-end gap-1">
-                      <button
+                      <Button
                         type="button"
-                        className="inline-flex h-8 w-8 min-h-0 items-center justify-center rounded-full border border-transparent text-ink-600 hover:border-black/10 hover:bg-[#ffffff]"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 rounded-full text-ink-600 hover:bg-[#ffffff]"
                         title="Förhandsgranska i nytt fönster"
                         onClick={() => previewListing(item.id)}
                       >
                         <ExternalLinkIcon className="h-4 w-4" />
-                      </button>
+                      </Button>
                     </div>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
               {filteredListings.length === 0 ? (
-                <tr className="border-t border-black/10">
-                  <td className="px-4 py-6 text-sm text-ink-500 sm:px-5" colSpan={6}>
+                <TableRow className="border-t border-black/10">
+                  <TableCell className="whitespace-normal px-4 py-6 text-sm text-ink-500 sm:px-5" colSpan={6}>
                     Inga annonser med vald status.
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ) : null}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       </article>
     </div>
@@ -1336,22 +1346,23 @@ function AdminBrokersPage({ app }) {
                       </div>
                     </div>
                     <div className="flex shrink-0 flex-wrap gap-2">
-                      <button
+                      <Button
                         type="button"
-                        className="btn-secondary min-h-0 px-4 py-2 text-sm"
+                        variant="secondary"
+                        className="h-auto px-4 py-2 text-sm"
                         disabled={isBusy}
                         onClick={() => rejectBroker(broker.userId)}
                       >
                         Avslå
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         type="button"
-                        className="btn-primary min-h-0 px-4 py-2 text-sm"
+                        className="h-auto px-4 py-2 text-sm"
                         disabled={isBusy}
                         onClick={() => approveBroker(broker.userId)}
                       >
                         {isBusy ? "Sparar..." : "Godkänn"}
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </article>
@@ -1373,16 +1384,15 @@ function AdminBrokersPage({ app }) {
           </div>
 
           <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_150px]">
-            <input
-              className="field"
+            <Input
               type="email"
               value={inviteEmail}
               onChange={(event) => setInviteEmail(event.target.value)}
               placeholder="kollega@bolag.se"
             />
-            <button
+            <Button
               type="button"
-              className="btn-primary inline-flex w-full items-center justify-center px-4"
+              className="h-auto w-full px-4 py-2"
               onClick={() => {
                 const email = String(inviteEmail || "").trim();
                 if (!email) return;
@@ -1391,7 +1401,7 @@ function AdminBrokersPage({ app }) {
               }}
             >
               + Bjud in
-            </button>
+            </Button>
           </div>
         </article>
 
@@ -1401,9 +1411,9 @@ function AdminBrokersPage({ app }) {
               <h2 className="text-lg font-semibold text-ink-900">Teamaktivitet</h2>
               <p className="mt-1 text-sm text-ink-600">Senaste händelser relaterade till mäklarteamet.</p>
             </div>
-            <button type="button" className="btn-secondary min-h-0 px-4 py-2 text-sm" onClick={() => setActivityOverlayOpen(true)}>
+            <Button type="button" variant="secondary" className="h-auto px-4 py-2 text-sm" onClick={() => setActivityOverlayOpen(true)}>
               Visa all aktivitet
-            </button>
+            </Button>
           </div>
           <ul className="mt-4 space-y-3">
             {activityItems.filter((item) => item.type === "team" || item.type === "inquiry").slice(0, 4).map((item, index, list) => {
@@ -1431,13 +1441,14 @@ function AdminBrokersPage({ app }) {
             <p className="mt-1 text-sm text-ink-600">Verifierade mäklare som kan arbeta för bolaget.</p>
           </div>
           {activeBrokers.length > 0 ? (
-            <button
+            <Button
               type="button"
-              className="btn-secondary min-h-0 px-4 py-2 text-sm"
+              variant="secondary"
+              className="h-auto px-4 py-2 text-sm"
               onClick={() => openBrokerManager()}
             >
               Hantera mäklare
-            </button>
+            </Button>
           ) : null}
         </div>
         <div className="mt-4 overflow-hidden rounded-2xl border border-black/10 bg-[#ffffff]">
@@ -1475,20 +1486,22 @@ function AdminBrokersPage({ app }) {
                       <p className="mt-0.5 text-sm font-medium text-ink-800">{formatJoinedDate(broker.approvedAt || broker.requestedAt)}</p>
                     </div>
                     <div className="flex flex-wrap gap-2 md:justify-end">
-                      <button
+                      <Button
                         type="button"
-                        className="btn-secondary min-h-0 px-3.5 py-2 text-sm"
+                        variant="secondary"
+                        className="h-auto px-3.5 py-2 text-sm"
                         onClick={() => openBrokerManager(broker)}
                       >
                         Redigera
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         type="button"
-                        className="btn-secondary min-h-0 px-3.5 py-2 text-sm"
+                        variant="secondary"
+                        className="h-auto px-3.5 py-2 text-sm"
                         onClick={() => openDeleteBrokerConfirmation(broker)}
                       >
                         Ta bort
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 );
@@ -1506,14 +1519,16 @@ function AdminBrokersPage({ app }) {
                 <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Mäklarteam</p>
                 <h2 className="mt-1 text-xl font-semibold text-ink-900">All teamaktivitet</h2>
               </div>
-              <button
+              <Button
                 type="button"
-                className="close-circle-button inline-flex items-center justify-center border border-black/10 bg-[#ffffff] p-0 leading-none text-ink-700 hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
+                variant="outline"
+                size="icon"
+                className="close-circle-button leading-none text-ink-700 hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
                 aria-label="Stäng"
                 onClick={() => setActivityOverlayOpen(false)}
               >
                 <XIcon className="h-4 w-4" />
-              </button>
+              </Button>
             </div>
             <div className="max-h-[68vh] overflow-y-auto p-5">
               <ul className="space-y-4">
@@ -1547,9 +1562,11 @@ function AdminBrokersPage({ app }) {
                   Detta tar bort <span className="font-semibold text-[#0b0a0e]">{deleteBrokerCandidate.name || deleteBrokerCandidate.email}</span> från bolagets mäklarteam. Mäklaren kan inte längre arbeta för bolaget.
                 </p>
               </div>
-              <button
+              <Button
                 type="button"
-                className="close-circle-button inline-flex items-center justify-center border border-black/10 bg-[#ffffff] p-0 leading-none text-ink-700 hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
+                variant="outline"
+                size="icon"
+                className="close-circle-button leading-none text-ink-700 hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
                 aria-label="Stäng"
                 onClick={() => {
                   setDeleteBrokerCandidate(null);
@@ -1557,31 +1574,32 @@ function AdminBrokersPage({ app }) {
                 }}
               >
                 <XIcon className="h-4 w-4" />
-              </button>
+              </Button>
             </div>
             <label className="mt-5 block">
               <span className="text-xs font-semibold uppercase tracking-wide text-ink-500">Skriv mäklarens namn för att bekräfta</span>
-              <input
-                className="field mt-1.5"
+              <Input
+                className="mt-1.5"
                 value={deleteBrokerConfirmName}
                 onChange={(event) => setDeleteBrokerConfirmName(event.target.value)}
                 placeholder={deleteBrokerCandidate.name || deleteBrokerCandidate.email}
               />
             </label>
             <div className="mt-5 flex justify-end gap-2">
-              <button
+              <Button
                 type="button"
-                className="btn-secondary min-h-0 px-4 py-2 text-sm"
+                variant="secondary"
+                className="h-auto px-4 py-2 text-sm"
                 onClick={() => {
                   setDeleteBrokerCandidate(null);
                   setDeleteBrokerConfirmName("");
                 }}
               >
                 Avbryt
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
-                className="btn-primary min-h-0 px-4 py-2 text-sm disabled:cursor-not-allowed disabled:border-black/10 disabled:bg-[#e5e7eb] disabled:text-ink-500"
+                className="h-auto px-4 py-2 text-sm disabled:cursor-not-allowed disabled:border-black/10 disabled:bg-[#e5e7eb] disabled:text-ink-500"
                 disabled={
                   deleteBrokerConfirmName.trim() !== String(deleteBrokerCandidate.name || deleteBrokerCandidate.email || "").trim()
                   || removingBrokerId === deleteBrokerCandidate.userId
@@ -1589,7 +1607,7 @@ function AdminBrokersPage({ app }) {
                 onClick={() => removeBroker(deleteBrokerCandidate)}
               >
                 {removingBrokerId === deleteBrokerCandidate.userId ? "Tar bort..." : "Ta bort"}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -1603,14 +1621,16 @@ function AdminBrokersPage({ app }) {
                 <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Mäklarteam</p>
                 <h2 className="mt-1 text-xl font-semibold text-ink-900">Hantera mäklare</h2>
               </div>
-              <button
+              <Button
                 type="button"
-                className="close-circle-button inline-flex items-center justify-center border border-black/10 bg-[#ffffff] p-0 leading-none text-ink-700 hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
+                variant="outline"
+                size="icon"
+                className="close-circle-button leading-none text-ink-700 hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
                 aria-label="Stäng"
                 onClick={() => setBrokerManagerOpen(false)}
               >
                 <XIcon className="h-4 w-4" />
-              </button>
+              </Button>
             </div>
 
             <div className="grid max-h-[72vh] min-h-[420px] overflow-hidden md:grid-cols-[280px_1fr]">
@@ -1626,10 +1646,11 @@ function AdminBrokersPage({ app }) {
                       .toUpperCase();
                     const selected = broker.userId === selectedBroker?.userId;
                     return (
-                      <button
+                      <Button
                         key={broker.userId}
                         type="button"
-                        className={`menu-hover-row flex w-full items-center gap-3 px-3 py-2.5 text-left ${selected ? "bg-[#eef2f8]" : "bg-transparent"}`}
+                        variant="ghost"
+                        className={`menu-hover-row h-auto w-full justify-start gap-3 px-3 py-2.5 text-left font-normal ${selected ? "bg-[#eef2f8] hover:bg-[#eef2f8]" : "bg-transparent"}`}
                         onClick={() => selectBrokerForEdit(broker)}
                       >
                         <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#0b0a0e] text-xs font-semibold text-white">
@@ -1639,7 +1660,7 @@ function AdminBrokersPage({ app }) {
                           <span className="block truncate text-sm font-semibold text-ink-900">{broker.name || broker.email}</span>
                           <span className="block truncate text-xs text-ink-600">{broker.email}</span>
                         </span>
-                      </button>
+                      </Button>
                     );
                   })}
                 </div>
@@ -1656,16 +1677,16 @@ function AdminBrokersPage({ app }) {
                     <div className="grid gap-4 sm:grid-cols-2">
                       <label className="block">
                         <span className="text-xs font-semibold uppercase tracking-wide text-ink-500">Namn</span>
-                        <input
-                          className="field mt-1.5"
+                        <Input
+                          className="mt-1.5"
                           value={brokerDraft.name}
                           onChange={(event) => setBrokerDraft((current) => ({ ...current, name: event.target.value }))}
                         />
                       </label>
                       <label className="block">
                         <span className="text-xs font-semibold uppercase tracking-wide text-ink-500">Telefon</span>
-                        <input
-                          className="field mt-1.5"
+                        <Input
+                          className="mt-1.5"
                           value={brokerDraft.phone}
                           onChange={(event) => setBrokerDraft((current) => ({ ...current, phone: event.target.value }))}
                           placeholder="Telefonnummer"
@@ -1673,8 +1694,8 @@ function AdminBrokersPage({ app }) {
                       </label>
                       <label className="block">
                         <span className="text-xs font-semibold uppercase tracking-wide text-ink-500">Mäklarnummer (FMI)</span>
-                        <input
-                          className="field mt-1.5"
+                        <Input
+                          className="mt-1.5"
                           value={brokerDraft.fmiNumber}
                           onChange={(event) => setBrokerDraft((current) => ({ ...current, fmiNumber: event.target.value }))}
                           placeholder="Ex. 2024001234"
@@ -1682,22 +1703,22 @@ function AdminBrokersPage({ app }) {
                       </label>
                       <label className="block">
                         <span className="text-xs font-semibold uppercase tracking-wide text-ink-500">E-post</span>
-                        <input className="field mt-1.5 bg-[#f7f7f7] text-ink-600" value={selectedBroker.email || ""} disabled />
+                        <Input className="mt-1.5 bg-[#f7f7f7] text-ink-600" value={selectedBroker.email || ""} disabled />
                       </label>
                     </div>
 
                     <div className="flex flex-col gap-3 border-t border-black/10 pt-5 sm:flex-row sm:items-center sm:justify-end">
                       <div className="flex gap-2 sm:justify-end">
-                        <button type="button" className="btn-secondary min-h-0 px-4 py-2 text-sm" onClick={() => setBrokerManagerOpen(false)}>
+                        <Button type="button" variant="secondary" className="h-auto px-4 py-2 text-sm" onClick={() => setBrokerManagerOpen(false)}>
                           Avbryt
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           type="submit"
-                          className="btn-primary min-h-0 px-4 py-2 text-sm"
+                          className="h-auto px-4 py-2 text-sm"
                           disabled={savingBrokerId === selectedBroker.userId}
                         >
                           {savingBrokerId === selectedBroker.userId ? "Sparar..." : "Spara ändringar"}
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -1874,8 +1895,8 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
               <div className="mt-3">
                 <label className="relative block">
                   <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
-                  <input
-                    className="field !rounded-2xl !bg-[#ffffff] pl-9"
+                  <Input
+                    className="!rounded-2xl !bg-[#ffffff] pl-9"
                     placeholder="Sök namn, bolag eller annons"
                     value={searchQuery}
                     onChange={(event) => setSearchQuery(event.target.value)}
@@ -1886,14 +1907,15 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                 {filterTabs.map((tab) => {
                   const active = filter === tab.key;
                   return (
-                    <button
+                    <Button
                       key={tab.key}
                       type="button"
+                      variant="outline"
                       onClick={() => setFilter(tab.key)}
-                      className={`inline-flex min-h-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold transition ${
+                      className={`h-auto gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold ${
                         active
-                          ? "bg-[#0b0a0e] text-white"
-                          : "border border-black/10 bg-[#ffffff] text-ink-700 hover:border-[#bfd0e3]"
+                          ? "border-transparent bg-[#0b0a0e] text-white hover:bg-[#0b0a0e] hover:text-white"
+                          : "border-black/10 text-ink-700 hover:border-[#bfd0e3]"
                       }`}
                     >
                       {tab.label}
@@ -1902,7 +1924,7 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                       }`}>
                         {tab.count}
                       </span>
-                    </button>
+                    </Button>
                   );
                 })}
               </div>
@@ -2059,15 +2081,16 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                   <div className="mx-auto max-w-3xl">
                     <div className="mb-3 flex flex-wrap gap-2">
                       {quickPromptChips.map((prompt) => (
-                        <button
+                        <Button
                           key={prompt.id}
                           type="button"
+                          variant="outline"
                           onClick={() => applySuggestedPrompt(prompt.text)}
-                          className="inline-flex min-h-0 items-center gap-2 rounded-full border border-[#cbd8e6] bg-[#f4f7fb] px-3 py-2 text-xs font-semibold text-[#0b0a0e] transition hover:bg-[#eaf1f8]"
+                          className="h-auto gap-2 rounded-full border-[#cbd8e6] bg-[#f4f7fb] px-3 py-2 text-xs font-semibold text-[#0b0a0e] hover:bg-[#eaf1f8]"
                         >
                           <SparklesIcon className="h-3.5 w-3.5" />
                           {prompt.label}
-                        </button>
+                        </Button>
                       ))}
                     </div>
                     <div className="rounded-[28px] border border-black/10 bg-[#fbfbfa] p-2">
@@ -2078,9 +2101,9 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                           value={draftValue}
                           onChange={(event) => setDraftValue(activeInquiry.id, event.target.value)}
                         />
-                        <button type="button" className="btn-primary min-h-0 rounded-[20px] px-4 py-3 text-sm" onClick={sendReply}>
+                        <Button type="button" className="h-auto rounded-[20px] px-4 py-3 text-sm" onClick={sendReply}>
                           Skicka svar
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -2142,11 +2165,12 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                   <p className="mt-1 text-xs leading-relaxed text-ink-600">Direkt baserat på senaste hyresgästmeddelandet.</p>
                   <div className="mt-3 space-y-2.5">
                     {suggestedPrompts.map((prompt) => (
-                      <button
+                      <Button
                         key={prompt.id}
                         type="button"
+                        variant="outline"
                         onClick={() => applySuggestedPrompt(prompt.text)}
-                        className="w-full rounded-3xl border border-black/10 bg-[#fbfbfa] p-3 text-left transition hover:border-[#bfd0e3] hover:bg-[#ffffff]"
+                        className="h-auto block w-full rounded-3xl border-black/10 bg-[#fbfbfa] p-3 text-left font-normal hover:border-[#bfd0e3] hover:bg-[#ffffff]"
                       >
                         <div className="flex items-center justify-between gap-2">
                           <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
@@ -2157,7 +2181,7 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                           <span className="text-[11px] font-semibold text-ink-400">{prompt.label}</span>
                         </div>
                         <p className="mt-2 text-sm leading-relaxed text-ink-800">{prompt.text}</p>
-                      </button>
+                      </Button>
                     ))}
                   </div>
                 </article>
@@ -2372,10 +2396,10 @@ function AdminStatistics({ app }) {
               <h1 className="mt-1 text-2xl font-semibold text-ink-900">Statistik</h1>
               <p className="mt-1 text-sm text-ink-600">Översikt över trender, prestation och fördelning i portföljen.</p>
             </div>
-            <button type="button" className="btn-secondary inline-flex items-center gap-1.5 px-4" onClick={() => setCustomizeOpen(true)}>
+            <Button type="button" variant="secondary" className="h-auto gap-1.5 px-4 py-2" onClick={() => setCustomizeOpen(true)}>
               <FilterIcon className="h-4 w-4" />
               Anpassa
-            </button>
+            </Button>
           </div>
         </header>
 
@@ -2564,9 +2588,9 @@ function AdminStatistics({ app }) {
                   <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Anpassa statistik</p>
                   <h3 className="mt-1 text-xl font-semibold text-ink-900">Välj vilka nyckeltal som ska visas</h3>
                 </div>
-                <button type="button" className="close-circle-button inline-flex items-center justify-center rounded-full border border-black/15 bg-[#ffffff] text-xl leading-none text-ink-700" onClick={closeCustomize}>
+                <Button type="button" variant="outline" size="icon" className="close-circle-button text-xl leading-none text-ink-700" onClick={closeCustomize}>
                   ×
-                </button>
+                </Button>
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
@@ -2585,10 +2609,9 @@ function AdminStatistics({ app }) {
                       { key: "segment", label: "Trend per lokaltyp" }
                     ].map((item) => (
                       <label key={item.key} className="flex items-center gap-2 text-ink-700">
-                        <input
-                          type="checkbox"
+                        <Checkbox
                           checked={Boolean(visibleModules[item.key])}
-                          onChange={(event) => setVisibleModules((prev) => ({ ...prev, [item.key]: event.target.checked }))}
+                          onCheckedChange={(checked) => setVisibleModules((prev) => ({ ...prev, [item.key]: Boolean(checked) }))}
                         />
                         <span>{item.label}</span>
                       </label>
@@ -2601,10 +2624,9 @@ function AdminStatistics({ app }) {
                   <div className="mt-3 max-h-[280px] space-y-2 overflow-y-auto pr-1 text-sm">
                     {extendedStatCards.map((item) => (
                       <label key={item.id} className="flex items-center gap-2 text-ink-700">
-                        <input
-                          type="checkbox"
+                        <Checkbox
                           checked={visibleExtendedCards[item.id] !== false}
-                          onChange={(event) => setVisibleExtendedCards((prev) => ({ ...prev, [item.id]: event.target.checked }))}
+                          onCheckedChange={(checked) => setVisibleExtendedCards((prev) => ({ ...prev, [item.id]: Boolean(checked) }))}
                         />
                         <span>{item.label}</span>
                       </label>
@@ -2614,7 +2636,7 @@ function AdminStatistics({ app }) {
               </div>
 
               <div className="mt-4 flex justify-end gap-2">
-                <button type="button" className="btn-primary px-4" onClick={closeCustomize}>Spara</button>
+                <Button type="button" className="h-auto px-4 py-2" onClick={closeCustomize}>Spara</Button>
               </div>
             </div>
           </div>
@@ -2671,21 +2693,22 @@ function AdminLeadMatchesPage({ app }) {
             <p className="mt-1 text-sm text-ink-600">Hyresgäster som matchar era lokaler — inkommande och föreslagna</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <button
+            <Button
               type="button"
-              className="btn-secondary px-4"
+              variant="secondary"
+              className="h-auto px-4 py-2"
               onClick={() => app?.pushToast?.("Ingen data att exportera.", "info")}
             >
               <DownloadIcon className="mr-1.5 h-4 w-4" />
               Exportera
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
-              className="btn-primary px-4"
+              className="h-auto px-4 py-2"
               onClick={() => app?.pushToast?.("Ingen data att skicka.", "info")}
             >
               + Skicka urval till mäklare
-            </button>
+            </Button>
           </div>
         </div>
       </header>
@@ -2706,27 +2729,27 @@ function AdminLeadMatchesPage({ app }) {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[900px] text-sm">
-            <thead className="bg-[#fafafa] text-[11px] uppercase tracking-wide text-ink-500">
-              <tr>
-                <th className="px-4 py-3 text-left font-semibold sm:px-5">Hyresgäst</th>
-                <th className="px-4 py-3 text-left font-semibold">Lokal</th>
-                <th className="px-4 py-3 text-left font-semibold">Intresse</th>
-                <th className="px-4 py-3 text-right font-semibold">Match</th>
-                <th className="px-4 py-3 text-left font-semibold">Tid</th>
-                <th className="px-4 py-3 text-right font-semibold sm:px-5">Action</th>
-              </tr>
-            </thead>
-            <tbody>
+          <Table className="min-w-[900px]">
+            <TableHeader className="bg-[#fafafa] text-[11px] uppercase tracking-wide text-ink-500">
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="px-4 py-3 sm:px-5">Hyresgäst</TableHead>
+                <TableHead className="px-4 py-3">Lokal</TableHead>
+                <TableHead className="px-4 py-3">Intresse</TableHead>
+                <TableHead className="px-4 py-3 text-right">Match</TableHead>
+                <TableHead className="px-4 py-3">Tid</TableHead>
+                <TableHead className="px-4 py-3 text-right sm:px-5">Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {leadRows.map((lead) => (
-                <tr
+                <TableRow
                   key={lead.id}
                   className={`cursor-pointer border-t border-black/10 transition hover:bg-[#fafafa] ${
                     lead.isUnread ? "shadow-[inset_3px_0_0_#0b0a0e]" : ""
                   }`}
                   onClick={() => openLeadConversation(app, lead)}
                 >
-                  <td className="px-4 py-3.5 align-top sm:px-5">
+                  <TableCell className="whitespace-normal px-4 py-3.5 align-top sm:px-5">
                     <div className="flex items-center gap-3">
                       <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#0b0a0e] text-sm font-semibold text-white">
                         {lead.renter.initials}
@@ -2736,22 +2759,23 @@ function AdminLeadMatchesPage({ app }) {
                         <span className="block truncate text-xs text-ink-600">{lead.renter.company}</span>
                       </span>
                     </div>
-                  </td>
-                  <td className="px-4 py-3.5 align-top font-semibold text-ink-800">{lead.listing.title}</td>
-                  <td className="px-4 py-3.5 align-top">
+                  </TableCell>
+                  <TableCell className="px-4 py-3.5 align-top font-semibold text-ink-800">{lead.listing.title}</TableCell>
+                  <TableCell className="whitespace-normal px-4 py-3.5 align-top">
                     <span className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-semibold ${interestClass(lead.interest)}`}>
                       {lead.interest}
                     </span>
-                  </td>
-                  <td className={`px-4 py-3.5 text-right font-semibold ${matchScoreClass(lead.score)}`}>
+                  </TableCell>
+                  <TableCell className={`px-4 py-3.5 text-right font-semibold ${matchScoreClass(lead.score)}`}>
                     {lead.score}%
-                  </td>
-                  <td className="px-4 py-3.5 align-top text-xs font-semibold text-ink-500">{lead.time}</td>
-                  <td className="px-4 py-3.5 text-right sm:px-5">
+                  </TableCell>
+                  <TableCell className="px-4 py-3.5 align-top text-xs font-semibold text-ink-500">{lead.time}</TableCell>
+                  <TableCell className="whitespace-normal px-4 py-3.5 text-right sm:px-5">
                     <div className="flex justify-end gap-2">
-                      <button
+                      <Button
                         type="button"
-                        className="btn-secondary inline-flex min-h-0 w-auto items-center gap-1.5 px-3 py-2 text-xs"
+                        variant="secondary"
+                        className="h-auto w-auto gap-1.5 px-3 py-2 text-xs"
                         onClick={(event) => {
                           event.stopPropagation();
                           sendToBroker(app, lead.renter, lead.listing);
@@ -2759,28 +2783,30 @@ function AdminLeadMatchesPage({ app }) {
                       >
                         <SendHorizontalIcon className="h-3.5 w-3.5" />
                         Skicka till mäklare
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         type="button"
-                        className="inline-flex h-8 w-8 min-h-0 items-center justify-center rounded-full border border-transparent text-ink-600 hover:border-black/10 hover:bg-[#ffffff]"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 rounded-full text-ink-600 hover:bg-[#ffffff]"
                         onClick={(event) => event.stopPropagation()}
                       >
                         <MoreHorizontalIcon className="h-4 w-4" />
-                      </button>
+                      </Button>
                     </div>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
               {leadRows.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="border-t border-black/10 px-4 py-10 text-center sm:px-5">
+                <TableRow>
+                  <TableCell colSpan={6} className="whitespace-normal border-t border-black/10 px-4 py-10 text-center sm:px-5">
                     <p className="font-semibold text-ink-900">Inga aktiva leads just nu</p>
                     <p className="mt-1 text-sm text-ink-500">Leads visas här när hyresgäster interagerar med era annonser</p>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ) : null}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       </section>
 
@@ -2801,48 +2827,47 @@ function AdminLeadMatchesPage({ app }) {
             </div>
             <p className="mt-1 text-sm text-ink-600">Hyresgäster vars sökprofil matchar era lokaler — de har inte kontaktat er än</p>
           </div>
-          <label className="relative inline-flex min-w-[190px] items-center">
-            <span className="sr-only">Sortera matchningar</span>
-            <select
-              className="field min-h-0 w-full appearance-none rounded-full border-black/10 bg-[#ffffff] py-2 pl-4 pr-10 text-sm font-semibold text-ink-800"
-              value={sortMode}
-              onChange={(event) => setSortMode(event.target.value)}
-            >
+          <Select value={sortMode} onValueChange={setSortMode}>
+            <SelectTrigger className="min-w-[190px] rounded-full text-sm font-semibold text-ink-800" aria-label="Sortera matchningar">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
               {sortTabs.map((tab) => (
-                <option key={tab.key} value={tab.key}>{tab.label}</option>
+                <SelectItem key={tab.key} value={tab.key}>{tab.label}</SelectItem>
               ))}
-            </select>
-            <ChevronRightIcon className="pointer-events-none absolute right-3 h-4 w-4 rotate-90 text-ink-500" />
-          </label>
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="mb-4 flex flex-wrap gap-2">
-          <button
+          <Button
             type="button"
-            className={`inline-flex min-h-0 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+            variant="outline"
+            className={`h-auto rounded-full px-3 py-1.5 text-xs font-semibold ${
               listingFilter === "all"
-                ? "bg-[#0b0a0e] text-white"
-                : "border border-black/10 bg-[#ffffff] text-ink-700 hover:border-[#bfd0e3]"
+                ? "border-transparent bg-[#0b0a0e] text-white hover:bg-[#0b0a0e] hover:text-white"
+                : "border-black/10 text-ink-700 hover:border-[#bfd0e3]"
             }`}
             onClick={() => setListingFilter("all")}
           >
             Alla lokaler
-          </button>
+          </Button>
           {activeListingOptions.map((listing) => {
             const active = listingFilter === listing.id;
             return (
-              <button
+              <Button
                 key={listing.id}
                 type="button"
-                className={`inline-flex min-h-0 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                variant="outline"
+                className={`h-auto rounded-full px-3 py-1.5 text-xs font-semibold ${
                   active
-                    ? "bg-[#0b0a0e] text-white"
-                    : "border border-black/10 bg-[#ffffff] text-ink-700 hover:border-[#bfd0e3]"
+                    ? "border-transparent bg-[#0b0a0e] text-white hover:bg-[#0b0a0e] hover:text-white"
+                    : "border-black/10 text-ink-700 hover:border-[#bfd0e3]"
                 }`}
                 onClick={() => setListingFilter(listing.id)}
               >
                 {listing.title}
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -2863,13 +2888,15 @@ function AdminLeadMatchesPage({ app }) {
                         <span className="block truncate text-xs text-ink-600">{renter.company}</span>
                       </span>
                     </div>
-                    <button
+                    <Button
                       type="button"
-                      className="inline-flex h-8 w-8 min-h-0 items-center justify-center rounded-full border border-transparent text-ink-600 hover:border-black/10 hover:bg-[#ffffff]"
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 rounded-full text-ink-600 hover:bg-[#ffffff]"
                       onClick={() => app?.pushToast?.(`${renter.name} flaggad för senare.`, "success")}
                     >
                       <StarIcon className="h-4 w-4" />
-                    </button>
+                    </Button>
                   </div>
 
                   <div className="mt-4 flex items-end justify-between gap-3 border-t border-black/10 pt-3">
@@ -2898,14 +2925,15 @@ function AdminLeadMatchesPage({ app }) {
                   </div>
 
                   <p className="mt-3 text-xs text-ink-500">Önskad inflytt: {moveInLabelForRenter(renter)}</p>
-                  <button
+                  <Button
                     type="button"
-                    className="btn-secondary mt-4 inline-flex w-full min-h-0 items-center gap-1.5 py-2 text-xs"
+                    variant="secondary"
+                    className="h-auto mt-4 w-full gap-1.5 py-2 text-xs"
                     onClick={() => sendToBroker(app, renter, matchedListing)}
                   >
                     <SendHorizontalIcon className="h-3.5 w-3.5" />
                     Skicka till mäklare
-                  </button>
+                  </Button>
                 </article>
               );
             })}
@@ -2962,10 +2990,10 @@ function EmptyCompanyAdminPage({ app, sectionKey }) {
             <h1 className="mt-1 text-2xl font-semibold text-ink-900">{companyName}</h1>
             <p className="mt-1 text-sm text-ink-600">{title}</p>
           </div>
-          <button type="button" className="btn-secondary px-4" onClick={() => navigateTo("/app/admin/adminprofil")}>
+          <Button type="button" variant="secondary" className="h-auto px-4 py-2" onClick={() => navigateTo("/app/admin/adminprofil")}>
             <PencilIcon className="mr-1.5 h-4 w-4" />
             Hantera adminprofil
-          </button>
+          </Button>
         </div>
       </header>
 
@@ -3007,24 +3035,25 @@ function AdminOverview({ app }) {
                 <h1 className="mt-1 text-2xl font-semibold text-ink-900">{greeting}, {app?.user?.name?.split(" ")[0] || "Samuel"}.</h1>
                 <p className="mt-1 text-sm text-ink-600">Här är vad som händer med er portfölj idag, {dateLabel}.</p>
               </div>
-              <button type="button" className="btn-secondary shrink-0 px-4" onClick={() => navigateTo("/app/admin/adminprofil")}>
+              <Button type="button" variant="secondary" className="h-auto shrink-0 px-4 py-2" onClick={() => navigateTo("/app/admin/adminprofil")}>
                 <PencilIcon className="mr-1.5 h-4 w-4" />
                 Hantera adminprofil
-              </button>
+              </Button>
             </div>
             <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Snabblänkar</p>
             <div className="flex flex-wrap items-center gap-2 -mt-2">
-              <button type="button" className="btn-secondary inline-flex w-fit min-h-0 justify-start px-3 py-2 text-sm" onClick={() => navigateTo("/app/admin/maklare")}>
+              <Button type="button" variant="secondary" className="h-auto w-fit justify-start px-3 py-2 text-sm" onClick={() => navigateTo("/app/admin/maklare")}>
                 <UsersGroupIcon className="mr-2 h-4 w-4" />
                 Bjud in mäklare
-              </button>
-              <button type="button" className="btn-secondary inline-flex w-fit min-h-0 justify-start px-3 py-2 text-sm" onClick={() => navigateTo("/app/admin/annonser")}>
+              </Button>
+              <Button type="button" variant="secondary" className="h-auto w-fit justify-start px-3 py-2 text-sm" onClick={() => navigateTo("/app/admin/annonser")}>
                 <PlusIcon className="mr-2 h-4 w-4" />
                 Publicera annons
-              </button>
-            <button
+              </Button>
+            <Button
               type="button"
-              className="btn-secondary inline-flex w-fit min-h-0 justify-start px-3 py-2 text-sm"
+              variant="secondary"
+              className="h-auto w-fit justify-start px-3 py-2 text-sm"
               onClick={() => {
                 navigateTo("/app/rent");
                 void app?.switchRole?.("broker");
@@ -3032,7 +3061,7 @@ function AdminOverview({ app }) {
             >
               <SwitchHorizontalIcon className="mr-2 h-4 w-4" />
               Växla till sökläge
-            </button>
+            </Button>
             </div>
           </div>
         </header>
@@ -3041,10 +3070,10 @@ function AdminOverview({ app }) {
 
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-lg font-semibold text-ink-900">Statistik</h2>
-        <button type="button" className="btn-secondary px-4" onClick={() => navigateTo("/app/admin/statistik")}>
+        <Button type="button" variant="secondary" className="h-auto px-4 py-2" onClick={() => navigateTo("/app/admin/statistik")}>
           <BarChart3Icon className="mr-1.5 h-4 w-4" />
           Se all statistik
-        </button>
+        </Button>
       </div>
 
       <KpiCardsSection showMatchLink cards={adminStats.cards} sparklineSeries={adminStats.sparklineSeries} />
@@ -3071,31 +3100,31 @@ function AdminOverview({ app }) {
                 <p className="mt-1 text-sm text-ink-600">Övervaka era pågående annonseringar</p>
               </div>
               <div className="flex items-center gap-2">
-                <button type="button" className="inline-flex h-9 w-9 min-h-0 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] text-ink-700">
+                <Button type="button" variant="outline" size="icon" className="h-9 w-9 rounded-full text-ink-700">
                   <FilterIcon className="h-4 w-4" />
-                </button>
-                <button type="button" className="inline-flex h-9 w-9 min-h-0 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] text-ink-700">
+                </Button>
+                <Button type="button" variant="outline" size="icon" className="h-9 w-9 rounded-full text-ink-700">
                   <SearchIcon className="h-4 w-4" />
-                </button>
+                </Button>
               </div>
             </div>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[760px] text-sm">
-              <thead className="bg-[#fafafa] text-[11px] uppercase tracking-wide text-ink-500">
-                <tr>
-                  <th className="px-4 py-3 text-left font-semibold sm:px-5">Annons</th>
-                  <th className="px-4 py-3 text-left font-semibold">Status</th>
-                  <th className="px-4 py-3 text-right font-semibold">Visningar</th>
-                  <th className="px-4 py-3 text-right font-semibold">Förfr.</th>
-                  <th className="px-4 py-3 text-right font-semibold sm:px-5" />
-                </tr>
-              </thead>
-              <tbody>
+            <Table className="min-w-[760px]">
+              <TableHeader className="bg-[#fafafa] text-[11px] uppercase tracking-wide text-ink-500">
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="px-4 py-3 sm:px-5">Annons</TableHead>
+                  <TableHead className="px-4 py-3">Status</TableHead>
+                  <TableHead className="px-4 py-3 text-right">Visningar</TableHead>
+                  <TableHead className="px-4 py-3 text-right">Förfr.</TableHead>
+                  <TableHead className="px-4 py-3 text-right sm:px-5" />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {companyListings.map((item) => (
-                  <tr key={item.id} className="border-t border-black/10">
-                    <td className="px-4 py-3.5 align-top sm:px-5">
+                  <TableRow key={item.id} className="border-t border-black/10">
+                    <TableCell className="whitespace-normal px-4 py-3.5 align-top sm:px-5">
                       <div className="flex items-center gap-3">
                         <img
                           src={item.image}
@@ -3110,37 +3139,37 @@ function AdminOverview({ app }) {
                           </p>
                         </div>
                       </div>
-                    </td>
-                    <td className="px-4 py-3.5 align-top">
+                    </TableCell>
+                    <TableCell className="px-4 py-3.5 align-top">
                       <span className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-semibold ${statusClass(item.status)}`}>
                         {item.status}
                       </span>
-                    </td>
-                    <td className="px-4 py-3.5 text-right font-semibold text-ink-800">{item.views.toLocaleString("sv-SE")}</td>
-                    <td className="px-4 py-3.5 text-right font-semibold text-ink-800">{item.inquiries}</td>
-                    <td className="px-4 py-3.5 text-right sm:px-5">
-                      <button type="button" className="inline-flex h-8 w-8 min-h-0 items-center justify-center rounded-full border border-transparent text-ink-600 hover:border-black/10 hover:bg-[#ffffff]">
+                    </TableCell>
+                    <TableCell className="px-4 py-3.5 text-right font-semibold text-ink-800">{item.views.toLocaleString("sv-SE")}</TableCell>
+                    <TableCell className="px-4 py-3.5 text-right font-semibold text-ink-800">{item.inquiries}</TableCell>
+                    <TableCell className="px-4 py-3.5 text-right sm:px-5">
+                      <Button type="button" variant="ghost" size="icon" className="h-8 w-8 rounded-full text-ink-600 hover:bg-[#ffffff]">
                         <MoreHorizontalIcon className="h-4 w-4" />
-                      </button>
-                    </td>
-                  </tr>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
                 ))}
                 {companyListings.length === 0 ? (
-                  <tr className="border-t border-black/10">
-                    <td className="px-4 py-8 text-center text-sm font-semibold text-ink-500 sm:px-5" colSpan={5}>
+                  <TableRow className="border-t border-black/10">
+                    <TableCell className="px-4 py-8 text-center text-sm font-semibold text-ink-500 sm:px-5" colSpan={5}>
                       Ingen data
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ) : null}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
 
           <div className="flex items-center justify-between border-t border-black/10 px-4 py-3 text-xs text-ink-500 sm:px-5">
             <span>Visar {companyListings.length} annonser</span>
-            <button type="button" className="min-h-0 p-0 text-xs font-semibold text-[#0b0a0e]" onClick={() => navigateTo("/app/admin/annonser")}>
+            <Button type="button" variant="link" className="h-auto p-0 text-xs font-semibold text-[#0b0a0e]" onClick={() => navigateTo("/app/admin/annonser")}>
               Visa alla
-            </button>
+            </Button>
           </div>
         </article>
 
@@ -3168,9 +3197,9 @@ function AdminOverview({ app }) {
               </li>
             ) : null}
           </ul>
-          <button type="button" className="btn-secondary mt-4 w-full min-h-0 py-2 text-xs" onClick={() => navigateTo("/app/admin/aktivitet")}>
+          <Button type="button" variant="secondary" className="h-auto mt-4 w-full py-2 text-xs" onClick={() => navigateTo("/app/admin/aktivitet")}>
             Se all aktivitet
-          </button>
+          </Button>
         </article>
       </section>
 
@@ -3263,25 +3292,29 @@ function AdminProfile({ app }) {
       <div className="grid gap-5 lg:grid-cols-2">
         <label className="space-y-1.5 text-sm">
           <span className="text-xs font-semibold uppercase tracking-wide text-ink-500">Organisationsnummer</span>
-          <input className="field" value={draft.organizationNumber} onChange={(event) => setDraft((prev) => ({ ...prev, organizationNumber: event.target.value }))} />
+          <Input value={draft.organizationNumber} onChange={(event) => setDraft((prev) => ({ ...prev, organizationNumber: event.target.value }))} />
         </label>
         <label className="space-y-1.5 text-sm">
           <span className="text-xs font-semibold uppercase tracking-wide text-ink-500">Bolagsnamn</span>
-          <input className="field" value={draft.legalEntity} onChange={(event) => setDraft((prev) => ({ ...prev, legalEntity: event.target.value }))} />
+          <Input value={draft.legalEntity} onChange={(event) => setDraft((prev) => ({ ...prev, legalEntity: event.target.value }))} />
         </label>
         <label className="space-y-1.5 text-sm">
           <span className="text-xs font-semibold uppercase tracking-wide text-ink-500">Bolagstyp</span>
-          <select className="field" value={draft.companyType} onChange={(event) => setDraft((prev) => ({ ...prev, companyType: event.target.value }))}>
-            <option value="">Välj bolagstyp</option>
-            {COMPANY_TYPE_OPTIONS.map((option) => <option key={option} value={option}>{option}</option>)}
-          </select>
+          <Select value={draft.companyType} onValueChange={(value) => setDraft((prev) => ({ ...prev, companyType: value }))}>
+            <SelectTrigger className="w-full"><SelectValue placeholder="Välj bolagstyp" /></SelectTrigger>
+            <SelectContent>
+              {COMPANY_TYPE_OPTIONS.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </label>
         <label className="space-y-1.5 text-sm">
           <span className="text-xs font-semibold uppercase tracking-wide text-ink-500">Portföljstorlek</span>
-          <select className="field" value={draft.portfolioSize} onChange={(event) => setDraft((prev) => ({ ...prev, portfolioSize: event.target.value }))}>
-            <option value="">Välj portföljstorlek</option>
-            {PORTFOLIO_SIZE_OPTIONS.map((option) => <option key={option} value={option}>{option}</option>)}
-          </select>
+          <Select value={draft.portfolioSize} onValueChange={(value) => setDraft((prev) => ({ ...prev, portfolioSize: value }))}>
+            <SelectTrigger className="w-full"><SelectValue placeholder="Välj portföljstorlek" /></SelectTrigger>
+            <SelectContent>
+              {PORTFOLIO_SIZE_OPTIONS.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </label>
         <div className="grid gap-1.5 text-sm lg:col-span-2">
           <span className="text-sm font-semibold text-ink-700">Logotyp</span>
@@ -3309,19 +3342,19 @@ function AdminProfile({ app }) {
         </div>
         <label className="space-y-1.5 text-sm lg:col-span-2">
           <span className="text-xs font-semibold uppercase tracking-wide text-ink-500">Bolagsbeskrivning</span>
-          <textarea className="field min-h-[112px]" value={draft.companyDescription} onChange={(event) => setDraft((prev) => ({ ...prev, companyDescription: event.target.value }))} />
+          <Textarea className="min-h-[112px]" value={draft.companyDescription} onChange={(event) => setDraft((prev) => ({ ...prev, companyDescription: event.target.value }))} />
         </label>
         <label className="space-y-1.5 text-sm">
           <span className="text-xs font-semibold uppercase tracking-wide text-ink-500">Webbplats</span>
-          <input className="field" value={draft.websiteUrl} onChange={(event) => setDraft((prev) => ({ ...prev, websiteUrl: event.target.value }))} />
+          <Input value={draft.websiteUrl} onChange={(event) => setDraft((prev) => ({ ...prev, websiteUrl: event.target.value }))} />
         </label>
         <label className="space-y-1.5 text-sm">
           <span className="text-xs font-semibold uppercase tracking-wide text-ink-500">Kontaktmejl</span>
-          <input className="field" value={draft.contactEmail} onChange={(event) => setDraft((prev) => ({ ...prev, contactEmail: event.target.value }))} />
+          <Input value={draft.contactEmail} onChange={(event) => setDraft((prev) => ({ ...prev, contactEmail: event.target.value }))} />
         </label>
         <label className="space-y-1.5 text-sm lg:col-span-2">
           <span className="text-xs font-semibold uppercase tracking-wide text-ink-500">Godkänd e-postdomän</span>
-          <input className="field" value={draft.approvedEmailDomain} onChange={(event) => setDraft((prev) => ({ ...prev, approvedEmailDomain: event.target.value }))} />
+          <Input value={draft.approvedEmailDomain} onChange={(event) => setDraft((prev) => ({ ...prev, approvedEmailDomain: event.target.value }))} />
         </label>
       </div>
 
@@ -3330,13 +3363,14 @@ function AdminProfile({ app }) {
           <p className="text-sm font-semibold text-ink-700">Godkännandeflöde</p>
           <div className="mt-3 space-y-3">
             {APPROVAL_FLOW_OPTIONS.map((option) => (
-              <button
+              <Button
                 key={option.key}
                 type="button"
-                className={`flex w-full items-center gap-3 !rounded-2xl border px-4 py-3 text-left transition ${
+                variant="outline"
+                className={`h-auto w-full justify-start gap-3 !rounded-2xl px-4 py-3 text-left font-normal ${
                   draft.approvalFlow === option.key
                     ? "border-[#0b0a0e] bg-[#f8fafc]"
-                    : "border-black/10 bg-[#ffffff] hover:bg-black/5"
+                    : "border-black/10 hover:bg-black/5"
                 }`}
                 onClick={() => setDraft((prev) => ({ ...prev, approvalFlow: option.key }))}
               >
@@ -3347,7 +3381,7 @@ function AdminProfile({ app }) {
                   <span className="block text-[0.92rem] font-semibold leading-tight text-[#0b0a0e]">{option.title}</span>
                   <span className="mt-1 block text-[0.8rem] leading-snug text-ink-600">{option.description}</span>
                 </span>
-              </button>
+              </Button>
             ))}
           </div>
         </div>
@@ -3355,13 +3389,14 @@ function AdminProfile({ app }) {
           <p className="text-sm font-semibold text-ink-700">Annonsmoderering</p>
           <div className="mt-3 space-y-3">
             {LISTING_MODERATION_OPTIONS.map((option) => (
-              <button
+              <Button
                 key={option.key}
                 type="button"
-                className={`flex w-full items-center gap-3 !rounded-2xl border px-4 py-3 text-left transition ${
+                variant="outline"
+                className={`h-auto w-full justify-start gap-3 !rounded-2xl px-4 py-3 text-left font-normal ${
                   draft.listingModeration === option.key
                     ? "border-[#0b0a0e] bg-[#f8fafc]"
-                    : "border-black/10 bg-[#ffffff] hover:bg-black/5"
+                    : "border-black/10 hover:bg-black/5"
                 }`}
                 onClick={() => setDraft((prev) => ({ ...prev, listingModeration: option.key }))}
               >
@@ -3372,16 +3407,16 @@ function AdminProfile({ app }) {
                   <span className="block text-[0.92rem] font-semibold leading-tight text-[#0b0a0e]">{option.title}</span>
                   <span className="mt-1 block text-[0.8rem] leading-snug text-ink-600">{option.description}</span>
                 </span>
-              </button>
+              </Button>
             ))}
           </div>
         </div>
       </div>
 
       <div className="mt-6 flex justify-end">
-        <button type="button" className="btn-primary px-4" disabled={saving} onClick={saveAdminProfile}>
+        <Button type="button" className="h-auto px-4 py-2" disabled={saving} onClick={saveAdminProfile}>
           {saving ? "Sparar..." : "Spara ändringar"}
-        </button>
+        </Button>
       </div>
     </article>
   );
@@ -3450,22 +3485,22 @@ function AdminProspectsPage({ app }) {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px] text-sm">
-            <thead className="bg-[#fafafa] text-[11px] uppercase tracking-wide text-ink-500">
-              <tr>
-                <th className="px-4 py-3 text-left font-semibold sm:px-5">Prospekt</th>
-                <th className="px-4 py-3 text-left font-semibold">Objekt</th>
-                <th className="px-4 py-3 text-left font-semibold">Status</th>
-                <th className="px-4 py-3 text-left font-semibold">Version</th>
-                <th className="px-4 py-3 text-left font-semibold sm:px-5">Uppdaterad</th>
-              </tr>
-            </thead>
-            <tbody>
+          <Table className="min-w-[720px]">
+            <TableHeader className="bg-[#fafafa] text-[11px] uppercase tracking-wide text-ink-500">
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="px-4 py-3 sm:px-5">Prospekt</TableHead>
+                <TableHead className="px-4 py-3">Objekt</TableHead>
+                <TableHead className="px-4 py-3">Status</TableHead>
+                <TableHead className="px-4 py-3">Version</TableHead>
+                <TableHead className="px-4 py-3 sm:px-5">Uppdaterad</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {prospects.map((prospect) => {
                 const listing = listingById.get(String(prospect.listingId));
                 return (
-                  <tr key={prospect.id} className="border-t border-black/10">
-                    <td className="px-4 py-3.5 align-top sm:px-5">
+                  <TableRow key={prospect.id} className="border-t border-black/10">
+                    <TableCell className="whitespace-normal px-4 py-3.5 align-top sm:px-5">
                       <div className="flex items-center gap-3">
                         <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#0b0a0e] text-white">
                           <PdfIcon className="h-4 w-4" />
@@ -3475,35 +3510,35 @@ function AdminProspectsPage({ app }) {
                           <span className="block truncate text-xs text-ink-600">{listing?.title || listing?.address || prospect.listingId}</span>
                         </span>
                       </div>
-                    </td>
-                    <td className="px-4 py-3.5 align-top font-semibold text-ink-800">{listing?.title || "Objekt"}</td>
-                    <td className="px-4 py-3.5 align-top">
+                    </TableCell>
+                    <TableCell className="px-4 py-3.5 align-top font-semibold text-ink-800">{listing?.title || "Objekt"}</TableCell>
+                    <TableCell className="px-4 py-3.5 align-top">
                       <StatusPill status={prospect.status} variant="prospect" />
-                    </td>
-                    <td className="px-4 py-3.5 align-top text-sm font-semibold text-ink-700">
+                    </TableCell>
+                    <TableCell className="px-4 py-3.5 align-top text-sm font-semibold text-ink-700">
                       {prospect.currentVersion ? `v${prospect.currentVersion}` : "Utkast"}
-                    </td>
-                    <td className="px-4 py-3.5 align-top text-xs font-semibold text-ink-500 sm:px-5">{formatDate(prospect.updatedAt)}</td>
-                  </tr>
+                    </TableCell>
+                    <TableCell className="px-4 py-3.5 align-top text-xs font-semibold text-ink-500 sm:px-5">{formatDate(prospect.updatedAt)}</TableCell>
+                  </TableRow>
                 );
               })}
               {!loading && prospects.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="border-t border-black/10 px-4 py-10 text-center sm:px-5">
+                <TableRow>
+                  <TableCell colSpan={5} className="whitespace-normal border-t border-black/10 px-4 py-10 text-center sm:px-5">
                     <p className="font-semibold text-ink-900">Inga prospekt än</p>
                     <p className="mt-1 text-sm text-ink-500">Dina mäklare kan skapa prospekt från sina egna objekt.</p>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ) : null}
               {loading ? (
-                <tr>
-                  <td colSpan={5} className="border-t border-black/10 px-4 py-10 text-center text-sm text-ink-600 sm:px-5">
+                <TableRow>
+                  <TableCell colSpan={5} className="whitespace-normal border-t border-black/10 px-4 py-10 text-center text-sm text-ink-600 sm:px-5">
                     Laddar prospekt...
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ) : null}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       </article>
     </div>
