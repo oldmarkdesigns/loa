@@ -27,6 +27,16 @@ import TypeDistributionDonut from "../../components/charts/type-distribution-don
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
 import { Progress } from "@/components/ui/progress";
 import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction
+} from "@/components/ui/alert-dialog";
+import {
   ArrowUpIcon,
   BarChart3Icon,
   BellIcon,
@@ -1546,66 +1556,50 @@ function AdminBrokersPage({ app }) {
         </div>
       ) : null}
 
-      {deleteBrokerCandidate ? (
-        <div className="fixed inset-0 z-[85] flex items-center justify-center bg-[#0b0a0e]/45 px-4 py-6">
-          <div className="w-full max-w-[520px] rounded-[28px] border border-black/10 bg-[#ffffff] p-5 shadow-[0_24px_70px_rgba(15,25,48,0.25)]">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h2 className="text-xl font-semibold text-ink-900">Ta bort mäklare?</h2>
-                <p className="mt-2 text-sm leading-relaxed text-ink-600">
+      <AlertDialog
+        open={Boolean(deleteBrokerCandidate)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeleteBrokerCandidate(null);
+            setDeleteBrokerConfirmName("");
+          }
+        }}
+      >
+        <AlertDialogContent className="max-w-[520px] rounded-[28px]">
+          {deleteBrokerCandidate ? (
+            <>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Ta bort mäklare?</AlertDialogTitle>
+                <AlertDialogDescription>
                   Detta tar bort <span className="font-semibold text-[#0b0a0e]">{deleteBrokerCandidate.name || deleteBrokerCandidate.email}</span> från bolagets mäklarteam. Mäklaren kan inte längre arbeta för bolaget.
-                </p>
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                className="close-circle-button leading-none text-ink-700 hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
-                aria-label="Stäng"
-                onClick={() => {
-                  setDeleteBrokerCandidate(null);
-                  setDeleteBrokerConfirmName("");
-                }}
-              >
-                <XIcon className="h-4 w-4" />
-              </Button>
-            </div>
-            <label className="mt-5 block">
-              <span className="text-xs font-semibold uppercase tracking-wide text-ink-500">Skriv mäklarens namn för att bekräfta</span>
-              <Input
-                className="mt-1.5"
-                value={deleteBrokerConfirmName}
-                onChange={(event) => setDeleteBrokerConfirmName(event.target.value)}
-                placeholder={deleteBrokerCandidate.name || deleteBrokerCandidate.email}
-              />
-            </label>
-            <div className="mt-5 flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="secondary"
-                className="h-auto px-4 py-2 text-sm"
-                onClick={() => {
-                  setDeleteBrokerCandidate(null);
-                  setDeleteBrokerConfirmName("");
-                }}
-              >
-                Avbryt
-              </Button>
-              <Button
-                type="button"
-                className="h-auto px-4 py-2 text-sm disabled:cursor-not-allowed disabled:border-black/10 disabled:bg-[#e5e7eb] disabled:text-ink-500"
-                disabled={
-                  deleteBrokerConfirmName.trim() !== String(deleteBrokerCandidate.name || deleteBrokerCandidate.email || "").trim()
-                  || removingBrokerId === deleteBrokerCandidate.userId
-                }
-                onClick={() => removeBroker(deleteBrokerCandidate)}
-              >
-                {removingBrokerId === deleteBrokerCandidate.userId ? "Tar bort..." : "Ta bort"}
-              </Button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <label className="block text-left">
+                <span className="text-xs font-semibold uppercase tracking-wide text-ink-500">Skriv mäklarens namn för att bekräfta</span>
+                <Input
+                  className="mt-1.5"
+                  value={deleteBrokerConfirmName}
+                  onChange={(event) => setDeleteBrokerConfirmName(event.target.value)}
+                  placeholder={deleteBrokerCandidate.name || deleteBrokerCandidate.email}
+                />
+              </label>
+              <AlertDialogFooter>
+                <AlertDialogCancel variant="secondary" className="h-auto px-4 py-2 text-sm">Avbryt</AlertDialogCancel>
+                <AlertDialogAction
+                  className="h-auto px-4 py-2 text-sm disabled:cursor-not-allowed disabled:border-black/10 disabled:bg-[#e5e7eb] disabled:text-ink-500"
+                  disabled={
+                    deleteBrokerConfirmName.trim() !== String(deleteBrokerCandidate.name || deleteBrokerCandidate.email || "").trim()
+                    || removingBrokerId === deleteBrokerCandidate.userId
+                  }
+                  onClick={() => removeBroker(deleteBrokerCandidate)}
+                >
+                  {removingBrokerId === deleteBrokerCandidate.userId ? "Tar bort..." : "Ta bort"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </>
+          ) : null}
+        </AlertDialogContent>
+      </AlertDialog>
 
       {brokerManagerOpen ? (
         <div className="fixed inset-0 z-[80] flex items-center justify-center bg-[#0b0a0e]/45 px-4 py-6">

@@ -9,6 +9,16 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/compon
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction
+} from "@/components/ui/alert-dialog";
 import companyLogo from "../../../Assets/Logo/LOA-Logo.png";
 
 function initialsForName(name = "") {
@@ -444,42 +454,30 @@ function AppShell({
         <MouseScrollIcon className="h-4 w-4" />
       </Button>
 
-      {showLeaveSearchConfirm ? (
-        <div
-          className="fixed inset-0 z-[80] flex items-center justify-center bg-transparent p-4"
-          onClick={() => setShowLeaveSearchConfirm(false)}
-        >
-          <article
-            className="w-full max-w-lg rounded-2xl border border-black/10 bg-[#ffffff] p-5 shadow-[0_24px_64px_rgba(15,25,48,0.28)]"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <h3 className="text-lg font-semibold text-ink-900">Byt till Lediga lokaler?</h3>
-            <p className="mt-2 text-sm text-ink-700">
+      <AlertDialog open={showLeaveSearchConfirm} onOpenChange={setShowLeaveSearchConfirm}>
+        <AlertDialogContent className="max-w-lg rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Byt till Lediga lokaler?</AlertDialogTitle>
+            <AlertDialogDescription>
               Din nuvarande sökning försvinner om du går vidare till Lediga lokaler-flödet.
-            </p>
-            <div className="mt-5 flex items-center justify-end gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                className="h-auto rounded-xl px-4 py-2 text-sm font-semibold text-ink-700 hover:bg-[#ffffff]"
-                onClick={() => setShowLeaveSearchConfirm(false)}
-              >
-                Avbryt
-              </Button>
-              <Button
-                type="button"
-                className="h-auto rounded-xl px-4 py-2 text-sm font-semibold"
-                onClick={() => {
-                  setShowLeaveSearchConfirm(false);
-                  navigateTo("/app/rent?view=available");
-                }}
-              >
-                Fortsätt
-              </Button>
-            </div>
-          </article>
-        </div>
-      ) : null}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="h-auto rounded-xl px-4 py-2 text-sm font-semibold text-ink-700 hover:bg-[#ffffff]">
+              Avbryt
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="h-auto rounded-xl px-4 py-2 text-sm font-semibold"
+              onClick={() => {
+                setShowLeaveSearchConfirm(false);
+                navigateTo("/app/rent?view=available");
+              }}
+            >
+              Fortsätt
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </main>
   );
 }
