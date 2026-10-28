@@ -1,5 +1,6 @@
 import plugin from "tailwindcss/plugin";
 import tailwindcssAnimate from "tailwindcss-animate";
+import { themeColors, themeVariables } from "./tailwind.palettes.js";
 
 // shadcn's generated components use these `data-*:` variant shorthands (e.g.
 // `data-open:fade-in-0`), which are Tailwind v4 `@custom-variant` aliases
@@ -25,6 +26,13 @@ const dataStateVariants = plugin(({ addVariant }) => {
   addVariant("data-starting-style", '&[data-starting-style]');
   addVariant("data-ending-style", '&[data-ending-style]');
   addVariant("supports-backdrop-filter", "@supports (backdrop-filter: blur(1px))");
+});
+
+// The variables behind the colours that change with the theme: today's values in :root, the dark ones under .dark (which is put on
+// <html> while a workspace panel is open, see src/lib/theme.jsx). See tailwind.palettes.js.
+const themeBase = plugin(({ addBase }) => {
+  const { light, dark } = themeVariables();
+  addBase({ ":root": light, ".dark": dark });
 });
 
 /** @type {import('tailwindcss').Config} */
@@ -78,7 +86,27 @@ export default {
           2: "var(--chart-2)",
           3: "var(--chart-3)",
           4: "var(--chart-4)",
-          5: "var(--chart-5)"
+          5: "var(--chart-5)",
+          // Bklit UI chart tokens (src/components/charts): the classes the charts use for labels, tooltips and legends.
+          background: "var(--chart-background)",
+          foreground: "var(--chart-foreground)",
+          "foreground-muted": "var(--chart-foreground-muted)",
+          label: "var(--chart-label)",
+          grid: "var(--chart-grid)",
+          crosshair: "var(--chart-crosshair)",
+          "tooltip-background": "var(--chart-tooltip-background)",
+          "tooltip-foreground": "var(--chart-tooltip-foreground)",
+          "tooltip-muted": "var(--chart-tooltip-muted)",
+          "marker-background": "var(--chart-marker-background)",
+          "marker-border": "var(--chart-marker-border)",
+          "marker-foreground": "var(--chart-marker-foreground)"
+        },
+        legend: {
+          DEFAULT: "var(--legend)",
+          foreground: "var(--legend-foreground)",
+          muted: "var(--legend-muted)",
+          "muted-foreground": "var(--legend-muted-foreground)",
+          track: "var(--legend-track)"
         },
         sidebar: {
           DEFAULT: "var(--sidebar)",
@@ -90,18 +118,8 @@ export default {
           border: "var(--sidebar-border)",
           ring: "var(--sidebar-ring)"
         },
-        brand: {
-          50: "#f3f7fb",
-          100: "#e4ecf6",
-          200: "#cad9ec",
-          300: "#a7c0df",
-          400: "#7ea1cc",
-          500: "#5d84b8",
-          600: "#476a99",
-          700: "#3b557c",
-          800: "#344867",
-          900: "#2f3e56"
-        },
+        // The workspace's surfaces, lines and text, the ink and brand scales and the mirrored hues (see tailwind.palettes.js).
+        ...themeColors(),
         brandAccent: {
           50: "#fff9ef",
           100: "#ffefcf",
@@ -113,18 +131,6 @@ export default {
           700: "#934d14",
           800: "#773f17",
           900: "#633616"
-        },
-        ink: {
-          50: "#f5f7f7",
-          100: "#e6ebeb",
-          200: "#cfd8d7",
-          300: "#adbdbc",
-          400: "#859b9a",
-          500: "#68817f",
-          600: "#536a69",
-          700: "#465657",
-          800: "#3c4949",
-          900: "#343f3f"
         }
       },
       boxShadow: {
@@ -156,5 +162,5 @@ export default {
       }
     }
   },
-  plugins: [tailwindcssAnimate, dataStateVariants]
+  plugins: [tailwindcssAnimate, dataStateVariants, themeBase]
 };

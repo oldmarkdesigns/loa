@@ -103,7 +103,7 @@ function ProspectShareSheet({ prospectId, listingId, prospect, app }) {
         <div className="mt-2 space-y-2">
           {collaborators.length === 0 ? <p className="text-sm text-ink-500">Ingen tillagd än.</p> : null}
           {collaborators.map((collab) => (
-            <div key={collab.id} className="flex items-center justify-between rounded-xl border border-black/10 px-3 py-2 text-sm">
+            <div key={collab.id} className="flex items-center justify-between rounded-xl border border-veil/10 px-3 py-2 text-sm">
               <span className="truncate text-ink-800">{renterNameById.get(collab.userId) || collab.userId}</span>
               <Button type="button" variant="ghost" size="icon" onClick={() => removeCollaborator(collab.userId)} disabled={pending} className="h-auto w-auto text-ink-500 hover:bg-transparent hover:text-rose-600">
                 <TrashIcon className="h-4 w-4" />
@@ -157,7 +157,7 @@ function ProspectShareSheet({ prospectId, listingId, prospect, app }) {
         <p className="mt-1 text-sm text-ink-600">Läs- och kommenteringsåtkomst, inget konto krävs. Bra för t.ex. arkitekten.</p>
         <div className="mt-2 space-y-2">
           {guestLinks.map((link) => (
-            <div key={link.id} className="rounded-xl border border-black/10 px-3 py-2">
+            <div key={link.id} className="rounded-xl border border-veil/10 px-3 py-2">
               <div className="flex items-center justify-between gap-2">
                 <span className="truncate text-sm font-semibold text-ink-800">{link.label || "Gästlänk"}</span>
                 {link.revokedAt ? (

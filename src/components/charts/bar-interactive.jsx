@@ -1,26 +1,21 @@
+import { Card } from "@/components/ui/card";
 import { useMemo, useState } from "react";
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  YAxis,
-  XAxis
-} from "recharts";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "../ui/chart";
+import { Area, AreaChart, Background, Bar, BarChart, BarXAxis, ChartTooltip, Grid, XAxis } from "@/components/charts";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 const rangeOptions = ["7d", "30d", "90d"];
-const chartConfig = {
-  views: {
-    label: "Visningar",
-    color: "#0b0a0e"
-  },
-  inquiries: {
-    label: "Förfrågningar",
-    color: "#7ea1cc"
-  }
-};
+const SERIES = [
+  { key: "views", label: "Visningar", color: "var(--chart-line-primary)" },
+  { key: "inquiries", label: "Förfrågningar", color: "var(--chart-line-secondary)" }
+];
+const CHART_MARGIN = { top: 16, right: 8, bottom: 32, left: 8 };
 
+const tooltipRows = (point) => SERIES.map((series) => ({ color: series.color, label: series.label, value: point[series.key] ?? 0 }));
+
+/**
+ * Views and inquiries. `datasets` has a list of points per range ("7d", "30d", "90d"). A list of one point is a total (columns
+ * under a label); a longer list is a series over time, each point `{ date: Date, views, inquiries }`, drawn as areas.
+ */
 function BarInteractive({
   title = "Visningar & förfrågningar",
   subtitle = "Senaste 30 dagarna",
@@ -32,93 +27,68 @@ function BarInteractive({
 
   const data = useMemo(() => {
     if (Array.isArray(datasets[range]) && datasets[range].length > 0) return datasets[range];
-    if (Array.isArray(datasets["30d"]) && datasets["30d"].length > 0) return datasets["30d"];
     return [];
   }, [datasets, range]);
 
+  const isSnapshot = Object.values(datasets).every((series) => !Array.isArray(series) || series.length <= 1);
+
   return (
-    <article className="surface p-4 sm:p-5">
+    <Card className="gap-0 py-0 p-4 sm:p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3 className="text-lg font-semibold text-ink-900">{title}</h3>
-          <p className="mt-1 text-sm text-ink-600">{subtitle}</p>
+          <p className="mt-1 text-sm text-ink-600">{isSnapshot ? "Registrerade totalsiffror" : subtitle}</p>
         </div>
-        <ToggleGroup
+        {!isSnapshot ? <ToggleGroup
           variant="outline"
           spacing={0}
           value={[range]}
           onValueChange={(next) => next[0] && setRange(next[0])}
-          className="rounded-full border border-black/10 bg-[#ffffff] p-1"
+          className="rounded-lg border border-veil/10 bg-control p-1"
         >
           {rangeOptions.map((option) => (
             <ToggleGroupItem
               key={option}
               value={option}
-              className="h-auto rounded-full border-0 px-2.5 py-1 text-xs font-semibold shadow-none data-[state=on]:bg-[#0b0a0e] data-[state=on]:text-white"
+              className="h-auto rounded-md border-0 px-2.5 py-1 text-xs font-semibold shadow-none data-[state=on]:bg-strong data-[state=on]:text-on-strong"
             >
               {option}
             </ToggleGroupItem>
           ))}
-        </ToggleGroup>
+        </ToggleGroup> : null}
       </div>
 
       <div className="mt-4">
-        <ChartContainer config={chartConfig} className="h-[260px] w-full">
-          <AreaChart accessibilityLayer data={data} margin={{ top: 8, right: 8, left: -12, bottom: 8 }}>
-            <defs>
-              <linearGradient id="viewsGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--color-views)" stopOpacity={0.22} />
-                <stop offset="95%" stopColor="var(--color-views)" stopOpacity={0} />
-              </linearGradient>
-              <linearGradient id="inquiriesGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--color-inquiries)" stopOpacity={0.18} />
-                <stop offset="95%" stopColor="var(--color-inquiries)" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-            <XAxis
-              dataKey="label"
-              tickLine={false}
-              axisLine={false}
-              tick={{ fontSize: 12, fill: "#68817f" }}
-            />
-            <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: "#68817f" }} width={34} />
-            <ChartTooltip content={<ChartTooltipContent />} cursor={{ stroke: "#cad9ec", strokeWidth: 1 }} />
-            <Area
-              type="monotone"
-              dataKey="views"
-              stroke="var(--color-views)"
-              strokeWidth={2}
-              fillOpacity={1}
-              fill="url(#viewsGradient)"
-              activeDot={{ r: 4 }}
-              isAnimationActive={false}
-            />
-            <Area
-              type="monotone"
-              dataKey="inquiries"
-              stroke="var(--color-inquiries)"
-              strokeWidth={2}
-              fillOpacity={1}
-              fill="url(#inquiriesGradient)"
-              activeDot={{ r: 4 }}
-              isAnimationActive={false}
-            />
+        {isSnapshot ? (
+          <BarChart key={range} data={data} xDataKey="label" aspectRatio="auto" className="h-[260px]" margin={CHART_MARGIN} barGap={0.5} barWidth={40}>
+            <Grid horizontal />
+            {SERIES.map((series) => (
+              <Bar key={series.key} dataKey={series.key} fill={series.color} lineCap="round" />
+            ))}
+            <BarXAxis />
+            <ChartTooltip rows={tooltipRows} />
+          </BarChart>
+        ) : (
+          <AreaChart key={range} data={data} aspectRatio="auto" className="h-[260px]" margin={CHART_MARGIN}>
+            <Background pattern="dots" />
+            {SERIES.map((series) => (
+              <Area key={series.key} dataKey={series.key} stroke={series.color} fill={series.color} />
+            ))}
+            <XAxis />
+            <ChartTooltip rows={tooltipRows} />
           </AreaChart>
-        </ChartContainer>
+        )}
       </div>
 
       <div className="mt-2 flex flex-wrap items-center gap-4 text-xs text-ink-700">
-        <span className="inline-flex items-center gap-1.5">
-          <span className="h-2.5 w-2.5 rounded-full bg-[#0b0a0e]" />
-          Visningar
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <span className="h-2.5 w-2.5 rounded-full bg-[#7ea1cc]" />
-          Förfrågningar
-        </span>
+        {SERIES.map((series) => (
+          <span key={series.key} className="inline-flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: series.color }} />
+            {series.label}
+          </span>
+        ))}
       </div>
-    </article>
+    </Card>
   );
 }
 

@@ -1,13 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { MapPin, Search, Users } from "lucide-react";
+import { BorderBeam } from "border-beam";
+import { cn } from "cn";
 import { navigateTo, normalizeAppRole } from "../lib/router";
 import { propertyAmenityOptions } from "../lib/propertyAmenityIcons";
 import MarketingHeader from "../components/layout/MarketingHeader";
+import TocCalculatorSection from "../components/marketing/TocCalculatorSection";
 import ListingVisualCard from "../components/app/ListingVisualCard";
 import MapListingPreviewCard from "../components/app/MapListingPreviewCard";
 import ViewingRequestModal from "../components/app/ViewingRequestModal";
 import { PLATFORM_GOOGLE_MAP_STYLE } from "../lib/googleMapStyles";
-import heroOwnerPanelImage from "../../Assets/Hero Images/How To Design A Moody Navy Blue Study Room.jpeg";
-import stockholmLandingImage from "../../Assets/Hero Images/stockholm-landing.jpg";
+import heroBackgroundImage from "../../Assets/Hero Images/new-banner-loa.jpeg";
 import {
   BalconyIcon,
   ArrowRightIcon,
@@ -49,7 +52,9 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 const HERO_GOOGLE_MAPS_SCRIPT_ID = "google-maps-hero-sdk-script";
@@ -77,22 +82,28 @@ const processSteps = [
   }
 ];
 
-const heroOwnerTestimonials = [
-  {
-    quote: "Vi fick rätt typ av förfrågningar direkt, utan att lägga tid på fel matchningar.",
-    company: "Nordic Workspace Group"
-  },
-  {
-    quote: "Lokalprogrammen gör dialogen skarpare. Teamen vet vad de söker innan första visningen.",
-    company: "Sthlm Fastighetspartner"
-  },
-  {
-    quote: "Publiceringen går snabbt och objekten känns bättre presenterade än i våra gamla flöden.",
-    company: "Atrium Offices"
-  }
-];
-
 const heroSpaceTypes = ["kontor", "coworking", "studio", "butik", "klinik", "lager"];
+
+// The rotating word in the headline: how long each letter takes to type and to erase, and how long a finished word stays.
+const HERO_TYPE_MS = 70;
+const HERO_ERASE_MS = 40;
+const HERO_HOLD_MS = 1500;
+// The search card rises into place over 760ms after a delay of 200ms (`.hero-load-search`); its border beam comes in once it is there,
+// so the ring is not seen floating over the image before the card.
+const HERO_SEARCH_BEAM_DELAY_MS = 1000;
+
+// The fields of the hero search sit on frosted glass over the dark image: a small caption over the value, an icon in front.
+// Each is one target: the tile of the number is a label around its input, the tile of the area is the select's own button.
+// The platform gives every input and select button a height of 42px; these two are as tall as their two lines need.
+const heroFieldClass =
+  "flex min-h-14 min-w-0 items-center gap-3 rounded-xl px-4 py-2 text-left text-white transition-colors hover:bg-white/10 focus-within:bg-white/15 focus-visible:bg-white/15 aria-expanded:bg-white/15";
+const heroCaptionClass = "mb-1 block text-[11px] font-semibold uppercase leading-none tracking-wide text-white/65";
+// `size-5` (not h-5 w-5): the select button gives every icon without a size-* class 16px.
+const heroIconClass = "size-5 shrink-0 text-white/70";
+
+// The bar is see-through at the top of the page and turns solid white as the hero scrolls away. Its text is light while
+// it sits over the dark image and turns dark at the point where the white behind it has got the upper hand.
+const NAV_LIGHT_TEXT_UNTIL = 0.45;
 
 function ProcessStepAccountMockup() {
   return (
@@ -1047,7 +1058,7 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
   const heroSectionRef = useRef(null);
   const [showScrollToTopButton, setShowScrollToTopButton] = useState(false);
   const [bookingListing, setBookingListing] = useState(null);
-  const [isNavScrolled, setIsNavScrolled] = useState(false);
+  const [navOverHero, setNavOverHero] = useState(true);
   const [openFaqIndex, setOpenFaqIndex] = useState(null);
   const [heroFilters, setHeroFilters] = useState({
     district: "Alla",
@@ -1056,7 +1067,7 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
   const [heroShowcaseIndex, setHeroShowcaseIndex] = useState(0);
   const [heroSpaceTypeIndex, setHeroSpaceTypeIndex] = useState(0);
   const [heroTypedSpaceType, setHeroTypedSpaceType] = useState(heroSpaceTypes[0]);
-  const [activeOwnerTestimonialIndex, setActiveOwnerTestimonialIndex] = useState(0);
+  const [heroSearchBeamOn, setHeroSearchBeamOn] = useState(false);
   const [demoRequestOpen, setDemoRequestOpen] = useState(false);
   const [demoRequestSubmitted, setDemoRequestSubmitted] = useState(false);
   const [demoRequestForm, setDemoRequestForm] = useState({
@@ -1068,8 +1079,6 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
   });
   const heroShowcaseListings = useMemo(() => baseListingDataset.slice(0, 4), []);
   const currentHeroListing = heroShowcaseListings[heroShowcaseIndex] ?? heroShowcaseListings[0] ?? baseListingDataset[0];
-  const heroBannerRef = useRef(null);
-  const heroBannerImageRef = useRef(null);
   const [activeProgramIndex, setActiveProgramIndex] = useState(0);
   const programStepRefs = useRef([]);
 
@@ -1082,11 +1091,8 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
   }, [heroShowcaseListings.length]);
 
   useEffect(() => {
-    if (heroOwnerTestimonials.length < 2) return undefined;
-    const interval = setInterval(() => {
-      setActiveOwnerTestimonialIndex((index) => (index + 1) % heroOwnerTestimonials.length);
-    }, 10000);
-    return () => clearInterval(interval);
+    const timer = window.setTimeout(() => setHeroSearchBeamOn(true), HERO_SEARCH_BEAM_DELAY_MS);
+    return () => window.clearTimeout(timer);
   }, []);
 
   useEffect(() => {
@@ -1098,22 +1104,23 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
       timeouts.push(
         window.setTimeout(() => {
           setHeroTypedSpaceType(currentWord.slice(0, index + 1));
-        }, 90 * (index + 1))
+        }, HERO_TYPE_MS * (index + 1))
       );
     }
 
+    const eraseStart = HERO_TYPE_MS * currentWord.length + HERO_HOLD_MS;
     for (let index = currentWord.length - 1; index >= 0; index -= 1) {
       timeouts.push(
         window.setTimeout(() => {
           setHeroTypedSpaceType(currentWord.slice(0, index));
-        }, 4000 + (currentWord.length - index) * 55)
+        }, eraseStart + (currentWord.length - index) * HERO_ERASE_MS)
       );
     }
 
     timeouts.push(
       window.setTimeout(() => {
         setHeroSpaceTypeIndex(nextIndex);
-      }, 4000 + currentWord.length * 55 + 140)
+      }, eraseStart + currentWord.length * HERO_ERASE_MS + 100)
     );
 
     return () => {
@@ -1141,38 +1148,6 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
     event.preventDefault();
     setDemoRequestSubmitted(true);
   }
-
-  useEffect(() => {
-    const container = heroBannerRef.current;
-    const image = heroBannerImageRef.current;
-    if (!container || !image) return undefined;
-    if (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) return undefined;
-
-    const parallaxRange = 72;
-    let frameId = null;
-
-    function applyParallax() {
-      frameId = null;
-      const rect = container.getBoundingClientRect();
-      const progress = (window.innerHeight - rect.top) / (window.innerHeight + rect.height);
-      const clamped = Math.min(Math.max(progress, 0), 1);
-      image.style.transform = `translateY(${(clamped - 0.5) * parallaxRange}px)`;
-    }
-
-    function onScroll() {
-      if (frameId) return;
-      frameId = requestAnimationFrame(applyParallax);
-    }
-
-    applyParallax();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-      if (frameId) cancelAnimationFrame(frameId);
-    };
-  }, []);
 
   useEffect(() => {
     function updateActiveProgramStep() {
@@ -1265,14 +1240,33 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
   }, []);
 
   useEffect(() => {
-    const onScroll = () => {
+    let frame = 0;
+
+    // How far the page has scrolled through the hero, from 0 (at the top) to 1 (the hero has passed under the bar). It
+    // is written straight to the bar as a CSS variable (see MarketingHeader) so React does not render sixty times a second.
+    const update = () => {
+      frame = 0;
+      const bar = headerRef.current;
+      const hero = heroSectionRef.current;
       setShowScrollToTopButton(window.scrollY > 12);
-      setIsNavScrolled(window.scrollY > 0);
+      if (!bar || !hero) return;
+      const distance = Math.max(1, hero.offsetHeight - bar.offsetHeight);
+      const progress = Math.min(1, Math.max(0, window.scrollY / distance));
+      bar.style.setProperty("--nav-progress", progress.toFixed(3));
+      setNavOverHero(progress < NAV_LIGHT_TEXT_UNTIL);
+    };
+    const onScroll = () => {
+      if (!frame) frame = window.requestAnimationFrame(update);
     };
 
-    onScroll();
+    update();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
   }, []);
 
   function submitHeroSearch(event) {
@@ -1302,148 +1296,107 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
   }
 
   return (
-    <main className="min-h-screen bg-[#ffffff] text-black">
-      <div ref={headerRef} className="sticky top-0 z-50">
-        <MarketingHeader
-          pathname="/"
-          user={user}
-          isGuest={!user}
-          isNavScrolled={isNavScrolled}
-          onBrandClick={handleHomeBrandClick}
-          onSectionLinkClick={handleSectionLinkClick}
-          onSwitchRole={onSwitchRole}
-          onLogout={onLogout}
-          onRequireAuth={openAuth}
-          onHelp={() => scrollToHashSection("#faq", true)}
-          onMessagesClick={() => navigateTo("/app/messages")}
-        />
+    <main className="min-h-screen overflow-x-clip bg-[#ffffff] text-black">
+      {/* A zero-height sticky layer: the bar floats over the top of the hero instead of pushing it down, and the ref
+          below still measures the bar itself for the scroll offsets. */}
+      <div className="sticky top-0 z-50 h-0">
+        <div ref={headerRef}>
+          <MarketingHeader
+            pathname="/"
+            user={user}
+            isGuest={!user}
+            fadeWithScroll
+            overHero={navOverHero}
+            onBrandClick={handleHomeBrandClick}
+            onSectionLinkClick={handleSectionLinkClick}
+            onSwitchRole={onSwitchRole}
+            onLogout={onLogout}
+            onRequireAuth={openAuth}
+            onHelp={() => scrollToHashSection("#faq", true)}
+            onMessagesClick={() => navigateTo("/app/messages")}
+          />
+        </div>
       </div>
 
-      <section ref={heroSectionRef} className="relative px-8 pb-2 pt-6 sm:px-12 sm:pb-4 sm:pt-10 lg:px-16" data-no-reveal>
-        <div className="mx-auto w-full max-w-[86rem]">
-          <div className="grid items-stretch gap-6 lg:grid-cols-[minmax(0,1.08fr)_minmax(360px,0.72fr)] lg:gap-10">
-            <div className="flex flex-col justify-center py-2 lg:py-4">
-              <h1 className="hero-load-title font-display-serif max-w-[11ch] text-[3.4rem] font-semibold leading-[0.9] text-[#0b0a0e] sm:text-[5.2rem] lg:text-[6.1rem]">
-                Hitta rätt{" "}
-                <span className="inline-block min-w-[4.8ch]">
-                  {heroTypedSpaceType}
-                </span>
-              </h1>
-              <p className="hero-load-copy mt-4 max-w-xl text-base font-medium leading-7 text-ink-600">
-                Matcha teamstorlek, område och budget mot aktuella kontor, studios och coworkingytor i Stockholm.
-              </p>
+      <section
+        ref={heroSectionRef}
+        className="relative isolate flex min-h-screen w-full items-center justify-center overflow-hidden bg-[#0b0a0e] px-6 pb-32 pt-20 text-center text-white sm:px-12"
+        data-no-reveal
+      >
+        <img
+          src={heroBackgroundImage}
+          alt=""
+          className="absolute inset-0 -z-20 h-full w-full object-cover object-[78%_50%]"
+        />
+        <div aria-hidden="true" className="absolute inset-0 -z-10 bg-black/55" />
 
-              <form className="hero-load-search mt-6 w-full" onSubmit={submitHeroSearch}>
-                <div className="grid w-full gap-3 sm:inline-grid sm:w-auto sm:grid-cols-[170px_220px_56px] sm:gap-0 sm:overflow-hidden sm:rounded-full sm:border sm:border-black/10 sm:bg-white sm:p-1 sm:shadow-[0_18px_50px_-30px_rgba(11,10,14,0.35)]">
-                  <div className="grid grid-cols-2 overflow-hidden rounded-full border border-black/10 bg-white shadow-[0_18px_50px_-30px_rgba(11,10,14,0.35)] sm:contents">
-                    <label className="flex min-w-0 items-center border-r border-black/10 px-4 py-3 sm:border-b-0 sm:py-0">
-                      <Input
-                        type="number"
-                        min="1"
-                        value={heroFilters.teamSize}
-                        onChange={(event) => setHeroFilters((prev) => ({ ...prev, teamSize: event.target.value }))}
-                        className="h-auto min-w-0 flex-1 rounded-none border-0 bg-transparent p-0 text-sm text-ink-900 shadow-none placeholder:text-ink-500 focus-visible:ring-0"
-                        placeholder="Antal platser"
-                      />
-                      <span className="ml-2 text-sm font-medium text-ink-700">st</span>
-                    </label>
+        <div className="mx-auto flex w-full max-w-4xl flex-col items-center">
+          <h1 className="hero-load-title font-display-serif text-[3.4rem] font-semibold leading-[0.92] text-white sm:text-[5.2rem] lg:text-[6.1rem]">
+            <span className="block">Hitta rätt</span>
+            <span className="block">{heroTypedSpaceType || " "}</span>
+          </h1>
+          <form className="mt-10 w-full sm:w-auto" onSubmit={submitHeroSearch}>
+            {/* The corner is 20px: the 12px of the platform's buttons plus the 8px around them, so inner and outer corners are
+                concentric. The white button is the one of the bar above. From `sm` the bar is as wide as its fields need: a
+                number of a few digits, and the name of an area. */}
+            {/* The card is wrapped in a border beam: a soft, breathing glow along its inside edge, in greys so it stays quiet over the
+                image. The beam takes the 20px corner of the card by itself. */}
+            <BorderBeam size="pulse-inner" colorVariant="mono" active={heroSearchBeamOn}>
+              <div className="hero-load-search grid gap-1 rounded-[1.25rem] border border-white/20 bg-white/10 p-2 text-left backdrop-blur-xl sm:w-fit sm:grid-cols-[12.5rem_auto_14rem_auto] sm:items-center sm:gap-0">
+                <Label className={cn(heroFieldClass, "cursor-text text-base leading-normal font-normal")}>
+                  <Users aria-hidden="true" className={heroIconClass} />
+                  <span className="min-w-0 flex-1">
+                    <span className={heroCaptionClass}>Antal platser</span>
+                    <Input
+                      id="hero-team-size"
+                      type="number"
+                      inputMode="numeric"
+                      min="1"
+                      value={heroFilters.teamSize}
+                      onChange={(event) => setHeroFilters((prev) => ({ ...prev, teamSize: event.target.value }))}
+                      placeholder="Hur många är ni?"
+                      className="!h-6 !min-h-0 !max-h-none min-w-0 rounded-none border-0 bg-transparent p-0 text-base font-medium leading-6 text-white caret-white shadow-none placeholder:font-normal placeholder:text-white/45 focus-visible:border-0 focus-visible:ring-0 md:text-base"
+                    />
+                  </span>
+                </Label>
 
-                    <label className="min-w-0 px-4 py-3 sm:border-b-0 sm:py-0">
-                      <Select
-                        value={heroFilters.district}
-                        onValueChange={(value) => setHeroFilters((prev) => ({ ...prev, district: value }))}
-                      >
-                        <SelectTrigger className="h-full w-full min-w-0 justify-between rounded-none border-0 bg-transparent p-0 text-sm text-ink-900 shadow-none focus-visible:ring-0">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Alla">Alla områden</SelectItem>
-                          {districtOptions.map((district) => (
-                            <SelectItem key={district} value={district}>
-                              {district}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </label>
-                  </div>
+                <Separator orientation="vertical" className="hidden h-8 bg-white/15 data-vertical:self-center sm:mx-3 sm:block" />
+                <Separator className="my-1 bg-white/15 sm:hidden" />
 
-                  <Button
-                    type="submit"
-                    aria-label="Sök lokaler"
-                    className="h-12 w-full gap-2 rounded-full bg-[#0b0a0e] text-sm font-semibold text-white hover:bg-[#0b0a0e]/90 sm:h-[48px] sm:w-[48px] sm:place-self-center"
+                <Select value={heroFilters.district} onValueChange={(value) => setHeroFilters((prev) => ({ ...prev, district: value }))}>
+                  <SelectTrigger
+                    id="hero-district"
+                    className={cn(
+                      heroFieldClass,
+                      "!h-auto !min-h-14 !max-h-none w-full justify-between border-0 bg-transparent shadow-none focus-visible:border-0 focus-visible:ring-0 [&_svg]:text-white/70"
+                    )}
                   >
-                    <SearchIcon className="h-5 w-5" />
-                    <span className="sm:hidden">Sök lokaler</span>
-                  </Button>
-                </div>
-              </form>
+                    <MapPin aria-hidden="true" className={heroIconClass} />
+                    <span className="min-w-0 flex-1 text-left">
+                      <span className={heroCaptionClass}>Plats</span>
+                      <SelectValue className="block truncate text-base font-medium leading-6 text-white" />
+                    </span>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Alla">Alla områden</SelectItem>
+                    {districtOptions.map((district) => (
+                      <SelectItem key={district} value={district}>
+                        {district}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-              <div className="hero-load-actions mt-5 flex flex-wrap gap-3">
                 <Button
-                  type="button"
-                  onClick={() => setDemoRequestOpen(true)}
-                  className="h-auto rounded-full px-7 py-4 text-sm font-semibold hover:bg-[#191919]"
+                  type="submit"
+                  aria-label="Sök lokaler"
+                  className="mt-1 h-14 w-full rounded-xl bg-white p-0 text-[#0b0a0e] hover:bg-white/90 sm:ml-2 sm:mt-0 sm:w-14"
                 >
-                  Boka en demo
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => scrollToHashSection("#lokaler-just-nu", true)}
-                  className="h-auto rounded-full px-7 py-4 text-sm font-semibold text-ink-900 hover:border-black/25"
-                >
-                  Utforska lokaler
+                  <Search aria-hidden="true" className="size-5" />
                 </Button>
               </div>
-            </div>
-
-            <aside className="hero-load-panel relative min-h-[310px] overflow-hidden rounded-3xl border border-black/10 bg-[#0b0a0e] p-5 text-white shadow-[0_24px_70px_-45px_rgba(11,10,14,0.8)] sm:min-h-[340px] sm:p-6">
-              <img
-                src={heroOwnerPanelImage}
-                alt=""
-                className="absolute inset-0 h-full w-full object-cover"
-              />
-              <div className="absolute inset-0 bg-black/48" />
-              <div className="absolute inset-0 bg-gradient-to-b from-black/18 via-black/28 to-black/88" />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/72 via-black/34 to-transparent" />
-              <div className="absolute inset-x-0 bottom-0 h-[68%] bg-gradient-to-t from-black via-black/80 to-transparent" />
-
-              <div className="relative flex h-full min-h-[270px] flex-col justify-between sm:min-h-[292px]">
-                <p className="text-xs font-semibold uppercase tracking-wide text-white/70">Användare om LOA</p>
-
-                <div className="relative mt-8 min-h-[180px]">
-                  {heroOwnerTestimonials.map((testimonial) => (
-                    <figure
-                      key={testimonial.company}
-                      className={`absolute inset-x-0 bottom-0 transition-all duration-1000 ease-out ${
-                        testimonial === heroOwnerTestimonials[activeOwnerTestimonialIndex]
-                          ? "translate-y-0 opacity-100"
-                          : "translate-y-2 opacity-0"
-                      }`}
-                      aria-hidden={testimonial !== heroOwnerTestimonials[activeOwnerTestimonialIndex]}
-                    >
-                      <blockquote className="font-display-serif text-[1.38rem] font-semibold leading-[1.08] text-white [text-shadow:0_2px_18px_rgba(0,0,0,0.95)] sm:text-[1.75rem]">
-                        "{testimonial.quote}"
-                      </blockquote>
-                      <figcaption className="mt-4 text-xs font-semibold uppercase tracking-wide text-white/70 [text-shadow:0_2px_12px_rgba(0,0,0,0.9)]">
-                        - {testimonial.company}
-                      </figcaption>
-                    </figure>
-                  ))}
-                </div>
-              </div>
-            </aside>
-          </div>
-
-          <div ref={heroBannerRef} className="hero-load-featured relative mt-8 h-56 overflow-hidden rounded-3xl sm:h-72 lg:h-80">
-            <img
-              ref={heroBannerImageRef}
-              src={stockholmLandingImage}
-              alt="Stockholm"
-              className="absolute inset-x-0 -top-[44px] h-[calc(100%+88px)] w-full object-cover will-change-transform"
-            />
-          </div>
+            </BorderBeam>
+          </form>
         </div>
       </section>
 
@@ -1561,6 +1514,8 @@ function LandingPage({ user, favorites = [], onToggleFavorite, onOpenAuthOverlay
           </div>
         </div>
       </section>
+
+      <TocCalculatorSection />
 
       <section id="priser" className="relative scroll-mt-28 px-6 py-20 sm:px-14 sm:py-24 lg:px-20">
         <div className="mx-auto max-w-3xl text-center">

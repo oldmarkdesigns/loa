@@ -8,12 +8,12 @@ function ToastStack({ toasts = [] }) {
       {toasts.map((toast) => (
         <div
           key={toast.id}
-          className={`rounded-2xl border px-4 py-3 text-sm font-semibold text-white ${
+          className={`rounded-2xl border px-4 py-3 text-sm font-semibold ${
             toast.type === "success"
-              ? "border-emerald-500/50 bg-emerald-700"
+              ? "border-[#10b981]/50 bg-[#047857] text-white"
               : toast.type === "error"
-                ? "border-rose-500/50 bg-rose-700"
-                : "border-black/20 bg-ink-900"
+                ? "border-[#f43f5e]/50 bg-[#be123c] text-white"
+                : "border-veil/20 bg-ink-900 text-white dark:text-on-strong"
           }`}
         >
           {toast.message}

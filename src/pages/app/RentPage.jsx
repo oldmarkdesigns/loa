@@ -3,9 +3,11 @@ import ListingVisualCard from "../../components/app/ListingVisualCard";
 import ViewingRequestModal from "../../components/app/ViewingRequestModal";
 import LocalProgramPickerModal from "../../components/app/LocalProgramPickerModal";
 import FurnishingToggle from "../../components/app/FurnishingToggle";
+import AssistantOrb from "../../components/app/AssistantOrb";
 import Breadcrumbs from "../../components/layout/Breadcrumbs";
 import { buildAmenityAliasMap, propertyAmenityOptions } from "../../lib/propertyAmenityIcons";
 import {
+  CoinsIcon,
   EyeIcon,
   FilterIcon,
   ListIcon,
@@ -14,13 +16,16 @@ import {
   SendHorizontalIcon,
   SparklesIcon,
   StarIcon,
+  TrainIcon,
   UsersGroupIcon,
 } from "../../components/icons/UiIcons";
 import { listingApi } from "../../api";
 import { districtOptions, listingTypes, listings as baseListingDataset } from "../../data/mockData";
-import { PLATFORM_GOOGLE_MAP_STYLE } from "../../lib/googleMapStyles";
+import { mapPinUrl, platformMapStyle } from "../../lib/googleMapStyles";
+import { useIsDark } from "../../lib/theme";
 import { navigateTo, normalizeAppRole } from "../../lib/router";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -268,13 +273,15 @@ function GoogleListingsMap({
   const [status, setStatus] = useState("loading");
   const [retryToken, setRetryToken] = useState(0);
   const [errorMessage, setErrorMessage] = useState("");
+  const dark = useIsDark();
+  // The map is made after the script has loaded, which can be after the theme changed: it and the pins take the theme of that moment.
+  const darkRef = useRef(dark);
+  darkRef.current = dark;
 
   function inactiveMarkerIcon() {
     if (!window.google?.maps) return null;
     return {
-      url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
-        `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="32" viewBox="0 0 24 32"><path fill="#ea4335" stroke="#c5221f" stroke-width="1.4" d="M12 1.75C6.34 1.75 1.75 6.34 1.75 12c0 7.71 8.58 16.56 9.57 17.55a.97.97 0 0 0 1.36 0c.99-.99 9.57-9.84 9.57-17.55 0-5.66-4.59-10.25-10.25-10.25Z"/><circle cx="12" cy="12" r="4.1" fill="#ffffff"/></svg>`
-      )}`,
+      url: mapPinUrl("inactive", darkRef.current),
       scaledSize: new window.google.maps.Size(20, 28),
       anchor: new window.google.maps.Point(10, 28)
     };
@@ -283,9 +290,7 @@ function GoogleListingsMap({
   function activeMarkerIcon() {
     if (!window.google?.maps) return null;
     return {
-      url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
-        `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="32" viewBox="0 0 24 32"><path fill="#0b0a0e" stroke="#0b1428" stroke-width="1.4" d="M12 1.75C6.34 1.75 1.75 6.34 1.75 12c0 7.71 8.58 16.56 9.57 17.55a.97.97 0 0 0 1.36 0c.99-.99 9.57-9.84 9.57-17.55 0-5.66-4.59-10.25-10.25-10.25Z"/><circle cx="12" cy="12" r="4.1" fill="#ffffff"/></svg>`
-      )}`,
+      url: mapPinUrl("active", darkRef.current),
       scaledSize: new window.google.maps.Size(30, 42),
       anchor: new window.google.maps.Point(15, 42)
     };
@@ -294,9 +299,7 @@ function GoogleListingsMap({
   function hoverMarkerIcon() {
     if (!window.google?.maps) return null;
     return {
-      url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
-        `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="32" viewBox="0 0 24 32"><path fill="#1b2a4d" stroke="#0b0a0e" stroke-width="1.4" d="M12 1.75C6.34 1.75 1.75 6.34 1.75 12c0 7.71 8.58 16.56 9.57 17.55a.97.97 0 0 0 1.36 0c.99-.99 9.57-9.84 9.57-17.55 0-5.66-4.59-10.25-10.25-10.25Z"/><circle cx="12" cy="12" r="4.1" fill="#ffffff"/></svg>`
-      )}`,
+      url: mapPinUrl("hover", darkRef.current),
       scaledSize: new window.google.maps.Size(26, 36),
       anchor: new window.google.maps.Point(13, 36)
     };
@@ -330,7 +333,7 @@ function GoogleListingsMap({
           mapRef.current = new maps.Map(containerRef.current, {
             center: { lat: 59.3293, lng: 18.0686 },
             zoom: 11,
-            styles: PLATFORM_GOOGLE_MAP_STYLE,
+            styles: platformMapStyle(darkRef.current),
             disableDefaultUI: false,
             zoomControl: true,
             streetViewControl: true,
@@ -419,7 +422,12 @@ function GoogleListingsMap({
       marker.setIcon(isActive ? activeMarkerIcon() : isHovered ? hoverMarkerIcon() : inactiveMarkerIcon());
       marker.setZIndex(isActive ? 99 : isHovered ? 60 : 1);
     });
-  }, [hoveredListingId, selectedListing]);
+  }, [hoveredListingId, selectedListing, dark]);
+
+  // The map and its pins follow the theme.
+  useEffect(() => {
+    mapRef.current?.setOptions({ styles: platformMapStyle(dark) });
+  }, [dark]);
 
   useEffect(() => {
     if (!hoveredListingId || !mapRef.current) return;
@@ -487,18 +495,18 @@ function GoogleListingsMap({
   }, []);
 
   return (
-    <div className={`relative overflow-hidden rounded-[28px] border border-black/10 bg-transparent ${dense ? "h-[340px] sm:h-[460px]" : "h-[480px]"} ${className}`}>
+    <div className={`relative overflow-hidden rounded-[28px] border border-veil/10 bg-transparent ${dense ? "h-[340px] sm:h-[460px]" : "h-[480px]"} ${className}`}>
       <div ref={containerRef} className="absolute inset-0" />
       {status === "loading" ? (
-        <div className="absolute inset-0 grid place-items-center bg-[#ffffff]/55 text-xs font-semibold text-ink-700">Laddar karta...</div>
+        <div className="absolute inset-0 grid place-items-center bg-surface/55 text-xs font-semibold text-ink-700">Laddar karta...</div>
       ) : null}
       {status === "missing_key" ? (
-        <div className="absolute inset-0 grid place-items-center bg-[#ffffff]/70 p-4 text-center text-xs font-semibold text-rose-700">
+        <div className="absolute inset-0 grid place-items-center bg-surface/70 p-4 text-center text-xs font-semibold text-rose-700">
           Google Maps API-nyckel saknas. Lägg till `VITE_GOOGLE_MAPS_API_KEY` i `.env` och starta om `npm run dev`.
         </div>
       ) : null}
       {status === "error" ? (
-        <div className="absolute inset-0 grid place-items-center bg-[#ffffff]/75 p-4 text-center text-xs font-semibold text-rose-700">
+        <div className="absolute inset-0 grid place-items-center bg-surface/75 p-4 text-center text-xs font-semibold text-rose-700">
           <div className="space-y-2">
             <p>{errorMessage || "Google Maps kunde inte laddas."}</p>
             <p>
@@ -535,7 +543,7 @@ function GoogleListingsMap({
                 variant="outline"
                 size="icon"
                 aria-label="Stäng objekt"
-                className="close-circle-button text-lg font-semibold leading-none text-ink-700 hover:bg-[#eef3fa]"
+                className="close-circle-button text-lg font-semibold leading-none text-ink-700 hover:bg-tint-2"
                 onClick={() => onCloseSelectedListing?.()}
               >
                 ×
@@ -545,7 +553,7 @@ function GoogleListingsMap({
                 variant="outline"
                 size="icon"
                 aria-label="Föregående objekt"
-                className="h-9 w-9 rounded-full text-base font-semibold leading-none text-ink-700 hover:bg-[#eef3fa]"
+                className="h-9 w-9 rounded-full text-base font-semibold leading-none text-ink-700 hover:bg-tint-2"
                 onClick={() => handleCycleSelectedListing(-1)}
               >
                 ‹
@@ -555,7 +563,7 @@ function GoogleListingsMap({
                 variant="outline"
                 size="icon"
                 aria-label="Nästa objekt"
-                className="h-9 w-9 rounded-full text-base font-semibold leading-none text-ink-700 hover:bg-[#eef3fa]"
+                className="h-9 w-9 rounded-full text-base font-semibold leading-none text-ink-700 hover:bg-tint-2"
                 onClick={() => handleCycleSelectedListing(1)}
               >
                 ›
@@ -570,12 +578,12 @@ function GoogleListingsMap({
 
 function MapCanvas({ listings, onMarkerClick, dense = false }) {
   return (
-    <div className={`relative overflow-hidden rounded-2xl border border-[#c6d1df] bg-[#ffffff] ${dense ? "h-64 sm:h-72" : "h-[420px]"}`}>
+    <div className={`relative overflow-hidden rounded-2xl border border-line-2 bg-surface ${dense ? "h-64 sm:h-72" : "h-[420px]"}`}>
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_25%,#e9f2fb_0%,transparent_35%),radial-gradient(circle_at_75%_65%,#d2e3f5_0%,transparent_40%),linear-gradient(135deg,#cfdfef_0%,#e9f2fb_100%)]" />
-      <div className="absolute inset-x-0 top-[32%] h-px bg-[#ffffff]/60" />
-      <div className="absolute inset-x-0 top-[58%] h-px bg-[#ffffff]/50" />
-      <div className="absolute left-[36%] top-0 h-full w-px bg-[#ffffff]/50" />
-      <div className="absolute left-[62%] top-0 h-full w-px bg-[#ffffff]/45" />
+      <div className="absolute inset-x-0 top-[32%] h-px bg-surface/60" />
+      <div className="absolute inset-x-0 top-[58%] h-px bg-surface/50" />
+      <div className="absolute left-[36%] top-0 h-full w-px bg-surface/50" />
+      <div className="absolute left-[62%] top-0 h-full w-px bg-surface/45" />
 
       {listings.map((listing) => {
         const point = markerPointForListing(listing);
@@ -584,7 +592,7 @@ function MapCanvas({ listings, onMarkerClick, dense = false }) {
             key={listing.id}
             type="button"
             onClick={() => onMarkerClick?.(listing)}
-            className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#0b0a0e]/25 bg-[#ffffff] px-2 py-1 text-[10px] font-semibold text-[#0b0a0e] hover:border-[#0b0a0e] hover:bg-[#0b0a0e] hover:text-white"
+            className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full border border-strong/25 bg-surface px-2 py-1 text-[10px] font-semibold text-strong hover:border-strong hover:bg-strong hover:text-on-strong"
             style={{ left: `${point.x}%`, top: `${point.y}%` }}
             title={listing.title}
           >
@@ -3033,18 +3041,18 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
         spacing={1}
         value={[resultViewMode]}
         onValueChange={(next) => next[0] && setResultViewMode(next[0])}
-        className="rounded-full border border-black/10 bg-[#ffffff] p-1 xl:hidden"
+        className="rounded-full border border-veil/10 bg-surface p-1 xl:hidden"
       >
         <ToggleGroupItem
           value="list"
-          className="h-auto min-h-[34px] gap-1.5 rounded-full px-3 text-xs font-semibold text-ink-700 data-[state=on]:bg-[#0b0a0e] data-[state=on]:text-white"
+          className="h-auto min-h-[34px] gap-1.5 rounded-full px-3 text-xs font-semibold text-ink-700 data-[state=on]:bg-strong data-[state=on]:text-on-strong"
         >
           <ListIcon className="h-3.5 w-3.5" />
           Lista
         </ToggleGroupItem>
         <ToggleGroupItem
           value="map"
-          className="h-auto min-h-[34px] gap-1.5 rounded-full px-3 text-xs font-semibold text-ink-700 data-[state=on]:bg-[#0b0a0e] data-[state=on]:text-white"
+          className="h-auto min-h-[34px] gap-1.5 rounded-full px-3 text-xs font-semibold text-ink-700 data-[state=on]:bg-strong data-[state=on]:text-on-strong"
         >
           <MapIcon className="h-3.5 w-3.5" />
           Karta
@@ -3056,7 +3064,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
       <div className="inline-flex items-center gap-2">
         <label className="text-xs font-semibold text-ink-700">Sortera</label>
         <Select value={sortBy} onValueChange={setSortBy}>
-          <SelectTrigger className="min-h-[40px] min-w-[132px] rounded-full text-xs font-semibold text-ink-800">
+          <SelectTrigger className="min-h-[40px] min-w-[132px] rounded-full text-xs font-semibold text-ink-800 dark:bg-control">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -3087,8 +3095,8 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
     >
       <div className="flex flex-nowrap items-start justify-between gap-2">
         <div className="min-w-0 space-y-0.5">
-          <p className="inline-flex min-h-[36px] items-center gap-1.5 rounded-full border border-black/10 bg-[#ffffff] px-3 py-1 text-sm font-semibold text-ink-800">
-            {displayedHasBegunSearch ? <SparklesIcon className="h-4 w-4 text-[#4f46e5]" /> : null}
+          <p className="inline-flex min-h-[36px] items-center gap-1.5 rounded-full border border-veil/10 bg-surface px-3 py-1 text-sm font-semibold text-ink-800">
+            {displayedHasBegunSearch ? <SparklesIcon className="h-4 w-4 text-indigo-600" /> : null}
             {displayedHasBegunSearch ? `${displayedSummaryResultCount} lokaler matchar dina preferenser` : `${displayedSummaryResultCount} lediga lokaler`}
           </p>
         </div>
@@ -3099,7 +3107,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
         <div className="hidden xl:flex shrink-0 items-center gap-2">
           <label className="text-xs font-semibold text-ink-700">Sortera</label>
           <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="min-h-[40px] min-w-[132px] rounded-full text-xs font-semibold text-ink-800">
+            <SelectTrigger className="min-h-[40px] min-w-[132px] rounded-full text-xs font-semibold text-ink-800 dark:bg-control">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -3114,82 +3122,92 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
       </div>
       {!isLocalProgramResultsTransitioning && summaryResultCount <= 3 ? (
         resultsSuggestionLoading ? (
-          <div className="mt-4 rounded-2xl border border-[#4f46e5]/20 bg-[#eef0ff] p-3">
-            <div className="space-y-1">
-              <p className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#312e81]">
-                <SparklesIcon className="h-4 w-4 text-[#4f46e5]" />
-                AI-förslag
-              </p>
+          <Card className="mt-4 gap-2.5 overflow-hidden rounded-2xl p-3.5 shadow-none">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <AssistantOrb state="searching" size={20} engaged />
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">AI-förslag</p>
+              <span aria-hidden="true" className="text-ink-300">·</span>
               <p className="text-[1.05rem] font-semibold text-ink-900">{summaryResultCount > 0 ? "Få matchningar" : "Ingen matchning just nu"}</p>
-              <p className="text-sm text-ink-700">AI granskar vilken inställning som begränsar träffarna mest.</p>
             </div>
-          </div>
+            <p className="text-sm text-ink-600" aria-live="polite">AI granskar vilken inställning som begränsar träffarna mest.</p>
+          </Card>
         ) : visibleResultsSuggestion ? (
-          <div className="mt-4 rounded-2xl border border-[#4f46e5]/20 bg-[#eef0ff] p-3">
-            <div className="space-y-1">
-              <p className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#312e81]">
-                <SparklesIcon className="h-4 w-4 text-[#4f46e5]" />
-                AI-förslag
-              </p>
+          <Card className="mt-4 gap-2.5 overflow-hidden rounded-2xl p-3.5 shadow-none">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <AssistantOrb state="breathing" size={20} />
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">AI-förslag</p>
+              <span aria-hidden="true" className="text-ink-300">·</span>
               <p className="text-[1.05rem] font-semibold text-ink-900">{summaryResultCount > 0 ? "Få matchningar" : "Ingen matchning just nu"}</p>
-              <p className="text-sm font-semibold text-ink-900">
-                {renderTextWithBoldMarkers(getSuggestionProblemText(visibleResultsSuggestion))}
-              </p>
             </div>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <Badge variant="outline" className="h-auto gap-1 rounded-full border-[#4f46e5]/35 bg-[#ffffff] px-3 py-1.5 text-[13px] font-semibold text-[#312e81]">
-                Föreslagen ändring: {visibleResultsSuggestion.suggestedChange}
-              </Badge>
-              <Badge variant="outline" className="h-auto rounded-full border-[#4f46e5]/35 px-3 py-1.5 text-[13px] font-semibold text-[#312e81]">
-                {visibleResultsSuggestion.count} träffar efter ändring
-              </Badge>
+            <p className="text-sm font-semibold text-ink-900">
+              {renderTextWithBoldMarkers(getSuggestionProblemText(visibleResultsSuggestion))}
+            </p>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex flex-wrap gap-2">
+                <Badge variant="secondary" className="h-auto gap-1 px-3 py-1.5 text-[13px] font-semibold">
+                  Föreslagen ändring: {visibleResultsSuggestion.suggestedChange}
+                </Badge>
+                <Badge variant="outline" className="h-auto px-3 py-1.5 text-[13px] font-semibold text-ink-700">
+                  {visibleResultsSuggestion.count} träffar efter ändring
+                </Badge>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  className="h-auto min-h-0 gap-1.5 px-3.5 py-1.5 text-xs"
+                  onClick={() => void applyResultsSuggestion(visibleResultsSuggestion)}
+                >
+                  <SparklesIcon className="h-3.5 w-3.5" />
+                  Redigera med AI
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-auto min-h-0 bg-control px-3.5 py-1.5 text-xs"
+                  onClick={() => {
+                    setShowEditorAiPanel(false);
+                    setShowAdvancedSearchEditor(true);
+                  }}
+                >
+                  Redigera manuellt
+                </Button>
+              </div>
             </div>
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <Button
-                type="button"
-                className="h-[40px] gap-1.5 rounded-xl px-3 text-xs font-semibold"
-                onClick={() => void applyResultsSuggestion(visibleResultsSuggestion)}
-              >
-                <SparklesIcon className="h-3.5 w-3.5" />
-                Redigera med AI
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                className="h-[40px] gap-1.5 rounded-xl px-3 text-xs font-semibold text-ink-700 hover:bg-[#ffffff]"
-                onClick={() => {
-                  setShowEditorAiPanel(false);
-                  setShowAdvancedSearchEditor(true);
-                }}
-              >
-                Redigera manuellt
-              </Button>
-            </div>
-          </div>
+          </Card>
         ) : null
       ) : null}
     </div>
   ) : null;
 
   const aiSearchUserFirstName = String(app.user?.name || "").trim().split(/\s+/)[0] || "";
+  // Each suggestion is a full prompt the assistant can act on directly, with the icon of what it is about (matches the
+  // capability pills of the AI-assistent page in the workspace: an icon, then the whole sentence, in a rounded-full pill).
   const aiSearchPromptSuggestions = [
-    "Kontor för 15 personer i Södermalm",
-    "Visa lokaler under 50 000 kr/mån",
-    "Möblerat kontor nära tunnelbana"
+    { text: "Kontor för 15 personer i Södermalm", Icon: UsersGroupIcon },
+    { text: "Visa lokaler under 50 000 kr/mån", Icon: CoinsIcon },
+    { text: "Möblerat kontor nära tunnelbana", Icon: TrainIcon }
   ];
 
+  // The entry point into the AI-assisted search: the same pill height and padding as its neighbours (Spara sökning, Bevaka
+  // sökning, Nollställ), so the row reads as one family, with the assistant's own orb and an unambiguous label ("Sök" alone
+  // could be mistaken for a submit button of the plain fields beside it, which have none of their own).
   const aiSearchTriggerControl = (
     <Button
       type="button"
       variant="outline"
       onClick={() => setShowEditorAiPanel(true)}
-      className="h-[44px] shrink-0 gap-1.5 whitespace-nowrap rounded-full border-[#4f46e5]/15 bg-[#f5f4ff] px-4 text-sm font-semibold text-[#4f46e5] hover:bg-[#efeeff]"
+      className="group h-auto gap-1.5 rounded-full border-indigo-600/20 bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-600 hover:border-indigo-600/30 hover:bg-indigo-50"
     >
-      <SparklesIcon className="h-3.5 w-3.5" />
-      Sök
+      <AssistantOrb state="breathing" size={16} />
+      AI-sök
     </Button>
   );
 
+  // The dialog it opens: the same shape as the AI-assistent page's empty state (an orb, a greeting, the box to write in, and
+  // a few things to try as pills under it), just for one question instead of a conversation — it answers by setting the
+  // filters and closing, rather than replying in a thread.
   const aiSearchOverlay = (
     <Dialog
       open={showEditorAiPanel}
@@ -3197,21 +3215,22 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
         if (!open) setShowEditorAiPanel(false);
       }}
     >
+      {/* `top-24`/`translate-y-0` (the older way this pinned the dialog near the top) never actually worked: `.dialog-slide-up`
+          (src/index.css) sets `transform: translate(-50%, -50%)` outside any Tailwind layer, which beats a utility class of the
+          same property regardless of order, so the dialog centred vertically anyway, cut off however far it overflowed upward.
+          Centred is also what every other dialog in the app does, so this just stops fighting it. */}
       <DialogContent
         showCloseButton={false}
-        className="top-24 z-[85] flex max-h-[80vh] w-full max-w-xl translate-y-0 flex-col gap-0 overflow-hidden rounded-3xl border border-black/10 bg-[#ffffff] p-0 shadow-[0_24px_64px_rgba(15,25,48,0.28)] ring-0"
+        className="z-[85] flex max-h-[80vh] w-full max-w-xl flex-col gap-0 overflow-hidden rounded-3xl border border-veil/10 bg-popover p-0 shadow-[0_24px_64px_rgba(15,25,48,0.28)] ring-0"
       >
-        <div className="flex shrink-0 items-center justify-between border-b border-black/10 px-5 py-4">
-          <span className="inline-flex items-center gap-2 text-sm font-semibold text-ink-700">
-            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#0b0a0e] text-white">
-              <SparklesIcon className="h-3.5 w-3.5" />
-            </span>
-            AI-sök
-          </span>
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-veil/10 px-5 py-4">
+          <DialogTitle className="text-sm font-semibold text-strong">AI-sök</DialogTitle>
+          <DialogDescription className="sr-only">Beskriv lokalen ni söker i ett fält, så sätter vi filtren åt er.</DialogDescription>
           <Button
             type="button"
             variant="outline"
-            className="h-auto gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-ink-700 hover:border-[#0b0a0e]/30"
+            size="sm"
+            className="min-h-0 shrink-0 gap-1.5 rounded-full bg-control shadow-none"
             onClick={() => setAiPromptDraft("")}
           >
             <ResetIcon className="h-3.5 w-3.5" />
@@ -3219,65 +3238,67 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
           </Button>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-10 text-center">
-          <span className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-full bg-[#f5f4ff] text-[#4f46e5]">
-            <SparklesIcon className="h-6 w-6" />
-          </span>
-          <h3 className="mt-4 text-xl font-semibold text-[#0b0a0e]">
-            Välkommen{aiSearchUserFirstName ? `, ${aiSearchUserFirstName}` : ""}!
-          </h3>
-          <p className="mx-auto mt-6 max-w-xs text-left text-xs font-semibold uppercase tracking-wide text-ink-500">
-            Beskriv lokalen ni söker
-          </p>
-          <div className="mx-auto mt-3 flex max-w-xs flex-col gap-2">
-            {aiSearchPromptSuggestions.map((suggestion) => (
-              <Button
-                key={suggestion}
-                type="button"
-                variant="outline"
-                className="h-auto justify-start rounded-2xl px-4 py-3 text-left text-sm font-normal text-ink-700 hover:border-[#0b0a0e]/30 hover:bg-[#fafafa]"
-                onClick={() => submitAiChatPrompt(suggestion)}
-                disabled={isAiSearchPending}
-              >
-                {suggestion}
-              </Button>
-            ))}
+        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-10">
+          <div className="mx-auto flex max-w-sm flex-col items-center text-center">
+            <AssistantOrb state={isAiSearchPending ? "composing" : "breathing"} engaged={isAiSearchPending} size={56} />
+            <h3 className="mt-4 text-xl font-semibold text-strong">
+              {aiSearchUserFirstName ? `Hej ${aiSearchUserFirstName}! ` : "Hej! "}Vad letar ni efter?
+            </h3>
+            <p className="mt-1.5 text-sm text-ink-500" aria-live="polite">
+              {isAiSearchPending ? "Tolkar din beskrivning…" : "Beskriv lokalen med egna ord, så fyller vi i filtren."}
+            </p>
+
+            <form
+              className="mt-6 w-full text-left"
+              onSubmit={(event) => {
+                event.preventDefault();
+                submitAiChatPrompt(aiPromptDraft);
+              }}
+            >
+              <Card className="gap-0 overflow-hidden rounded-2xl p-0 shadow-none focus-within:ring-2 focus-within:ring-indigo-200">
+                <Textarea
+                  value={aiPromptDraft}
+                  onChange={(event) => setAiPromptDraft(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" && !event.shiftKey) {
+                      event.preventDefault();
+                      submitAiChatPrompt(aiPromptDraft);
+                    }
+                  }}
+                  aria-label="Beskriv lokalen ni söker"
+                  rows={2}
+                  placeholder="T.ex. Kontor för 15 personer i Södermalm…"
+                  disabled={isAiSearchPending}
+                  className="max-h-28 min-h-[64px] resize-none border-0 px-4 py-3 text-sm shadow-none focus-visible:ring-0"
+                />
+                <div className="flex items-center justify-end px-3 pb-3">
+                  <Button type="submit" size="sm" className="min-h-0 gap-1.5" disabled={isAiSearchPending || !aiPromptDraft.trim()}>
+                    <SendHorizontalIcon className="h-3.5 w-3.5" />
+                    Skicka
+                  </Button>
+                </div>
+              </Card>
+            </form>
+
+            <ul aria-label="Förslag på sökningar" className="mt-4 flex flex-wrap justify-center gap-2">
+              {aiSearchPromptSuggestions.map(({ text, Icon }) => (
+                <li key={text}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-9 min-h-0 gap-2 rounded-full bg-control px-3.5 text-sm font-medium shadow-none"
+                    disabled={isAiSearchPending}
+                    onClick={() => submitAiChatPrompt(text)}
+                  >
+                    <Icon aria-hidden="true" className="h-4 w-4 text-ink-500" />
+                    {text}
+                  </Button>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
-
-        <form
-          className="shrink-0 border-t border-black/10 p-3"
-          onSubmit={(event) => {
-            event.preventDefault();
-            submitAiChatPrompt(aiPromptDraft);
-          }}
-        >
-          <div className="flex items-end gap-2 rounded-2xl border border-black/10 bg-[#fbfbfa] p-2">
-            <textarea
-              value={aiPromptDraft}
-              onChange={(event) => setAiPromptDraft(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" && !event.shiftKey) {
-                  event.preventDefault();
-                  submitAiChatPrompt(aiPromptDraft);
-                }
-              }}
-              rows={1}
-              placeholder="Börja skriva..."
-              className="max-h-28 min-h-[40px] flex-1 resize-none bg-transparent px-2 py-2 text-sm text-ink-900 placeholder:text-ink-500 focus:outline-none"
-              disabled={isAiSearchPending}
-            />
-            <Button
-              type="submit"
-              size="icon"
-              className="close-circle-button"
-              disabled={isAiSearchPending || !aiPromptDraft.trim()}
-              aria-label="Skicka"
-            >
-              <SendHorizontalIcon className="h-4 w-4" />
-            </Button>
-          </div>
-        </form>
       </DialogContent>
     </Dialog>
   );
@@ -3289,7 +3310,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
           <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] md:items-end">
             <label>
               <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Antal platser</span>
-              <div className="flex h-[48px] items-center rounded-2xl border border-black/10 bg-transparent px-3">
+              <div className="flex h-[48px] items-center rounded-2xl border border-veil/10 bg-transparent px-3 dark:bg-control">
                 <input
                   value={filters.teamSize}
                   onChange={(event) => setFilters((prev) => ({ ...prev, teamSize: event.target.value }))}
@@ -3304,7 +3325,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
             <label>
               <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Område</span>
               <Select value={filters.district} onValueChange={(value) => setFilters((prev) => ({ ...prev, district: value }))}>
-                <SelectTrigger className="h-[48px] w-full rounded-2xl">
+                <SelectTrigger className="!h-[48px] !min-h-[48px] !max-h-[48px] w-full rounded-2xl dark:bg-control">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -3316,7 +3337,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
             <Button
               type="button"
               variant="outline"
-              className="h-[48px] w-auto justify-center justify-self-start self-end gap-1.5 rounded-2xl px-4 text-xs font-semibold text-ink-700 hover:bg-[#ffffff]"
+              className="h-[48px] w-auto justify-center justify-self-start self-end gap-1.5 rounded-2xl px-4 text-xs font-semibold text-ink-700 dark:bg-control hover:bg-surface dark:hover:bg-tint"
               onClick={() => setShowAdvancedSearchEditor(true)}
             >
               <FilterIcon className="h-3.5 w-3.5" />
@@ -3329,8 +3350,8 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
   );
 
   const stickyFilterBar = (
-    <div className="inline-flex flex-wrap items-center gap-2 rounded-full border border-black/10 bg-[#ffffff] p-3 shadow-[0_10px_28px_rgba(15,25,48,0.08)]">
-      <label className="flex h-10 min-w-0 shrink-0 items-center gap-1.5 rounded-full border border-black/10 bg-[#fbfbfa] px-3">
+    <div className="inline-flex flex-wrap items-center gap-2 rounded-full border border-veil/10 bg-surface p-3 shadow-[0_10px_28px_rgba(15,25,48,0.08)]">
+      <label className="flex h-10 min-w-0 shrink-0 items-center gap-1.5 rounded-full border border-veil/10 bg-canvas px-3 dark:bg-control">
         <UsersGroupIcon className="h-4 w-4 shrink-0 text-ink-600" />
         <input
           value={filters.teamSize}
@@ -3342,7 +3363,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
         />
         <span className="shrink-0 text-sm font-medium text-ink-700">st</span>
       </label>
-      <label className="flex h-10 shrink-0 items-center gap-1.5 rounded-full border border-black/10 bg-[#fbfbfa] px-3">
+      <label className="flex h-10 shrink-0 items-center gap-1.5 rounded-full border border-veil/10 bg-canvas px-3 dark:bg-control">
         <MapIcon className="h-4 w-4 shrink-0 text-ink-600" />
         <select
           value={filters.district}
@@ -3356,13 +3377,13 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
       <Button
         type="button"
         variant="outline"
-        className="h-10 shrink-0 gap-1.5 rounded-full bg-[#fbfbfa] px-3 text-xs font-semibold text-ink-700 hover:bg-[#ffffff]"
+        className="h-10 shrink-0 gap-1.5 rounded-full bg-canvas px-3 text-xs font-semibold text-ink-700 hover:bg-surface dark:bg-control dark:hover:bg-tint"
         onClick={() => setShowAdvancedSearchEditor(true)}
       >
         <FilterIcon className="h-3.5 w-3.5" />
         <span>Visa alla filter</span>
       </Button>
-      <span className="mx-0.5 h-6 w-px shrink-0 bg-black/10" />
+      <span className="mx-0.5 h-6 w-px shrink-0 bg-veil/10" />
       <Tooltip>
         <TooltipTrigger
           render={
@@ -3371,7 +3392,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
               variant="outline"
               size="icon"
               aria-label="Spara sökning"
-              className="close-circle-button text-ink-600 hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
+              className="close-circle-button bg-control text-ink-600 hover:border-strong hover:text-strong"
               onClick={handleSaveSearchAction}
             />
           }
@@ -3388,7 +3409,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
               variant="outline"
               size="icon"
               aria-label="Bevaka sökning"
-              className="close-circle-button text-ink-600 hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
+              className="close-circle-button bg-control text-ink-600 hover:border-strong hover:text-strong"
               onClick={handleWatchSearchAction}
             />
           }
@@ -3405,7 +3426,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
               variant="outline"
               size="icon"
               aria-label="Nollställ"
-              className="close-circle-button text-ink-600 hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
+              className="close-circle-button bg-control text-ink-600 hover:border-strong hover:text-strong"
               onClick={() => {
                 void handleResetSearchResults();
               }}
@@ -3423,7 +3444,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
     <Button
       type="button"
       variant="outline"
-      className={`h-[38px] justify-center gap-1.5 rounded-full border-[#0b0a0e]/15 bg-gradient-to-r from-[#f8fafc] to-white pl-1.5 pr-3 text-xs font-semibold text-ink-900 hover:border-[#0b0a0e] hover:text-[#0b0a0e] ${
+      className={`h-[38px] justify-center gap-1.5 rounded-full border-strong/15 bg-gradient-to-r from-canvas to-surface pl-1.5 pr-3 text-xs font-semibold text-ink-900 hover:border-strong hover:text-strong ${
         isLocalProgramQuickCardDissolving ? "pointer-events-none opacity-0" : "opacity-100"
       }`}
       onClick={() => {
@@ -3434,7 +3455,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
         void handleApplyLocalProgramFromQuickCard();
       }}
     >
-      <Avatar className="h-7 w-7 border border-white">
+      <Avatar className="h-7 w-7 border border-surface">
         <AvatarImage src={user?.profile?.avatarUrl} alt={user?.name || "Profilbild"} />
         <AvatarFallback className="bg-[#0b1733] text-[10px] font-semibold text-white">
           {(user?.name || user?.email || "A")
@@ -3454,30 +3475,30 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
       <Button
         type="button"
         variant="outline"
-        className="group h-auto gap-1 rounded-full px-2.5 py-1 text-xs font-semibold text-ink-700 hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
+        className="group h-auto gap-1 rounded-full bg-control px-2.5 py-1 text-xs font-semibold text-ink-700 hover:border-strong hover:text-strong"
         onClick={handleSaveSearchAction}
       >
-        <StarIcon className="h-4 w-4 shrink-0 transition group-hover:text-[#0b0a0e]" />
+        <StarIcon className="h-4 w-4 shrink-0 transition group-hover:text-strong" />
         Spara sökning
       </Button>
       <Button
         type="button"
         variant="outline"
-        className="group h-auto gap-1 rounded-full px-2.5 py-1 text-xs font-semibold text-ink-700 hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
+        className="group h-auto gap-1 rounded-full bg-control px-2.5 py-1 text-xs font-semibold text-ink-700 hover:border-strong hover:text-strong"
         onClick={handleWatchSearchAction}
       >
-        <EyeIcon className="h-4 w-4 shrink-0 transition group-hover:text-[#0b0a0e]" />
+        <EyeIcon className="h-4 w-4 shrink-0 transition group-hover:text-strong" />
         Bevaka sökning
       </Button>
       <Button
         type="button"
         variant="outline"
-        className="group h-auto gap-1 rounded-full px-2.5 py-1 text-xs font-semibold text-ink-700 hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
+        className="group h-auto gap-1 rounded-full bg-control px-2.5 py-1 text-xs font-semibold text-ink-700 hover:border-strong hover:text-strong"
         onClick={() => {
           void handleResetSearchResults();
         }}
       >
-        <ResetIcon className="h-4 w-4 shrink-0 transition group-hover:text-[#0b0a0e]" />
+        <ResetIcon className="h-4 w-4 shrink-0 transition group-hover:text-strong" />
         Nollställ
       </Button>
     </div>
@@ -3498,6 +3519,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
           onToggleShortlist={handleToggleShortlist}
           onHoverStart={(item) => setHoveredListingId(item.id)}
           onHoverEnd={() => setHoveredListingId(null)}
+          onDismissMatch={(item, reason) => app.recordMatchDismissal(item.id, reason)}
           showMatchChip={showMatchChipOnListingCards}
           horizontal
         />
@@ -3513,6 +3535,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
           onToggleShortlist={handleToggleShortlist}
           onHoverStart={(item) => setHoveredListingId(item.id)}
           onHoverEnd={() => setHoveredListingId(null)}
+          onDismissMatch={(item, reason) => app.recordMatchDismissal(item.id, reason)}
           showMatchChip={showMatchChipOnListingCards}
         />
       </div>
@@ -3520,7 +3543,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
   ].filter(Boolean);
 
   const emptyResultsContent = displayedVisibleListings.length === 0 ? null : (
-    <div className="rounded-3xl border border-black/10 bg-[#ffffff] p-5">
+    <div className="rounded-3xl border border-veil/10 bg-surface p-5">
       <p className="text-xl font-semibold text-ink-900">Ingen matchning just nu</p>
       <p className="mt-1 text-[1.05rem] text-ink-700">
         Prova en snabb justering så kan jag hitta närliggande träffar direkt.
@@ -3541,24 +3564,24 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                 key={suggestion.id}
                 type="button"
                 variant="outline"
-                className="group h-auto block w-full rounded-[24px] p-3 text-left font-normal hover:border-[#0b0a0e]/35 hover:bg-[#ffffff]"
+                className="group h-auto block w-full rounded-[24px] p-3 text-left font-normal hover:border-strong/35 hover:bg-surface"
                 onClick={() => void applyNoMatchSuggestion(suggestion)}
               >
                 <div className="flex items-start justify-between gap-2">
                   <span className="text-sm font-semibold text-ink-900">{suggestion.label}</span>
-                  <Badge variant="outline" className="h-auto shrink-0 rounded-full bg-[#ffffff] px-2 py-0.5 text-xs font-semibold text-ink-700">
+                  <Badge variant="outline" className="h-auto shrink-0 rounded-full bg-surface px-2 py-0.5 text-xs font-semibold text-ink-700">
                     {suggestion.count} träffar
                   </Badge>
                 </div>
                 <p className="mt-2 text-[11px] font-semibold uppercase tracking-wide text-ink-600">Ändrar</p>
                 <div className="mt-1.5 flex flex-wrap gap-1.5">
                   {visibleChanges.map((item) => (
-                    <span key={`${suggestion.id}-${item}`} className="rounded-full border border-black/10 bg-[#ffffff] px-2 py-0.5 text-xs font-medium text-ink-700">
+                    <span key={`${suggestion.id}-${item}`} className="rounded-full border border-veil/10 bg-surface px-2 py-0.5 text-xs font-medium text-ink-700">
                       {item}
                     </span>
                   ))}
                   {extraChanges > 0 ? (
-                    <span className="rounded-full border border-black/10 bg-[#ffffff] px-2 py-0.5 text-xs font-medium text-ink-700">
+                    <span className="rounded-full border border-veil/10 bg-surface px-2 py-0.5 text-xs font-medium text-ink-700">
                       +{extraChanges} fler
                     </span>
                   ) : null}
@@ -3622,7 +3645,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
       <div className="relative mx-auto flex h-full w-full max-w-[1540px] flex-col">
         {isHydratingLandingSearch ? (
           <div className="grid min-h-0 flex-1 place-items-center">
-            <div className="rounded-2xl border border-[#c8d1de] bg-[#ffffff] px-5 py-4 text-sm font-semibold text-ink-700">
+            <div className="rounded-2xl border border-line-2 bg-surface px-5 py-4 text-sm font-semibold text-ink-700">
               Laddar sökresultat...
             </div>
           </div>
@@ -3667,14 +3690,14 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
 
                     <div className="!mt-4 space-y-3">
                       {displayedShowPreferencesSummaryCard ? (
-                        <div className="bg-[#ffffff]">
+                        <div className="bg-page">
                           <div className="relative">
                             {preferencesSummaryCard}
                           </div>
                         </div>
                       ) : (
                         <div className="hidden items-center justify-between md:flex md:flex-nowrap xl:flex">
-                          <p className="inline-flex min-h-[36px] items-center gap-1.5 rounded-full border border-black/10 bg-[#ffffff] px-3 py-1 text-sm font-semibold text-ink-800">
+                          <p className="inline-flex min-h-[36px] items-center gap-1.5 rounded-full border border-veil/10 bg-surface px-3 py-1 text-sm font-semibold text-ink-800">
                             {displayedVisibleListings.length} lediga lokaler
                           </p>
                           <div className="flex flex-nowrap items-center justify-end gap-2">
@@ -3733,7 +3756,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                   </div>
 
                   {preferencesSummaryCard ? (
-                    <div className="bg-[#ffffff] pb-4">
+                    <div className="bg-page pb-4">
                       <div className="relative">
                         {preferencesSummaryCard}
                       </div>
@@ -3756,15 +3779,15 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
       >
         <DialogContent
           showCloseButton={false}
-          className="relative z-[72] w-full max-w-4xl gap-0 rounded-[32px] border border-black/10 bg-[#ffffff] p-0 shadow-[0_16px_40px_rgba(15,25,48,0.12)] ring-0"
+          className="z-[72] flex max-h-[calc(100vh-2rem)] w-full !max-w-4xl flex-col gap-0 overflow-hidden rounded-[32px] border border-veil/10 bg-popover p-0 shadow-[0_16px_40px_rgba(15,25,48,0.12)] ring-0"
         >
-            <div className="flex items-center justify-between gap-3 border-b border-black/10 px-6 py-4">
+            <div className="flex items-center justify-between gap-3 border-b border-veil/10 px-6 py-4">
               <h3 className="text-lg font-semibold text-ink-900">Alla filter</h3>
               <Button
                 type="button"
                 variant="outline"
                 size="icon"
-                className="close-circle-button text-lg font-semibold leading-none text-ink-700 hover:bg-[#ffffff]"
+                className="close-circle-button text-lg font-semibold leading-none text-ink-700 hover:bg-surface"
                 onClick={closeAdvancedSearchOverlay}
                 aria-label="Stäng filter"
               >
@@ -3773,7 +3796,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
             </div>
 
             <form
-              className="max-h-[min(78vh,860px)] overflow-y-auto px-6 py-5"
+              className="min-h-0 flex-1 overflow-y-auto px-6 py-5"
               onSubmit={(event) => {
                 event.preventDefault();
                 void submitSideFilterSearch(event);
@@ -3918,7 +3941,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                   </label>
                 </div>
 
-                <div className="rounded-2xl border border-black/10 bg-[#ffffff] p-4">
+                <div className="rounded-2xl border border-veil/10 bg-surface p-4">
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-700">Särskilda krav</p>
                   <div className="mt-3 grid gap-2 md:grid-cols-3">
                     <label className="inline-flex items-center gap-2 text-sm text-ink-700">
@@ -3957,7 +3980,7 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                           type="button"
                           variant="outline"
                           className={`h-auto gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold ${
-                            active ? "border-transparent bg-[#0b0a0e] text-white hover:bg-[#0b0a0e] hover:text-white" : "border-black/10 text-ink-700 hover:bg-[#ffffff]"
+                            active ? "border-transparent bg-strong text-on-strong hover:bg-strong hover:text-on-strong" : "border-veil/10 text-ink-700 hover:bg-surface"
                           }`}
                           onClick={() => toggleAmenity(option.value)}
                         >
@@ -3970,11 +3993,11 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
                 </div>
               </div>
 
-              <div className="mt-6 flex items-center justify-between gap-3 border-t border-black/10 pt-4">
+              <div className="mt-6 flex items-center justify-between gap-3 border-t border-veil/10 pt-4">
                 <Button
                   type="button"
                   variant="outline"
-                  className="h-auto rounded-2xl px-4 py-3 text-sm font-semibold text-ink-700 hover:bg-[#ffffff]"
+                  className="h-auto rounded-2xl px-4 py-3 text-sm font-semibold text-ink-700 hover:bg-surface"
                   onClick={() => {
                     setFilters(savedFilters);
                     setAmenityQuery("");
@@ -4022,13 +4045,13 @@ function RentPage({ app, isGuest = false, onRequireAuth }) {
       >
         <DialogContent
           showCloseButton={false}
-          className="z-[70] w-full max-w-lg rounded-2xl border border-black/10 bg-[#ffffff] p-5 shadow-[0_24px_64px_rgba(15,25,48,0.28)] ring-0"
+          className="z-[70] w-full max-w-lg rounded-2xl border border-veil/10 bg-popover p-5 shadow-[0_24px_64px_rgba(15,25,48,0.28)] ring-0"
         >
           <Button
             type="button"
             variant="outline"
             size="icon"
-            className="close-circle-button absolute right-3 top-3 text-lg font-semibold leading-none text-ink-700 hover:bg-[#ffffff]"
+            className="close-circle-button absolute right-3 top-3 text-lg font-semibold leading-none text-ink-700 hover:bg-surface"
             onClick={() => setShowEditorAiInfo(false)}
             aria-label="Stäng"
           >

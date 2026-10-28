@@ -1,11 +1,25 @@
 import { useEffect, useState } from "react";
 
+// The account window of the panels (Profil, Adminprofil, Inställningar, Hjälp and their pages) is a route that opens over a page.
+const ACCOUNT_PATH = /^\/app\/(admin|broker)\/(profil|adminprofil|installningar|hjalp)(?:\/|$|[?#])/;
+
 export function navigateTo(pathname, options = {}) {
   const target = pathname.startsWith("/") ? pathname : `/${pathname}`;
+  let state = target === "/app/publish" && !options.replace && window.location.pathname.startsWith("/app/") && window.location.pathname !== target
+    ? { publishBackground: window.location.pathname + window.location.search + window.location.hash }
+    : {};
+  if (ACCOUNT_PATH.test(target)) {
+    // Remember the page the window opened over, so that closing it goes back there; moving between its pages keeps what was remembered.
+    const here = window.location.pathname;
+    const background = ACCOUNT_PATH.test(here)
+      ? window.history.state?.accountBackground
+      : here + window.location.search + window.location.hash;
+    if (background) state = { ...state, accountBackground: background };
+  }
   if (options.replace) {
-    window.history.replaceState({}, "", target);
+    window.history.replaceState(state, "", target);
   } else {
-    window.history.pushState({}, "", target);
+    window.history.pushState(state, "", target);
   }
   window.dispatchEvent(new Event("app:navigate"));
 }

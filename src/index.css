@@ -29,11 +29,11 @@
     --border: oklch(0.925 0.005 214.3);
     --input: oklch(0.925 0.005 214.3);
     --ring: oklch(0.723 0.014 214.4);
-    --chart-1: oklch(0.785 0.115 274.713);
-    --chart-2: oklch(0.585 0.233 277.117);
-    --chart-3: oklch(0.511 0.262 276.966);
-    --chart-4: oklch(0.457 0.24 277.023);
-    --chart-5: oklch(0.398 0.195 277.366);
+    --chart-1: var(--primary);
+    --chart-2: oklch(0.41 0.008 223.9);
+    --chart-3: oklch(0.54 0.008 223.9);
+    --chart-4: oklch(0.71 0.008 223.9);
+    --chart-5: oklch(0.89 0.008 223.9);
     --radius: 0.75rem;
     --radius-sm: calc(var(--radius) - 4px);
     --radius-md: calc(var(--radius) - 2px);
@@ -47,35 +47,91 @@
     --sidebar-accent-foreground: oklch(0.218 0.008 223.9);
     --sidebar-border: oklch(0.925 0.005 214.3);
     --sidebar-ring: oklch(0.723 0.014 214.4);
+    --legend: oklch(1 0 0);
+    --legend-foreground: oklch(0.141 0.005 285.823);
+    --legend-muted: oklch(0.967 0.001 286.375);
+    --legend-muted-foreground: oklch(0.552 0.016 285.938);
+    --legend-track: oklch(0.92 0.004 286.32);
+    --chart-background: oklch(1 0 0);
+    --chart-foreground: oklch(0.145 0.004 285);
+    --chart-foreground-muted: oklch(0.55 0.014 260);
+    --chart-line-primary: var(--chart-1);
+    --chart-line-secondary: var(--chart-2);
+    --chart-crosshair: var(--primary);
+    --chart-grid: oklch(0.9 0 0);
+    --chart-brush-border: var(--chart-grid);
+    --chart-tooltip-background: oklch(0.218 0.008 223.9 / 0.8);
+    --chart-tooltip-foreground: oklch(0.985 0 0);
+    --chart-tooltip-muted: oklch(0.65 0.01 260);
+    --chart-marker-background: oklch(0.97 0.005 260);
+    --chart-marker-border: oklch(0.85 0.01 260);
+    --chart-marker-foreground: oklch(0.3 0.01 260);
+    --chart-label: oklch(0.45 0.01 260);
+    --chart-scale-01: oklch(0.97 0.006 223.9);
+    --chart-scale-02: oklch(0.88 0.01 223.9);
+    --chart-scale-03: oklch(0.74 0.015 223.9);
+    --chart-scale-04: oklch(0.5 0.012 223.9);
+    --chart-scale-05: var(--primary);
+    --chart-scale-pattern-color: oklch(0.96 0.005 106);
   }
+  /* The workspace panels in dark mode (the class is put on <html> while a panel is open, see src/lib/theme.jsx). The surfaces
+     come from the named tokens of tailwind.palettes.js so that the shadcn primitives and the panels' own classes agree. */
   .dark {
-    --background: oklch(0.148 0.004 228.8);
-    --foreground: oklch(0.987 0.002 197.1);
-    --card: oklch(0.218 0.008 223.9);
-    --card-foreground: oklch(0.987 0.002 197.1);
-    --popover: oklch(0.218 0.008 223.9);
-    --popover-foreground: oklch(0.987 0.002 197.1);
-    --primary: oklch(0.925 0.005 214.3);
-    --primary-foreground: oklch(0.218 0.008 223.9);
-    --secondary: oklch(0.275 0.011 216.9);
-    --secondary-foreground: oklch(0.987 0.002 197.1);
-    --muted: oklch(0.275 0.011 216.9);
-    --muted-foreground: oklch(0.723 0.014 214.4);
-    --accent: oklch(0.275 0.011 216.9);
-    --accent-foreground: oklch(0.987 0.002 197.1);
+    color-scheme: dark;
+    --background: rgb(var(--canvas));
+    --foreground: rgb(var(--strong));
+    --card: rgb(var(--surface));
+    --card-foreground: rgb(var(--strong));
+    --popover: #14171c; /* overlays (menus, popovers, dialogs, sheets): a step above the containers they open over, so they read as lifted */
+    --popover-foreground: rgb(var(--strong));
+    --primary: rgb(var(--strong));
+    --primary-foreground: rgb(var(--on-strong));
+    --secondary: rgb(var(--tint));
+    --secondary-foreground: rgb(var(--strong));
+    --muted: rgb(var(--tint));
+    --muted-foreground: rgb(var(--ink-500));
+    --accent: rgb(var(--tint-2));
+    --accent-foreground: rgb(var(--strong));
     --destructive: oklch(0.704 0.191 22.216);
-    --destructive-foreground: oklch(0.148 0.004 228.8);
-    --border: oklch(0.35 0.012 216.9);
-    --input: oklch(0.35 0.012 216.9 / 60%);
-    --ring: oklch(0.56 0.021 213.5);
-    --sidebar: oklch(0.218 0.008 223.9);
-    --sidebar-foreground: oklch(0.987 0.002 197.1);
-    --sidebar-primary: oklch(0.488 0.243 264.376);
-    --sidebar-primary-foreground: oklch(0.987 0.002 197.1);
-    --sidebar-accent: oklch(0.275 0.011 216.9);
-    --sidebar-accent-foreground: oklch(0.987 0.002 197.1);
-    --sidebar-border: oklch(0.35 0.012 216.9);
-    --sidebar-ring: oklch(0.56 0.021 213.5);
+    --destructive-foreground: rgb(var(--on-strong));
+    --border: rgb(255 255 255 / 0.125);
+    --input: rgb(255 255 255 / 0.2);
+    --ring: #5b6b85;
+    --chart-1: oklch(1 0 none);
+    --chart-2: oklch(0.73 0 none);
+    --chart-3: oklch(0.51 0 none);
+    --chart-4: oklch(0.39 0 none);
+    --chart-5: oklch(0.32 0 none);
+    --sidebar: rgb(var(--surface));
+    --sidebar-foreground: rgb(var(--strong));
+    --sidebar-primary: rgb(var(--strong));
+    --sidebar-primary-foreground: rgb(var(--on-strong));
+    --sidebar-accent: rgb(var(--tint));
+    --sidebar-accent-foreground: rgb(var(--strong));
+    --sidebar-border: rgb(255 255 255 / 0.125);
+    --sidebar-ring: #5b6b85;
+    --legend: oklch(0.21 0.006 285.885);
+    --legend-foreground: oklch(0.985 0 0);
+    --legend-muted: oklch(0.274 0.006 286.033);
+    --legend-muted-foreground: oklch(0.705 0.015 286.067);
+    --legend-track: oklch(0.274 0.006 286.033);
+    --chart-background: oklch(0.145 0 0);
+    --chart-foreground: oklch(0.45 0 0);
+    --chart-foreground-muted: oklch(0.65 0.01 260);
+    --chart-crosshair: oklch(0.45 0 0);
+    --chart-tooltip-background: oklch(0.21 0.006 285 / 0.8);
+    --chart-grid: oklch(0.25 0 0);
+    --chart-brush-border: var(--chart-grid);
+    --chart-marker-background: oklch(0.25 0.01 260);
+    --chart-marker-border: oklch(0.4 0.01 260);
+    --chart-marker-foreground: oklch(0.9 0 0);
+    --chart-label: oklch(0.75 0.01 260);
+    --chart-scale-01: oklch(0.28 0.03 270);
+    --chart-scale-02: oklch(0.38 0.04 270);
+    --chart-scale-03: oklch(0.48 0.05 270);
+    --chart-scale-04: oklch(0.58 0.06 270);
+    --chart-scale-05: oklch(0.68 0.07 270);
+    --chart-scale-pattern-color: oklch(0.145 0 0);
   }
 }
 
@@ -98,6 +154,12 @@ body {
   font-family: "Urbanist", "Avenir Next", "Helvetica Neue", sans-serif;
   color: #1b2838;
   background: #ffffff;
+}
+
+html.dark,
+html.dark body {
+  color: rgb(var(--strong));
+  background: rgb(var(--canvas));
 }
 
 /* ::placeholder doesn't reliably inherit font-family from the input across browsers
@@ -271,17 +333,6 @@ textarea::placeholder {
   }
 }
 
-@keyframes hero-load-panel {
-  from {
-    opacity: 0;
-    transform: translateY(20px) scale(0.97);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
 @keyframes hero-load-card {
   from {
     opacity: 0;
@@ -294,9 +345,7 @@ textarea::placeholder {
 }
 
 .hero-load-title,
-.hero-load-copy,
 .hero-load-search,
-.hero-load-actions,
 .hero-load-featured-header {
   opacity: 0;
   animation: hero-load-rise 760ms cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -306,22 +355,8 @@ textarea::placeholder {
   animation-delay: 80ms;
 }
 
-.hero-load-copy {
-  animation-delay: 180ms;
-}
-
 .hero-load-search {
-  animation-delay: 280ms;
-}
-
-.hero-load-actions {
-  animation-delay: 380ms;
-}
-
-.hero-load-panel {
-  opacity: 0;
-  transform-origin: center;
-  animation: hero-load-panel 900ms cubic-bezier(0.22, 1, 0.36, 1) 240ms both;
+  animation-delay: 200ms;
 }
 
 .hero-load-featured-header {
@@ -449,10 +484,7 @@ textarea::placeholder {
   }
 
   .hero-load-title,
-  .hero-load-copy,
   .hero-load-search,
-  .hero-load-actions,
-  .hero-load-panel,
   .hero-load-featured-header,
   .hero-featured-card {
     opacity: 1;
@@ -477,16 +509,16 @@ textarea::placeholder {
 
 @layer components {
   .surface {
-    @apply rounded-3xl border border-black/10 bg-[#ffffff];
+    @apply rounded-3xl border border-veil/10 bg-surface;
   }
 
   .chip {
-    @apply rounded-2xl border border-ink-200 bg-[#ffffff] px-3 py-1 text-xs font-semibold text-ink-700;
+    @apply rounded-2xl border border-ink-200 bg-surface px-3 py-1 text-xs font-semibold text-ink-700;
   }
 }
 
 input[type="checkbox"] {
-  accent-color: #0b0a0e;
+  accent-color: rgb(var(--strong));
   width: 18px;
   height: 18px;
 }
@@ -507,8 +539,8 @@ input[type="number"]::-webkit-inner-spin-button {
   width: 18px;
   height: 18px;
   border-radius: 8px;
-  border: 1px solid rgba(0, 0, 0, 0.3);
-  background-color: #ffffff;
+  border: 1px solid rgb(var(--veil) / 0.3);
+  background-color: rgb(var(--surface));
   background-repeat: no-repeat;
   background-position: center;
   background-size: 12px 12px;
@@ -516,9 +548,14 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 
 .search-flag-checkbox:checked {
-  border-color: #0b0a0e;
-  background-color: #0b0a0e;
+  border-color: rgb(var(--strong));
+  background-color: rgb(var(--strong));
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M2 6.2L4.7 9L10 3.5' stroke='white' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+/* On the light fill of dark mode the tick is dark. */
+.dark .search-flag-checkbox:checked {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M2 6.2L4.7 9L10 3.5' stroke='%2308090b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 }
 
 .property-card-hover {
@@ -526,7 +563,7 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 
 .property-card-hover:hover {
-  border-color: #8f8f8f !important;
+  border-color: rgb(var(--veil) / calc(0.44 * var(--veil-gain, 1))) !important;
 }
 
 .property-card-hover-accent {
@@ -534,7 +571,7 @@ input[type="number"]::-webkit-inner-spin-button {
 }
 
 .property-card-hover-accent:hover {
-  border-color: #0b0a0e !important;
+  border-color: rgb(var(--strong)) !important;
 }
 
 .calendar-scope [data-day] {
@@ -605,27 +642,26 @@ button,
   border-radius: 0.75rem !important;
 }
 
-/* Admin/broker side menu open + collapse: smooth glide with a subtle spring overshoot */
-.admin-sidebar-panel {
+/* Admin/broker side menu open + collapse: smooth glide with a subtle spring overshoot. The card (.admin-sidebar-panel) and its
+   place in the layout (.admin-sidebar-slot, which the page moves over for) use the same one, and so does the card that opens on
+   hover, which grows over the page while its place stays as narrow as the rail. */
+.admin-sidebar-panel,
+.admin-sidebar-slot {
   transition-property: width;
   transition-duration: 440ms;
   transition-timing-function: cubic-bezier(0.32, 1.22, 0.44, 1);
   will-change: width;
 }
 
-.admin-sidebar-toggle-icon {
-  transition: transform 440ms cubic-bezier(0.32, 1.22, 0.44, 1);
-}
-
 @media (prefers-reduced-motion: reduce) {
   .admin-sidebar-panel,
-  .admin-sidebar-toggle-icon {
+  .admin-sidebar-slot {
     transition-duration: 1ms;
     transition-timing-function: linear;
   }
 }
 
-/* Admin/broker nav: sliding active pill that springs between items */
+/* Admin/broker nav: sliding active pill between items */
 .admin-nav-indicator {
   position: absolute;
   left: 0;
@@ -633,7 +669,7 @@ button,
   top: 0;
   height: 0;
   border-radius: 0.75rem;
-  background: #0b0a0e;
+  background: rgb(var(--strong));
   opacity: 0;
   pointer-events: none;
   z-index: 0;
@@ -641,15 +677,15 @@ button,
 
 .admin-nav-indicator.is-animated {
   transition:
-    transform 460ms cubic-bezier(0.32, 1.24, 0.44, 1),
-    height 460ms cubic-bezier(0.32, 1.24, 0.44, 1),
+    transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    height 260ms cubic-bezier(0.22, 1, 0.36, 1),
     opacity 180ms linear;
 }
 
 .admin-nav-row {
   transition:
-    color 260ms cubic-bezier(0.32, 1.22, 0.44, 1),
-    background-color 260ms cubic-bezier(0.32, 1.22, 0.44, 1);
+    color 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 220ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 /* Horizontal variant of the sliding active pill, for tab bars (e.g. the prospect workspace tabs) */
@@ -660,7 +696,7 @@ button,
   left: 0;
   width: 0;
   border-radius: 0.75rem;
-  background: #0b0a0e;
+  background: rgb(var(--strong));
   opacity: 0;
   pointer-events: none;
   z-index: 0;
@@ -668,8 +704,8 @@ button,
 
 .admin-nav-indicator-h.is-animated {
   transition:
-    transform 460ms cubic-bezier(0.32, 1.24, 0.44, 1),
-    width 460ms cubic-bezier(0.32, 1.24, 0.44, 1),
+    transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    width 260ms cubic-bezier(0.22, 1, 0.36, 1),
     opacity 180ms linear;
 }
 
@@ -678,14 +714,13 @@ button,
   transition-delay: 110ms;
 }
 
-/* Bottom nav (no sliding pill): brief spring pop when a row becomes active */
+/* Bottom nav (no sliding pill): subtle active-state settle */
 .admin-nav-row--active {
-  animation: admin-nav-pop 320ms cubic-bezier(0.32, 1.28, 0.44, 1);
+  animation: admin-nav-pop 180ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @keyframes admin-nav-pop {
-  0% { transform: scale(0.96); }
-  55% { transform: scale(1.02); }
+  0% { transform: scale(0.985); }
   100% { transform: scale(1); }
 }
 
@@ -767,7 +802,7 @@ button,
   bottom: -0.38rem;
   height: 2px;
   border-radius: 999px;
-  background: #0b0a0e;
+  background: rgb(var(--strong));
   transform: scaleX(0);
   transform-origin: left center;
   transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
@@ -779,10 +814,17 @@ button,
   transform: scaleX(1);
 }
 
+/* The same links over a dark image (the landing hero): a white line. */
+.nav-underline-anim-light::after {
+  background: #ffffff;
+}
+
 button[class*="bg-[#ffffff]"][class*="border-black/20"]:hover,
-button[class*="bg-[#ffffff]"][class*="border-black/10"]:hover {
-  border-color: #0b0a0e;
-  color: #0b0a0e;
+button[class*="bg-[#ffffff]"][class*="border-black/10"]:hover,
+button[class*="bg-surface"][class*="border-veil/20"]:hover,
+button[class*="bg-surface"][class*="border-veil/10"]:hover {
+  border-color: rgb(var(--strong));
+  color: rgb(var(--strong));
 }
 
 .no-scrollbar {
@@ -805,4 +847,257 @@ button[class*="bg-[#ffffff]"][class*="border-black/10"]:hover {
 
 .card-click-surface {
   border-radius: 0 !important;
+}
+
+/* Shared admin workspace rhythm; uses the established monochrome/ink palette. */
+.admin-platform,
+.admin-workspace {
+  --radius: 0.625rem;
+  --primary: #0b0a0e;
+  --primary-foreground: #ffffff;
+  --muted: #f7f7f7;
+  --muted-foreground: #68817f;
+  --card: #ffffff;
+  --border: rgba(0, 0, 0, 0.1);
+}
+.dark .admin-platform,
+.dark .admin-workspace {
+  --primary: rgb(var(--strong));
+  --primary-foreground: rgb(var(--on-strong));
+  --muted: rgb(var(--tint));
+  --muted-foreground: rgb(var(--ink-500));
+  --card: rgb(var(--surface));
+  --border: rgb(255 255 255 / 0.125);
+}
+.admin-platform h1 { letter-spacing: -0.035em; }
+.admin-platform [data-slot="card"],
+.admin-workspace [data-slot="card"] { min-width: 0; }
+.admin-platform [data-slot="table-head"] { font-size: 0.75rem; color: rgb(var(--ink-500)); }
+.admin-platform [data-slot="table-cell"] { vertical-align: middle; }
+.admin-platform .admin-nav-indicator,
+.admin-workspace .admin-nav-indicator { border-radius: 0.5rem; }
+.admin-platform [data-slot="select-trigger"] { max-width: 100%; }
+.admin-workspace [data-slot="tabs-trigger"][data-active],
+.admin-platform [data-slot="tabs-trigger"][data-active] { background: rgb(var(--surface)); color: rgb(var(--strong)); box-shadow: 0 1px 3px #00000012; }
+.dark .admin-workspace [data-slot="tabs-trigger"][data-active],
+.dark .admin-platform [data-slot="tabs-trigger"][data-active] { background: rgb(var(--tint-3)); box-shadow: none; }
+.admin-workspace [data-slot="tabs-list"] { flex-shrink: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .admin-platform *, .admin-workspace * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+/* Dialogs dissolve in place so position never competes with the interaction. */
+.dialog-slide-up {
+  transform: translate(-50%, -50%);
+  transition: opacity 180ms ease;
+}
+
+.dialog-slide-up[data-starting-style],
+.dialog-slide-up[data-ending-style] {
+  opacity: 0;
+}
+
+.dialog-dissolve {
+  transition: opacity 180ms ease;
+}
+
+.dialog-dissolve[data-starting-style],
+.dialog-dissolve[data-ending-style] {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dialog-slide-up,
+  .dialog-dissolve {
+    transition: none;
+  }
+}
+
+/* Shared single-line controls: buttons have a global 42px minimum. */
+[data-slot="input"],
+[data-slot="select-trigger"] {
+  box-sizing: border-box;
+  height: 42px;
+  min-height: 42px;
+  max-height: 42px;
+}
+
+/* The compact size, for controls inside table rows. */
+[data-slot="select-trigger"][data-size="sm"] {
+  height: 32px;
+  min-height: 32px;
+  max-height: 32px;
+}
+
+/* Menus are at least trigger width and expand to fit complete option labels. */
+[data-slot="select-content"] {
+  width: max-content;
+  min-width: var(--anchor-width);
+  max-width: calc(100vw - 16px);
+  outline: none;
+}
+
+.menu-selection-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  border-radius: 0.75rem;
+  background: rgb(var(--strong));
+  z-index: -1;
+  transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    width 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    height 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+[data-program-step-tracker="true"] .menu-selection-indicator {
+  z-index: 0;
+}
+[data-program-step-tracker="true"] > [data-program-step="active"] > div {
+  background: transparent !important;
+}
+.program-step-selection-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  height: 2rem;
+  width: calc((100% - 1.875rem) / 6);
+  border-radius: 0.375rem;
+  background: rgb(var(--strong));
+  transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+[data-sliding-selection="true"] > [aria-pressed="true"],
+[data-sliding-selection="true"] > [aria-selected="true"] {
+  background: transparent !important;
+  color: rgb(var(--on-strong)) !important;
+  box-shadow: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .menu-selection-indicator,
+  .program-step-selection-indicator { transition: none; }
+}
+
+/* Neutral popup boundary, including browser focus on portaled menus. */
+[data-slot="dropdown-menu-content"],
+[data-slot="dropdown-menu-sub-content"],
+[data-slot="popover-content"],
+[data-slot="select-content"] {
+  outline: 1px solid rgb(var(--veil) / 0.1);
+  outline-offset: 0;
+  --tw-ring-color: transparent;
+}
+
+/* The assistant in "Redigera objekt" points at a field by outlining it for a moment (no shadow, only a line). */
+[data-flash="true"] {
+  outline: 2px solid rgb(var(--brand-600));
+  outline-offset: 3px;
+  border-radius: 0.5rem;
+}
+
+/* Liquid glass, iOS style: a mostly transparent disc that blurs and brightens whatever is behind it, edged by a bright
+   rim that is strongest at the top left. No drop shadow; the inset lines only light the inside of the edge. */
+.liquid-glass {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 30% 12%, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 36%),
+    radial-gradient(circle at 80% 96%, rgba(126, 161, 204, 0.22) 0%, rgba(126, 161, 204, 0) 56%),
+    linear-gradient(155deg, rgba(255, 255, 255, 0.14), rgba(202, 217, 236, 0.06));
+  -webkit-backdrop-filter: blur(12px) saturate(190%) brightness(1.04);
+  backdrop-filter: blur(12px) saturate(190%) brightness(1.04);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.95),
+    inset 0 -1px 1px rgba(255, 255, 255, 0.4),
+    inset 0 0 16px rgba(255, 255, 255, 0.3);
+}
+.liquid-glass::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  padding: 1.5px;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.2) 35%, rgba(255, 255, 255, 0.04) 55%, rgba(255, 255, 255, 0.8) 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+/* The broker's overview: each widget sits in a .dashboard-cell, which measures its own width, so what is inside a widget
+   follows the room it has (a third of the row, all of it) rather than the width of the window, which says little when the
+   side menu can be open or shut. */
+.dashboard-cell {
+  container-type: inline-size;
+  min-width: 0;
+}
+
+.dashboard-quick-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.75rem;
+}
+
+/* The key figures are separated by hairlines: the grid shows its own background through a one-pixel gap. */
+.dashboard-kpis {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1px;
+  background: rgb(var(--veil) / 0.1);
+}
+
+/* A chart with its legend: stacked in a narrow widget, side by side in a wide one. */
+.dashboard-split {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+@container (min-width: 14rem) {
+  .dashboard-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container (min-width: 22rem) {
+  .dashboard-quick-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container (min-width: 30rem) {
+  .dashboard-split {
+    flex-direction: row;
+    align-items: center;
+  }
+  .dashboard-split > * {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+}
+
+@container (min-width: 52rem) {
+  .dashboard-quick-actions,
+  .dashboard-kpis {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* The assistant's launcher is glass: over a dark page the bright inner rim is toned down. */
+.dark .liquid-glass {
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.28),
+    inset 0 -1px 1px rgba(255, 255, 255, 0.1),
+    inset 0 0 16px rgba(255, 255, 255, 0.06);
+}
+.dark .liquid-glass::before {
+  opacity: 0.45;
+}
+
+/* Bklit UI sizes the figure in the middle of its pie, ring and gauge charts in container units (cqw) of this class, which Tailwind
+   v4 generates and the v3 of this project does not. */
+.\@container\/chart-center {
+  container-type: inline-size;
+  container-name: chart-center;
 }

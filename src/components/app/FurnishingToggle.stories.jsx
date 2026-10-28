@@ -1,6 +1,9 @@
 import { useState } from "react";
-import { expect } from "storybook/test";
+import { expect, waitFor } from "storybook/test";
 import FurnishingToggle from "./FurnishingToggle";
+
+/** A colour of the theme (a variable of channels, "11 10 14") as getComputedStyle writes it, so the checks hold in light and dark. */
+const token = (name) => `rgb(${getComputedStyle(document.documentElement).getPropertyValue(`--${name}`).trim().split(/\s+/).join(", ")})`;
 
 const OPTIONS = [
   { value: "furnished", label: "Möblerat" },
@@ -24,9 +27,11 @@ export const Default = {
   args: { options: OPTIONS, value: "furnished" },
   play: async ({ canvas, userEvent }) => {
     const unfurnishedButton = canvas.getByText("Omöblerat");
-    await expect(getComputedStyle(unfurnishedButton).color).not.toBe("rgb(255, 255, 255)");
+    const onStrong = token("on-strong");
+    await expect(getComputedStyle(unfurnishedButton).color).not.toBe(onStrong);
     await userEvent.click(unfurnishedButton);
-    await expect(getComputedStyle(unfurnishedButton).color).toBe("rgb(255, 255, 255)");
+    // The text colour eases to the one of the filled pill (`transition-colors`), so it is read until it has arrived.
+    await waitFor(() => expect(getComputedStyle(unfurnishedButton).color).toBe(onStrong), { timeout: 2000 });
   }
 };
 

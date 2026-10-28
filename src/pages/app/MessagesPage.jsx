@@ -1,22 +1,16 @@
-import { useEffect, useMemo, useState } from "react";
-import { formatSek } from "../../lib/formatters";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ArrowLeft, Search, Send, Sparkles, Star, MessageSquare, Archive, Building2, Plus, Image, File, FileText, X } from "lucide-react";
 import { normalizeAppRole } from "../../lib/router";
-import {
-  CalendarIcon,
-  CircleDotIcon,
-  MoreHorizontalIcon,
-  PaperclipIcon,
-  SearchIcon,
-  SendHorizontalIcon,
-  SparklesIcon,
-  StarIcon
-} from "../../components/icons/UiIcons";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Card } from "@/components/ui/card";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 
 const MESSAGE_LISTING = {
   id: "msg-listing-1",
@@ -25,7 +19,7 @@ const MESSAGE_LISTING = {
   district: "Södermalm",
   size: 248,
   priceMonthly: 48500,
-  image: "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=720&h=480&q=80"
+  image: "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=720&h=480&q=80",
 };
 
 const BROKER_PROFILE = {
@@ -33,7 +27,7 @@ const BROKER_PROFILE = {
   initials: "AL",
   company: "Nordic Estate",
   role: "Mäklare",
-  responseTime: "~2h"
+  responseTime: "~2h",
 };
 
 const renterConversations = [
@@ -50,17 +44,60 @@ const renterConversations = [
     summary: "Hej Samuel! Tack för din förfrågan. Jag skulle gärna...",
     messages: [
       { id: "r-sys-1", type: "system", text: "Du skickade en förfrågan om Kontorslokal Södermalm", timestamp: "20 april 10:24" },
-      { id: "r-1", sender: "self", text: "Hej Anna! Jag är intresserad av er kontorslokal på Södermalm. Vi är ett designteam på 12 personer som letar efter ny lokal till augusti.", timestamp: "20 april 13:47" },
-      { id: "r-2", sender: "other", text: "Hej Samuel! Tack för din förfrågan — vad roligt att ni är intresserade. Lokalen passar utmärkt för 10-15 personer och är nyligen renoverad.", timestamp: "22 april 09:12" },
-      { id: "r-3", sender: "other", text: "Kan du berätta lite mer om er verksamhet och önskad tillträdesdag?", timestamp: "22 april 09:16" },
-      { id: "r-4", sender: "self", text: "Absolut. Vi driver Oldmark Designs, en designstudio. Önskad inflytt 1 augusti med 3-årigt kontrakt om möjligt.", timestamp: "Idag 14:32" },
-      { id: "r-5", sender: "other", text: "Perfekt — 3-årigt kontrakt fungerar bra. Jag kan erbjuda visning:\nTisdag 29/4 kl 10:00\nOnsdag 30/4 kl 14:30\nTorsdag 1/5 kl 09:00", timestamp: "Idag 14:48" }
+      {
+        id: "r-1",
+        sender: "self",
+        text: "Hej Anna! Jag är intresserad av er kontorslokal på Södermalm. Vi är ett designteam på 12 personer som letar efter ny lokal till augusti.",
+        timestamp: "20 april 13:47",
+      },
+      {
+        id: "r-2",
+        sender: "other",
+        text: "Hej Samuel! Tack för din förfrågan — vad roligt att ni är intresserade. Lokalen passar utmärkt för 10-15 personer och är nyligen renoverad.",
+        timestamp: "22 april 09:12",
+      },
+      {
+        id: "r-3",
+        sender: "other",
+        text: "Kan du berätta lite mer om er verksamhet och önskad tillträdesdag?",
+        timestamp: "22 april 09:16",
+      },
+      {
+        id: "r-4",
+        sender: "self",
+        text: "Absolut. Vi driver Oldmark Designs, en designstudio. Önskad inflytt 1 augusti med 3-årigt kontrakt om möjligt.",
+        timestamp: "Idag 14:32",
+      },
+      {
+        id: "r-5",
+        sender: "other",
+        text: "Perfekt — 3-årigt kontrakt fungerar bra. Jag kan erbjuda visning:\nTisdag 29/4 kl 10:00\nOnsdag 30/4 kl 14:30\nTorsdag 1/5 kl 09:00",
+        timestamp: "Idag 14:48",
+      },
     ],
     suggestions: [
-      { id: "rent-s-1", tone: "answer", tag: "SVAR", label: "Föreslå tid", text: "Hej Anna! Tisdag 29/4 kl 10:00 passar bra. Ska vi ses på plats?" },
-      { id: "rent-s-2", tone: "question", tag: "FRÅGA", label: "Be om mer info", text: "Tack för tiderna! Innan vi bokar — finns ritning och info om månadskostnader?" },
-      { id: "rent-s-3", tone: "answer", tag: "SVAR", label: "Bekräfta intresse", text: "Tack för svar! Lokalen låter perfekt. Vi ser fram emot visningen." }
-    ]
+      {
+        id: "rent-s-1",
+        tone: "answer",
+        tag: "SVAR",
+        label: "Föreslå tid",
+        text: "Hej Anna! Tisdag 29/4 kl 10:00 passar bra. Ska vi ses på plats?",
+      },
+      {
+        id: "rent-s-2",
+        tone: "question",
+        tag: "FRÅGA",
+        label: "Be om mer info",
+        text: "Tack för tiderna! Innan vi bokar — finns ritning och info om månadskostnader?",
+      },
+      {
+        id: "rent-s-3",
+        tone: "answer",
+        tag: "SVAR",
+        label: "Bekräfta intresse",
+        text: "Tack för svar! Lokalen låter perfekt. Vi ser fram emot visningen.",
+      },
+    ],
   },
   {
     id: "rent-erik",
@@ -73,7 +110,7 @@ const renterConversations = [
     saved: false,
     timestamp: "09:15",
     summary: "Visningen är bokad till torsdag kl 14:00. Vi ses på plats.",
-    messages: []
+    messages: [],
   },
   {
     id: "rent-maria",
@@ -86,7 +123,7 @@ const renterConversations = [
     saved: true,
     timestamp: "Igår",
     summary: "Jag har skickat över hyreskontraktet för genomgång.",
-    messages: []
+    messages: [],
   },
   {
     id: "rent-johan",
@@ -99,7 +136,7 @@ const renterConversations = [
     saved: false,
     timestamp: "20 apr",
     summary: "Tyvärr är lokalen uthyrd. Jag återkommer när vi har liknande.",
-    messages: []
+    messages: [],
   },
   {
     id: "rent-sofia",
@@ -112,7 +149,7 @@ const renterConversations = [
     saved: false,
     timestamp: "18 apr",
     summary: "Vi har några frågor kring er verksamhet innan vi går vidare.",
-    messages: []
+    messages: [],
   },
   {
     id: "rent-henrik",
@@ -125,8 +162,8 @@ const renterConversations = [
     saved: false,
     timestamp: "15 apr",
     summary: "Visningsförslag: tisdag 29/4 kl 10:00 eller onsdag 30/4 kl 15:00.",
-    messages: []
-  }
+    messages: [],
+  },
 ];
 
 const brokerConversations = [
@@ -142,16 +179,54 @@ const brokerConversations = [
     timestamp: "14:32",
     summary: "Vill boka visning av Kontorslokal Södermalm. Elin...",
     messages: [
-      { id: "b-sys-1", type: "system", text: "Elin Andersson skickade en förfrågan om Kontorslokal Södermalm", timestamp: "20 april 10:24" },
-      { id: "b-1", sender: "other", text: "Hej Anna! Vi är ett produktdesign-team på 18 personer som söker nytt kontor i Södermalm. Er lokal ser perfekt ut — skulle vi kunna boka en visning den här eller nästa vecka?", timestamp: "20 april 10:24" },
-      { id: "b-2", sender: "other", text: "Vi har ett behov från 1 augusti och budget upp till ca 52 000 kr/mån. Kan vi få en digital visning först?", timestamp: "22 april 09:12" },
-      { id: "b-3", sender: "other", text: "Hej igen! Följer upp — vill gärna boka en tid så snart som möjligt. Tisdag eller onsdag passar oss bäst.", timestamp: "Idag 14:30" }
+      {
+        id: "b-sys-1",
+        type: "system",
+        text: "Elin Andersson skickade en förfrågan om Kontorslokal Södermalm",
+        timestamp: "20 april 10:24",
+      },
+      {
+        id: "b-1",
+        sender: "other",
+        text: "Hej Anna! Vi är ett produktdesign-team på 18 personer som söker nytt kontor i Södermalm. Er lokal ser perfekt ut — skulle vi kunna boka en visning den här eller nästa vecka?",
+        timestamp: "20 april 10:24",
+      },
+      {
+        id: "b-2",
+        sender: "other",
+        text: "Vi har ett behov från 1 augusti och budget upp till ca 52 000 kr/mån. Kan vi få en digital visning först?",
+        timestamp: "22 april 09:12",
+      },
+      {
+        id: "b-3",
+        sender: "other",
+        text: "Hej igen! Följer upp — vill gärna boka en tid så snart som möjligt. Tisdag eller onsdag passar oss bäst.",
+        timestamp: "Idag 14:30",
+      },
     ],
     suggestions: [
-      { id: "broker-s-1", tone: "answer", tag: "SVAR", label: "Föreslå tider", text: "Hej Elin! Jag kan erbjuda idag 10:00 eller onsdag 14:30 för en digital genomgång. Vilken tid passar bäst?" },
-      { id: "broker-s-2", tone: "question", tag: "FRÅGA", label: "Klargör upplägg", text: "Tack! Vill ni börja med digital genomgång eller gå direkt på fysisk visning, och vilka från teamet deltar?" },
-      { id: "broker-s-3", tone: "answer", tag: "SVAR", label: "Bekräfta", text: "Tack för tydlig återkoppling. Jag hjälper gärna vidare med nästa steg i processen." }
-    ]
+      {
+        id: "broker-s-1",
+        tone: "answer",
+        tag: "SVAR",
+        label: "Föreslå tider",
+        text: "Hej Elin! Jag kan erbjuda idag 10:00 eller onsdag 14:30 för en digital genomgång. Vilken tid passar bäst?",
+      },
+      {
+        id: "broker-s-2",
+        tone: "question",
+        tag: "FRÅGA",
+        label: "Klargör upplägg",
+        text: "Tack! Vill ni börja med digital genomgång eller gå direkt på fysisk visning, och vilka från teamet deltar?",
+      },
+      {
+        id: "broker-s-3",
+        tone: "answer",
+        tag: "SVAR",
+        label: "Bekräfta",
+        text: "Tack för tydlig återkoppling. Jag hjälper gärna vidare med nästa steg i processen.",
+      },
+    ],
   },
   {
     id: "broker-samuel",
@@ -164,7 +239,7 @@ const brokerConversations = [
     needsReply: false,
     timestamp: "13:05",
     summary: "Absolut. Vi driver Oldmark Designs, en designstudio...",
-    messages: []
+    messages: [],
   },
   {
     id: "broker-marcus",
@@ -177,7 +252,7 @@ const brokerConversations = [
     needsReply: false,
     timestamp: "11:42",
     summary: "Tack för visningen idag! Vi diskuterar internt och återkommer.",
-    messages: []
+    messages: [],
   },
   {
     id: "broker-linnea",
@@ -190,7 +265,7 @@ const brokerConversations = [
     needsReply: false,
     timestamp: "09:20",
     summary: "Tyvärr känns lokalen lite för stor för våra behov just nu.",
-    messages: []
+    messages: [],
   },
   {
     id: "broker-david",
@@ -203,7 +278,7 @@ const brokerConversations = [
     needsReply: false,
     timestamp: "Igår",
     summary: "Hej! Jag leder en startup på 25 personer och söker vårt nästa...",
-    messages: []
+    messages: [],
   },
   {
     id: "broker-elin-f",
@@ -216,388 +291,308 @@ const brokerConversations = [
     needsReply: true,
     timestamp: "Igår",
     summary: "Vi är redo att skriva kontrakt. Kan ni skicka över underlag?",
-    messages: []
-  }
+    messages: [],
+  },
 ];
 
-function suggestionToneClass(tone) {
-  if (tone === "question") return "border-[#cad9ec] bg-[#eef3f8] text-[#476a99]";
-  return "border-black/10 bg-[#fbfbfa] text-[#0b0a0e]";
-}
-
-function pipelineToneClass(tone) {
-  if (tone === "green") return "border-[#cad9ec] bg-[#eef3f8] text-[#0b0a0e]";
-  if (tone === "amber") return "border-black/10 bg-[#fbfbfa] text-ink-700";
-  if (tone === "gray") return "border-black/10 bg-[#ffffff] text-ink-600";
-  return "border-black/10 bg-[#ffffff] text-ink-700";
-}
-
-function MessagesPage({ app }) {
-  const activeRole = normalizeAppRole(app?.user?.role);
-  const isBrokerView = activeRole === "broker" || activeRole === "company_admin";
-  const [searchQuery, setSearchQuery] = useState("");
-  const [activeConversationId, setActiveConversationId] = useState(isBrokerView ? brokerConversations[0].id : renterConversations[0].id);
-  const [draft, setDraft] = useState("");
+export default function MessagesPage({ app }) {
+  const role = normalizeAppRole(app?.user?.role);
+  const isBroker = role === "broker" || role === "company_admin";
+  const conversations = isBroker ? brokerConversations : renterConversations;
+  const [selectedId, setSelectedId] = useState(null);
+  const [mobileChat, setMobileChat] = useState(false);
+  const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("all");
-  const [favoriteConversationIds, setFavoriteConversationIds] = useState(() => new Set());
-  const [showSuggestions, setShowSuggestions] = useState(false);
-
+  const [favorites, setFavorites] = useState({});
+  const [archived, setArchived] = useState({});
+  const [statuses, setStatuses] = useState({});
+  const [drafts, setDrafts] = useState({});
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
+  const composer = useRef(null);
+  const attachmentInput = useRef(null);
+  const attachmentTarget = useRef(null);
+  const [attachments, setAttachments] = useState({});
+  function pickAttachment(accept) {
+    attachmentTarget.current = active.id;
+    attachmentInput.current.accept = accept;
+    attachmentInput.current.click();
+  }
+  function addAttachments(event) {
+    const files = Array.from(event.target.files || []).map((file) => ({ id: crypto.randomUUID(), file }));
+    const id = attachmentTarget.current;
+    if (files.length && id) setAttachments((previous) => ({ ...previous, [id]: [...(previous[id] || []), ...files] }));
+    event.target.value = "";
+  }
+  const active = conversations.find((item) => item.id === selectedId) || conversations[0];
+  const draft = drafts[active.id] || "";
+  const activeAttachments = attachments[active.id] || [];
+  const unread = (item) => (isBroker ? item.needsReply : item.unreadCount > 0);
+  const visible = useMemo(
+    () =>
+      conversations.filter((item) => {
+        if (filter === "archived" ? !archived[item.id] : archived[item.id]) return false;
+        if (filter === "unread" && !unread(item)) return false;
+        if (filter === "saved" && !favorites[item.id]) return false;
+        return `${item.counterpartName} ${item.company} ${item.summary}`
+          .toLocaleLowerCase("sv")
+          .includes(query.trim().toLocaleLowerCase("sv"));
+      }),
+    [conversations, query, filter, favorites, archived],
+  );
   useEffect(() => {
-    setShowSuggestions(false);
-  }, [activeConversationId]);
-
-  const conversations = isBrokerView ? brokerConversations : renterConversations;
-
-  const filteredConversations = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-    return conversations.filter((conversation) => {
-      const haystack = `${conversation.counterpartName} ${conversation.company} ${conversation.summary}`.toLowerCase();
-      const matchesQuery = query ? haystack.includes(query) : true;
-      if (!matchesQuery) return false;
-      if (isBrokerView) {
-        if (filter === "unread") return conversation.needsReply;
-        if (filter === "saved") return favoriteConversationIds.has(conversation.id);
-        if (filter === "archived") return false;
-        return true;
-      }
-      if (filter === "unread") return conversation.unreadCount > 0;
-      if (filter === "saved") return favoriteConversationIds.has(conversation.id);
-      if (filter === "archived") return false;
-      return true;
-    });
-  }, [conversations, favoriteConversationIds, filter, isBrokerView, searchQuery]);
-
-  const activeConversation = filteredConversations.find((item) => item.id === activeConversationId)
-    || conversations.find((item) => item.id === activeConversationId)
-    || filteredConversations[0]
-    || conversations[0];
-
-  const filterTabs = [
-    { key: "all", label: "Alla", count: conversations.length },
-    {
-      key: "unread",
-      label: "Olästa",
-      count: isBrokerView
-        ? brokerConversations.filter((item) => item.needsReply).length
-        : renterConversations.filter((item) => item.unreadCount > 0).length
-    },
-    {
-      key: "saved",
-      label: "Favoriter",
-      count: conversations.filter((item) => favoriteConversationIds.has(item.id)).length
-    },
-    { key: "archived", label: "Arkiverade", count: 0 }
-  ];
-
-  const activeConversationIsFavorite = activeConversation ? favoriteConversationIds.has(activeConversation.id) : false;
-
-  function useSuggestion(text) {
-    setDraft(text);
+    setSuggestionsOpen(false);
+  }, [active.id]);
+  function updateDraft(value) {
+    setDrafts((prev) => ({ ...prev, [active.id]: value }));
   }
-
-  function sendDraft() {
-    if (!draft.trim()) return;
-    setDraft("");
+  function sendDraft(event) {
+    event.preventDefault();
+    if (!draft.trim() && !activeAttachments.length) return;
+    // This page currently uses demonstration conversations, not a messaging API.
+    // Keep the draft instead of silently discarding an unsent message.
+    app.pushToast?.("Meddelandet är inte skickat. Meddelandefunktionen är ännu inte ansluten.", "info");
   }
-
-  function toggleActiveConversationFavorite() {
-    if (!activeConversation) return;
-    setFavoriteConversationIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(activeConversation.id)) next.delete(activeConversation.id);
-      else next.add(activeConversation.id);
-      return next;
-    });
-  }
-
   return (
-    <section className="h-full overflow-y-auto bg-[#ffffff] lg:overflow-hidden">
-      <div className="min-h-full w-full lg:h-full">
-        <div className="grid min-h-full overflow-hidden lg:h-full lg:min-h-0 lg:grid-cols-[380px,minmax(0,1fr)] xl:grid-cols-[420px,minmax(0,1fr)]">
-          <aside className="flex min-h-0 flex-col border-b border-black/10 bg-[#fbfbfa] lg:border-b-0 lg:border-r">
-            <div className="border-b border-black/10 p-4 sm:p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ink-500">
-                {isBrokerView ? "Inkorg" : "Hyresgäst"}
-              </p>
-              <h1 className="mt-1 text-2xl font-semibold leading-tight text-[#0b0a0e]">
-                {isBrokerView ? "Konversationer" : "Meddelanden"}
-              </h1>
-              <label className="relative mt-4 block">
-                <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
-                <Input
-                  className="rounded-2xl bg-[#ffffff] pl-9"
-                  placeholder={isBrokerView ? "Sök namn, bolag eller annons" : "Sök mäklare eller annons"}
-                  value={searchQuery}
-                  onChange={(event) => setSearchQuery(event.target.value)}
-                />
-              </label>
-              <ToggleGroup
-                variant="outline"
-                spacing={2}
-                value={[filter]}
-                onValueChange={(next) => next[0] && setFilter(next[0])}
-                className="mt-3 flex-nowrap gap-2 overflow-x-auto pb-1"
-              >
-                {filterTabs.map((tab) => {
-                  const active = filter === tab.key;
-                  return (
-                    <ToggleGroupItem
-                      key={tab.key}
-                      value={tab.key}
-                      className="h-auto gap-1.5 rounded-full border-black/10 px-3 py-1.5 text-[11px] font-semibold text-ink-700 shadow-none hover:border-[#0b0a0e] hover:bg-transparent data-[state=on]:border-transparent data-[state=on]:bg-[#0b0a0e] data-[state=on]:text-white data-[state=on]:hover:bg-[#0b0a0e]/90"
-                    >
-                      {tab.label}
-                      <Badge className={`h-auto min-w-5 rounded-full px-1.5 py-0.5 text-[10px] ${
-                        active ? "bg-[#ffffff]/15 text-white" : "bg-[#eef3f8] text-[#476a99]"
-                      }`}>
-                        {tab.count}
-                      </Badge>
-                    </ToggleGroupItem>
-                  );
-                })}
-              </ToggleGroup>
+    <section aria-label="Meddelanden" className="mx-auto flex h-full min-h-0 w-full max-w-[1440px] flex-col bg-canvas p-4">
+      <div className="grid min-h-0 flex-1 gap-5 md:grid-cols-[300px_minmax(0,1fr)] xl:grid-cols-[340px_minmax(0,1fr)]">
+        <Card className={`${mobileChat ? "hidden md:flex" : "flex"} min-h-0 flex-col gap-0 overflow-hidden bg-surface p-0`}>
+          <header className="space-y-4 border-b border-border p-5">
+            <h2 className="text-base font-semibold text-ink-900">Konversationer</h2>
+
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-ink-400" />
+              <Input
+                aria-label="Sök konversationer"
+                placeholder="Sök namn eller företag…"
+                className="bg-control pl-9"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+              />
             </div>
-
-            <div className="max-h-[360px] overflow-y-auto px-3 py-3 lg:min-h-0 lg:max-h-none lg:flex-1">
-              {filteredConversations.map((conversation) => {
-                const active = conversation.id === activeConversation?.id;
-                return (
-                  <Button
-                    key={conversation.id}
-                    type="button"
-                    variant="ghost"
-                    onClick={() => setActiveConversationId(conversation.id)}
-                    className={`message-list-row mb-2 grid h-auto w-full grid-cols-[auto,1fr,auto] gap-3 rounded-[26px] px-4 py-4 text-left font-normal transition ${
-                      active
-                        ? "bg-[#efefee] hover:bg-[#efefee]"
-                        : "bg-transparent hover:bg-[#efefee]"
-                    }`}
-                  >
-                    <div className="flex flex-col items-center gap-2 pt-1">
-                      <Avatar className="h-10 w-10">
-                        <AvatarFallback className={`text-sm font-semibold ${active ? "bg-[#0b0a0e] text-white" : "bg-[#dbe6f3] text-[#0b0a0e]"}`}>
-                          {conversation.counterpartInitials}
-                        </AvatarFallback>
-                      </Avatar>
-                    </div>
-
-                    <div className="min-w-0">
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="truncate text-sm font-semibold text-ink-900">{conversation.counterpartName}</p>
-                          {isBrokerView ? (
-                            <Badge variant="outline" className={`h-auto shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${pipelineToneClass(conversation.pipelineTone)}`}>
-                              {conversation.pipelineLabel}
-                            </Badge>
-                          ) : null}
-                        </div>
-                        <p className="truncate text-xs text-ink-500">{conversation.company}</p>
-                      </div>
-                      <p className="mt-2 truncate text-sm leading-snug text-ink-700">
-                        {MESSAGE_LISTING.address} · {MESSAGE_LISTING.size} m² · {MESSAGE_LISTING.title}
+            <ToggleGroup
+              aria-label="Filtrera konversationer"
+              value={[filter]}
+              onValueChange={(value) => value[0] && setFilter(value[0])}
+              className="flex w-full gap-1"
+            >
+              {[
+                ["all", "Alla"],
+                ["unread", "Olästa"],
+                ["saved", "Favoriter"],
+                ["archived", "Arkiv"],
+              ].map(([value, label]) => (
+                <ToggleGroupItem key={value} value={value} className="min-w-0 flex-1 px-2 text-xs">
+                  {label}
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
+          </header>
+          <nav aria-label="Konversationer" className="min-h-0 flex-1 space-y-1 overflow-y-auto p-2">
+            {visible.map((item) => (
+              <Button
+                key={item.id}
+                variant="ghost"
+                aria-current={active.id === item.id ? "true" : undefined}
+                onClick={() => {
+                  setSelectedId(item.id);
+                  setMobileChat(true);
+                }}
+                className={`h-auto w-full justify-start gap-3 whitespace-normal rounded-lg p-3 text-left font-normal ${active.id === item.id ? "bg-tint-2 hover:bg-tint-2" : "hover:bg-control"}`}
+              >
+                <Avatar className="h-10 w-10 shrink-0">
+                  <AvatarFallback className="bg-tint-3 text-xs font-medium text-ink-900">{item.counterpartInitials}</AvatarFallback>
+                </Avatar>
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center justify-between gap-2">
+                    <span className="truncate text-sm font-semibold">{item.counterpartName}</span>
+                    <span className="shrink-0 text-[10px] text-ink-500">{item.timestamp}</span>
+                  </span>
+                  <span className="mt-0.5 block truncate text-xs text-ink-500">{item.company}</span>
+                  <span className="mt-2 flex items-center gap-2">
+                    <span className="truncate text-xs text-ink-600">{item.summary}</span>
+                    {unread(item) ? <span aria-label="Oläst" className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand-600" /> : null}
+                  </span>
+                </span>
+              </Button>
+            ))}
+            {!visible.length && (
+              <div className="px-5 py-12 text-center">
+                <Search className="mx-auto mb-3 h-5 w-5 text-ink-400" />
+                <p className="text-sm font-medium">Inga konversationer</p>
+                <p className="mt-1 text-xs text-ink-500">Prova ett annat sökord eller filter.</p>
+              </div>
+            )}
+          </nav>
+          <p className="border-t border-border px-5 py-3 text-xs text-ink-500">Demokonversationer · inga meddelanden skickas</p>
+        </Card>
+        <Card className={`${mobileChat ? "flex" : "hidden md:flex"} min-h-0 min-w-0 flex-col gap-0 overflow-hidden bg-surface p-0`}>
+          <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-4 lg:px-6">
+            <div className="flex min-w-0 items-center gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Till konversationer"
+                className="md:hidden"
+                onClick={() => setMobileChat(false)}
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <Avatar className="h-10 w-10">
+                <AvatarFallback className="bg-strong text-xs text-on-strong">{active.counterpartInitials}</AvatarFallback>
+              </Avatar>
+              <div className="min-w-0">
+                <h2 className="truncate text-sm font-semibold">{active.counterpartName}</h2>
+                <p className="mt-0.5 truncate text-xs text-ink-500">{active.company}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-1">
+              {isBroker && (
+                <Select
+                  value={statuses[active.id] || active.stage}
+                  onValueChange={(value) => setStatuses((prev) => ({ ...prev, [active.id]: value }))}
+                >
+                  <SelectTrigger aria-label="Konversationsstatus" className="mr-2 h-8 w-[145px] text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {["Ny", "Kvalificerad", "Visning klar", "Uppföljning", "Kontrakt", "Ej aktuell"].map((status) => (
+                      <SelectItem key={status} value={status}>
+                        {status}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={favorites[active.id] ? "Ta bort favorit" : "Favoritmarkera"}
+                aria-pressed={!!favorites[active.id]}
+                onClick={() => setFavorites((prev) => ({ ...prev, [active.id]: !prev[active.id] }))}
+              >
+                <Star className={`h-4 w-4 ${favorites[active.id] ? "fill-current" : ""}`} />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={archived[active.id] ? "Återställ konversation" : "Arkivera konversation"}
+                onClick={() => {
+                  setArchived((prev) => ({ ...prev, [active.id]: !prev[active.id] }));
+                  setMobileChat(false);
+                }}
+              >
+                <Archive className="h-4 w-4" />
+              </Button>
+            </div>
+          </header>
+          <div className="flex items-center gap-3 border-b border-border bg-canvas px-4 py-3 lg:px-6">
+            <Building2 className="h-4 w-4 shrink-0 text-ink-500" />
+            <p className="min-w-0 truncate text-xs">
+              <span className="font-medium">{MESSAGE_LISTING.title}</span>
+              <span className="ml-2 text-ink-500">
+                {MESSAGE_LISTING.size} m² · {MESSAGE_LISTING.district}
+              </span>
+            </p>
+          </div>
+          <div role="log" aria-label="Meddelandehistorik" className="min-h-0 flex-1 overflow-y-auto px-4 py-6 lg:px-8">
+            <div className="mx-auto max-w-3xl space-y-5">
+              {active.messages.map((message) =>
+                message.type === "system" ? (
+                  <p key={message.id} className="mx-auto max-w-sm py-3 text-center text-xs leading-relaxed text-ink-500">
+                    {message.text}
+                    <span className="mt-1 block text-[10px]">{message.timestamp}</span>
+                  </p>
+                ) : (
+                  <div key={message.id} className={`flex ${message.sender === "self" ? "justify-end" : "justify-start"}`}>
+                    <div className="max-w-[88%] space-y-1.5 sm:max-w-[78%]">
+                      <Card
+                        className={`gap-0 whitespace-pre-wrap break-words rounded-xl px-4 py-3 text-sm leading-relaxed shadow-none ${message.sender === "self" ? "rounded-br-sm border-transparent bg-strong text-on-strong" : "rounded-bl-sm bg-canvas text-ink-800"}`}
+                      >
+                        {message.text}
+                      </Card>
+                      <p className={`px-1 text-[10px] text-ink-500 ${message.sender === "self" ? "text-right" : ""}`}>
+                        {message.sender === "self" ? "Du" : active.counterpartName.split(" ")[0]} · {message.timestamp}
                       </p>
                     </div>
-
-                    <div className="text-right">
-                      <p className="text-[11px] font-semibold text-ink-400">{conversation.timestamp}</p>
-                      {!isBrokerView && conversation.unreadCount > 0 ? (
-                        <Badge className="mt-2 min-w-5 rounded-full bg-[#0b0a0e] px-1.5 py-0.5 text-[10px] font-semibold text-white">
-                          {conversation.unreadCount}
-                        </Badge>
-                      ) : null}
-                    </div>
-                  </Button>
-                );
-              })}
-            </div>
-          </aside>
-
-          <div className="flex min-h-[620px] flex-col border-b border-black/10 bg-[#ffffff] lg:min-h-0 lg:border-b-0 xl:border-r">
-            {activeConversation ? (
-              <>
-                <header className="border-b border-black/10 bg-[#ffffff] px-4 py-4 sm:px-5">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <Avatar className="h-12 w-12 shrink-0">
-                        <AvatarFallback className="bg-[#0b0a0e] text-sm font-semibold text-white">{activeConversation.counterpartInitials}</AvatarFallback>
-                      </Avatar>
-                      <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h2 className="truncate text-lg font-semibold text-[#0b0a0e]">{activeConversation.counterpartName}</h2>
-                          {isBrokerView ? (
-                            <Badge variant="outline" className="h-auto rounded-full bg-[#eef3f8] px-2 py-0.5 text-[11px] font-semibold text-[#476a99]">{activeConversation.stage}</Badge>
-                          ) : (
-                            <Badge variant="outline" className="h-auto rounded-full bg-[#eef3f8] px-2 py-0.5 text-[11px] font-semibold text-[#476a99]">{BROKER_PROFILE.role}</Badge>
-                          )}
-                        </div>
-                        <p className="truncate text-sm text-ink-600">
-                          {isBrokerView
-                            ? `${activeConversation.company} · ${MESSAGE_LISTING.title}`
-                            : `${BROKER_PROFILE.company} · ${MESSAGE_LISTING.title}`}
-                        </p>
-                        <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-ink-500">
-                          {isBrokerView ? <span>Ansvarig mäklare: {BROKER_PROFILE.name}</span> : null}
-                          <span className="inline-flex items-center gap-1">
-                            <CircleDotIcon className="h-3.5 w-3.5 fill-[#406947] text-[#406947]" />
-                            Aktiv 12 min sedan
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <Button type="button" variant="outline" className="h-auto gap-1.5 rounded-full border-black/10 px-3 py-2 text-xs font-semibold text-ink-800 hover:bg-transparent">
-                        <CalendarIcon className="h-3.5 w-3.5" />
-                        {isBrokerView ? "Visning att boka" : "Svara på tider"}
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        className="h-10 w-10 rounded-full border-black/10 text-ink-800 hover:bg-transparent"
-                        onClick={toggleActiveConversationFavorite}
-                      >
-                        <StarIcon className={`h-3.5 w-3.5 ${activeConversationIsFavorite ? "fill-[#0b0a0e] text-[#0b0a0e]" : "text-ink-500"}`} />
-                      </Button>
-                      <Button type="button" variant="outline" size="icon" className="h-10 w-10 rounded-full border-black/10 text-ink-700 hover:bg-transparent">
-                        <MoreHorizontalIcon className="h-4 w-4" />
-                      </Button>
-                    </div>
                   </div>
-                </header>
-
-                <div className="min-h-0 flex-1 overflow-y-auto bg-[#ffffff] px-4 py-5 sm:px-5">
-                  <div className="mx-auto max-w-3xl space-y-4">
-                    {activeConversation.messages.length > 0 ? activeConversation.messages.map((message) => {
-                      if (message.type === "system") {
-                        return (
-                          <div key={message.id} className="flex flex-col items-center gap-2">
-                            <div className="flex w-full max-w-sm items-center gap-3 rounded-2xl border border-black/10 bg-[#ffffff] p-2">
-                              <img
-                                src={MESSAGE_LISTING.image}
-                                alt={MESSAGE_LISTING.title}
-                                className="h-14 w-14 shrink-0 rounded-xl object-cover"
-                                loading="lazy"
-                              />
-                              <div className="min-w-0 flex-1">
-                                <p className="truncate text-sm font-semibold text-[#0b0a0e]">{MESSAGE_LISTING.title}</p>
-                                <p className="truncate text-xs text-ink-600">{MESSAGE_LISTING.district} · {MESSAGE_LISTING.size} m²</p>
-                                <p className="text-xs font-semibold text-ink-800">{formatSek(MESSAGE_LISTING.priceMonthly)}/mån</p>
-                              </div>
-                            </div>
-                            <p className="text-[11px] text-ink-400">{message.timestamp}</p>
-                          </div>
-                        );
-                      }
-
-                      const self = message.sender === "self";
-                      return (
-                        <div key={message.id} className={`flex ${self ? "justify-end" : "justify-start"}`}>
-                          <div className={`flex max-w-[85%] flex-col gap-1 ${self ? "items-end" : "items-start"}`}>
-                            <span className="px-1 text-[11px] text-ink-400">{message.timestamp}</span>
-                            <div className={`rounded-[26px] px-4 py-3 text-sm leading-relaxed shadow-[0_12px_28px_rgba(15,25,48,0.06)] ${
-                              self
-                                ? "rounded-br-md bg-[#0b0a0e] text-white"
-                                : "rounded-bl-md border border-black/10 bg-[#fbfbfa] text-ink-800"
-                            }`}>
-                              {message.text.split("\n").map((line) => (
-                                <p key={`${message.id}-${line}`} className="whitespace-pre-wrap">{line}</p>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    }) : (
-                      <div className="pt-12 text-sm text-ink-600">Välj en aktiv konversation för att läsa dialogen.</div>
-                    )}
-                  </div>
+                ),
+              )}
+              {!active.messages.length && (
+                <div className="py-16 text-center">
+                  <MessageSquare className="mx-auto mb-3 h-7 w-7 text-ink-400" />
+                  <p className="text-sm font-medium">Ingen meddelandehistorik</p>
+                  <p className="mt-1 text-xs text-ink-500">Det finns inga meddelanden i den här demokonversationen.</p>
                 </div>
-
-                <footer className="border-t border-black/10 bg-[#ffffff] px-4 py-4 sm:px-5">
-                  <div className="mx-auto flex max-w-3xl items-center gap-2">
-                    <Popover open={showSuggestions} onOpenChange={setShowSuggestions}>
-                      <PopoverTrigger
-                        render={
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="icon"
-                            aria-label="Föreslagna svar"
-                            className={`h-11 w-11 rounded-full ${
-                              showSuggestions ? "border-[#0b0a0e] bg-black/5 text-[#0b0a0e] hover:bg-black/5" : "border-black/10 bg-[#fbfbfa] text-ink-500 hover:border-[#0b0a0e]/25 hover:bg-[#fbfbfa]"
-                            }`}
-                          />
-                        }
-                      >
-                        <SparklesIcon className="h-4 w-4" />
-                      </PopoverTrigger>
-                      <PopoverContent
-                        side="top"
-                        align="start"
-                        className="w-[320px] max-h-[360px] overflow-y-auto rounded-3xl border border-black/10 p-3 shadow-[0_20px_48px_rgba(15,25,48,0.16)]"
-                      >
-                        <div className="flex items-center gap-2 px-1">
-                          <SparklesIcon className="h-4 w-4 text-[#0b0a0e]" />
-                          <h3 className="text-sm font-semibold text-[#0b0a0e]">Föreslagna svar</h3>
-                        </div>
-                        <p className="mt-1 px-1 text-xs text-ink-600">Baserat på senaste meddelandet</p>
-                        <div className="mt-2 space-y-2">
-                          {activeConversation?.suggestions?.length ? activeConversation.suggestions.map((suggestion) => (
-                            <Button
-                              key={suggestion.id}
-                              type="button"
-                              variant="ghost"
-                              onClick={() => {
-                                useSuggestion(suggestion.text);
-                                setShowSuggestions(false);
-                              }}
-                              className="message-suggestion-card block h-auto w-full whitespace-normal border border-black/10 bg-[#fbfbfa] p-3 text-left font-normal transition hover:bg-[#ffffff]"
-                            >
-                              <div className="flex items-center justify-between gap-2">
-                                <Badge variant="outline" className={`h-auto rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide ${suggestionToneClass(suggestion.tone)}`}>
-                                  {suggestion.tag}
-                                </Badge>
-                                <span className="text-[11px] text-ink-500">{suggestion.label}</span>
-                              </div>
-                              <p className="mt-2 text-sm leading-relaxed text-ink-800">{suggestion.text}</p>
-                            </Button>
-                          )) : (
-                            <p className="px-1 py-2 text-sm text-ink-500">Inga förslag just nu.</p>
-                          )}
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-
-                    <div className="flex min-w-0 flex-1 items-center gap-3 rounded-[28px] border border-black/10 bg-[#fbfbfa] p-2">
-                      <Button type="button" variant="ghost" size="icon" className="h-9 w-9 rounded-full text-ink-500 hover:bg-transparent">
-                        <PaperclipIcon className="h-4 w-4" />
-                      </Button>
-                      <Input
-                        className="h-auto min-w-0 flex-1 border-none bg-transparent px-0 shadow-none focus-visible:ring-0"
-                        placeholder={isBrokerView ? "Skriv ett svar..." : "Skriv ett meddelande..."}
-                        value={draft}
-                        onChange={(event) => setDraft(event.target.value)}
-                      />
-                      <Button
-                        type="button"
-                        size="icon"
-                        aria-label="Skicka"
-                        className="h-10 w-10 rounded-full bg-[#0b0a0e] hover:bg-[#0b0a0e]/90"
-                        onClick={sendDraft}
-                      >
-                        <SendHorizontalIcon className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </footer>
-              </>
-            ) : null}
+              )}
+            </div>
           </div>
-
-        </div>
+          <footer className="shrink-0 border-t border-border px-4 py-4 lg:px-6">
+            <form onSubmit={sendDraft} className="mx-auto max-w-3xl">
+              <Card className="gap-0 overflow-hidden rounded-xl p-0 shadow-none focus-within:ring-2 focus-within:ring-brand-200">
+                <input ref={attachmentInput} type="file" multiple hidden tabIndex={-1} onChange={addAttachments} />
+                {activeAttachments.length > 0 && <ul aria-label="Bilagor" className="flex flex-wrap gap-2 px-3 pt-3">
+                  {activeAttachments.map(({ id, file }) => <li key={id} className="flex max-w-full items-center gap-2 rounded-md border border-border bg-canvas py-1 pl-2 pr-1">
+                    <File className="h-4 w-4 shrink-0 text-ink-500" />
+                    <span className="min-w-0 truncate text-xs" title={file.name}>{file.name}</span>
+                    <Button type="button" variant="ghost" size="icon" aria-label={`Ta bort ${file.name}`} onClick={() => setAttachments((prev) => ({ ...prev, [active.id]: prev[active.id].filter((item) => item.id !== id) }))}><X className="h-3 w-3" /></Button>
+                  </li>)}
+                </ul>}
+                <Textarea
+                  ref={composer}
+                  aria-label="Meddelande"
+                  placeholder={`Skriv till ${active.counterpartName.split(" ")[0]}…`}
+                  rows={2}
+                  value={draft}
+                  onChange={(event) => updateDraft(event.target.value)}
+                  className="max-h-40 min-h-[64px] resize-y border-0 px-4 py-3 shadow-none focus-visible:ring-0"
+                />
+                <div className="flex items-center justify-between gap-2 px-3 pb-3">
+                  <div className="flex min-w-0 items-center gap-1">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger render={<Button type="button" variant="ghost" size="icon" aria-label="Bifoga till meddelande" />}><Plus className="h-4 w-4" /></DropdownMenuTrigger>
+                    <DropdownMenuContent side="top" align="start">
+                      <DropdownMenuItem onClick={() => pickAttachment("image/*")}><Image className="h-4 w-4" />Bifoga bild</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => pickAttachment("")}><File className="h-4 w-4" />Bifoga fil</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => pickAttachment(".pdf,.doc,.docx,.odt,.rtf,.txt")}><FileText className="h-4 w-4" />Bifoga dokument</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <Popover open={suggestionsOpen} onOpenChange={setSuggestionsOpen}>
+                    <PopoverTrigger render={<Button type="button" variant="ghost" size="sm" disabled={!active.suggestions?.length} />}>
+                      <Sparkles className="mr-1.5 h-4 w-4" />
+                      Svarsförslag
+                    </PopoverTrigger>
+                    <PopoverContent side="top" align="start" className="w-80 max-w-[calc(100vw-2rem)] p-2">
+                      <p className="px-2 py-2 text-xs font-medium text-ink-500">Välj ett utkast att anpassa</p>
+                      {active.suggestions?.map((item) => (
+                        <Button
+                          key={item.id}
+                          type="button"
+                          variant="ghost"
+                          className="block h-auto w-full whitespace-normal p-3 text-left"
+                          onClick={() => {
+                            updateDraft(item.text);
+                            setSuggestionsOpen(false);
+                            composer.current?.focus();
+                          }}
+                        >
+                          <span className="block text-xs font-semibold">{item.label}</span>
+                          <span className="mt-1 block text-xs font-normal leading-relaxed text-ink-500">{item.text}</span>
+                        </Button>
+                      ))}
+                    </PopoverContent>
+                  </Popover>
+                  </div>
+                  <Button type="submit" size="sm" disabled={!draft.trim() && !activeAttachments.length}>
+                    <Send className="mr-2 h-4 w-4" />
+                    Skicka
+                  </Button>
+                </div>
+              </Card>
+              <p className="mt-2 text-[10px] text-ink-500">Demoläge. Svar, status och favoriter sparas inte permanent.</p>
+            </form>
+          </footer>
+        </Card>
       </div>
     </section>
   );
 }
-
-export default MessagesPage;

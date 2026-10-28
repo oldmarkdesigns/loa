@@ -1,3 +1,6 @@
+import LocalProgramWorkspace from "../../components/app/LocalProgramWorkspace";
+import LocalProgramFlow from "../../components/app/LocalProgramFlow";
+import EditorWorkspace from "../../components/layout/EditorWorkspace";
 import { useEffect, useMemo, useRef, useState } from "react";
 import ListingVisualCard from "../../components/app/ListingVisualCard";
 import LocalProgramModule from "../../components/app/LocalProgramModule";
@@ -269,6 +272,7 @@ function ProfilePage({ app }) {
     const selectedProgram = renterPrograms.find((program) => program.id === editingProgramId) || createBlankProgram(renterPrograms.length);
     setProgramDraft({
       id: selectedProgram.id || "",
+      contextNotes: selectedProgram.contextNotes || {},
       title: selectedProgram.title || `Lokalprogram ${renterPrograms.length + 1}`,
       district: selectedProgram.district || "Alla",
       type: listFromDelimitedValue(selectedProgram.type),
@@ -444,30 +448,33 @@ function ProfilePage({ app }) {
     }
   }
 
-  async function saveProgramChanges() {
+  // `draftOverride` is a program that has only just been finished (the new-program flow keeps its own draft); without one the
+  // editor's draft is saved. `keepOpen` leaves the window open for the flow's own "done" screen. Resolves to the saved program.
+  async function saveProgramChanges(draftOverride, { keepOpen = false, message = "Lokalprogram uppdaterat." } = {}) {
+    const source = draftOverride && typeof draftOverride.title === "string" ? draftOverride : programDraft;
     if (!updateProfile) {
       app.pushToast?.("Kunde inte spara ändringarna just nu.", "error");
-      return;
+      return null;
     }
     setSavingProgram(true);
     try {
       const nextProgram = {
-        ...programDraft,
-        id: programDraft.id || `program-${Date.now()}`,
-        title: String(programDraft.title || "").trim() || `Lokalprogram ${renterPrograms.length + 1}`,
-        type: Array.isArray(programDraft.type) ? programDraft.type.filter(Boolean) : [],
-        teamSize: String(programDraft.teamSize || "").trim(),
-        minSize: String(programDraft.minSize || "").trim(),
-        maxSize: String(programDraft.maxSize || "").trim(),
-        minBudget: String(programDraft.minBudget || "").trim(),
-        maxBudget: String(programDraft.maxBudget || "").trim(),
-        moveInDate: programDraft.moveInDate || "",
-        contractFlex: programDraft.contractFlex || "",
-        transitDistance: programDraft.transitDistance || "",
-        accessHours: programDraft.accessHours || "",
-        parkingType: programDraft.parkingType || "",
-        layoutType: programDraft.layoutType || "",
-        amenities: programDraft.amenities || ""
+        ...source,
+        id: source.id || `program-${Date.now()}`,
+        title: String(source.title || "").trim() || `Lokalprogram ${renterPrograms.length + 1}`,
+        type: Array.isArray(source.type) ? source.type.filter(Boolean) : [],
+        teamSize: String(source.teamSize || "").trim(),
+        minSize: String(source.minSize || "").trim(),
+        maxSize: String(source.maxSize || "").trim(),
+        minBudget: String(source.minBudget || "").trim(),
+        maxBudget: String(source.maxBudget || "").trim(),
+        moveInDate: source.moveInDate || "",
+        contractFlex: source.contractFlex || "",
+        transitDistance: source.transitDistance || "",
+        accessHours: source.accessHours || "",
+        parkingType: source.parkingType || "",
+        layoutType: source.layoutType || "",
+        amenities: source.amenities || ""
       };
       const nextPrograms = editingProgramId
         ? renterPrograms.map((program) => program.id === editingProgramId ? nextProgram : program)
@@ -486,11 +493,15 @@ function ProfilePage({ app }) {
           moveInTimeline: activeProgram.moveInDate || ""
         }
       });
-      app.pushToast?.("Lokalprogram uppdaterat.", "success");
-      setShowProgramOverlay(false);
-      setEditingProgramId(null);
+      app.pushToast?.(message, "success");
+      if (!keepOpen) {
+        setShowProgramOverlay(false);
+        setEditingProgramId(null);
+      }
+      return nextProgram;
     } catch (error) {
       app.pushToast?.(error.message || "Kunde inte spara lokalprogrammet.", "error");
+      return null;
     } finally {
       setSavingProgram(false);
     }
@@ -539,18 +550,18 @@ function ProfilePage({ app }) {
   return (
     <section className="relative flex h-full min-h-0 flex-col">
       {activeTab === "favorites" || activeTab === "history" ? (
-        <div className="shrink-0 border-b border-black/10 bg-[#ffffff] px-4 py-2 sm:px-6">
+        <div className="shrink-0 border-b border-veil/10 bg-surface px-4 py-2 sm:px-6">
           <Tabs value={activeTab} onValueChange={activateTab} className="mx-auto w-full max-w-[1240px]">
             <TabsList variant="line" className="h-auto w-fit justify-start gap-5 bg-transparent p-0">
               <TabsTrigger
                 value="favorites"
-                className="h-auto rounded-none border-b-2 border-transparent px-0 pb-0.5 text-sm font-semibold text-[#0b0a0e]/85 shadow-none transition after:hidden hover:bg-transparent hover:text-[#0b0a0e] data-active:border-[#0b0a0e] data-active:bg-transparent data-active:text-[#0b0a0e] data-active:shadow-none"
+                className="h-auto rounded-none border-b-2 border-transparent px-0 pb-0.5 text-sm font-semibold text-strong/85 shadow-none transition after:hidden hover:bg-transparent hover:text-strong data-active:border-strong data-active:bg-transparent data-active:text-strong data-active:shadow-none"
               >
                 Sparade objekt
               </TabsTrigger>
               <TabsTrigger
                 value="history"
-                className="h-auto rounded-none border-b-2 border-transparent px-0 pb-0.5 text-sm font-semibold text-[#0b0a0e]/85 shadow-none transition after:hidden hover:bg-transparent hover:text-[#0b0a0e] data-active:border-[#0b0a0e] data-active:bg-transparent data-active:text-[#0b0a0e] data-active:shadow-none"
+                className="h-auto rounded-none border-b-2 border-transparent px-0 pb-0.5 text-sm font-semibold text-strong/85 shadow-none transition after:hidden hover:bg-transparent hover:text-strong data-active:border-strong data-active:bg-transparent data-active:text-strong data-active:shadow-none"
               >
                 Sparade sökningar
               </TabsTrigger>
@@ -571,10 +582,10 @@ function ProfilePage({ app }) {
                           <img
                             src={user.profile.avatarUrl}
                             alt={user?.name || "Profilbild"}
-                            className="h-36 w-36 rounded-full border border-black/10 object-cover"
+                            className="h-36 w-36 rounded-full border border-veil/10 object-cover"
                           />
                         ) : (
-                          <div className="inline-flex h-36 w-36 items-center justify-center rounded-full border border-black/10 bg-[#eef2f8] text-3xl font-semibold text-ink-700">
+                          <div className="inline-flex h-36 w-36 items-center justify-center rounded-full border border-veil/10 bg-tint-2 text-3xl font-semibold text-ink-700">
                             {(user?.name || "AA")
                               .split(" ")
                               .filter(Boolean)
@@ -587,7 +598,7 @@ function ProfilePage({ app }) {
                           type="button"
                           variant="outline"
                           size="icon"
-                          className="absolute right-1 top-1 h-9 w-9 rounded-full border-black/20 text-ink-700 hover:border-[#0b0a0e] hover:bg-transparent hover:text-[#0b0a0e]"
+                          className="absolute right-1 top-1 h-9 w-9 rounded-full border-veil/20 text-ink-700 hover:border-strong hover:bg-transparent hover:text-strong"
                           aria-label="Redigera profilbild"
                           onClick={() => setShowTeamOverlay(true)}
                         >
@@ -596,11 +607,11 @@ function ProfilePage({ app }) {
                       </div>
                       <div>
                         <div className="flex flex-wrap items-center gap-2">
-                          <p className="text-2xl font-semibold text-[#0b0a0e]">{user?.name || "Användare"}</p>
+                          <p className="text-2xl font-semibold text-strong">{user?.name || "Användare"}</p>
                         </div>
-                        <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-black/10 bg-[#ffffff] px-4 py-2 text-sm font-semibold text-[#241d1a]">
+                        <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-veil/10 bg-surface px-4 py-2 text-sm font-semibold text-strong">
                           <span
-                            className="inline-flex h-5 w-5 items-center justify-center bg-[#0b0a0e] text-white"
+                            className="inline-flex h-5 w-5 items-center justify-center bg-strong text-on-strong"
                             style={{ clipPath: "polygon(50% 1%,58% 4%,66% 2%,73% 8%,81% 8%,88% 15%,96% 19%,99% 28%,97% 36%,99% 44%,94% 51%,95% 59%,89% 66%,86% 75%,78% 79%,71% 86%,62% 87%,55% 94%,47% 92%,39% 97%,32% 91%,23% 91%,18% 83%,9% 81%,6% 72%,1% 65%,3% 56%,0% 48%,6% 41%,4% 33%,10% 26%,11% 17%,20% 13%,25% 5%,34% 5%,42% 1%)" }}
                           >
                             <svg aria-hidden="true" viewBox="0 0 24 24" className="h-3.5 w-3.5">
@@ -617,7 +628,7 @@ function ProfilePage({ app }) {
                         <Button
                           type="button"
                           variant="outline"
-                          className="h-auto gap-1.5 rounded-full border-black/20 px-3 py-2 text-xs font-semibold text-ink-700 hover:border-[#0b0a0e] hover:bg-transparent hover:text-[#0b0a0e]"
+                          className="h-auto gap-1.5 rounded-full border-veil/20 px-3 py-2 text-xs font-semibold text-ink-700 hover:border-strong hover:bg-transparent hover:text-strong"
                           disabled={pendingRole}
                           onClick={async () => {
                             setPendingRole(true);
@@ -637,7 +648,7 @@ function ProfilePage({ app }) {
                         <Button
                           type="button"
                           variant="outline"
-                          className="h-auto gap-1.5 rounded-full border-black/20 px-3 py-2 text-xs font-semibold text-ink-700 hover:border-[#0b0a0e] hover:bg-transparent hover:text-[#0b0a0e]"
+                          className="h-auto gap-1.5 rounded-full border-veil/20 px-3 py-2 text-xs font-semibold text-ink-700 hover:border-strong hover:bg-transparent hover:text-strong"
                           disabled={pendingRole}
                           onClick={async () => {
                             setPendingRole(true);
@@ -655,7 +666,7 @@ function ProfilePage({ app }) {
                       <Button
                         type="button"
                         variant="outline"
-                        className="h-auto gap-1.5 rounded-full border-black/20 px-4 py-2 text-xs font-semibold text-ink-700 hover:border-[#0b0a0e] hover:bg-transparent hover:text-[#0b0a0e]"
+                        className="h-auto gap-1.5 rounded-full border-veil/20 px-4 py-2 text-xs font-semibold text-ink-700 hover:border-strong hover:bg-transparent hover:text-strong"
                         onClick={() => setShowTeamOverlay(true)}
                       >
                         <PencilIcon className="h-4 w-4" />
@@ -671,7 +682,7 @@ function ProfilePage({ app }) {
               <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
                 <div className="space-y-5">
                   {showProfileSetupCard ? (
-                  <article className="rounded-3xl border border-black/10 bg-[#ffffff] p-5 sm:p-6">
+                  <article className="rounded-3xl border border-veil/10 bg-surface p-5 sm:p-6">
                     <Button
                       type="button"
                       variant="ghost"
@@ -679,11 +690,11 @@ function ProfilePage({ app }) {
                       onClick={() => setIsProfileSetupCollapsed((prev) => !prev)}
                       aria-expanded={!isProfileSetupCollapsed}
                     >
-                      <h2 className="text-2xl font-semibold text-[#0b0a0e]">Slutför din profil</h2>
+                      <h2 className="text-2xl font-semibold text-strong">Slutför din profil</h2>
                       {isProfileSetupCollapsed ? (
                         <span className="text-2xl leading-none text-ink-700 transition-transform duration-300">›</span>
                       ) : (
-                        <Badge variant="outline" className="h-auto gap-1.5 rounded-full px-4 py-2 text-xs font-semibold text-ink-700 hover:border-[#0b0a0e] hover:text-[#0b0a0e]">
+                        <Badge variant="outline" className="h-auto gap-1.5 rounded-full px-4 py-2 text-xs font-semibold text-ink-700 hover:border-strong hover:text-strong">
                           <EyeIcon className="h-4 w-4" />
                           Dölj
                         </Badge>
@@ -701,7 +712,7 @@ function ProfilePage({ app }) {
                         <p className="text-sm font-semibold text-ink-700">{profileSetupProgress.percent}% klart</p>
                         <Progress
                           value={profileSetupProgress.percent}
-                          className="mt-2 [&_[data-slot=progress-track]]:h-3 [&_[data-slot=progress-track]]:border [&_[data-slot=progress-track]]:border-black/10 [&_[data-slot=progress-track]]:bg-[#eef2f8] [&_[data-slot=progress-indicator]]:bg-[#0b0a0e]"
+                          className="mt-2 [&_[data-slot=progress-track]]:h-3 [&_[data-slot=progress-track]]:border [&_[data-slot=progress-track]]:border-veil/10 [&_[data-slot=progress-track]]:bg-tint-2 [&_[data-slot=progress-indicator]]:bg-strong"
                         />
                       </div>
 
@@ -709,7 +720,7 @@ function ProfilePage({ app }) {
                         {profileSetupProgress.done} av {profileSetupProgress.total} steg klara
                       </p>
 
-                      <div className="mt-4 border-t border-black/10 pt-3">
+                      <div className="mt-4 border-t border-veil/10 pt-3">
                         <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-700">Saker kvar att göra</p>
                         <div className="mt-2 grid gap-1.5">
                           {profileSetupTasks.map((task) => (
@@ -717,13 +728,13 @@ function ProfilePage({ app }) {
                               key={task.id}
                               type="button"
                               variant="ghost"
-                              className="h-auto justify-start gap-2.5 rounded-xl px-2 py-1.5 text-left text-[15px] font-normal text-ink-500 hover:bg-black/5"
+                              className="h-auto justify-start gap-2.5 rounded-xl px-2 py-1.5 text-left text-[15px] font-normal text-ink-500 hover:bg-veil/5"
                               onClick={() => openTaskEditor(task.target)}
                             >
                               <span className={`inline-flex h-6 w-6 items-center justify-center rounded-full border ${
                                 task.done
-                                  ? "border-transparent bg-[#0b0a0e] text-white"
-                                  : "border-black/20 bg-[#ffffff] text-ink-500"
+                                  ? "border-transparent bg-strong text-on-strong"
+                                  : "border-veil/20 bg-surface text-ink-500"
                               }`}>
                                 {task.done ? (
                                   <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4">
@@ -751,12 +762,12 @@ function ProfilePage({ app }) {
                   <section className="pt-3">
                     <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                       <div>
-                        <h2 className="text-2xl font-semibold text-[#0b0a0e]">Lokaler som matchar dina preferenser</h2>
+                        <h2 className="text-2xl font-semibold text-strong">Lokaler som matchar dina preferenser</h2>
                         <p className="mt-1 text-sm text-ink-600">Matchningar med tydlig motivering utifrån ditt lokalprogram.</p>
                       </div>
                     </div>
                     {preferenceMatches.length === 0 ? (
-                      <p className="rounded-2xl border border-black/10 bg-[#ffffff] px-4 py-4 text-sm text-ink-600">
+                      <p className="rounded-2xl border border-veil/10 bg-surface px-4 py-4 text-sm text-ink-600">
                         Inga matchningar ännu. Fyll i fler preferenser i lokalprogrammet.
                       </p>
                     ) : (
@@ -783,16 +794,16 @@ function ProfilePage({ app }) {
                 <aside className="space-y-6 lg:sticky lg:top-0 lg:self-start">
                   <div className="space-y-6">
                     {hasPendingBrokerVerification ? (
-                      <article className="rounded-3xl border border-[#0b0a0e]/15 bg-[#f8fafc] p-5">
+                      <article className="rounded-3xl border border-strong/15 bg-canvas p-5">
                         <div className="flex items-start gap-3">
-                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#0b0a0e] text-white">
+                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-strong text-on-strong">
                             <ShieldIcon className="h-5 w-5" />
                           </span>
                           <div>
-                            <p className="text-lg font-semibold text-[#0b0a0e]">Verifiering skickad</p>
+                            <p className="text-lg font-semibold text-strong">Verifiering skickad</p>
                             <p className="mt-1 text-sm leading-relaxed text-ink-600">
                               Din förfrågan om att bli mäklare hos{" "}
-                              <span className="font-semibold text-[#0b0a0e]">
+                              <span className="font-semibold text-strong">
                                 {brokerVerificationCompanyName}
                                 {brokerVerificationOrganizationNumber ? ` (${brokerVerificationOrganizationNumber})` : ""}
                               </span>{" "}
@@ -803,7 +814,7 @@ function ProfilePage({ app }) {
                         <Button
                           type="button"
                           variant="outline"
-                          className="mt-4 h-auto w-full gap-2 rounded-full border-black/10 px-4 py-2.5 text-sm font-semibold text-[#0b0a0e] shadow-[0_1px_0_rgba(15,25,48,0.04)] hover:bg-transparent"
+                          className="mt-4 h-auto w-full gap-2 rounded-full border-veil/10 px-4 py-2.5 text-sm font-semibold text-strong shadow-[0_1px_0_rgba(15,25,48,0.04)] hover:bg-transparent"
                           onClick={() => navigateTo("/onboarding/publisher-profile?role=broker&intent=add-role")}
                         >
                           <ShieldIcon className="h-4 w-4" />
@@ -813,12 +824,12 @@ function ProfilePage({ app }) {
                     ) : null}
 
                     {!hasPendingBrokerVerification && brokerVerificationApproved && !dismissedBrokerApprovalCard ? (
-                      <article className="relative rounded-3xl border border-black/10 bg-[#ffffff] p-5 pr-12">
+                      <article className="relative rounded-3xl border border-veil/10 bg-surface p-5 pr-12">
                         <Button
                           type="button"
                           variant="outline"
                           size="icon"
-                          className="absolute right-4 top-4 h-8 w-8 rounded-full border-black/10 text-ink-600 hover:border-[#0b0a0e] hover:bg-transparent hover:text-[#0b0a0e]"
+                          className="absolute right-4 top-4 h-8 w-8 rounded-full border-veil/10 text-ink-600 hover:border-strong hover:bg-transparent hover:text-strong"
                           aria-label="Dölj verifieringskort"
                           onClick={() => setDismissedBrokerApprovalCard(true)}
                         >
@@ -829,10 +840,10 @@ function ProfilePage({ app }) {
                             <CheckBadgeIcon className="h-5 w-5" />
                           </span>
                           <div>
-                            <p className="text-lg font-semibold text-[#0b0a0e]">Verifiering godkänd</p>
+                            <p className="text-lg font-semibold text-strong">Verifiering godkänd</p>
                             <p className="mt-1 text-sm leading-relaxed text-ink-700">
                               Du är verifierad som mäklare för{" "}
-                              <span className="font-semibold text-[#0b0a0e]">
+                              <span className="font-semibold text-strong">
                                 {brokerVerificationCompanyName}
                                 {brokerVerificationOrganizationNumber ? ` (${brokerVerificationOrganizationNumber})` : ""}
                               </span>.
@@ -848,16 +859,16 @@ function ProfilePage({ app }) {
                     ) : null}
 
                     {brokerVerificationRejected ? (
-                      <article className="rounded-3xl border border-black/10 bg-[#ffffff] p-5">
+                      <article className="rounded-3xl border border-veil/10 bg-surface p-5">
                         <div className="flex items-start gap-3">
                           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-rose-100 bg-rose-50 text-rose-700">
                             <ShieldIcon className="h-5 w-5" />
                           </span>
                           <div>
-                            <p className="text-lg font-semibold text-[#0b0a0e]">Verifiering nekad</p>
+                            <p className="text-lg font-semibold text-strong">Verifiering nekad</p>
                             <p className="mt-1 text-sm leading-relaxed text-ink-700">
                               Bolagsadmin för{" "}
-                              <span className="font-semibold text-[#0b0a0e]">
+                              <span className="font-semibold text-strong">
                                 {brokerVerificationCompanyName}
                                 {brokerVerificationOrganizationNumber ? ` (${brokerVerificationOrganizationNumber})` : ""}
                               </span>{" "}
@@ -876,7 +887,7 @@ function ProfilePage({ app }) {
                         <Button
                           type="button"
                           variant="outline"
-                          className="mt-2 h-auto w-full gap-2 rounded-full border-black/15 px-4 py-2.5 text-sm font-semibold text-[#0b0a0e] hover:border-[#0b0a0e] hover:bg-transparent"
+                          className="mt-2 h-auto w-full gap-2 rounded-full border-veil/15 px-4 py-2.5 text-sm font-semibold text-strong hover:border-strong hover:bg-transparent"
                           onClick={() => navigateTo("/onboarding/publisher-profile?role=broker&intent=add-role")}
                         >
                           Ändra organisationsnummer
@@ -898,12 +909,12 @@ function ProfilePage({ app }) {
                   <h2 className="text-xl font-semibold">Sparade objekt</h2>
                   <p className="mt-1 text-sm text-ink-600">Objekt du har sparat för uppföljning.</p>
                 </div>
-                <Badge variant="outline" className="h-auto rounded-full bg-[#ffffff] px-3 py-1 text-xs font-semibold text-ink-700">
+                <Badge variant="outline" className="h-auto rounded-full bg-surface px-3 py-1 text-xs font-semibold text-ink-700">
                   {favoriteListings.length} sparade
                 </Badge>
               </div>
               {favoriteListings.length === 0 ? (
-                <p className="mt-3 rounded-2xl border border-black/10 bg-[#fafafa] px-3 py-3 text-sm text-ink-600">Inga sparade objekt ännu.</p>
+                <p className="mt-3 rounded-2xl border border-veil/10 bg-canvas px-3 py-3 text-sm text-ink-600">Inga sparade objekt ännu.</p>
               ) : (
                 <div className="mt-3 grid gap-4 lg:grid-cols-3">
                   {favoriteListings.map((listing) => (
@@ -928,12 +939,12 @@ function ProfilePage({ app }) {
                   <h2 className="text-xl font-semibold">Sparade sökningar</h2>
                   <p className="mt-1 text-sm text-ink-600">Sökningar du har sparat för uppföljning.</p>
                 </div>
-                <Badge variant="outline" className="h-auto rounded-full bg-[#ffffff] px-3 py-1 text-xs font-semibold text-ink-700">
+                <Badge variant="outline" className="h-auto rounded-full bg-surface px-3 py-1 text-xs font-semibold text-ink-700">
                   {filterPresets.length} sparade
                 </Badge>
               </div>
               {filterPresets.length === 0 ? (
-                <p className="mt-3 rounded-2xl border border-black/10 bg-[#fafafa] px-3 py-3 text-sm text-ink-600">Inga sparade sökningar ännu.</p>
+                <p className="mt-3 rounded-2xl border border-veil/10 bg-canvas px-3 py-3 text-sm text-ink-600">Inga sparade sökningar ännu.</p>
               ) : (
                 <div className="mt-3 grid gap-3">
                   {filterPresets.map((preset) => {
@@ -943,7 +954,7 @@ function ProfilePage({ app }) {
                     return (
                       <article
                         key={preset.id}
-                        className="cursor-pointer rounded-2xl border border-black/10 bg-[#ffffff] p-3 transition hover:border-[#0b0a0e]/35"
+                        className="cursor-pointer rounded-2xl border border-veil/10 bg-surface p-3 transition hover:border-strong/35"
                         onClick={() => navigateTo(targetUrl)}
                         onKeyDown={(event) => {
                           if (event.key === "Enter" || event.key === " ") {
@@ -956,14 +967,14 @@ function ProfilePage({ app }) {
                       >
                         <div className="flex flex-wrap items-start justify-between gap-2">
                           <div>
-                            <p className="text-sm font-semibold text-black">{preset.title || "Sparad sökning"}</p>
+                            <p className="text-sm font-semibold text-strong">{preset.title || "Sparad sökning"}</p>
                             <p className="text-xs text-ink-500">Uppdaterad {formatTimestamp(preset.updatedAt || preset.createdAt)}</p>
                           </div>
                           <div className="flex items-center gap-2">
                             <Button
                               type="button"
                               variant="outline"
-                              className="h-auto rounded-xl border-black/20 px-3 py-1.5 text-xs font-semibold text-ink-700 hover:bg-[#ffffff]"
+                              className="h-auto rounded-xl border-veil/20 px-3 py-1.5 text-xs font-semibold text-ink-700 hover:bg-surface"
                               onClick={(event) => {
                                 event.stopPropagation();
                                 navigateTo(targetUrl);
@@ -987,7 +998,7 @@ function ProfilePage({ app }) {
                         {details.length > 0 ? (
                           <dl className="mt-3 grid gap-2 sm:grid-cols-2">
                             {details.map((item) => (
-                              <div key={`${preset.id}-${item.label}-${item.value}`} className="rounded-xl border border-black/10 bg-[#ffffff] px-2.5 py-2">
+                              <div key={`${preset.id}-${item.label}-${item.value}`} className="rounded-xl border border-veil/10 bg-surface px-2.5 py-2">
                                 <dt className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">{item.label}</dt>
                                 <dd className="mt-0.5 text-xs font-medium text-ink-800">{item.value}</dd>
                               </div>
@@ -997,7 +1008,7 @@ function ProfilePage({ app }) {
                         {chips.length > 0 ? (
                           <div className="mt-2 flex flex-wrap gap-1.5">
                             {chips.map((chip) => (
-                              <span key={`${preset.id}-${chip}`} className="rounded-full border border-black/10 bg-[#ffffff] px-2.5 py-1 text-[11px] font-semibold text-ink-700">
+                              <span key={`${preset.id}-${chip}`} className="rounded-full border border-veil/10 bg-surface px-2.5 py-1 text-[11px] font-semibold text-ink-700">
                                 {chip}
                               </span>
                             ))}
@@ -1013,36 +1024,39 @@ function ProfilePage({ app }) {
         </div>
       </div>
 
-      {showProgramOverlay ? (
-        <div className="fixed inset-0 z-[90] h-dvh overflow-hidden bg-[#ffffff]">
-        <div className="h-full overflow-y-auto overscroll-none bg-[#ffffff] p-4 sm:p-6" onClick={() => {
-          setShowProgramOverlay(false);
-          setEditingProgramId(null);
-        }}>
-          <div className="mx-auto w-full max-w-[1240px] rounded-3xl border border-black/10 bg-[#ffffff] p-5 sm:p-6" onClick={(event) => event.stopPropagation()}>
-            <div className="flex items-start justify-between gap-3">
+      {showProgramOverlay && !editingProgramId ? (
+        <LocalProgramFlow
+          existingCount={renterPrograms.length}
+          onCreate={(program) => saveProgramChanges(program, { keepOpen: true, message: "Lokalprogram skapat." })}
+          onShowMatches={(program) => navigateTo(buildRentSearchUrl(program))}
+          onClose={() => { setShowProgramOverlay(false); setEditingProgramId(null); }}
+        />
+      ) : null}
+
+      {showProgramOverlay && editingProgramId ? (
+        <LocalProgramWorkspace onContextChange={(contextNotes) => setProgramDraft((prev) => ({ ...prev, contextNotes }))} draft={programDraft} editing={Boolean(editingProgramId)} busy={savingProgram} onSave={saveProgramChanges} onClose={() => { setShowProgramOverlay(false); setEditingProgramId(null); }}>
+          {(close, programStep) => (
+            <div className={programStep === null ? "mx-auto w-full bg-popover" : "w-full"} onClick={(event) => event.stopPropagation()}>
+            <div className={programStep === null ? "flex items-start justify-between gap-3 pr-2" : "hidden"}>
               <div>
-                <h3 className="text-2xl font-semibold text-[#0b0a0e]">Redigera lokalprogram</h3>
+                <h3 className="text-xl font-semibold text-strong">{editingProgramId ? "Redigera lokalprogram" : "Nytt lokalprogram"}</h3>
                 <p className="mt-1 text-sm text-ink-600">Justera preferenser som används i matchning och sök.</p>
               </div>
               <Button
                 type="button"
                 variant="outline"
                 size="icon"
-                className="close-circle-button rounded-full border-black/15 text-xl leading-none text-ink-700 hover:bg-transparent"
-                onClick={() => {
-                  setShowProgramOverlay(false);
-                  setEditingProgramId(null);
-                }}
+                className="close-circle-button mr-1 rounded-full border-veil/15 text-xl leading-none text-ink-700 hover:bg-transparent"
+                onClick={close}
                 aria-label="Stäng"
               >
                 ×
               </Button>
             </div>
 
-            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              <label className="grid gap-1 sm:col-span-2 lg:col-span-3">
-                <span className="text-xs font-semibold text-ink-600">Namn på lokalprogram</span>
+            {(programStep === null || programStep === 0) && <div className={`${programStep === null ? "mt-4" : ""} grid gap-3 sm:grid-cols-2 lg:grid-cols-12`}><h4 hidden={programStep !== null} className="border-b border-border pb-1.5 pt-1 text-xs font-semibold uppercase tracking-wide text-ink-600 sm:col-span-2 lg:col-span-12">Grunduppgifter</h4>
+<label className="flex min-w-0 flex-col justify-end gap-1.5 lg:col-span-4">
+                <span className="text-xs font-semibold text-ink-600">{programStep === null ? "Namn på lokalprogram" : "Vad vill du kalla lokalprogrammet?"}</span>
                 <Input
                   value={programDraft.title}
                   onChange={(event) => setProgramDraft((prev) => ({ ...prev, title: event.target.value }))}
@@ -1050,8 +1064,8 @@ function ProfilePage({ app }) {
                 />
               </label>
 
-              <label className="grid gap-1">
-                <span className="text-xs font-semibold text-ink-600">Område</span>
+              <label className="flex min-w-0 flex-col justify-end gap-1.5 lg:col-span-4">
+                <span className="text-xs font-semibold text-ink-600">{programStep === null ? "Område" : "Var vill ni sitta?"}</span>
                 <Select value={programDraft.district} onValueChange={(value) => setProgramDraft((prev) => ({ ...prev, district: value }))}>
                   <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -1060,8 +1074,8 @@ function ProfilePage({ app }) {
                 </Select>
               </label>
 
-              <label className="grid gap-1">
-                <span className="text-xs font-semibold text-ink-600">Typ av lokal</span>
+              <label className="flex min-w-0 flex-col justify-end gap-1.5 lg:col-span-4">
+                <span className="text-xs font-semibold text-ink-600">{programStep === null ? "Typ av lokal" : "Vilken typ av lokal söker ni?"}</span>
                 <Select
                   value={Array.isArray(programDraft.type) && programDraft.type.length ? programDraft.type[0] : "Alla"}
                   onValueChange={(value) => setProgramDraft((prev) => ({ ...prev, type: value === "Alla" ? [] : [value] }))}
@@ -1074,33 +1088,37 @@ function ProfilePage({ app }) {
                 </Select>
               </label>
 
-              <label className="grid gap-1">
-                <span className="text-xs font-semibold text-ink-600">Minst platser</span>
+              </div>}
+{(programStep === null || programStep === 1) && <div className={`${programStep === null ? "mt-4" : ""} grid gap-3 sm:grid-cols-2 lg:grid-cols-12`}><h4 hidden={programStep !== null} className="border-b border-border pb-1.5 pt-1 text-xs font-semibold uppercase tracking-wide text-ink-600 sm:col-span-2 lg:col-span-12">Storlek och budget</h4>
+<label className="flex min-w-0 flex-col justify-end gap-1.5 lg:col-span-3">
+                <span className="text-xs font-semibold text-ink-600">{programStep === null ? "Minst platser" : "Hur många platser behövs?"}</span>
                 <Input type="number" min="0" value={programDraft.teamSize} onChange={(event) => setProgramDraft((prev) => ({ ...prev, teamSize: event.target.value }))} />
               </label>
 
-              <label className="grid gap-1">
-                <span className="text-xs font-semibold text-ink-600">Min yta (kvm)</span>
+              <label className="flex min-w-0 flex-col justify-end gap-1.5 lg:col-span-3">
+                <span className="text-xs font-semibold text-ink-600">{programStep === null ? "Min yta (kvm)" : "Minsta yta i kvm?"}</span>
                 <Input type="number" min="0" value={programDraft.minSize} onChange={(event) => setProgramDraft((prev) => ({ ...prev, minSize: event.target.value }))} />
               </label>
 
-              <label className="grid gap-1">
-                <span className="text-xs font-semibold text-ink-600">Max yta (kvm)</span>
+              <label className="flex min-w-0 flex-col justify-end gap-1.5 lg:col-span-3">
+                <span className="text-xs font-semibold text-ink-600">{programStep === null ? "Max yta (kvm)" : "Största yta i kvm?"}</span>
                 <Input type="number" min="0" value={programDraft.maxSize} onChange={(event) => setProgramDraft((prev) => ({ ...prev, maxSize: event.target.value }))} />
               </label>
 
-              <label className="grid gap-1">
-                <span className="text-xs font-semibold text-ink-600">Max budget / mån</span>
+              <label className="flex min-w-0 flex-col justify-end gap-1.5 lg:col-span-3">
+                <span className="text-xs font-semibold text-ink-600">{programStep === null ? "Max budget / mån" : "Maxbudget per månad?"}</span>
                 <Input type="number" min="0" value={programDraft.maxBudget} onChange={(event) => setProgramDraft((prev) => ({ ...prev, maxBudget: event.target.value }))} />
               </label>
 
-              <label className="grid gap-1">
-                <span className="text-xs font-semibold text-ink-600">Inflyttning</span>
+              </div>}
+{(programStep === null || programStep === 2) && <div className={`${programStep === null ? "mt-4" : ""} grid gap-3 sm:grid-cols-2 lg:grid-cols-12`}><h4 hidden={programStep !== null} className="border-b border-border pb-1.5 pt-1 text-xs font-semibold uppercase tracking-wide text-ink-600 sm:col-span-2 lg:col-span-12">Tid och avtal</h4>
+<label className="flex min-w-0 flex-col justify-end gap-1.5 lg:col-span-6">
+                <span className="text-xs font-semibold text-ink-600">{programStep === null ? "Inflyttning" : "När vill ni flytta in?"}</span>
                 <Input type="date" value={programDraft.moveInDate} onChange={(event) => setProgramDraft((prev) => ({ ...prev, moveInDate: event.target.value }))} />
               </label>
 
-              <label className="grid gap-1">
-                <span className="text-xs font-semibold text-ink-600">Avtalsflexibilitet</span>
+              <label className="flex min-w-0 flex-col justify-end gap-1.5 lg:col-span-6">
+                <span className="text-xs font-semibold text-ink-600">{programStep === null ? "Avtalsflexibilitet" : "Hur långt avtal passar er?"}</span>
                 <Select value={programDraft.contractFlex || "Alla"} onValueChange={(value) => setProgramDraft((prev) => ({ ...prev, contractFlex: value === "Alla" ? "" : value }))}>
                   <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -1109,8 +1127,10 @@ function ProfilePage({ app }) {
                 </Select>
               </label>
 
-              <label className="grid gap-1">
-                <span className="text-xs font-semibold text-ink-600">Kollektivtrafik</span>
+              </div>}
+{(programStep === null || programStep === 3) && <div className={`${programStep === null ? "mt-4" : ""} grid gap-3 sm:grid-cols-2 lg:grid-cols-12`}><h4 hidden={programStep !== null} className="border-b border-border pb-1.5 pt-1 text-xs font-semibold uppercase tracking-wide text-ink-600 sm:col-span-2 lg:col-span-12">Läge och tillgång</h4>
+<label className="flex min-w-0 flex-col justify-end gap-1.5 lg:col-span-3">
+                <span className="text-xs font-semibold text-ink-600">{programStep === null ? "Kollektivtrafik" : "Hur nära kollektivtrafik?"}</span>
                 <Select value={programDraft.transitDistance || "Alla"} onValueChange={(value) => setProgramDraft((prev) => ({ ...prev, transitDistance: value === "Alla" ? "" : value }))}>
                   <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -1119,8 +1139,8 @@ function ProfilePage({ app }) {
                 </Select>
               </label>
 
-              <label className="grid gap-1">
-                <span className="text-xs font-semibold text-ink-600">Tillgång</span>
+              <label className="flex min-w-0 flex-col justify-end gap-1.5 lg:col-span-3">
+                <span className="text-xs font-semibold text-ink-600">{programStep === null ? "Tillgång" : "När behöver ni tillgång?"}</span>
                 <Select value={programDraft.accessHours || "Alla"} onValueChange={(value) => setProgramDraft((prev) => ({ ...prev, accessHours: value === "Alla" ? "" : value }))}>
                   <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -1129,8 +1149,8 @@ function ProfilePage({ app }) {
                 </Select>
               </label>
 
-              <label className="grid gap-1">
-                <span className="text-xs font-semibold text-ink-600">Parkering</span>
+              <label className="flex min-w-0 flex-col justify-end gap-1.5 lg:col-span-3">
+                <span className="text-xs font-semibold text-ink-600">{programStep === null ? "Parkering" : "Vilken parkering behövs?"}</span>
                 <Select value={programDraft.parkingType || "Alla"} onValueChange={(value) => setProgramDraft((prev) => ({ ...prev, parkingType: value === "Alla" ? "" : value }))}>
                   <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -1139,8 +1159,8 @@ function ProfilePage({ app }) {
                 </Select>
               </label>
 
-              <label className="grid gap-1">
-                <span className="text-xs font-semibold text-ink-600">Planlösning</span>
+              <label className="flex min-w-0 flex-col justify-end gap-1.5 lg:col-span-3">
+                <span className="text-xs font-semibold text-ink-600">{programStep === null ? "Planlösning" : "Vilken planlösning passar?"}</span>
                 <Select value={programDraft.layoutType || "Alla"} onValueChange={(value) => setProgramDraft((prev) => ({ ...prev, layoutType: value === "Alla" ? "" : value }))}>
                   <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -1148,10 +1168,9 @@ function ProfilePage({ app }) {
                   </SelectContent>
                 </Select>
               </label>
-            </div>
-
-            <div className="mt-4 border-b border-black/10 pb-4">
-              <div className="rounded-2xl border border-black/10 bg-[#ffffff] p-3">
+            </div>}
+            <div hidden={programStep !== null && programStep !== 4} className="mt-4 border-b border-veil/10 pb-4">
+              <div className="w-fit max-w-full rounded-lg border border-veil/10 bg-surface p-3">
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-700">Särskilda krav</p>
                 <div className="mt-2 grid grid-cols-1 gap-2">
                   <label className="inline-flex items-center gap-2 text-sm text-ink-700">
@@ -1159,28 +1178,28 @@ function ProfilePage({ app }) {
                       checked={Boolean(programDraft.includeOperatingCosts)}
                       onCheckedChange={(checked) => setProgramDraft((prev) => ({ ...prev, includeOperatingCosts: Boolean(checked) }))}
                     />
-                    Driftkostnad ingår
+                    {programStep === null ? "Driftkostnad ingår" : "Ska driftkostnader ingå?"}
                   </label>
                   <label className="inline-flex items-center gap-2 text-sm text-ink-700">
                     <Checkbox
                       checked={Boolean(programDraft.accessibilityAdapted)}
                       onCheckedChange={(checked) => setProgramDraft((prev) => ({ ...prev, accessibilityAdapted: Boolean(checked) }))}
                     />
-                    Tillgänglighetsanpassad
+                    {programStep === null ? "Tillgänglighetsanpassad" : "Behöver lokalen vara tillgänglighetsanpassad?"}
                   </label>
                   <label className="inline-flex items-center gap-2 text-sm text-ink-700">
                     <Checkbox
                       checked={Boolean(programDraft.ecoCertified)}
                       onCheckedChange={(checked) => setProgramDraft((prev) => ({ ...prev, ecoCertified: Boolean(checked) }))}
                     />
-                    Miljöcertifierad
+                    {programStep === null ? "Miljöcertifierad" : "Behöver lokalen vara miljöcertifierad?"}
                   </label>
                 </div>
               </div>
             </div>
 
-            <div className="mt-3">
-              <p className="mb-2 text-xs font-semibold text-ink-600">Bekvämligheter</p>
+            <div hidden={programStep !== null && programStep !== 5} className="mt-3">
+              <p className="mb-2 text-xs font-semibold text-ink-600">{programStep === null ? "Bekvämligheter" : "Vilka bekvämligheter vill ni ha?"}</p>
               <div className="flex flex-wrap gap-2">
                 {amenityOptions.map((option) => {
                   const Icon = option.icon;
@@ -1190,8 +1209,8 @@ function ProfilePage({ app }) {
                       key={option.value}
                       type="button"
                       variant="outline"
-                      className={`h-auto shrink-0 gap-2 whitespace-nowrap rounded-full px-3.5 py-2.5 text-sm font-semibold ${
-                        active ? "border-[#0b0a0e] bg-[#0b0a0e] text-white hover:bg-[#0b0a0e]/90" : "border-black/10 text-ink-700"
+                      className={`h-auto shrink-0 gap-2 whitespace-nowrap rounded-md px-3 py-2 text-sm font-semibold ${
+                        active ? "border-strong bg-strong text-on-strong hover:bg-strong/90" : "border-veil/10 text-ink-700"
                       }`}
                       onClick={() => toggleProgramAmenity(option.value)}
                     >
@@ -1203,52 +1222,33 @@ function ProfilePage({ app }) {
               </div>
             </div>
 
-            <div className="mt-5 flex items-center justify-end gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                className="h-auto rounded-full border-black/20 px-5 py-2.5 text-sm font-semibold text-ink-700"
-                onClick={() => {
-                  setShowProgramOverlay(false);
-                  setEditingProgramId(null);
-                }}
-              >
-                Avbryt
-              </Button>
-              <Button
-                type="button"
-                className="h-auto rounded-full px-5 py-2.5 text-sm font-semibold"
-                onClick={saveProgramChanges}
-                disabled={savingProgram}
-              >
-                {savingProgram ? "Sparar..." : "Spara ändringar"}
-              </Button>
-            </div>
           </div>
-        </div>
-        </div>
+          )}
+        </LocalProgramWorkspace>
       ) : null}
 
       {showTeamOverlay ? (
-        <div className="fixed inset-0 z-[90] h-dvh overflow-hidden bg-[#ffffff]">
-        <div className="h-full overflow-y-auto overscroll-none bg-[#ffffff] p-4 sm:p-6">
-          <div className="mx-auto w-full max-w-[1240px] rounded-3xl border border-black/10 bg-[#ffffff] p-5 sm:p-6">
-            <div className="flex items-start justify-between gap-3">
+        <EditorWorkspace compact title="Hantera profil" busy={savingProfile} dirty={JSON.stringify(profileDraft) !== JSON.stringify({ name: user?.name || "", phone: user?.phone || "", avatarUrl: user?.profile?.avatarUrl || "" })} onClose={() => setShowTeamOverlay(false)}>
+          {(close) => (
+          <div className="flex min-h-0 flex-1 flex-col bg-popover">
+            <div className="shrink-0 border-b border-border px-5 py-4">
+              <div className="flex items-start justify-between gap-3">
               <div>
-                <h3 className="text-2xl font-semibold text-[#0b0a0e]">Hantera profil</h3>
+                <h3 className="text-lg font-semibold text-strong">Hantera profil</h3>
                 <p className="mt-1 text-sm text-ink-600">Redigera administratörsprofil och hantera teamets uppgifter.</p>
               </div>
             </div>
+            </div>
 
-            <div className="mt-4 p-1">
-              <p className="text-sm font-semibold text-[#0b0a0e]">Administratör</p>
-              <div className="mt-4 grid gap-5 lg:grid-cols-[220px_minmax(0,680px)] lg:items-start">
+            <div className="min-h-0 flex-1 overflow-y-auto p-5">
+              <p className="text-sm font-semibold text-strong">Administratör</p>
+              <div className="mt-4 grid gap-5 sm:grid-cols-[120px_minmax(0,1fr)] sm:items-start">
                 <div className="flex items-start justify-center">
                   <div className="relative flex flex-col items-center gap-2">
                     {profileDraft.avatarUrl ? (
-                      <img src={profileDraft.avatarUrl} alt="Profilbild" className="h-[220px] w-[220px] rounded-full border border-black/10 object-cover" />
+                      <img src={profileDraft.avatarUrl} alt="Profilbild" className="h-24 w-24 rounded-full border border-veil/10 object-cover" />
                     ) : (
-                      <div className="inline-flex h-[220px] w-[220px] items-center justify-center rounded-full border border-black/10 bg-[#eef2f8] text-6xl font-semibold text-ink-700">
+                      <div className="inline-flex h-24 w-24 items-center justify-center rounded-full border border-veil/10 bg-tint-2 text-4xl font-semibold text-ink-700">
                         {(profileDraft.name || user?.email || "A").trim().charAt(0).toUpperCase()}
                       </div>
                     )}
@@ -1256,7 +1256,7 @@ function ProfilePage({ app }) {
                       type="button"
                       variant="outline"
                       size="icon"
-                      className="absolute right-2 top-2 h-10 w-10 rounded-full border-black/20 text-ink-700 hover:border-[#0b0a0e] hover:bg-transparent hover:text-[#0b0a0e]"
+                      className="absolute right-0 top-0 h-9 w-9 rounded-md border-veil/20 text-ink-700 hover:border-strong hover:bg-transparent hover:text-strong"
                       onClick={() => profileAvatarInputRef.current?.click()}
                       aria-label="Byt foto"
                     >
@@ -1282,7 +1282,7 @@ function ProfilePage({ app }) {
                       <Button
                         type="button"
                         variant="outline"
-                        className="h-auto gap-1.5 rounded-full border-black/20 px-3 py-1.5 text-xs font-semibold text-ink-700 hover:border-[#0b0a0e] hover:bg-transparent hover:text-[#0b0a0e]"
+                        className="h-auto gap-1.5 rounded-md border-veil/20 px-3 py-1.5 text-xs font-semibold text-ink-700 hover:border-strong hover:bg-transparent hover:text-strong"
                         onClick={() => setProfileDraft((prev) => ({ ...prev, avatarUrl: "" }))}
                       >
                         <TrashIcon className="h-3.5 w-3.5" />
@@ -1291,7 +1291,7 @@ function ProfilePage({ app }) {
                     ) : null}
                   </div>
                 </div>
-                <div className="grid max-w-2xl gap-3 sm:grid-cols-2">
+                <div className="grid gap-3 sm:grid-cols-2">
                   <label className="grid gap-1 sm:col-span-2">
                     <span className="text-xs font-semibold text-ink-600">Namn</span>
                     <Input value={profileDraft.name} onChange={(event) => setProfileDraft((prev) => ({ ...prev, name: event.target.value }))} />
@@ -1304,33 +1304,30 @@ function ProfilePage({ app }) {
                     <span className="text-xs font-semibold text-ink-600">E-post</span>
                     <Input value={user?.email || ""} disabled />
                   </label>
-                  <div className="sm:col-span-2">
-                    <Button
-                      type="button"
-                      className="h-auto rounded-full px-4 py-2 text-xs font-semibold"
-                      onClick={saveProfileChanges}
-                      disabled={savingProfile}
-                    >
-                      {savingProfile ? "Sparar..." : "Spara ändringar"}
-                    </Button>
-                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="mt-5 flex justify-end">
+            <div className="flex shrink-0 items-center justify-between gap-2 border-t border-border px-5 py-4">
               <Button
                 type="button"
                 variant="outline"
-                className="h-auto rounded-full border-black/20 px-5 py-2.5 text-sm font-semibold text-ink-700"
-                onClick={() => setShowTeamOverlay(false)}
+                className="h-auto rounded-md border-veil/20 px-5 py-2.5 text-sm font-semibold text-ink-700"
+                onClick={close}
               >
                 Avbryt
+              </Button><Button
+                type="button"
+                className="h-auto rounded-md px-4 py-2 text-xs font-semibold"
+                onClick={saveProfileChanges}
+                disabled={savingProfile}
+              >
+                {savingProfile ? "Sparar..." : "Spara ändringar"}
               </Button>
             </div>
           </div>
-        </div>
-        </div>
+          )}
+        </EditorWorkspace>
       ) : null}
 
       <ViewingRequestModal

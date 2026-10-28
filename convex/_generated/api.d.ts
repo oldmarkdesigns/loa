@@ -14,6 +14,7 @@ import type * as leadActivities from "../leadActivities.js";
 import type * as leads from "../leads.js";
 import type * as lib from "../lib.js";
 import type * as listings from "../listings.js";
+import type * as matchFeedback from "../matchFeedback.js";
 import type * as migrations from "../migrations.js";
 import type * as prospectComments from "../prospectComments.js";
 import type * as prospectSharing from "../prospectSharing.js";
@@ -35,6 +36,7 @@ declare const fullApi: ApiFromModules<{
   leads: typeof leads;
   lib: typeof lib;
   listings: typeof listings;
+  matchFeedback: typeof matchFeedback;
   migrations: typeof migrations;
   prospectComments: typeof prospectComments;
   prospectSharing: typeof prospectSharing;

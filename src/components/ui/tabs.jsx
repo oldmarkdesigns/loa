@@ -1,3 +1,4 @@
+import { useSelectionIndicator, SelectionIndicator } from "./selection-indicator";
 import { Tabs as TabsPrimitive } from "@base-ui/react/tabs"
 import { cva } from "class-variance-authority";
 import { cn } from "cn"
@@ -10,6 +11,7 @@ function Tabs({
   return (
     <TabsPrimitive.Root
       data-slot="tabs"
+      orientation={orientation}
       data-orientation={orientation}
       className={cn("group/tabs flex gap-2 data-horizontal:flex-col", className)}
       {...props} />
@@ -32,16 +34,20 @@ const tabsListVariants = cva(
 )
 
 function TabsList({
+  children,
   className,
   variant = "default",
   ...props
 }) {
+  const { ref, box } = useSelectionIndicator('[data-slot="tabs-trigger"][aria-selected="true"]');
   return (
     <TabsPrimitive.List
+      ref={ref}
+      data-sliding-selection={box && variant !== "line" ? "true" : undefined}
       data-slot="tabs-list"
       data-variant={variant}
-      className={cn(tabsListVariants({ variant }), className)}
-      {...props} />
+      className={cn("relative isolate", tabsListVariants({ variant }), className)}
+      {...props}>{variant !== "line" && <SelectionIndicator box={box} />}{children}</TabsPrimitive.List>
   );
 }
 

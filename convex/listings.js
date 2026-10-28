@@ -73,7 +73,17 @@ function buildListingPayload(payload, ownerId, companyId = "", existingListing =
     status: payload.status ?? existingListing?.status ?? "draft",
     isBostadsratt: payload.isBostadsratt !== undefined ? Boolean(payload.isBostadsratt) : existingListing?.isBostadsratt ?? false,
     verifyRequestedAt: existingListing?.verifyRequestedAt ?? null,
-    sourceUrl: payload.sourceUrl ?? existingListing?.sourceUrl
+    sourceUrl: payload.sourceUrl ?? existingListing?.sourceUrl,
+    description: payload.description ?? existingListing?.description,
+    transitDistance: payload.transitDistance ?? existingListing?.transitDistance,
+    moveInDate: payload.moveInDate ?? existingListing?.moveInDate,
+    contractFlex: payload.contractFlex ?? existingListing?.contractFlex,
+    accessHours: payload.accessHours ?? existingListing?.accessHours,
+    parkingType: payload.parkingType ?? existingListing?.parkingType,
+    layoutType: payload.layoutType ?? existingListing?.layoutType,
+    includeOperatingCosts: payload.includeOperatingCosts !== undefined ? Boolean(payload.includeOperatingCosts) : existingListing?.includeOperatingCosts,
+    accessibilityAdapted: payload.accessibilityAdapted !== undefined ? Boolean(payload.accessibilityAdapted) : existingListing?.accessibilityAdapted,
+    ecoCertified: payload.ecoCertified !== undefined ? Boolean(payload.ecoCertified) : existingListing?.ecoCertified
   };
 }
 

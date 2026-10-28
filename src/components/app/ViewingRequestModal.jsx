@@ -68,7 +68,7 @@ function ViewingRequestModal({ listing, onClose, onSubmit }) {
         if (!isOpen) onClose?.();
       }}
     >
-      <DialogContent className="max-w-xl rounded-3xl border border-black/10 bg-[#ffffff] p-5 sm:p-6">
+      <DialogContent className="max-w-xl rounded-3xl border border-veil/10 bg-popover p-5 sm:p-6">
         <DialogHeader className="gap-1 text-left">
           <DialogTitle className="text-2xl font-semibold text-ink-900">Skicka till uthyrare</DialogTitle>
           <DialogDescription className="text-[1.05rem] text-ink-700">{displayListing.title}</DialogDescription>
@@ -159,7 +159,7 @@ function ViewingRequestModal({ listing, onClose, onSubmit }) {
           </Button>
           <Button
             type="button"
-            className="h-auto rounded-full bg-[#0b0a0e] px-8 py-2.5 text-sm font-semibold text-white hover:bg-[#0b0a0e]/90"
+            className="h-auto rounded-full bg-strong px-8 py-2.5 text-sm font-semibold text-on-strong hover:bg-strong/90"
             disabled={!canSubmit || submitting}
             onClick={handleSubmit}
           >

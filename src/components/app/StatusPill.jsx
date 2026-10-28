@@ -6,7 +6,7 @@ const TONE_CLASSES = {
   blue: "border-blue-200 bg-blue-50 text-blue-800",
   indigo: "border-indigo-200 bg-indigo-50 text-indigo-800",
   rose: "border-rose-200 bg-rose-50 text-rose-800",
-  neutral: "border-black/10 bg-[#f7f7f7] text-ink-700"
+  neutral: "border-veil/10 bg-subtle text-ink-700"
 };
 
 // Mirrors LEAD_STATUSES in convex/lib.js.

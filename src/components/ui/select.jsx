@@ -5,7 +5,33 @@ import { Select as SelectPrimitive } from "@base-ui/react/select"
 import { cn } from "cn"
 import { ChevronDownIcon, CheckIcon, ChevronUpIcon } from "lucide-react"
 
-const Select = SelectPrimitive.Root
+const SelectLabelsContext = React.createContext(null);
+
+// Base UI needs labels before the portaled menu mounts. Infer them from the
+// shadcn-style children so closed triggers never display internal IDs.
+function Select({ children, items, ...props }) {
+  const inferredItems = [];
+  function collect(nodes) {
+    React.Children.forEach(nodes, (node) => {
+      if (!React.isValidElement(node)) return;
+      if (node.type === SelectItem) inferredItems.push({ value: node.props.value, label: node.props.children });
+      else if (node.props.children) collect(node.props.children);
+    });
+  }
+  if (items === undefined) collect(children);
+  const resolvedItems = items ?? inferredItems;
+  const [uncontrolledValue, setUncontrolledValue] = React.useState(props.defaultValue);
+  const selectedValue = props.value !== undefined ? props.value : uncontrolledValue;
+  const selectedLabel = Array.isArray(resolvedItems)
+    ? resolvedItems.find((item) => item.value === selectedValue)?.label
+    : resolvedItems?.[selectedValue];
+  return <SelectLabelsContext.Provider value={selectedLabel ?? null}>
+    <SelectPrimitive.Root items={resolvedItems} {...props} onValueChange={(value, details) => {
+      setUncontrolledValue(value);
+      props.onValueChange?.(value, details);
+    }}>{children}</SelectPrimitive.Root>
+  </SelectLabelsContext.Provider>;
+}
 
 function SelectGroup({
   className,
@@ -20,14 +46,16 @@ function SelectGroup({
 }
 
 function SelectValue({
+  children,
   className,
   ...props
 }) {
+  const label = React.useContext(SelectLabelsContext);
   return (
     <SelectPrimitive.Value
       data-slot="select-value"
       className={cn("flex flex-1 text-left", className)}
-      {...props} />
+      {...props}>{children ?? label}</SelectPrimitive.Value>
   );
 }
 
@@ -62,7 +90,7 @@ function SelectContent({
   sideOffset = 4,
   align = "center",
   alignOffset = 0,
-  alignItemWithTrigger = true,
+  alignItemWithTrigger = false,
   ...props
 }) {
   return (
@@ -78,7 +106,7 @@ function SelectContent({
           data-slot="select-content"
           data-align-trigger={alignItemWithTrigger}
           className={cn(
-            "relative isolate z-50 max-h-(--available-height) w-(--anchor-width) min-w-36 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-md bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10 duration-100 data-[align-trigger=true]:animate-none data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+            "relative isolate z-50 max-h-[var(--available-height)] w-[var(--anchor-width)] min-w-0 outline-none origin-[var(--transform-origin)] overflow-x-hidden overflow-y-auto rounded-md bg-popover text-popover-foreground shadow-md ring-1 ring-veil/10 duration-100 data-[align-trigger=true]:animate-none data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
             className
           )}
           {...props}>
@@ -112,11 +140,11 @@ function SelectItem({
     <SelectPrimitive.Item
       data-slot="select-item"
       className={cn(
-        "relative flex w-full cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
+        "relative flex w-full cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-none select-none focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
         className
       )}
       {...props}>
-      <SelectPrimitive.ItemText className="flex flex-1 shrink-0 gap-2 whitespace-nowrap">
+      <SelectPrimitive.ItemText className="flex flex-1 gap-2 whitespace-nowrap">
         {children}
       </SelectPrimitive.ItemText>
       <SelectPrimitive.ItemIndicator

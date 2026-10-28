@@ -1,3 +1,4 @@
+import { Card } from "@/components/ui/card";
 import { useEffect, useState } from "react";
 import { formatDate } from "../../lib/formatters";
 import { prospectsApi } from "../../api";
@@ -48,7 +49,7 @@ function ProspectVersionHistoryPanel({ prospectId, app, onRestored }) {
   return (
     <div className="space-y-3">
       {versions.map((version) => (
-        <div key={version.id} className="rounded-2xl border border-black/10 bg-[#fafafa] p-3">
+        <Card key={version.id} className="gap-0 py-0 rounded-xl border border-veil/10 bg-canvas p-3">
           <div className="flex items-center justify-between gap-2">
             <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-900">
               <HistoryIcon className="h-4 w-4" />
@@ -66,7 +67,7 @@ function ProspectVersionHistoryPanel({ prospectId, app, onRestored }) {
           >
             {restoringVersion === version.versionNumber ? "Återställer..." : "Återställ till utkast"}
           </Button>
-        </div>
+        </Card>
       ))}
     </div>
   );

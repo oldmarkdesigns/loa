@@ -127,7 +127,18 @@ export default defineSchema({
     createdAt: v.string(),
     updatedAt: v.string(),
     verifyRequestedAt: v.union(v.string(), v.null()),
-    sourceUrl: v.optional(v.string())
+    sourceUrl: v.optional(v.string()),
+    description: v.optional(v.string()),
+    // Stated when a listing is published or edited; older listings simply lack them.
+    transitDistance: v.optional(v.string()),
+    moveInDate: v.optional(v.string()),
+    contractFlex: v.optional(v.string()),
+    accessHours: v.optional(v.string()),
+    parkingType: v.optional(v.string()),
+    layoutType: v.optional(v.string()),
+    includeOperatingCosts: v.optional(v.boolean()),
+    accessibilityAdapted: v.optional(v.boolean()),
+    ecoCertified: v.optional(v.boolean())
   })
     .index("by_public_id", ["id"])
     .index("by_owner_id", ["ownerId"])
@@ -137,6 +148,20 @@ export default defineSchema({
     listingId: v.string(),
     viewerId: v.optional(v.string()),
     source: v.optional(v.string()),
+    createdAt: v.string()
+  })
+    .index("by_public_id", ["id"])
+    .index("by_listing_id", ["listingId"])
+    .index("by_viewer_id", ["viewerId"]),
+  // One row per time a renter sees a match (a listing card shown with a match score
+  // against their active search/Lokalprogram) and signals it isn't for them. Captured
+  // as a one-click reason rather than free text so it aggregates without anyone at LOA
+  // reading it manually — see convex/matchFeedback.js.
+  matchDismissals: defineTable({
+    id: v.string(),
+    listingId: v.string(),
+    viewerId: v.optional(v.string()),
+    reason: v.string(),
     createdAt: v.string()
   })
     .index("by_public_id", ["id"])
@@ -194,7 +219,7 @@ export default defineSchema({
     id: v.string(),
     leadId: v.string(),
     authorId: v.string(),
-    type: v.union(v.literal("note"), v.literal("call"), v.literal("email"), v.literal("viewing")),
+    type: v.union(v.literal("note"), v.literal("call"), v.literal("email"), v.literal("meeting"), v.literal("viewing")),
     body: v.string(),
     createdAt: v.string()
   })

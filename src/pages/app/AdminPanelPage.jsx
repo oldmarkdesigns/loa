@@ -1,31 +1,30 @@
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { Card } from "@/components/ui/card";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { navigateTo, routeMatches } from "../../lib/router";
+import { Bot } from "lucide-react";
+import { navigateTo, normalizeAppRole, routeMatches } from "../../lib/router";
 import { formatDate, formatSek } from "../../lib/formatters";
 import AdminPanelShell from "../../components/layout/AdminPanelShell";
-import PanelProfileSection from "./PanelProfileSection";
+import { BrokerAssistantPage, BrokerAssistantProvider } from "../../components/app/BrokerAssistant";
+import AccountWindow from "../../components/account/AccountWindow";
+import { accountBackgroundPath, parseAccountPath } from "../../lib/accountPages";
 import MessagesPage from "./MessagesPage";
-import StatusPill from "../../components/app/StatusPill";
+import ProspectIcon from "../../components/app/ProspectIcon";
+import StatusPill, { listingStatusLabel } from "../../components/app/StatusPill";
 import { prospectsApi } from "../../api";
-import {
-  Area,
-  AreaChart,
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Line,
-  LineChart,
-  PolarAngleAxis,
-  PolarGrid,
-  PolarRadiusAxis,
-  Radar,
-  RadarChart,
-  XAxis,
-  YAxis
-} from "recharts";
 import BarInteractive from "../../components/charts/bar-interactive";
 import TypeDistributionDonut from "../../components/charts/type-distribution-donut";
-import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
-import { Progress } from "@/components/ui/progress";
+import {
+  BrokerRadarChart,
+  ConversionFunnelChart,
+  DistrictPerformanceChart,
+  MetricBars,
+  MetricFunnel,
+  MetricGauge,
+  MetricSparkline,
+  SegmentTrendChart,
+  WeeklyHeatmapChart
+} from "../../components/admin/StatisticsCharts";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -64,7 +63,6 @@ import {
   SparklesIcon,
   StarIcon,
   SupportIcon,
-  SwitchHorizontalIcon,
   UsersGroupIcon,
   UserIcon,
   XIcon
@@ -81,17 +79,16 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 export const ADMIN_NAV_ITEMS = [
-  { key: "oversikt", label: "Översikt", path: "/app/admin", Icon: LayoutDashboardIcon },
-  { key: "annonser", label: "Annonser", path: "/app/admin/annonser", Icon: BuildingIcon },
-  { key: "leads", label: "Leads & Matchningar", path: "/app/admin/leads", Icon: SparklesIcon },
-  { key: "prospekt", label: "Prospekt", path: "/app/admin/prospekt", Icon: PdfIcon },
-  { key: "meddelanden", label: "Meddelanden", path: "/app/admin/meddelanden", Icon: MessageSquareIcon },
-  { key: "notifikationer", label: "Notifikationer", path: "/app/admin/notifikationer", Icon: BellIcon },
-  { key: "maklare", label: "Mäklare", path: "/app/admin/maklare", Icon: UsersGroupIcon },
-  { key: "sparade-objekt", label: "Sparade objekt", path: "/app/admin/sparade-objekt", Icon: StarIcon },
-  { key: "sparade-sokningar", label: "Sparade sökningar", path: "/app/admin/sparade-sokningar", Icon: SearchIcon },
-  { key: "aktivitet", label: "Aktivitet", path: "/app/admin/aktivitet", Icon: HistoryIcon },
-  { key: "statistik", label: "Statistik", path: "/app/admin/statistik", Icon: BarChart3Icon }
+  { key: "oversikt", label: "Översikt", path: "/app/admin", Icon: LayoutDashboardIcon, group: "Arbetsyta" },
+  { key: "assistent", label: "AI-assistent", path: "/app/admin/assistent", Icon: Bot, group: "Arbetsyta" },
+  { key: "annonser", label: "Annonser", path: "/app/admin/annonser", Icon: BuildingIcon, group: "Annonser" },
+  { key: "prospekt", label: "Prospekt", path: "/app/admin/prospekt", Icon: PdfIcon, group: "Annonser" },
+  { key: "leads", label: "Leads & Matchningar", path: "/app/admin/leads", Icon: SparklesIcon, group: "Hyresgäster" },
+  { key: "meddelanden", label: "Meddelanden", path: "/app/admin/meddelanden", Icon: MessageSquareIcon, group: "Hyresgäster" },
+  { key: "notifikationer", label: "Notifikationer", path: "/app/admin/notifikationer", Icon: BellIcon, group: "Hyresgäster" },
+  { key: "maklare", label: "Mäklare", path: "/app/admin/maklare", Icon: UsersGroupIcon, group: "Företag" },
+  { key: "aktivitet", label: "Aktivitet", path: "/app/admin/aktivitet", Icon: HistoryIcon, group: "Företag" },
+  { key: "statistik", label: "Statistik", path: "/app/admin/statistik", Icon: BarChart3Icon, group: "Företag" }
 ];
 
 export const ADMIN_BOTTOM_NAV_ITEMS = [
@@ -103,6 +100,7 @@ export const ADMIN_BOTTOM_NAV_ITEMS = [
 
 const SECTION_TITLES = {
   oversikt: "Översikt",
+  assistent: "AI-assistent",
   profil: "Profil",
   adminprofil: "Adminprofil",
   annonser: "Annonser",
@@ -112,58 +110,15 @@ const SECTION_TITLES = {
   inkorg: "Inkorg",
   notifikationer: "Notifikationer",
   maklare: "Mäklare",
-  "sparade-objekt": "Sparade objekt",
-  "sparade-sokningar": "Sparade sökningar",
   aktivitet: "Aktivitet",
   statistik: "Statistik",
   hjalp: "Hjälp",
   installningar: "Inställningar"
 };
 
-const COMPANY_TYPE_OPTIONS = [
-  "Privat fastighetsbolag",
-  "Kommunalt bostadsbolag",
-  "Kommersiell förvaltare",
-  "Bostadsutvecklare",
-  "Blandad portfölj"
-];
-
-const PORTFOLIO_SIZE_OPTIONS = [
-  "1-10 fastigheter",
-  "11-50 fastigheter",
-  "51-200 fastigheter",
-  "200+ fastigheter"
-];
-
-const APPROVAL_FLOW_OPTIONS = [
-  {
-    key: "admin_approves_broker",
-    title: "Admin godkänner varje mäklare",
-    description: "Ni behåller full kontroll över vem som publicerar"
-  },
-  {
-    key: "broker_auto_approved",
-    title: "Mäklare aktiveras automatiskt",
-    description: "Godkänd roll aktiveras direkt utan manuell granskning"
-  }
-];
-
-const LISTING_MODERATION_OPTIONS = [
-  {
-    key: "broker_publishes_direct",
-    title: "Mäklare publicerar direkt",
-    description: "Automatisk granskning flaggar avvikelser"
-  },
-  {
-    key: "admin_reviews_before_publish",
-    title: "Bolagsadmin granskar innan publicering",
-    description: "Mer kontroll, kräver aktiv admin-närvaro"
-  }
-];
-
 const kpiCards = [
   { key: "active", label: "Aktiva annonser", value: "0", delta: "0", deltaTone: "flat", meta: "Ingen data", unit: "annonser" },
-  { key: "views", label: "Visningar (30d)", value: "0", delta: "0", deltaTone: "flat", meta: "Ingen data", unit: "visningar" },
+  { key: "views", label: "Visningar totalt", value: "0", delta: "0", deltaTone: "flat", meta: "Ingen data", unit: "visningar" },
   { key: "inquiries", label: "Förfrågningar", value: "0", delta: "0", deltaTone: "flat", meta: "Ingen data", unit: "förfrågningar" },
   { key: "matches", label: "Matchade hyresgäster", value: "0", delta: "0", deltaTone: "flat", meta: "Ingen data", unit: "matchningar" }
 ];
@@ -224,7 +179,7 @@ function companyNameForAdmin(user) {
 function adminStatusLabel(status) {
   if (status === "active") return "Aktiv";
   if (status === "pending") return "Väntande";
-  return "Utkast";
+  return listingStatusLabel(status || "draft");
 }
 
 function adminListingFromListing(listing, app) {
@@ -248,7 +203,7 @@ function adminListingFromListing(listing, app) {
   };
 }
 
-function ownedAdminListings(app) {
+function ownedAdminListingRecords(app) {
   const userId = app?.user?.id;
   const companyId = app?.adminCompany?.id || app?.user?.profile?.companyId;
   const activeBrokerIds = new Set(
@@ -258,13 +213,15 @@ function ownedAdminListings(app) {
       .filter(Boolean)
   );
   if (!userId) return [];
-  return (app?.listings || [])
-    .filter((listing) => (
-      listing.ownerId === userId
-      || (companyId && listing.companyId === companyId)
-      || activeBrokerIds.has(listing.ownerId)
-    ))
-    .map((listing) => adminListingFromListing(listing, app));
+  return (app?.listings || []).filter((listing) => (
+    listing.ownerId === userId
+    || (companyId && listing.companyId === companyId)
+    || activeBrokerIds.has(listing.ownerId)
+  ));
+}
+
+function ownedAdminListings(app) {
+  return ownedAdminListingRecords(app).map((listing) => adminListingFromListing(listing, app));
 }
 
 function buildAdminStats(app) {
@@ -276,7 +233,7 @@ function buildAdminStats(app) {
   const hasData = listings.length > 0 || totalViews > 0 || totalInquiries > 0 || leadCount > 0;
   const cards = [
     { key: "active", label: "Aktiva annonser", value: String(activeListingsCount), delta: "0", deltaTone: "flat", meta: hasData ? "Faktisk data" : "Ingen data", unit: "annonser" },
-    { key: "views", label: "Visningar (30d)", value: totalViews.toLocaleString("sv-SE"), delta: "0", deltaTone: "flat", meta: totalViews > 0 ? "Faktisk data" : "Ingen data", unit: "visningar" },
+    { key: "views", label: "Visningar totalt", value: totalViews.toLocaleString("sv-SE"), delta: "0", deltaTone: "flat", meta: totalViews > 0 ? "Faktisk data" : "Ingen data", unit: "visningar" },
     { key: "inquiries", label: "Förfrågningar", value: totalInquiries.toLocaleString("sv-SE"), delta: "0", deltaTone: "flat", meta: totalInquiries > 0 ? "Faktisk data" : "Ingen data", unit: "förfrågningar" },
     { key: "matches", label: "Matchade hyresgäster", value: String(leadCount), delta: "0", deltaTone: "flat", meta: leadCount > 0 ? "Faktisk data" : "Ingen data", unit: "matchningar" }
   ];
@@ -294,12 +251,10 @@ function buildAdminStats(app) {
     const type = listing.type || "Övrigt";
     typeTotals.set(type, (typeTotals.get(type) || 0) + 1);
   });
-  const colors = ["#0b0a0e", "#476a99", "#7ea1cc", "#cad9ec"];
   const distribution = Array.from(typeTotals.entries()).map(([name, value], index) => ({
     key: name.toLowerCase(),
     name,
-    value,
-    color: colors[index % colors.length]
+    value
   }));
   const districtTotals = new Map();
   listings.forEach((listing) => {
@@ -347,9 +302,12 @@ const matchedRenters = [];
 
 const adminInquiryThreads = [];
 
+// Saved listings and searches used to be pages of their own; they are cards on the profile now.
+const LEGACY_SECTIONS = { "sparade-objekt": "profil", "sparade-sokningar": "profil" };
+
 function sectionFromPath(pathname) {
   const match = pathname.match(/^\/(?:app\/)?admin\/([^/?#]+)/);
-  const key = match?.[1] || "oversikt";
+  const key = LEGACY_SECTIONS[match?.[1]] || match?.[1] || "oversikt";
   return SECTION_TITLES[key] ? key : "oversikt";
 }
 
@@ -366,7 +324,7 @@ function statusClass(status) {
 }
 
 function statusToggleOnClass(status) {
-  if (status === "Alla") return "data-[state=on]:border-[#0b0a0e] data-[state=on]:bg-[#0b0a0e] data-[state=on]:text-white data-[state=on]:hover:bg-[#0b0a0e] data-[state=on]:hover:text-white";
+  if (status === "Alla") return "data-[state=on]:border-strong data-[state=on]:bg-strong data-[state=on]:text-on-strong data-[state=on]:hover:bg-strong data-[state=on]:hover:text-on-strong";
   if (status === "Aktiv") return "data-[state=on]:border-emerald-200 data-[state=on]:bg-emerald-50 data-[state=on]:text-emerald-700";
   if (status === "Väntande") return "data-[state=on]:border-amber-200 data-[state=on]:bg-amber-50 data-[state=on]:text-amber-700";
   return "data-[state=on]:border-slate-200 data-[state=on]:bg-slate-100 data-[state=on]:text-slate-700";
@@ -375,7 +333,7 @@ function statusToggleOnClass(status) {
 function deltaClass(tone) {
   if (tone === "up") return "border-emerald-200 bg-emerald-50 text-emerald-700";
   if (tone === "down") return "border-rose-200 bg-rose-50 text-rose-700";
-  return "border-black/10 bg-[#f7f7f7] text-ink-700";
+  return "border-veil/10 bg-subtle text-ink-700";
 }
 
 function inquiryStatusClass(status) {
@@ -604,69 +562,32 @@ function inquiryNeedsResponse(inquiry) {
 function ExtendedMetricSparkline({ data = [], labels = [], direction = "up" }) {
   if (!Array.isArray(data) || data.length === 0) return null;
 
-  const max = Math.max(...data);
-  const min = Math.min(...data);
-  const range = max - min || 1;
-  const points = data.map((value, index) => {
-    const x = (index / Math.max(data.length - 1, 1)) * 100;
-    const y = 100 - ((value - min) / range) * 100;
-    return `${x},${y}`;
-  }).join(" ");
-  const areaPoints = `0,100 ${points} 100,100`;
-  const stroke = direction === "down" ? "#0f766e" : "#0b0a0e";
-  const fill = direction === "down" ? "rgba(15,118,110,0.16)" : "rgba(15,25,48,0.14)";
-
   return (
-    <div className="rounded-2xl border border-black/5 bg-[#f7fafb] px-3 py-2.5">
-      <div className="h-16">
-        <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="h-full w-full overflow-visible">
-          <polyline points={areaPoints} fill={fill} stroke="none" />
-          <polyline
-            points={points}
-            fill="none"
-            stroke={stroke}
-            strokeWidth="3"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </div>
+    <Card className="gap-0 py-0 rounded-xl border border-veil/5 bg-canvas px-3 py-2.5">
+      <MetricSparkline data={data} direction={direction} />
       <div className="mt-1 flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-400">
         <span>{labels[0] || "start"}</span>
         <span>{labels[1] || "nu"}</span>
       </div>
-    </div>
+    </Card>
   );
 }
 
 function ExtendedMetricGauge({ value = 0, target, inverse = false, footer }) {
-  const normalized = Math.max(0, Math.min(value, 100));
   const targetValue = typeof target === "number" ? Math.max(0, Math.min(target, 100)) : null;
-  const fillWidth = inverse ? 100 - normalized : normalized;
 
   return (
-    <div className="rounded-2xl border border-black/5 bg-[#f7fafb] px-3 py-3">
-      <div className="flex items-end justify-between gap-3">
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-400">
-            {inverse ? "Risknivå" : "Måluppfyllnad"}
-          </p>
-          <p className="mt-1 text-2xl font-semibold leading-none text-[#0b0a0e]">{normalized}%</p>
-        </div>
-        {targetValue !== null ? (
-          <div className="rounded-full border border-black/10 bg-[#ffffff] px-2 py-1 text-[10px] font-semibold text-ink-600">
+    <Card className="gap-0 py-0 rounded-xl border border-veil/5 bg-canvas px-3 py-3">
+      {targetValue !== null ? (
+        <div className="mb-2 flex justify-end">
+          <div className="rounded-full border border-veil/10 bg-control px-2 py-1 text-[10px] font-semibold text-ink-600">
             mål {targetValue}%
           </div>
-        ) : null}
-      </div>
-      <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-[#dde7eb]">
-        <div
-          className={`h-full rounded-full ${inverse ? "bg-[#0f766e]" : "bg-[#0b0a0e]"}`}
-          style={{ width: `${fillWidth}%` }}
-        />
-      </div>
+        </div>
+      ) : null}
+      <MetricGauge value={value} inverse={inverse} />
       {footer ? <p className="mt-2 text-[11px] text-ink-500">{footer}</p> : null}
-    </div>
+    </Card>
   );
 }
 
@@ -674,25 +595,9 @@ function ExtendedMetricFunnel({ steps = [] }) {
   if (!Array.isArray(steps) || steps.length === 0) return null;
 
   return (
-    <div className="space-y-2 rounded-2xl border border-black/5 bg-[#f7fafb] px-3 py-3">
-      {steps.map((step, index) => (
-        <div key={step.label}>
-          <div className="mb-1 flex items-center justify-between text-[11px]">
-            <span className="font-semibold text-ink-700">{step.label}</span>
-            <span className="text-ink-500">{step.value}%</span>
-          </div>
-          <div className="h-2.5 overflow-hidden rounded-full bg-[#dde7eb]">
-            <div
-              className="h-full rounded-full bg-[#0b0a0e]"
-              style={{
-                width: `${Math.max(step.value, 12)}%`,
-                opacity: 1 - index * 0.18
-              }}
-            />
-          </div>
-        </div>
-      ))}
-    </div>
+    <Card className="gap-0 py-0 rounded-xl border border-veil/5 bg-canvas px-3 py-3">
+      <MetricFunnel steps={steps} />
+    </Card>
   );
 }
 
@@ -700,23 +605,8 @@ function ExtendedMetricBars({ items = [], compact = false }) {
   if (!Array.isArray(items) || items.length === 0) return null;
 
   return (
-    <div className={`rounded-2xl border border-black/5 bg-[#f7fafb] px-3 ${compact ? "py-2.5" : "py-3"}`}>
-      <div className="space-y-2">
-        {items.map((item) => (
-          <div key={item.label}>
-            <div className="mb-1 flex items-center justify-between text-[11px]">
-              <span className={`font-semibold ${item.active ? "text-[#0b0a0e]" : "text-ink-600"}`}>{item.label}</span>
-              <span className="text-ink-400">{item.value}</span>
-            </div>
-            <div className="h-2 overflow-hidden rounded-full bg-[#dde7eb]">
-              <div
-                className={`h-full rounded-full ${item.active ? "bg-[#0b0a0e]" : "bg-[#7ea1cc]"}`}
-                style={{ width: `${Math.max(item.value, 10)}%`, opacity: item.active ? 1 : 0.8 }}
-              />
-            </div>
-          </div>
-        ))}
-      </div>
+    <div className={`rounded-2xl border border-veil/5 bg-canvas px-3 ${compact ? "py-2.5" : "py-3"}`}>
+      <MetricBars items={items} />
     </div>
   );
 }
@@ -741,11 +631,11 @@ function ExtendedStatCard({ item }) {
   }
 
   return (
-    <article className="rounded-[28px] border border-black/10 bg-[#ffffff] p-4 shadow-[0_12px_30px_rgba(15,25,48,0.04)]">
+    <article className="rounded-[28px] border border-veil/10 bg-surface p-4 shadow-[0_12px_30px_rgba(15,25,48,0.04)]">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-[12px] font-semibold text-ink-600">{item.label}</p>
-          <p className="mt-2 text-[30px] font-semibold leading-none tracking-[-0.04em] text-[#0b0a0e]">{item.value}</p>
+          <p className="mt-2 text-[30px] font-semibold leading-none tracking-[-0.04em] text-strong">{item.value}</p>
         </div>
         <Badge variant="outline" className="h-auto shrink-0 rounded-full border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
           {item.delta}
@@ -757,87 +647,17 @@ function ExtendedStatCard({ item }) {
   );
 }
 
-function KpiCardsSection({ showMatchLink = false, cards = kpiCards, sparklineSeries = kpiSparklineSeries } = {}) {
+function KpiCardsSection({ showMatchLink = false, cards = kpiCards } = {}) {
+  const icons = { active: BuildingIcon, views: BarChart3Icon, inquiries: MessageSquareIcon, matches: UsersGroupIcon };
   return (
-    <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+    <section aria-label="Nyckeltal" className="grid grid-cols-2 gap-3 xl:grid-cols-4">
       {cards.map((card) => {
-        if (card.key === "matches") {
-          return (
-            <article key="upgrade" className="surface p-4">
-              <div className="flex h-full flex-col justify-between gap-4">
-                <div className="min-w-0">
-                  <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">Uppgradera</p>
-                  <h2 className="mt-2 text-lg font-semibold leading-tight text-[#0b0a0e]">
-                    <span className="w-fit rounded-xl bg-[#f3d571] px-2 py-1 text-[#352922]">
-                      Lokalflöde Business+
-                    </span>
-                  </h2>
-                  <p className="mt-2 text-xs text-ink-600">Avancerad analys, API-tillgång och prioriterad support.</p>
-                </div>
-                <Button type="button" variant="secondary" className="h-auto w-fit px-4 py-2">
-                  Se planer
-                </Button>
-              </div>
-            </article>
-          );
-        }
-
-        const series = (sparklineSeries[card.key] || []).map((value, index) => ({
-          x: kpiAxisLabels[index] || `${index + 1}`,
-          y: value
-        }));
-        return (
-          <article key={card.key} className="surface p-4">
-            <div className="flex items-start justify-between gap-3">
-              <p className="text-sm text-ink-600">{card.label}</p>
-              <Badge variant="outline" className={`h-auto rounded-full px-2 py-0.5 text-xs font-semibold ${deltaClass(card.deltaTone)}`}>
-                {card.delta}
-              </Badge>
-            </div>
-            <p className="mt-3 text-[30px] font-semibold leading-none text-[#0b0a0e]">{card.value}</p>
-            {showMatchLink && card.key === "matches" ? (
-              <Button
-                type="button"
-                variant="link"
-                className="h-auto mt-2 p-0 text-xs font-semibold text-[#0b0a0e]"
-                onClick={() => navigateTo("/app/admin/leads#matchningar")}
-              >
-                ↗ Visa alla matchningar
-              </Button>
-            ) : null}
-            <p className="mt-2 text-xs text-ink-500">{card.meta}</p>
-            <div className="mt-3 h-16">
-              {series.length > 0 ? (
-                <ChartContainer config={{ y: { label: card.label, color: "#0b0a0e" } }} className="h-full w-full">
-                  <AreaChart data={series} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id={`kpi-gradient-${card.key}`} x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="var(--color-y)" stopOpacity={0.22} />
-                        <stop offset="100%" stopColor="var(--color-y)" stopOpacity={0.03} />
-                      </linearGradient>
-                    </defs>
-                    <Area
-                      type="monotone"
-                      dataKey="y"
-                      stroke="var(--color-y)"
-                      strokeWidth={1.7}
-                      fill={`url(#kpi-gradient-${card.key})`}
-                      fillOpacity={1}
-                    />
-                    <ChartTooltip
-                      cursor={{ stroke: "#0b0a0e", strokeOpacity: 0.18, strokeWidth: 1 }}
-                      content={<ChartTooltipContent hideLabel />}
-                    />
-                  </AreaChart>
-                </ChartContainer>
-              ) : (
-                <div className="grid h-full place-items-center rounded-xl border border-dashed border-black/15 bg-[#fafafa] text-xs font-semibold text-ink-500">
-                  Ingen data
-                </div>
-              )}
-            </div>
-          </article>
-        );
+        const Icon = icons[card.key] || BarChart3Icon;
+        return <Card key={card.key} className="gap-0 p-4 sm:p-5">
+          <div className="flex items-start justify-between gap-2"><p className="text-sm font-medium text-ink-600">{card.label}</p><Icon className="h-4 w-4 shrink-0 text-ink-400" /></div>
+          <p className="mt-4 text-3xl font-semibold tracking-tight tabular-nums text-strong">{card.value}</p>
+          {showMatchLink && card.key === "matches" ? <Button variant="link" className="mt-3 h-auto justify-start whitespace-normal p-0 text-xs text-ink-500" onClick={() => navigateTo("/app/admin/leads#matchningar")}>Visa matchningar →</Button> : <p className="mt-3 text-xs text-ink-500">{card.unit}</p>}
+        </Card>;
       })}
     </section>
   );
@@ -856,14 +676,13 @@ function hasChartSeriesData(datasets) {
 
 function NoDataPanel({ title = "Ingen data", subtitle, className = "" }) {
   return (
-    <article className={["surface p-4 sm:p-5", className].filter(Boolean).join(" ")}>
-      <h3 className="text-lg font-semibold text-ink-900">Ingen data</h3>
-      {title && title !== "Ingen data" ? <p className="mt-1 text-sm text-ink-600">{title}</p> : null}
+    <Card className={["gap-0 p-5", className].filter(Boolean).join(" ")}>
+      <h3 className="text-base font-semibold text-ink-900">{title}</h3>
       {subtitle ? <p className="mt-1 text-sm text-ink-500">{subtitle}</p> : null}
-      <div className="mt-4 grid h-[220px] place-items-center rounded-2xl border border-dashed border-black/15 bg-[#fafafa] text-sm font-semibold text-ink-500">
-        Ingen data
-      </div>
-    </article>
+      <Card className="gap-0 py-0 mt-4 grid h-[180px] place-items-center rounded-xl border border-dashed border-veil/15 bg-canvas text-sm font-semibold text-ink-500">
+        Data visas här när aktivitet registreras.
+      </Card>
+    </Card>
   );
 }
 
@@ -873,89 +692,25 @@ function WeeklyActivityHeatmap() {
   }
 
   const labels = ["06-10", "10-14", "14-18", "18-22"];
-  const values = weeklyHeatmap.flatMap((row) => row.slots);
-  const minValue = Math.min(...values);
-  const maxValue = Math.max(...values);
-  const range = maxValue - minValue || 1;
-  const heatmapPalette = [
-    { bg: "#cad9ec", text: "#0b0a0e", border: "rgba(202, 217, 236, 0.9)" },
-    { bg: "#7ea1cc", text: "#0b0a0e", border: "rgba(126, 161, 204, 0.9)" },
-    { bg: "#476a99", text: "#ffffff", border: "rgba(71, 106, 153, 0.95)" },
-    { bg: "#0b0a0e", text: "#ffffff", border: "rgba(15, 25, 48, 0.95)" }
-  ];
-
-  function heatmapCellStyle(value) {
-    const intensity = (value - minValue) / range;
-    const paletteIndex = Math.min(
-      heatmapPalette.length - 1,
-      Math.floor(intensity * heatmapPalette.length)
-    );
-    const swatch = heatmapPalette[paletteIndex];
-    return {
-      backgroundColor: swatch.bg,
-      color: swatch.text,
-      borderColor: swatch.border
-    };
-  }
 
   return (
-    <article className="surface p-4 sm:p-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h3 className="text-lg font-semibold text-ink-900">Veckoaktivitet</h3>
-          <p className="mt-1 text-sm text-ink-600">Visningsintensitet per veckodag och tidsfönster</p>
-        </div>
-        <div className="rounded-full border border-black/10 bg-[#fbfcfe] px-3 py-2">
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-400">Låg</span>
-            <div className="flex items-center gap-1">
-              {heatmapPalette.map((swatch, step) => {
-                return (
-                  <span
-                    key={step}
-                    className="h-2.5 w-7 rounded-full border"
-                    style={{ backgroundColor: swatch.bg, borderColor: swatch.border }}
-                  />
-                );
-              })}
-            </div>
-            <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-400">Hög</span>
-          </div>
-        </div>
+    <Card className="gap-0 py-0 p-4 sm:p-5">
+      <h3 className="text-lg font-semibold text-ink-900">Veckoaktivitet</h3>
+      <p className="mt-1 text-sm text-ink-600">Visningsintensitet per veckodag och tidsfönster</p>
+      <div className="mt-4">
+        <WeeklyHeatmapChart rows={weeklyHeatmap} labels={labels} />
       </div>
-      <div className="mt-4 space-y-2">
-        <div className="ml-14 grid grid-cols-4 gap-2 text-[11px] font-semibold text-ink-500">
-          {labels.map((label) => <span key={label}>{label}</span>)}
-        </div>
-        {weeklyHeatmap.map((row) => (
-          <div key={row.day} className="grid grid-cols-[44px_1fr] items-center gap-2">
-            <span className="text-xs font-semibold text-ink-600">{row.day}</span>
-            <div className="grid grid-cols-4 gap-2">
-              {row.slots.map((value, index) => (
-                <div
-                  key={`${row.day}-${index}`}
-                  className="h-8 rounded-lg border text-center text-[11px] font-semibold leading-8 shadow-[inset_0_1px_0_rgba(255,255,255,0.18)]"
-                  style={heatmapCellStyle(value)}
-                  title={`${row.day} ${labels[index]}: ${value}`}
-                >
-                  {value}
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-    </article>
+    </Card>
   );
 }
 
 function AdminListingsPage({ listings = [] }) {
+  const [query, setQuery] = useState("");
+  const [selectedListing, setSelectedListing] = useState(null);
   const [selectedStatus, setSelectedStatus] = useState("Alla");
-  const statusFilters = ["Alla", "Aktiv", "Väntande", "Utkast"];
+  const statusFilters = ["Alla", "Aktiv", "Väntande", "Utkast", "Förhandling", "Uthyrd", "Inaktiv"].filter((status) => ["Alla", "Aktiv", "Utkast"].includes(status) || listings.some((listing) => listing.status === status));
   const listingRows = Array.isArray(listings) ? listings : [];
-  const filteredListings = selectedStatus === "Alla"
-    ? listingRows
-    : listingRows.filter((item) => item.status === selectedStatus);
+  const filteredListings = listingRows.filter((item) => (selectedStatus === "Alla" || item.status === selectedStatus) && [item.title, item.district, item.responsible].some((value) => String(value || "").toLocaleLowerCase("sv").includes(query.trim().toLocaleLowerCase("sv"))));
 
   function previewListing(listingId) {
     if (typeof window === "undefined") return;
@@ -964,28 +719,13 @@ function AdminListingsPage({ listings = [] }) {
 
   return (
     <div className="space-y-4">
-      <header className="surface p-4 sm:p-5">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Adminpanel</p>
-            <h1 className="mt-1 text-2xl font-semibold text-ink-900">Annonser</h1>
-            <p className="mt-1 text-sm text-ink-600">Hantera aktiva annonser, utkast och publiceringar.</p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Button type="button" variant="secondary" className="h-auto px-4 py-2">
-              <FilterIcon className="mr-1.5 h-4 w-4" />
-              Filter
-            </Button>
-            <Button type="button" className="h-auto px-4 py-2" onClick={() => navigateTo("/app/publish")}>
+
+
+      <Card className="gap-0 py-0 overflow-hidden"><div className="flex flex-wrap items-center justify-end gap-2 border-b border-border p-4 sm:px-5"><Button type="button" className="h-auto px-4 py-2" onClick={() => navigateTo("/app/publish")}>
               <PlusIcon className="mr-1.5 h-4 w-4" />
               Ny annons
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      <article className="surface overflow-hidden">
-        <div className="border-b border-black/10 px-4 py-4 sm:px-5">
+            </Button></div>
+        <div className="border-b border-veil/10 px-4 py-4 sm:px-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="text-lg font-semibold text-ink-900">Alla annonser</h2>
@@ -1005,7 +745,7 @@ function AdminListingsPage({ listings = [] }) {
                     <ToggleGroupItem
                       key={status}
                       value={status}
-                      className={`h-auto gap-2 rounded-full border-black/10 px-3 py-1.5 text-sm font-semibold text-ink-700 shadow-none hover:bg-black/5 ${statusToggleOnClass(status)}`}
+                      className={`h-auto gap-2 rounded-full border-veil/10 px-3 py-1.5 text-sm font-semibold text-ink-700 shadow-none hover:bg-veil/5 ${statusToggleOnClass(status)}`}
                     >
                       <span className="font-medium">{status === "Alla" ? "Alla" : status === "Aktiv" ? "Aktiva" : status}</span>
                       <span className="font-medium -ml-1">:</span>
@@ -1015,27 +755,13 @@ function AdminListingsPage({ listings = [] }) {
                 })}
               </ToggleGroup>
             </div>
-            <div className="flex items-center gap-2">
-              <Button type="button" variant="outline" size="icon" className="h-9 w-9 rounded-full text-ink-700">
-                <FilterIcon className="h-4 w-4" />
-              </Button>
-              <Button type="button" variant="outline" size="icon" className="h-9 w-9 rounded-full text-ink-700">
-                <SearchIcon className="h-4 w-4" />
-              </Button>
-            </div>
+            <Input aria-label="Sök annonser" className="w-full sm:w-72" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Sök annons, område eller ansvarig..." />
           </div>
         </div>
         <div className="overflow-x-auto">
-          <Table className="min-w-[880px] table-fixed">
-            <colgroup>
-              <col className="w-[46%]" />
-              <col className="w-[14%]" />
-              <col className="w-[14%]" />
-              <col className="w-[10%]" />
-              <col className="w-[16%]" />
-              <col className="w-[6%]" />
-            </colgroup>
-            <TableHeader className="bg-[#fafafa] text-[11px] uppercase tracking-wide text-ink-500">
+          <Table className="min-w-[780px]">
+
+            <TableHeader className="bg-canvas text-[11px] uppercase tracking-wide text-ink-500">
               <TableRow className="hover:bg-transparent">
                 <TableHead className="px-4 py-3 sm:px-5">Annons</TableHead>
                 <TableHead className="px-4 py-3">Status</TableHead>
@@ -1047,12 +773,12 @@ function AdminListingsPage({ listings = [] }) {
             </TableHeader>
             <TableBody>
               {filteredListings.map((item) => (
-                <TableRow key={item.id} className="border-t border-black/10">
+                <TableRow key={item.id} className="border-t border-veil/10">
                   <TableCell className="whitespace-normal px-4 py-3.5 align-top sm:px-5">
                     <div className="flex items-center gap-3">
-                      <img src={item.image} alt={item.title} className="h-11 w-16 shrink-0 rounded-lg border border-black/10 object-cover" loading="lazy" />
+                      <img src={item.image} alt={item.title} className="h-11 w-16 shrink-0 rounded-lg border border-veil/10 object-cover" loading="lazy" />
                       <div className="min-w-0">
-                        <p className="truncate font-semibold text-ink-900">{item.title}</p>
+                        <Button variant="link" className="h-auto max-w-full justify-start truncate p-0 font-semibold text-ink-900" onClick={() => setSelectedListing(item)}>{item.title}</Button>
                         <p className="mt-1 text-xs text-ink-600">{item.district} · {item.size} m² · {formatSek(item.priceMonthly)}/mån</p>
                       </div>
                     </div>
@@ -1074,7 +800,8 @@ function AdminListingsPage({ listings = [] }) {
                               type="button"
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 rounded-full text-ink-600 hover:bg-[#ffffff]"
+                              className="h-8 w-8 rounded-md text-ink-600 hover:bg-control"
+                              aria-label={`Förhandsgranska ${item.title}`}
                               onClick={() => previewListing(item.id)}
                             />
                           }
@@ -1088,16 +815,34 @@ function AdminListingsPage({ listings = [] }) {
                 </TableRow>
               ))}
               {filteredListings.length === 0 ? (
-                <TableRow className="border-t border-black/10">
+                <TableRow className="border-t border-veil/10">
                   <TableCell className="whitespace-normal px-4 py-6 text-sm text-ink-500 sm:px-5" colSpan={6}>
-                    Inga annonser med vald status.
+                    Inga annonser matchar din sökning.
+                    <Button variant="link" onClick={() => { setQuery(""); setSelectedStatus("Alla"); }}>Rensa filter</Button>
                   </TableCell>
                 </TableRow>
               ) : null}
             </TableBody>
           </Table>
         </div>
-      </article>
+      </Card>
+      <Sheet open={Boolean(selectedListing)} onOpenChange={(open) => { if (!open) setSelectedListing(null); }}>
+        <SheetContent className="admin-workspace data-[side=right]:w-full data-[side=right]:sm:max-w-xl gap-0 p-0">
+          <SheetHeader className="border-b border-veil/10 p-6 pr-12">
+            <SheetTitle className="text-xl">{selectedListing?.title}</SheetTitle>
+            <SheetDescription>Annonsöversikt · {selectedListing?.district}</SheetDescription>
+          </SheetHeader>
+          {selectedListing ? <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-6">
+            <img src={selectedListing.image} alt={selectedListing.title} className="aspect-video w-full rounded-lg object-cover" />
+            <Badge variant="outline" className={statusClass(selectedListing.status)}>{selectedListing.status}</Badge>
+            <dl className="grid grid-cols-2 gap-6 text-sm">
+              {[["Yta", `${selectedListing.size} m²`], ["Hyra", `${formatSek(selectedListing.priceMonthly)}/mån`], ["Visningar", selectedListing.views], ["Förfrågningar", selectedListing.inquiries], ["Ansvarig", selectedListing.responsible], ["Lokaltyp", selectedListing.type]].map(([label, value]) => <div key={label}><dt className="text-ink-500">{label}</dt><dd className="mt-1 font-semibold">{value}</dd></div>)}
+            </dl>
+            <p className="text-sm text-ink-500">Ansvarig mäklare hanterar innehåll och publicering i sin objektpanel.</p>
+          </div> : null}
+          <div className="border-t border-veil/10 p-5"><Button className="w-full" onClick={() => previewListing(selectedListing.id)}>Visa hela annonsen<ExternalLinkIcon /></Button></div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
@@ -1105,7 +850,7 @@ function AdminListingsPage({ listings = [] }) {
 function notificationToneClass(tone) {
   if (tone === "new") return "border-emerald-200 bg-emerald-50 text-emerald-700";
   if (tone === "live") return "border-blue-200 bg-blue-50 text-blue-700";
-  return "border-black/10 bg-[#f7f7f7] text-ink-700";
+  return "border-veil/10 bg-subtle text-ink-700";
 }
 
 function AdminNotificationsPage({ app }) {
@@ -1141,33 +886,22 @@ function AdminNotificationsPage({ app }) {
 
   return (
     <div className="space-y-4">
-      <header className="surface p-4 sm:p-5">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Adminpanel</p>
-            <h1 className="mt-1 text-2xl font-semibold text-ink-900">Notifikationer</h1>
-            <p className="mt-1 text-sm text-ink-600">Samlad vy för nya händelser, publiceringar och teamaktivitet.</p>
-          </div>
-          <Badge variant="outline" className="h-auto rounded-full bg-[#f7f7f7] px-3 py-1 text-xs font-semibold text-ink-700">
-            {notificationItems.length} nya
-          </Badge>
-        </div>
-      </header>
 
-      <section className="surface p-3 sm:p-4">
+
+      <Card className="gap-0 py-0 p-3 sm:p-4">
         {notificationItems.length === 0 ? (
           <div>
-            <p className="rounded-2xl border border-black/10 bg-[#fafafa] px-4 py-4 text-sm text-ink-600">
+            <p className="rounded-2xl border border-veil/10 bg-canvas px-4 py-4 text-sm text-ink-600">
               Inga notifikationer
             </p>
           </div>
         ) : (
-          <div className="overflow-hidden rounded-2xl border border-black/10 bg-[#ffffff]">
-            <div className="divide-y divide-black/10">
+          <Card className="gap-0 py-0 overflow-hidden rounded-xl border border-veil/10 bg-surface">
+            <div className="divide-y divide-veil/10">
               {notificationItems.map((item) => (
                 <article
                   key={item.id}
-                  className="cursor-pointer px-4 py-3.5 transition hover:bg-[#fafafa] sm:px-5"
+                  className="cursor-pointer px-4 py-3.5 transition hover:bg-canvas sm:px-5"
                   onClick={() => {
                     setSeenNotificationIds((current) => Array.from(new Set([...current, item.id])));
                     navigateTo(item.actionPath || "/app/admin/notifikationer");
@@ -1183,7 +917,7 @@ function AdminNotificationsPage({ app }) {
                   aria-label={`Öppna notis: ${item.title}`}
                 >
                   <div className="flex items-center gap-3">
-                    <span className={`inline-flex h-2.5 w-2.5 shrink-0 rounded-full ${seenNotificationIds.includes(item.id) ? "bg-ink-300" : "bg-[#0b0a0e]"}`} />
+                    <span className={`inline-flex h-2.5 w-2.5 shrink-0 rounded-full ${seenNotificationIds.includes(item.id) ? "bg-ink-300" : "bg-strong"}`} />
                     <div className="min-w-0 flex-1">
                       <div className="flex min-w-0 items-baseline gap-3">
                         <p className="shrink-0 truncate text-sm font-semibold text-ink-900">{item.title}</p>
@@ -1198,9 +932,9 @@ function AdminNotificationsPage({ app }) {
                 </article>
               ))}
             </div>
-          </div>
+          </Card>
         )}
-      </section>
+      </Card>
     </div>
   );
 }
@@ -1309,20 +1043,10 @@ function AdminBrokersPage({ app }) {
 
   return (
     <div className="space-y-4">
-      <header className="surface p-4 sm:p-5">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Adminpanel</p>
-            <h1 className="mt-1 text-2xl font-semibold text-ink-900">Mäklare</h1>
-            <p className="mt-1 text-sm text-ink-600">
-              Godkänn mäklarförfrågningar och hantera aktiva mäklare för {app?.adminCompany?.name || "bolaget"}.
-            </p>
-          </div>
-        </div>
-      </header>
+
 
       {pendingBrokerRequests.length > 0 ? (
-        <section className="surface p-4 sm:p-5">
+        <Card className="gap-0 py-0 p-4 sm:p-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="text-lg font-semibold text-ink-900">Väntar på godkännande</h2>
@@ -1346,18 +1070,18 @@ function AdminBrokersPage({ app }) {
                 .toUpperCase();
               const isBusy = pendingApprovalUserId === broker.userId;
               return (
-                <article key={broker.id} className="rounded-2xl border border-black/10 bg-[#ffffff] p-4 shadow-[0_1px_0_rgba(15,25,48,0.03)]">
+                <Card key={broker.id} className="gap-0 py-0 p-4 shadow-[0_1px_0_rgba(15,25,48,0.03)]">
                   <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                     <div className="flex min-w-0 items-start gap-3">
                       <Avatar className="h-10 w-10 shrink-0">
-                        <AvatarFallback className="bg-[#0b0a0e] text-xs font-semibold text-white">{initials}</AvatarFallback>
+                        <AvatarFallback className="bg-strong text-xs font-semibold text-on-strong">{initials}</AvatarFallback>
                       </Avatar>
                       <div className="min-w-0">
                         <p className="truncate text-sm font-semibold text-ink-900">{broker.name || broker.email}</p>
                         <p className="mt-0.5 truncate text-xs text-ink-600">{broker.email}</p>
                         <p className="mt-2 text-sm text-ink-700">
                           Vill bli verifierad som mäklare för{" "}
-                          <span className="font-semibold text-[#0b0a0e]">{broker.companyName} ({broker.organizationNumber})</span>.
+                          <span className="font-semibold text-strong">{broker.companyName} ({broker.organizationNumber})</span>.
                         </p>
                         <p className="mt-1 text-xs text-ink-500">Skickad {formatRequestTime(broker.requestedAt)}</p>
                       </div>
@@ -1382,23 +1106,23 @@ function AdminBrokersPage({ app }) {
                       </Button>
                     </div>
                   </div>
-                </article>
+                </Card>
               );
             })}
           </div>
-        </section>
+        </Card>
       ) : null}
 
       <section className="grid gap-4 xl:grid-cols-2">
-        <article className="surface p-4 sm:p-5">
+        <Card className="gap-0 py-0 p-4 sm:p-5">
           <h2 className="text-lg font-semibold text-ink-900">Bjud in mäklare</h2>
           <p className="mt-1 text-sm text-ink-600">Använd samma inbjudningsflöde som onboarding, anpassat för adminpanelen.</p>
 
-          <div className="mt-4 rounded-2xl border border-black/10 bg-[#fafafa] px-4 py-4">
+          <Card className="gap-0 py-0 mt-4 rounded-xl border border-veil/10 bg-canvas px-4 py-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Inbjudningskod</p>
-            <p className="mt-2 text-[1.2rem] font-semibold text-[#0b0a0e]">{inviteCode}</p>
+            <p className="mt-2 text-[1.2rem] font-semibold text-strong">{inviteCode}</p>
             <p className="mt-1 text-sm text-ink-500">Dela med mäklare via e-post eller internt system.</p>
-          </div>
+          </Card>
 
           <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_150px]">
             <Input
@@ -1420,9 +1144,9 @@ function AdminBrokersPage({ app }) {
               + Bjud in
             </Button>
           </div>
-        </article>
+        </Card>
 
-        <article className="surface p-4 sm:p-5">
+        <Card className="gap-0 py-0 p-4 sm:p-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="text-lg font-semibold text-ink-900">Teamaktivitet</h2>
@@ -1438,20 +1162,20 @@ function AdminBrokersPage({ app }) {
               const hasNext = index < list.length - 1;
               return (
                 <li key={item.id} className="relative pl-10">
-                  <span className="absolute left-0 top-0 inline-flex h-8 w-8 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] text-ink-700">
+                  <span className="absolute left-0 top-0 inline-flex h-8 w-8 items-center justify-center rounded-full border border-veil/10 bg-control text-ink-700">
                     <Icon className="h-4 w-4" />
                   </span>
-                  {hasNext ? <span className="absolute left-[15px] top-8 h-[calc(100%+0.75rem)] w-px bg-black/10" /> : null}
+                  {hasNext ? <span className="absolute left-[15px] top-8 h-[calc(100%+0.75rem)] w-px bg-veil/10" /> : null}
                   <p className="text-sm font-semibold text-ink-800">{item.text}</p>
                   <p className="mt-0.5 text-xs text-ink-500">{item.timestamp}</p>
                 </li>
               );
             })}
           </ul>
-        </article>
+        </Card>
       </section>
 
-      <section className="surface p-4 sm:p-5">
+      <Card className="gap-0 py-0 p-4 sm:p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h2 className="text-lg font-semibold text-ink-900">Aktiva mäklare</h2>
@@ -1468,13 +1192,13 @@ function AdminBrokersPage({ app }) {
             </Button>
           ) : null}
         </div>
-        <div className="mt-4 overflow-hidden rounded-2xl border border-black/10 bg-[#ffffff]">
+        <Card className="gap-0 py-0 mt-4 overflow-hidden rounded-xl border border-veil/10 bg-surface">
           {activeBrokers.length === 0 ? (
-            <p className="bg-[#fafafa] px-4 py-4 text-sm text-ink-600">
+            <p className="bg-canvas px-4 py-4 text-sm text-ink-600">
               Inga verifierade mäklare ännu.
             </p>
           ) : (
-            <div className="divide-y divide-black/10">
+            <div className="divide-y divide-veil/10">
               {activeBrokers.map((broker) => {
                 const initials = String(broker.name || broker.email || "AA")
                   .split(" ")
@@ -1487,7 +1211,7 @@ function AdminBrokersPage({ app }) {
                   <div key={broker.id} className="grid gap-3 px-4 py-3.5 md:grid-cols-[minmax(0,1.4fr)_170px_180px_auto] md:items-center">
                     <div className="flex min-w-0 items-center gap-3">
                       <Avatar className="h-10 w-10 shrink-0">
-                        <AvatarFallback className="bg-[#0b0a0e] text-xs font-semibold text-white">{initials}</AvatarFallback>
+                        <AvatarFallback className="bg-strong text-xs font-semibold text-on-strong">{initials}</AvatarFallback>
                       </Avatar>
                       <span className="min-w-0">
                         <span className="block truncate text-sm font-semibold text-ink-900">{broker.name || broker.email}</span>
@@ -1525,8 +1249,8 @@ function AdminBrokersPage({ app }) {
               })}
             </div>
           )}
-        </div>
-      </section>
+        </Card>
+      </Card>
 
       <Dialog
         open={activityOverlayOpen}
@@ -1536,9 +1260,9 @@ function AdminBrokersPage({ app }) {
       >
         <DialogContent
           showCloseButton={false}
-          className="z-[80] w-full max-w-[720px] gap-0 overflow-hidden rounded-[28px] border border-black/10 bg-[#ffffff] p-0 shadow-[0_24px_70px_rgba(15,25,48,0.25)] ring-0"
+          className="z-[80] w-full max-w-[720px] gap-0 overflow-hidden rounded-[28px] border border-veil/10 bg-popover p-0 shadow-[0_24px_70px_rgba(15,25,48,0.25)] ring-0"
         >
-          <div className="flex items-start justify-between gap-4 border-b border-black/10 px-5 py-4">
+          <div className="flex items-start justify-between gap-4 border-b border-veil/10 px-5 py-4">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Mäklarteam</p>
               <h2 className="mt-1 text-xl font-semibold text-ink-900">All teamaktivitet</h2>
@@ -1547,7 +1271,7 @@ function AdminBrokersPage({ app }) {
               type="button"
               variant="outline"
               size="icon"
-              className="close-circle-button leading-none text-ink-700 hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
+              className="close-circle-button leading-none text-ink-700 hover:border-strong hover:text-strong"
               aria-label="Stäng"
               onClick={() => setActivityOverlayOpen(false)}
             >
@@ -1561,10 +1285,10 @@ function AdminBrokersPage({ app }) {
                 const hasNext = index < list.length - 1;
                 return (
                   <li key={item.id} className="relative pl-10">
-                    <span className="absolute left-0 top-0 inline-flex h-8 w-8 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] text-ink-700">
+                    <span className="absolute left-0 top-0 inline-flex h-8 w-8 items-center justify-center rounded-full border border-veil/10 bg-control text-ink-700">
                       <Icon className="h-4 w-4" />
                     </span>
-                    {hasNext ? <span className="absolute left-[15px] top-8 h-[calc(100%+1rem)] w-px bg-black/10" /> : null}
+                    {hasNext ? <span className="absolute left-[15px] top-8 h-[calc(100%+1rem)] w-px bg-veil/10" /> : null}
                     <p className="text-sm font-semibold text-ink-800">{item.text}</p>
                     <p className="mt-0.5 text-xs text-ink-500">{item.timestamp}</p>
                   </li>
@@ -1590,7 +1314,7 @@ function AdminBrokersPage({ app }) {
               <AlertDialogHeader>
                 <AlertDialogTitle>Ta bort mäklare?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Detta tar bort <span className="font-semibold text-[#0b0a0e]">{deleteBrokerCandidate.name || deleteBrokerCandidate.email}</span> från bolagets mäklarteam. Mäklaren kan inte längre arbeta för bolaget.
+                  Detta tar bort <span className="font-semibold text-strong">{deleteBrokerCandidate.name || deleteBrokerCandidate.email}</span> från bolagets mäklarteam. Mäklaren kan inte längre arbeta för bolaget.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <label className="block text-left">
@@ -1605,7 +1329,7 @@ function AdminBrokersPage({ app }) {
               <AlertDialogFooter>
                 <AlertDialogCancel variant="secondary" className="h-auto px-4 py-2 text-sm">Avbryt</AlertDialogCancel>
                 <AlertDialogAction
-                  className="h-auto px-4 py-2 text-sm disabled:cursor-not-allowed disabled:border-black/10 disabled:bg-[#e5e7eb] disabled:text-ink-500"
+                  className="h-auto px-4 py-2 text-sm disabled:cursor-not-allowed disabled:border-veil/10 disabled:bg-tint-3 disabled:text-ink-500"
                   disabled={
                     deleteBrokerConfirmName.trim() !== String(deleteBrokerCandidate.name || deleteBrokerCandidate.email || "").trim()
                     || removingBrokerId === deleteBrokerCandidate.userId
@@ -1628,9 +1352,9 @@ function AdminBrokersPage({ app }) {
       >
         <DialogContent
           showCloseButton={false}
-          className="z-[80] w-full max-w-[880px] gap-0 overflow-hidden rounded-[28px] border border-black/10 bg-[#ffffff] p-0 shadow-[0_24px_70px_rgba(15,25,48,0.25)] ring-0"
+          className="z-[80] w-full max-w-[880px] gap-0 overflow-hidden rounded-[28px] border border-veil/10 bg-popover p-0 shadow-[0_24px_70px_rgba(15,25,48,0.25)] ring-0"
         >
-          <div className="flex items-start justify-between gap-4 border-b border-black/10 px-5 py-4">
+          <div className="flex items-start justify-between gap-4 border-b border-veil/10 px-5 py-4">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Mäklarteam</p>
               <h2 className="mt-1 text-xl font-semibold text-ink-900">Hantera mäklare</h2>
@@ -1639,7 +1363,7 @@ function AdminBrokersPage({ app }) {
               type="button"
               variant="outline"
               size="icon"
-              className="close-circle-button leading-none text-ink-700 hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
+              className="close-circle-button leading-none text-ink-700 hover:border-strong hover:text-strong"
               aria-label="Stäng"
               onClick={() => setBrokerManagerOpen(false)}
             >
@@ -1648,7 +1372,7 @@ function AdminBrokersPage({ app }) {
           </div>
 
           <div className="grid max-h-[72vh] min-h-[420px] overflow-hidden md:grid-cols-[280px_1fr]">
-            <aside className="overflow-y-auto border-b border-black/10 p-3 md:border-b-0 md:border-r">
+            <aside className="overflow-y-auto border-b border-veil/10 p-3 md:border-b-0 md:border-r">
               <div className="space-y-2">
                 {activeBrokers.map((broker) => {
                   const initials = String(broker.name || broker.email || "AA")
@@ -1664,11 +1388,11 @@ function AdminBrokersPage({ app }) {
                       key={broker.userId}
                       type="button"
                       variant="ghost"
-                      className={`menu-hover-row h-auto w-full justify-start gap-3 px-3 py-2.5 text-left font-normal ${selected ? "bg-[#eef2f8] hover:bg-[#eef2f8]" : "bg-transparent"}`}
+                      className={`menu-hover-row h-auto w-full justify-start gap-3 px-3 py-2.5 text-left font-normal ${selected ? "bg-tint-2 hover:bg-tint-2" : "bg-transparent"}`}
                       onClick={() => selectBrokerForEdit(broker)}
                     >
                       <Avatar className="h-9 w-9 shrink-0">
-                        <AvatarFallback className="bg-[#0b0a0e] text-xs font-semibold text-white">{initials}</AvatarFallback>
+                        <AvatarFallback className="bg-strong text-xs font-semibold text-on-strong">{initials}</AvatarFallback>
                       </Avatar>
                       <span className="min-w-0">
                         <span className="block truncate text-sm font-semibold text-ink-900">{broker.name || broker.email}</span>
@@ -1717,11 +1441,11 @@ function AdminBrokersPage({ app }) {
                     </label>
                     <label className="block">
                       <span className="text-xs font-semibold uppercase tracking-wide text-ink-500">E-post</span>
-                      <Input className="mt-1.5 bg-[#f7f7f7] text-ink-600" value={selectedBroker.email || ""} disabled />
+                      <Input className="mt-1.5 bg-subtle text-ink-600" value={selectedBroker.email || ""} disabled />
                     </label>
                   </div>
 
-                  <div className="flex flex-col gap-3 border-t border-black/10 pt-5 sm:flex-row sm:items-center sm:justify-end">
+                  <div className="flex flex-col gap-3 border-t border-veil/10 pt-5 sm:flex-row sm:items-center sm:justify-end">
                     <div className="flex gap-2 sm:justify-end">
                       <Button type="button" variant="secondary" className="h-auto px-4 py-2 text-sm" onClick={() => setBrokerManagerOpen(false)}>
                         Avbryt
@@ -1737,7 +1461,7 @@ function AdminBrokersPage({ app }) {
                   </div>
                 </div>
               ) : (
-                <p className="rounded-2xl border border-black/10 bg-[#fafafa] px-4 py-4 text-sm text-ink-600">
+                <p className="rounded-2xl border border-veil/10 bg-canvas px-4 py-4 text-sm text-ink-600">
                   Inga aktiva mäklare att hantera.
                 </p>
               )}
@@ -1870,46 +1594,34 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
 
   return (
     <div className="space-y-4">
-      <header className="surface p-4 sm:p-5">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Adminpanel</p>
-            <h1 className="mt-1 text-2xl font-semibold text-ink-900">Förfrågningar</h1>
-            <p className="mt-1 text-sm text-ink-600">Inkorg för inkommande dialoger. Välj konversation till vänster, svara i chatten och använd förslag som bygger på senaste hyresgästmeddelandet.</p>
-          </div>
-          <div className="rounded-2xl border border-[#d7e2ee] bg-[#f4f7fb] px-4 py-3">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-[#476a99]">Svar inom 24h</p>
-            <p className="mt-1 text-xl font-semibold text-[#0b0a0e]">91%</p>
-          </div>
-        </div>
-      </header>
+
 
       <section className="grid gap-3 sm:grid-cols-3">
-        <article className="surface p-4">
+        <Card className="gap-0 py-0 p-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Nya</p>
-          <p className="mt-2 text-2xl font-semibold text-[#0b0a0e]">{inquiries.filter((item) => item.status === "Ny").length}</p>
-        </article>
-        <article className="surface p-4">
+          <p className="mt-2 text-2xl font-semibold text-strong">{inquiries.filter((item) => item.status === "Ny").length}</p>
+        </Card>
+        <Card className="gap-0 py-0 p-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Pågående</p>
-          <p className="mt-2 text-2xl font-semibold text-[#0b0a0e]">{inquiries.filter((item) => item.status === "Pågående").length}</p>
-        </article>
-        <article className="surface p-4">
+          <p className="mt-2 text-2xl font-semibold text-strong">{inquiries.filter((item) => item.status === "Pågående").length}</p>
+        </Card>
+        <Card className="gap-0 py-0 p-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Hög prioritet</p>
-          <p className="mt-2 text-2xl font-semibold text-[#0b0a0e]">{inquiries.filter((item) => item.priority === "Hög").length}</p>
-        </article>
+          <p className="mt-2 text-2xl font-semibold text-strong">{inquiries.filter((item) => item.priority === "Hög").length}</p>
+        </Card>
       </section>
 
-      <section className="surface overflow-hidden">
+      <Card className="gap-0 py-0 overflow-hidden">
         <div className="grid lg:h-[calc(100vh-11rem)] lg:grid-cols-[360px,minmax(0,1fr)] xl:grid-cols-[360px,minmax(0,1fr),336px]">
-          <aside className="border-b border-black/10 bg-[#fbfcfd] lg:border-b-0 lg:border-r">
-            <div className="border-b border-black/10 p-4">
+          <aside className="border-b border-veil/10 bg-canvas lg:border-b-0 lg:border-r">
+            <div className="border-b border-veil/10 p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ink-500">Inkorg</p>
-              <h2 className="mt-1 text-lg font-semibold text-[#0b0a0e]">Konversationer</h2>
+              <h2 className="mt-1 text-lg font-semibold text-strong">Konversationer</h2>
               <div className="mt-3">
                 <label className="relative block">
                   <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-400" />
                   <Input
-                    className="!rounded-2xl !bg-[#ffffff] pl-9"
+                    className="!rounded-2xl !bg-control pl-9"
                     placeholder="Sök namn, bolag eller annons"
                     value={searchQuery}
                     onChange={(event) => setSearchQuery(event.target.value)}
@@ -1927,13 +1639,13 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                       onClick={() => setFilter(tab.key)}
                       className={`h-auto gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold ${
                         active
-                          ? "border-transparent bg-[#0b0a0e] text-white hover:bg-[#0b0a0e] hover:text-white"
-                          : "border-black/10 text-ink-700 hover:border-[#bfd0e3]"
+                          ? "border-transparent bg-strong text-on-strong hover:bg-strong hover:text-on-strong"
+                          : "border-veil/10 text-ink-700 hover:border-line-2"
                       }`}
                     >
                       {tab.label}
                       <Badge className={`h-auto min-w-5 rounded-full px-1.5 py-0.5 text-[10px] ${
-                        active ? "bg-[#ffffff]/15 text-white" : "bg-[#eef3f8] text-[#476a99]"
+                        active ? "bg-on-strong/15 text-on-strong" : "bg-tint-2 text-brand-600"
                       }`}>
                         {tab.count}
                       </Badge>
@@ -1956,12 +1668,12 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                     type="button"
                     variant="ghost"
                     onClick={() => selectInquiry(inquiry.id)}
-                    className={`h-auto flex w-full items-start gap-3 border-b border-black/5 px-4 py-4 text-left font-normal transition ${
-                      isActive ? "bg-[#ffffff] shadow-[inset_3px_0_0_#0b0a0e] hover:bg-[#ffffff]" : "hover:bg-[#ffffff]/80"
+                    className={`h-auto flex w-full items-start gap-3 border-b border-veil/5 px-4 py-4 text-left font-normal transition ${
+                      isActive ? "bg-control shadow-[inset_3px_0_0_rgb(var(--strong))] hover:bg-control" : "hover:bg-control/80"
                     }`}
                   >
                     <Avatar className="h-11 w-11 shrink-0">
-                      <AvatarFallback className={`text-sm font-semibold ${isActive ? "bg-[#0b0a0e] text-white" : "bg-[#dbe6f3] text-[#0b0a0e]"}`}>
+                      <AvatarFallback className={`text-sm font-semibold ${isActive ? "bg-strong text-on-strong" : "bg-tint-3 text-strong"}`}>
                         {renter.initials}
                       </AvatarFallback>
                     </Avatar>
@@ -1978,7 +1690,7 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                         <Badge variant="outline" className={`h-auto rounded-full px-2 py-0.5 text-[10px] font-semibold ${inquiryStatusClass(inquiry.status)}`}>{inquiry.status}</Badge>
                         <Badge variant="outline" className={`h-auto rounded-full px-2 py-0.5 text-[10px] font-semibold ${inquiryPriorityClass(inquiry.priority)}`}>{inquiry.priority}</Badge>
                         {inquiryNeedsResponse(inquiry) ? (
-                          <Badge className="h-auto rounded-full bg-[#eef3f8] px-2 py-0.5 text-[10px] font-semibold text-[#476a99]">
+                          <Badge className="h-auto rounded-full bg-tint-2 px-2 py-0.5 text-[10px] font-semibold text-brand-600">
                             Svar krävs
                           </Badge>
                         ) : null}
@@ -2000,18 +1712,18 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
             </div>
           </aside>
 
-          <div className="min-w-0 border-b border-black/10 lg:border-b-0 xl:border-r">
+          <div className="min-w-0 border-b border-veil/10 lg:border-b-0 xl:border-r">
             {activeInquiry && activeRenter && activeListing ? (
-              <div className="flex h-full min-h-[760px] flex-col bg-[#ffffff]">
-                <div className="border-b border-black/10 bg-[#ffffff] px-4 py-4 sm:px-5">
+              <div className="flex h-full min-h-[760px] flex-col bg-surface">
+                <div className="border-b border-veil/10 bg-surface px-4 py-4 sm:px-5">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-3">
                       <Avatar className="h-12 w-12 shrink-0">
-                        <AvatarFallback className="bg-[#0b0a0e] text-sm font-semibold text-white">{activeRenter.initials}</AvatarFallback>
+                        <AvatarFallback className="bg-strong text-sm font-semibold text-on-strong">{activeRenter.initials}</AvatarFallback>
                       </Avatar>
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="truncate text-lg font-semibold text-[#0b0a0e]">{activeRenter.name}</h3>
+                          <h3 className="truncate text-lg font-semibold text-strong">{activeRenter.name}</h3>
                           <Badge variant="outline" className={`h-auto rounded-full px-2 py-0.5 text-[11px] font-semibold ${inquiryStatusClass(activeInquiry.status)}`}>{activeInquiry.status}</Badge>
                         </div>
                         <p className="truncate text-sm text-ink-600">{activeRenter.company} · {activeSummary}</p>
@@ -2019,7 +1731,7 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                       </div>
                     </div>
                     <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold text-ink-500">
-                      <Badge variant="outline" className="h-auto gap-1 rounded-full bg-[#fbfbfa] px-2.5 py-1 text-sm font-normal">
+                      <Badge variant="outline" className="h-auto gap-1 rounded-full bg-canvas px-2.5 py-1 text-sm font-normal">
                         <CalendarIcon className="h-3.5 w-3.5" />
                         {activeInquiry.stage}
                       </Badge>
@@ -2030,37 +1742,37 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                   </div>
                 </div>
 
-                <div className="border-b border-black/10 bg-[#fbfcfd] px-4 py-3 sm:px-5 xl:hidden">
-                  <div className="flex flex-wrap items-center gap-3 rounded-3xl border border-[#d7e2ee] bg-[#ffffff] p-3">
-                    <img src={activeListing.image} alt={activeListing.title} className="h-16 w-24 rounded-2xl border border-black/10 object-cover" loading="lazy" />
+                <div className="border-b border-veil/10 bg-canvas px-4 py-3 sm:px-5 xl:hidden">
+                  <Card className="gap-0 py-0 flex flex-wrap items-center gap-3 rounded-xl border border-line bg-surface p-3">
+                    <img src={activeListing.image} alt={activeListing.title} className="h-16 w-24 rounded-2xl border border-veil/10 object-cover" loading="lazy" />
                     <div className="min-w-0 flex-1">
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-[#476a99]">Matchad annons</p>
-                      <p className="mt-1 truncate text-sm font-semibold text-[#0b0a0e]">{activeListing.title}</p>
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-brand-600">Matchad annons</p>
+                      <p className="mt-1 truncate text-sm font-semibold text-strong">{activeListing.title}</p>
                       <p className="mt-1 text-xs text-ink-600">{activeListing.district} · {activeListing.size} m² · {formatSek(activeListing.priceMonthly)}/mån</p>
                     </div>
-                    <div className="rounded-2xl border border-[#d7e2ee] bg-[#f4f7fb] px-3 py-2 text-center">
+                    <Card className="gap-0 py-0 rounded-xl border border-line bg-tint-2 px-3 py-2 text-center">
                       <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">Match</p>
-                      <p className="mt-1 text-lg font-semibold text-[#0b0a0e]">{activeRenter.score}%</p>
-                    </div>
-                  </div>
+                      <p className="mt-1 text-lg font-semibold text-strong">{activeRenter.score}%</p>
+                    </Card>
+                  </Card>
                 </div>
 
                 <div className="flex-1 space-y-4 overflow-y-auto bg-[linear-gradient(180deg,#ffffff_0%,#fbfbfa_100%)] px-4 py-5 sm:px-5">
-                  <div className="mx-auto max-w-3xl rounded-3xl border border-[#d9e4f1] bg-[#f4f7fb] p-4">
+                  <Card className="gap-0 py-0 mx-auto max-w-3xl rounded-xl border border-line bg-tint-2 p-4">
                     <div className="flex flex-wrap items-start gap-3">
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-[#476a99]">Dialogsammanfattning</p>
-                        <p className="mt-1 text-sm font-semibold text-[#0b0a0e]">{activeSummary}</p>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-brand-600">Dialogsammanfattning</p>
+                        <p className="mt-1 text-sm font-semibold text-strong">{activeSummary}</p>
                         <p className="mt-2 text-sm leading-relaxed text-ink-700">
                           {activeRenter.name.split(" ")[0]} söker {activeRenter.preferredType.toLowerCase()} i {activeRenter.district} för {activeRenter.teamSize.toLowerCase()} med budget {activeRenter.budget}.
                         </p>
                       </div>
-                      <div className="rounded-2xl border border-[#c9d8e7] bg-[#ffffff] px-3 py-2">
+                      <Card className="gap-0 py-0 rounded-xl border border-line-2 bg-surface px-3 py-2">
                         <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">Nästa steg</p>
-                        <p className="mt-1 text-sm font-semibold text-[#0b0a0e]">{activeInquiry.stage}</p>
-                      </div>
+                        <p className="mt-1 text-sm font-semibold text-strong">{activeInquiry.stage}</p>
+                      </Card>
                     </div>
-                  </div>
+                  </Card>
 
                   <div className="mx-auto max-w-3xl space-y-4">
                     {activeInquiry.messages.map((message) => {
@@ -2076,10 +1788,10 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                             ) : null}
                             <div className={`rounded-[26px] px-4 py-3 text-sm leading-relaxed shadow-[0_12px_28px_rgba(15,25,48,0.06)] ${
                               isSystem
-                                ? "border border-dashed border-black/10 bg-[#fafafa] text-ink-600"
+                                ? "border border-dashed border-veil/10 bg-canvas text-ink-600"
                                 : isAdmin
-                                  ? "rounded-br-md bg-[#0b0a0e] text-white"
-                                  : "rounded-bl-md border border-black/10 bg-[#ffffff] text-ink-800"
+                                  ? "rounded-br-md bg-strong text-on-strong"
+                                  : "rounded-bl-md border border-veil/10 bg-surface text-ink-800"
                             }`}>
                               {message.text}
                             </div>
@@ -2091,7 +1803,7 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                   </div>
                 </div>
 
-                <div className="border-t border-black/10 bg-[#ffffff] px-4 py-4 sm:px-5">
+                <div className="border-t border-veil/10 bg-surface px-4 py-4 sm:px-5">
                   <div className="mx-auto max-w-3xl">
                     <div className="mb-3 flex flex-wrap gap-2">
                       {quickPromptChips.map((prompt) => (
@@ -2100,14 +1812,14 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                           type="button"
                           variant="outline"
                           onClick={() => applySuggestedPrompt(prompt.text)}
-                          className="h-auto gap-2 rounded-full border-[#cbd8e6] bg-[#f4f7fb] px-3 py-2 text-xs font-semibold text-[#0b0a0e] hover:bg-[#eaf1f8]"
+                          className="h-auto gap-2 rounded-full border-line-2 bg-tint-2 px-3 py-2 text-xs font-semibold text-strong hover:bg-tint-2"
                         >
                           <SparklesIcon className="h-3.5 w-3.5" />
                           {prompt.label}
                         </Button>
                       ))}
                     </div>
-                    <div className="rounded-[28px] border border-black/10 bg-[#fbfbfa] p-2">
+                    <div className="rounded-[28px] border border-veil/10 bg-canvas p-2">
                       <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
                         <textarea
                           className="min-h-[104px] w-full resize-none rounded-[22px] border-0 bg-transparent px-3 py-2.5 text-sm text-ink-900 outline-none placeholder:text-ink-400"
@@ -2130,51 +1842,51 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
             )}
           </div>
 
-          <aside className="hidden bg-[#f8fafc] xl:block">
+          <aside className="hidden bg-canvas xl:block">
             {activeInquiry && activeRenter && activeListing ? (
               <div className="h-full space-y-4 overflow-y-auto p-4 sm:p-5">
-                <article className="rounded-[28px] border border-[#d7e2ee] bg-[#ffffff] p-4">
-                  <img src={activeListing.image} alt={activeListing.title} className="h-40 w-full rounded-[22px] border border-black/10 object-cover" loading="lazy" />
+                <article className="rounded-[28px] border border-line bg-surface p-4">
+                  <img src={activeListing.image} alt={activeListing.title} className="h-40 w-full rounded-[22px] border border-veil/10 object-cover" loading="lazy" />
                   <div className="mt-3">
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-[#476a99]">Matchad annons</p>
-                    <h3 className="mt-1 text-base font-semibold text-[#0b0a0e]">{activeListing.title}</h3>
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-brand-600">Matchad annons</p>
+                    <h3 className="mt-1 text-base font-semibold text-strong">{activeListing.title}</h3>
                     <p className="mt-1 text-sm text-ink-600">{activeListing.district} · {activeListing.size} m² · {formatSek(activeListing.priceMonthly)}/mån</p>
                   </div>
                 </article>
 
-                <article className="rounded-[28px] border border-[#d7e2ee] bg-[#ffffff] p-4">
+                <article className="rounded-[28px] border border-line bg-surface p-4">
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">Hyresgäst</p>
-                      <h3 className="mt-1 text-base font-semibold text-[#0b0a0e]">{activeRenter.name}</h3>
+                      <h3 className="mt-1 text-base font-semibold text-strong">{activeRenter.name}</h3>
                     </div>
-                    <div className="rounded-2xl border border-[#d7e2ee] bg-[#f4f7fb] px-3 py-2 text-center">
+                    <Card className="gap-0 py-0 rounded-xl border border-line bg-tint-2 px-3 py-2 text-center">
                       <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">Match</p>
-                      <p className="mt-1 text-lg font-semibold text-[#0b0a0e]">{activeRenter.score}%</p>
-                    </div>
+                      <p className="mt-1 text-lg font-semibold text-strong">{activeRenter.score}%</p>
+                    </Card>
                   </div>
                   <div className="mt-3 grid gap-2">
-                    <div className="rounded-2xl border border-black/10 bg-[#fbfbfa] px-3 py-2.5">
+                    <Card className="gap-0 py-0 rounded-xl border border-veil/10 bg-canvas px-3 py-2.5">
                       <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">Bolag</p>
                       <p className="mt-1 text-sm font-semibold text-ink-900">{activeRenter.company}</p>
-                    </div>
+                    </Card>
                     <div className="grid grid-cols-2 gap-2">
-                      <div className="rounded-2xl border border-black/10 bg-[#fbfbfa] px-3 py-2.5">
+                      <Card className="gap-0 py-0 rounded-xl border border-veil/10 bg-canvas px-3 py-2.5">
                         <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">Team</p>
                         <p className="mt-1 text-sm font-semibold text-ink-900">{activeRenter.teamSize}</p>
-                      </div>
-                      <div className="rounded-2xl border border-black/10 bg-[#fbfbfa] px-3 py-2.5">
+                      </Card>
+                      <Card className="gap-0 py-0 rounded-xl border border-veil/10 bg-canvas px-3 py-2.5">
                         <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">Budget</p>
                         <p className="mt-1 text-sm font-semibold text-ink-900">{activeRenter.budget}</p>
-                      </div>
+                      </Card>
                     </div>
                   </div>
                 </article>
 
-                <article className="rounded-[28px] border border-[#d7e2ee] bg-[#ffffff] p-4">
+                <article className="rounded-[28px] border border-line bg-surface p-4">
                   <div className="flex items-center gap-2">
-                    <SparklesIcon className="h-4 w-4 text-[#476a99]" />
-                    <h3 className="text-sm font-semibold text-[#0b0a0e]">Föreslagna svar</h3>
+                    <SparklesIcon className="h-4 w-4 text-brand-600" />
+                    <h3 className="text-sm font-semibold text-strong">Föreslagna svar</h3>
                   </div>
                   <p className="mt-1 text-xs leading-relaxed text-ink-600">Direkt baserat på senaste hyresgästmeddelandet.</p>
                   <div className="mt-3 space-y-2.5">
@@ -2184,11 +1896,11 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                         type="button"
                         variant="outline"
                         onClick={() => applySuggestedPrompt(prompt.text)}
-                        className="h-auto block w-full rounded-3xl border-black/10 bg-[#fbfbfa] p-3 text-left font-normal hover:border-[#bfd0e3] hover:bg-[#ffffff]"
+                        className="h-auto block w-full rounded-xl border-veil/10 bg-canvas p-3 text-left font-normal hover:border-line-2 hover:bg-control"
                       >
                         <div className="flex items-center justify-between gap-2">
                           <Badge className={`h-auto rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
-                            prompt.kind === "question" ? "bg-[#e8f0fa] text-[#476a99]" : "bg-[#f3ebe6] text-[#9b5d3f]"
+                            prompt.kind === "question" ? "bg-tint-2 text-brand-600" : "bg-[#f3ebe6] text-[#9b5d3f] dark:bg-[#3a2c25] dark:text-[#e2b8a0]"
                           }`}>
                             {prompt.kind === "question" ? "Fråga" : "Svar"}
                           </Badge>
@@ -2200,11 +1912,11 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                   </div>
                 </article>
 
-                <article className="rounded-[28px] border border-[#d7e2ee] bg-[#ffffff] p-4">
-                  <h3 className="text-sm font-semibold text-[#0b0a0e]">Matchkriterier</h3>
+                <article className="rounded-[28px] border border-line bg-surface p-4">
+                  <h3 className="text-sm font-semibold text-strong">Matchkriterier</h3>
                   <div className="mt-3 space-y-2">
                     {activeRenter.matchCriteria.map((item) => (
-                      <div key={`${activeInquiry.id}-${item.label}`} className="flex items-start justify-between gap-3 rounded-2xl border border-black/10 bg-[#fbfbfa] px-3 py-2.5">
+                      <Card key={`${activeInquiry.id}-${item.label}`} className="gap-0 py-0 flex items-start justify-between gap-3 rounded-xl border border-veil/10 bg-canvas px-3 py-2.5">
                         <div>
                           <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">{item.label}</p>
                           <p className="mt-1 text-sm font-semibold text-ink-900">{item.value}</p>
@@ -2214,13 +1926,13 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                         }`}>
                           {item.status === "match" ? "Match" : "Delvis"}
                         </Badge>
-                      </div>
+                      </Card>
                     ))}
                   </div>
                 </article>
 
-                <article className="rounded-[28px] border border-[#d7e2ee] bg-[#ffffff] p-4">
-                  <h3 className="text-sm font-semibold text-[#0b0a0e]">Snabböversikt</h3>
+                <article className="rounded-[28px] border border-line bg-surface p-4">
+                  <h3 className="text-sm font-semibold text-strong">Snabböversikt</h3>
                   <ul className="mt-3 space-y-2">
                     <li className="flex items-center gap-2 text-sm text-ink-700">
                       <ClockIcon className="h-4 w-4 text-ink-500" />
@@ -2244,7 +1956,7 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
             ) : null}
           </aside>
         </div>
-      </section>
+      </Card>
     </div>
   );
 }
@@ -2373,7 +2085,7 @@ function AdminStatistics({ app }) {
   return (
     <div ref={rootRef} className="relative">
       <aside className="hidden xl:absolute xl:left-[-264px] xl:top-0 xl:block xl:h-full xl:w-[240px]">
-        <nav className="sticky top-6 rounded-[28px] border border-black/10 bg-transparent p-3 shadow-[0_10px_24px_rgba(15,25,48,0.05)]">
+        <nav className="sticky top-6 rounded-[28px] border border-veil/10 bg-transparent p-3 shadow-[0_10px_24px_rgba(15,25,48,0.05)]">
           <p className="px-2 pb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-400">Snabblänkar</p>
           <div className="space-y-0.5">
             {visibleSectionLinks.map((item) => {
@@ -2384,8 +2096,8 @@ function AdminStatistics({ app }) {
                   href={`#${item.id}`}
                   className={`menu-hover-row block whitespace-nowrap rounded-2xl px-3 py-2.5 text-sm transition ${
                     active
-                      ? "bg-[#0b0a0e] font-semibold text-white"
-                      : "text-ink-600 hover:bg-black/5 hover:text-ink-900"
+                      ? "bg-strong font-semibold text-on-strong"
+                      : "text-ink-600 hover:bg-veil/5 hover:text-ink-900"
                   }`}
                   onClick={(event) => handleSectionLinkClick(event, item.id)}
                 >
@@ -2398,19 +2110,10 @@ function AdminStatistics({ app }) {
       </aside>
 
       <div className="space-y-4">
-        <header className="surface px-4 py-4 sm:px-5 sm:py-5">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Adminpanel</p>
-              <h1 className="mt-1 text-2xl font-semibold text-ink-900">Statistik</h1>
-              <p className="mt-1 text-sm text-ink-600">Översikt över trender, prestation och fördelning i portföljen.</p>
-            </div>
-            <Button type="button" variant="secondary" className="h-auto gap-1.5 px-4 py-2" onClick={() => setCustomizeOpen(true)}>
+        <Card className="gap-0 p-0"><div className="flex flex-wrap items-center justify-end gap-2 border-b border-border p-4 sm:px-5"><Button type="button" variant="secondary" className="h-auto gap-1.5 px-4 py-2" onClick={() => setCustomizeOpen(true)}>
               <FilterIcon className="h-4 w-4" />
               Anpassa
-            </Button>
-          </div>
-        </header>
+            </Button></div></Card>
 
         {visibleModules.kpi ? (
           <section id="stats-kpi">
@@ -2445,29 +2148,13 @@ function AdminStatistics({ app }) {
           <section className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
           {visibleModules.district ? (
             statsDistrictPerformance.length > 0 ? (
-              <article id="stats-district" className="surface p-4 sm:p-5">
+              <Card id="stats-district" className="gap-0 py-0 p-4 sm:p-5">
                 <h3 className="text-lg font-semibold text-ink-900">Prestanda per område</h3>
                 <p className="mt-1 text-sm text-ink-600">Visningar och förfrågningar för era starkaste delmarknader</p>
-                <div className="mt-4 h-[280px]">
-                  <ChartContainer
-                    config={{
-                      views: { label: "Visningar", color: "#0b0a0e" },
-                      inquiries: { label: "Förfrågningar", color: "#7ea1cc" }
-                    }}
-                    className="h-full w-full"
-                  >
-                    <BarChart data={statsDistrictPerformance} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(15,25,48,0.12)" />
-                      <XAxis dataKey="district" tick={{ fontSize: 11, fill: "#6f7a86" }} />
-                      <YAxis tick={{ fontSize: 11, fill: "#6f7a86" }} />
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                      <ChartLegend content={<ChartLegendContent />} />
-                      <Bar dataKey="views" fill="var(--color-views)" radius={[6, 6, 0, 0]} />
-                      <Bar dataKey="inquiries" fill="var(--color-inquiries)" radius={[6, 6, 0, 0]} />
-                    </BarChart>
-                  </ChartContainer>
+                <div className="mt-4">
+                  <DistrictPerformanceChart data={statsDistrictPerformance} />
                 </div>
-              </article>
+              </Card>
             ) : (
               <div id="stats-district">
                 <NoDataPanel title="Prestanda per område" />
@@ -2477,24 +2164,13 @@ function AdminStatistics({ app }) {
 
           {visibleModules.funnel ? (
             funnelData.length > 0 ? (
-              <article id="stats-funnel" className="surface p-4 sm:p-5">
+              <Card id="stats-funnel" className="gap-0 py-0 p-4 sm:p-5">
               <h3 className="text-lg font-semibold text-ink-900">Konverteringstratt</h3>
               <p className="mt-1 text-sm text-ink-600">Från visning till signerat avtal</p>
-              <div className="mt-4 space-y-2.5">
-                {funnelData.map((step) => (
-                  <div key={step.stage}>
-                    <div className="mb-1 flex items-center justify-between text-xs">
-                      <span className="font-semibold text-ink-700">{step.stage}</span>
-                      <span className="text-ink-600">{step.count.toLocaleString("sv-SE")} · {step.conversion}%</span>
-                    </div>
-                    <Progress
-                      value={Math.max(step.conversion, 6)}
-                      className="[&_[data-slot=progress-track]]:h-2.5 [&_[data-slot=progress-track]]:border [&_[data-slot=progress-track]]:border-black/10 [&_[data-slot=progress-track]]:bg-[#eef2f8] [&_[data-slot=progress-indicator]]:bg-[#0b0a0e]"
-                    />
-                  </div>
-                ))}
+              <div className="mt-4">
+                <ConversionFunnelChart data={funnelData} />
               </div>
-            </article>
+            </Card>
             ) : (
               <div id="stats-funnel">
                 <NoDataPanel title="Konverteringstratt" />
@@ -2508,33 +2184,13 @@ function AdminStatistics({ app }) {
           <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
           {visibleModules.brokerRadar ? (
             brokerPerformanceRadar.length > 0 ? (
-              <article id="stats-broker-radar" className="surface p-4 sm:p-5">
+              <Card id="stats-broker-radar" className="gap-0 py-0 p-4 sm:p-5">
               <h3 className="text-lg font-semibold text-ink-900">Mäklarprestanda</h3>
               <p className="mt-1 text-sm text-ink-600">Jämförelse av teamets nyckelområden (index)</p>
-              <div className="mt-4 h-[280px]">
-                <ChartContainer
-                  config={Object.fromEntries(
-                    Object.keys(brokerPerformanceRadar[0] || {})
-                      .filter((key) => key !== "metric")
-                      .map((key, index) => [key, { label: key, color: ["#0b0a0e", "#476a99", "#7ea1cc"][index % 3] }])
-                  )}
-                  className="h-full w-full"
-                >
-                  <RadarChart data={brokerPerformanceRadar}>
-                    <PolarGrid stroke="rgba(15,25,48,0.2)" />
-                    <PolarAngleAxis dataKey="metric" tick={{ fontSize: 11, fill: "#6f7a86" }} />
-                    <PolarRadiusAxis tick={{ fontSize: 10, fill: "#6f7a86" }} />
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <ChartLegend content={<ChartLegendContent />} />
-                    {Object.keys(brokerPerformanceRadar[0] || {})
-                      .filter((key) => key !== "metric")
-                      .map((key) => (
-                        <Radar key={key} name={key} dataKey={key} stroke={`var(--color-${key})`} fill={`var(--color-${key})`} fillOpacity={0.18} />
-                      ))}
-                  </RadarChart>
-                </ChartContainer>
+              <div className="mt-4">
+                <BrokerRadarChart data={brokerPerformanceRadar} />
               </div>
-            </article>
+            </Card>
             ) : (
               <div id="stats-broker-radar">
                 <NoDataPanel title="Mäklarprestanda" />
@@ -2552,31 +2208,13 @@ function AdminStatistics({ app }) {
 
         {visibleModules.segment ? (
           segmentTrend.length > 0 ? (
-            <section id="stats-segment" className="surface p-4 sm:p-5">
+            <Card id="stats-segment" className="gap-0 py-0 p-4 sm:p-5">
           <h3 className="text-lg font-semibold text-ink-900">Trend per lokaltyp</h3>
           <p className="mt-1 text-sm text-ink-600">Utveckling av efterfrågan i respektive segment</p>
-          <div className="mt-4 h-[300px]">
-            <ChartContainer
-              config={{
-                kontor: { label: "Kontor", color: "#0b0a0e" },
-                butik: { label: "Butik", color: "#476a99" },
-                lager: { label: "Lager", color: "#7ea1cc" }
-              }}
-              className="h-full w-full"
-            >
-              <LineChart data={segmentTrend} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(15,25,48,0.12)" />
-                <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#6f7a86" }} />
-                <YAxis tick={{ fontSize: 11, fill: "#6f7a86" }} />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <ChartLegend content={<ChartLegendContent />} />
-                <Line type="monotone" dataKey="kontor" stroke="var(--color-kontor)" strokeWidth={2} dot={{ r: 2 }} />
-                <Line type="monotone" dataKey="butik" stroke="var(--color-butik)" strokeWidth={2} dot={{ r: 2 }} />
-                <Line type="monotone" dataKey="lager" stroke="var(--color-lager)" strokeWidth={2} dot={{ r: 2 }} />
-              </LineChart>
-            </ChartContainer>
+          <div className="mt-4">
+            <SegmentTrendChart data={segmentTrend} />
           </div>
-          </section>
+          </Card>
           ) : (
             <section id="stats-segment">
               <NoDataPanel title="Trend per lokaltyp" />
@@ -2585,7 +2223,7 @@ function AdminStatistics({ app }) {
         ) : null}
 
         {visibleModules.extended ? (
-          <section id="stats-extended" className="surface p-4 sm:p-5">
+          <Card id="stats-extended" className="gap-0 py-0 p-4 sm:p-5">
           <div className="mb-3">
             <h3 className="text-lg font-semibold text-ink-900">Fördjupade nyckeltal</h3>
             <p className="mt-1 text-sm text-ink-600">Operativa och kommersiella KPI:er för portföljstyrning</p>
@@ -2597,7 +2235,7 @@ function AdminStatistics({ app }) {
               <NoDataPanel title="Fördjupade nyckeltal" className="md:col-span-2 xl:col-span-4" />
             )}
           </div>
-          </section>
+          </Card>
         ) : null}
 
         <Dialog
@@ -2608,7 +2246,7 @@ function AdminStatistics({ app }) {
         >
           <DialogContent
             showCloseButton={false}
-            className="z-[95] w-full max-w-2xl rounded-3xl border border-black/10 bg-[#ffffff] p-5 shadow-[0_24px_64px_rgba(15,25,48,0.22)] ring-0"
+            className="z-[95] w-full max-w-2xl rounded-xl border border-veil/10 bg-popover p-5 shadow-[0_24px_64px_rgba(15,25,48,0.22)] ring-0"
           >
             <div className="mb-4 flex items-start justify-between gap-3">
               <div>
@@ -2621,7 +2259,7 @@ function AdminStatistics({ app }) {
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
-              <div className="rounded-2xl border border-black/10 bg-[#ffffff] p-3">
+              <Card className="gap-0 py-0 p-3">
                 <p className="text-sm font-semibold text-ink-800">Diagramsektioner</p>
                 <div className="mt-3 space-y-2 text-sm">
                   {[
@@ -2644,9 +2282,9 @@ function AdminStatistics({ app }) {
                     </label>
                   ))}
                 </div>
-              </div>
+              </Card>
 
-              <div className="rounded-2xl border border-black/10 bg-[#ffffff] p-3">
+              <Card className="gap-0 py-0 p-3">
                 <p className="text-sm font-semibold text-ink-800">Fördjupade nyckeltal</p>
                 <div className="mt-3 max-h-[280px] space-y-2 overflow-y-auto pr-1 text-sm">
                   {extendedStatCards.map((item) => (
@@ -2659,7 +2297,7 @@ function AdminStatistics({ app }) {
                     </label>
                   ))}
                 </div>
-              </div>
+              </Card>
             </div>
 
             <div className="mt-4 flex justify-end gap-2">
@@ -2711,15 +2349,9 @@ function AdminLeadMatchesPage({ app }) {
 
   return (
     <div className="space-y-4">
-      <header className="surface px-4 py-4 sm:px-5 sm:py-5">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">LEADS & MATCHNINGAR</p>
-            <h1 className="mt-1 text-2xl font-semibold text-ink-900">Leads & Matchningar</h1>
-            <p className="mt-1 text-sm text-ink-600">Hyresgäster som matchar era lokaler — inkommande och föreslagna</p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
+
+
+      <Card className="gap-0 py-0 overflow-hidden"><div className="flex flex-wrap items-center justify-end gap-2 border-b border-border p-4 sm:px-5"><Button
               type="button"
               variant="secondary"
               className="h-auto px-4 py-2"
@@ -2728,24 +2360,19 @@ function AdminLeadMatchesPage({ app }) {
               <DownloadIcon className="mr-1.5 h-4 w-4" />
               Exportera
             </Button>
-            <Button
+<Button
               type="button"
               className="h-auto px-4 py-2"
               onClick={() => app?.pushToast?.("Ingen data att skicka.", "info")}
             >
               + Skicka urval till mäklare
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      <section className="surface overflow-hidden">
-        <div className="border-b border-black/10 px-4 py-4 sm:px-5">
+            </Button></div>
+        <div className="border-b border-veil/10 px-4 py-4 sm:px-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">LEADS</p>
-                <Badge variant="outline" className="h-auto rounded-full bg-black/10 px-2 py-0.5 text-[11px] font-semibold text-ink-700">
+                <Badge variant="outline" className="h-auto rounded-full bg-veil/10 px-2 py-0.5 text-[11px] font-semibold text-ink-700">
                   {leadRows.length} nya
                 </Badge>
               </div>
@@ -2756,7 +2383,7 @@ function AdminLeadMatchesPage({ app }) {
 
         <div className="overflow-x-auto">
           <Table className="min-w-[900px]">
-            <TableHeader className="bg-[#fafafa] text-[11px] uppercase tracking-wide text-ink-500">
+            <TableHeader className="bg-canvas text-[11px] uppercase tracking-wide text-ink-500">
               <TableRow className="hover:bg-transparent">
                 <TableHead className="px-4 py-3 sm:px-5">Hyresgäst</TableHead>
                 <TableHead className="px-4 py-3">Lokal</TableHead>
@@ -2770,15 +2397,15 @@ function AdminLeadMatchesPage({ app }) {
               {leadRows.map((lead) => (
                 <TableRow
                   key={lead.id}
-                  className={`cursor-pointer border-t border-black/10 transition hover:bg-[#fafafa] ${
-                    lead.isUnread ? "shadow-[inset_3px_0_0_#0b0a0e]" : ""
+                  className={`cursor-pointer border-t border-veil/10 transition hover:bg-canvas ${
+                    lead.isUnread ? "shadow-[inset_3px_0_0_rgb(var(--strong))]" : ""
                   }`}
                   onClick={() => openLeadConversation(app, lead)}
                 >
                   <TableCell className="whitespace-normal px-4 py-3.5 align-top sm:px-5">
                     <div className="flex items-center gap-3">
                       <Avatar className="h-10 w-10 shrink-0">
-                        <AvatarFallback className="bg-[#0b0a0e] text-sm font-semibold text-white">{lead.renter.initials}</AvatarFallback>
+                        <AvatarFallback className="bg-strong text-sm font-semibold text-on-strong">{lead.renter.initials}</AvatarFallback>
                       </Avatar>
                       <span className="min-w-0">
                         <span className="block truncate font-semibold text-ink-900">{lead.renter.name}</span>
@@ -2814,7 +2441,7 @@ function AdminLeadMatchesPage({ app }) {
                         type="button"
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 rounded-full text-ink-600 hover:bg-[#ffffff]"
+                        className="h-8 w-8 rounded-md text-ink-600 hover:bg-control"
                         onClick={(event) => event.stopPropagation()}
                       >
                         <MoreHorizontalIcon className="h-4 w-4" />
@@ -2825,7 +2452,7 @@ function AdminLeadMatchesPage({ app }) {
               ))}
               {leadRows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="whitespace-normal border-t border-black/10 px-4 py-10 text-center sm:px-5">
+                  <TableCell colSpan={6} className="whitespace-normal border-t border-veil/10 px-4 py-10 text-center sm:px-5">
                     <p className="font-semibold text-ink-900">Inga aktiva leads just nu</p>
                     <p className="mt-1 text-sm text-ink-500">Leads visas här när hyresgäster interagerar med era annonser</p>
                   </TableCell>
@@ -2834,20 +2461,20 @@ function AdminLeadMatchesPage({ app }) {
             </TableBody>
           </Table>
         </div>
-      </section>
+      </Card>
 
       <div className="flex items-center gap-3 py-1">
-        <span className="h-px flex-1 bg-black/10" />
+        <span className="h-px flex-1 bg-veil/10" />
         <span className="text-[11px] font-semibold uppercase tracking-wide text-ink-400">Föreslagna av systemet</span>
-        <span className="h-px flex-1 bg-black/10" />
+        <span className="h-px flex-1 bg-veil/10" />
       </div>
 
-      <section id="matchningar" className="surface p-4 sm:p-5">
+      <Card id="matchningar" className="gap-0 py-0 p-4 sm:p-5">
         <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">MATCHNINGAR</p>
-              <Badge variant="outline" className="h-auto rounded-full bg-black/10 px-2 py-0.5 text-[11px] font-semibold text-ink-700">
+              <Badge variant="outline" className="h-auto rounded-full bg-veil/10 px-2 py-0.5 text-[11px] font-semibold text-ink-700">
                 {suggestedMatches.length} föreslagna
               </Badge>
             </div>
@@ -2869,10 +2496,10 @@ function AdminLeadMatchesPage({ app }) {
           <Button
             type="button"
             variant="outline"
-            className={`h-auto rounded-full px-3 py-1.5 text-xs font-semibold ${
+            className={`h-auto rounded-md px-3 py-1.5 text-xs font-semibold ${
               listingFilter === "all"
-                ? "border-transparent bg-[#0b0a0e] text-white hover:bg-[#0b0a0e] hover:text-white"
-                : "border-black/10 text-ink-700 hover:border-[#bfd0e3]"
+                ? "border-transparent bg-strong text-on-strong hover:bg-strong hover:text-on-strong"
+                : "border-veil/10 text-ink-700 hover:border-line-2"
             }`}
             onClick={() => setListingFilter("all")}
           >
@@ -2885,10 +2512,10 @@ function AdminLeadMatchesPage({ app }) {
                 key={listing.id}
                 type="button"
                 variant="outline"
-                className={`h-auto rounded-full px-3 py-1.5 text-xs font-semibold ${
+                className={`h-auto rounded-md px-3 py-1.5 text-xs font-semibold ${
                   active
-                    ? "border-transparent bg-[#0b0a0e] text-white hover:bg-[#0b0a0e] hover:text-white"
-                    : "border-black/10 text-ink-700 hover:border-[#bfd0e3]"
+                    ? "border-transparent bg-strong text-on-strong hover:bg-strong hover:text-on-strong"
+                    : "border-veil/10 text-ink-700 hover:border-line-2"
                 }`}
                 onClick={() => setListingFilter(listing.id)}
               >
@@ -2903,11 +2530,11 @@ function AdminLeadMatchesPage({ app }) {
             {suggestedMatches.map((renter) => {
               const matchedListing = activeListings.find((listing) => listing.id === renter.matchListingId) || activeListings[0];
               return (
-                <article key={renter.id} className="rounded-2xl border border-black/10 bg-[#ffffff] p-4">
+                <Card key={renter.id} className="gap-0 py-0 p-4">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex min-w-0 items-center gap-2.5">
                       <Avatar className="h-10 w-10 shrink-0">
-                        <AvatarFallback className="bg-[#0b0a0e] text-sm font-semibold text-white">{renter.initials}</AvatarFallback>
+                        <AvatarFallback className="bg-strong text-sm font-semibold text-on-strong">{renter.initials}</AvatarFallback>
                       </Avatar>
                       <span className="min-w-0">
                         <span className="block truncate text-sm font-semibold text-ink-900">{renter.name}</span>
@@ -2918,14 +2545,14 @@ function AdminLeadMatchesPage({ app }) {
                       type="button"
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 rounded-full text-ink-600 hover:bg-[#ffffff]"
+                      className="h-8 w-8 rounded-md text-ink-600 hover:bg-control"
                       onClick={() => app?.pushToast?.(`${renter.name} flaggad för senare.`, "success")}
                     >
                       <StarIcon className="h-4 w-4" />
                     </Button>
                   </div>
 
-                  <div className="mt-4 flex items-end justify-between gap-3 border-t border-black/10 pt-3">
+                  <div className="mt-4 flex items-end justify-between gap-3 border-t border-veil/10 pt-3">
                     <div>
                       <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">Match</p>
                       <p className={`mt-1 text-3xl font-semibold leading-none ${matchScoreClass(renter.score)}`}>{renter.score}%</p>
@@ -2935,19 +2562,19 @@ function AdminLeadMatchesPage({ app }) {
                     </Badge>
                   </div>
 
-                  <div className="mt-4 grid grid-cols-3 gap-3 border-t border-black/10 pt-3">
-                    <div className="rounded-2xl border border-black/10 bg-[#fbfbfa] px-3 py-2.5">
+                  <div className="mt-4 grid grid-cols-3 gap-3 border-t border-veil/10 pt-3">
+                    <Card className="gap-0 py-0 rounded-xl border border-veil/10 bg-canvas px-3 py-2.5">
                       <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">Område</p>
                       <p className="mt-1 truncate text-sm font-semibold text-ink-900">{renter.district}</p>
-                    </div>
-                    <div className="rounded-2xl border border-black/10 bg-[#fbfbfa] px-3 py-2.5">
+                    </Card>
+                    <Card className="gap-0 py-0 rounded-xl border border-veil/10 bg-canvas px-3 py-2.5">
                       <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">Storlek</p>
                       <p className="mt-1 truncate text-sm font-semibold text-ink-900">{matchCriteriaValue(renter, "Yta", renter.teamSize)}</p>
-                    </div>
-                    <div className="rounded-2xl border border-black/10 bg-[#fbfbfa] px-3 py-2.5">
+                    </Card>
+                    <Card className="gap-0 py-0 rounded-xl border border-veil/10 bg-canvas px-3 py-2.5">
                       <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">Budget</p>
                       <p className="mt-1 truncate text-sm font-semibold text-ink-900">{renter.budget}</p>
-                    </div>
+                    </Card>
                   </div>
 
                   <p className="mt-3 text-xs text-ink-500">Önskad inflytt: {moveInLabelForRenter(renter)}</p>
@@ -2960,46 +2587,42 @@ function AdminLeadMatchesPage({ app }) {
                     <SendHorizontalIcon className="h-3.5 w-3.5" />
                     Skicka till mäklare
                   </Button>
-                </article>
+                </Card>
               );
             })}
           </div>
         ) : (
-          <div className="rounded-2xl border border-black/10 bg-[#fafafa] px-4 py-10 text-center">
+          <Card className="gap-0 py-0 rounded-xl border border-veil/10 bg-canvas px-4 py-10 text-center">
             <p className="font-semibold text-ink-900">Inga matchningar hittades för era nuvarande lokaler</p>
             <p className="mt-1 text-sm text-ink-500">Publicera fler annonser för att bredda matchningsunderlaget.</p>
-          </div>
+          </Card>
         )}
-      </section>
+      </Card>
     </div>
   );
 }
 
 function AdminActivityPage() {
   return (
-    <article className="surface p-5 sm:p-6">
-      <div className="mb-4">
-        <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Adminpanel</p>
-        <h1 className="mt-1 text-2xl font-semibold text-ink-900">Aktivitet</h1>
-        <p className="mt-1 text-sm text-ink-600">Samlad tidslinje över händelser i annonser, förfrågningar och team.</p>
-      </div>
+    <Card className="gap-0 py-0 p-5 sm:p-6">
+
       <ul className="space-y-3">
         {activityItems.map((item, index) => {
           const Icon = activityIcon(item.type);
           const hasNext = index < activityItems.length - 1;
           return (
             <li key={item.id} className="relative pl-10">
-              <span className="absolute left-0 top-0 inline-flex h-8 w-8 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] text-ink-700">
+              <span className="absolute left-0 top-0 inline-flex h-8 w-8 items-center justify-center rounded-full border border-veil/10 bg-control text-ink-700">
                 <Icon className="h-4 w-4" />
               </span>
-              {hasNext ? <span className="absolute left-[15px] top-8 h-[calc(100%+0.75rem)] w-px bg-black/10" /> : null}
+              {hasNext ? <span className="absolute left-[15px] top-8 h-[calc(100%+0.75rem)] w-px bg-veil/10" /> : null}
               <p className="text-sm font-semibold text-ink-800">{item.text}</p>
               <p className="mt-0.5 text-xs text-ink-500">{item.timestamp}</p>
             </li>
           );
         })}
       </ul>
-    </article>
+    </Card>
   );
 }
 
@@ -3009,23 +2632,14 @@ function EmptyCompanyAdminPage({ app, sectionKey }) {
 
   return (
     <div className="space-y-4">
-      <header className="surface p-4 sm:p-5">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Adminpanel</p>
-            <h1 className="mt-1 text-2xl font-semibold text-ink-900">{companyName}</h1>
-            <p className="mt-1 text-sm text-ink-600">{title}</p>
-          </div>
-          <Button type="button" variant="secondary" className="h-auto px-4 py-2" onClick={() => navigateTo("/app/admin/adminprofil")}>
+
+
+      <Card className="gap-0 py-0 p-6 sm:p-8"><div className="flex flex-wrap items-center justify-end gap-2 border-b border-border p-4 sm:px-5"><Button type="button" variant="secondary" className="h-auto px-4 py-2" onClick={() => navigateTo("/app/admin/adminprofil")}>
             <PencilIcon className="mr-1.5 h-4 w-4" />
             Hantera adminprofil
-          </Button>
-        </div>
-      </header>
-
-      <section className="surface p-6 sm:p-8">
+          </Button></div>
         <div className="mx-auto max-w-[560px] py-8 text-center">
-          <span className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] text-ink-700">
+          <span className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-full border border-veil/10 bg-control text-ink-700">
             <BuildingIcon className="h-5 w-5" />
           </span>
           <h2 className="mt-4 text-xl font-semibold text-ink-900">Inget innehåll ännu</h2>
@@ -3033,7 +2647,7 @@ function EmptyCompanyAdminPage({ app, sectionKey }) {
             Bolagets adminyta är tom tills ni skapar första annonsen, bjuder in mäklare eller får inkommande intresse.
           </p>
         </div>
-      </section>
+      </Card>
     </div>
   );
 }
@@ -3052,47 +2666,7 @@ function AdminOverview({ app }) {
   ), [now]);
   return (
     <div className="space-y-4">
-      <div className="flex flex-col items-stretch gap-4 xl:flex-row">
-        <header className="surface shrink-0 px-4 py-4 sm:px-5 sm:py-5 xl:w-fit">
-          <div className="flex flex-col gap-4">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Kontopanel</p>
-                <h1 className="mt-1 text-2xl font-semibold text-ink-900">{greeting}, {app?.user?.name?.split(" ")[0] || "Samuel"}.</h1>
-                <p className="mt-1 text-sm text-ink-600">Här är vad som händer med er portfölj idag, {dateLabel}.</p>
-              </div>
-              <Button type="button" variant="secondary" className="h-auto shrink-0 px-4 py-2" onClick={() => navigateTo("/app/admin/adminprofil")}>
-                <PencilIcon className="mr-1.5 h-4 w-4" />
-                Hantera adminprofil
-              </Button>
-            </div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Snabblänkar</p>
-            <div className="flex flex-wrap items-center gap-2 -mt-2">
-              <Button type="button" variant="secondary" className="h-auto w-fit justify-start px-3 py-2 text-sm" onClick={() => navigateTo("/app/admin/maklare")}>
-                <UsersGroupIcon className="mr-2 h-4 w-4" />
-                Bjud in mäklare
-              </Button>
-              <Button type="button" variant="secondary" className="h-auto w-fit justify-start px-3 py-2 text-sm" onClick={() => navigateTo("/app/admin/annonser")}>
-                <PlusIcon className="mr-2 h-4 w-4" />
-                Publicera annons
-              </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              className="h-auto w-fit justify-start px-3 py-2 text-sm"
-              onClick={() => {
-                navigateTo("/app/rent");
-                void app?.switchRole?.("broker");
-              }}
-            >
-              <SwitchHorizontalIcon className="mr-2 h-4 w-4" />
-              Växla till sökläge
-            </Button>
-            </div>
-          </div>
-        </header>
 
-      </div>
 
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-lg font-semibold text-ink-900">Statistik</h2>
@@ -3118,27 +2692,31 @@ function AdminOverview({ app }) {
       </section>
 
       <section className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-        <article className="surface overflow-hidden">
-          <div className="border-b border-black/10 px-4 py-4 sm:px-5">
+        <Card className="gap-0 py-0 overflow-hidden"><div className="flex flex-wrap items-center justify-end gap-2 border-b border-border p-4 sm:px-5"><Button type="button" variant="secondary" className="h-auto shrink-0 px-4 py-2" onClick={() => navigateTo("/app/admin/adminprofil")}>
+                <PencilIcon className="mr-1.5 h-4 w-4" />
+                Hantera adminprofil
+              </Button>
+<Button type="button" variant="secondary" className="h-auto w-fit justify-start px-3 py-2 text-sm" onClick={() => navigateTo("/app/admin/maklare")}>
+                <UsersGroupIcon className="mr-2 h-4 w-4" />
+                Bjud in mäklare
+              </Button>
+<Button type="button" variant="secondary" className="h-auto w-fit justify-start px-3 py-2 text-sm" onClick={() => navigateTo("/app/publish")}>
+                <PlusIcon className="mr-2 h-4 w-4" />
+                Publicera annons
+              </Button></div>
+          <div className="border-b border-veil/10 px-4 py-4 sm:px-5">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <h2 className="text-lg font-semibold text-ink-900">Aktiva annonser</h2>
+                <h2 className="text-lg font-semibold text-ink-900">Senaste annonser</h2>
                 <p className="mt-1 text-sm text-ink-600">Övervaka era pågående annonseringar</p>
               </div>
-              <div className="flex items-center gap-2">
-                <Button type="button" variant="outline" size="icon" className="h-9 w-9 rounded-full text-ink-700">
-                  <FilterIcon className="h-4 w-4" />
-                </Button>
-                <Button type="button" variant="outline" size="icon" className="h-9 w-9 rounded-full text-ink-700">
-                  <SearchIcon className="h-4 w-4" />
-                </Button>
-              </div>
+
             </div>
           </div>
 
           <div className="overflow-x-auto">
             <Table className="min-w-[760px]">
-              <TableHeader className="bg-[#fafafa] text-[11px] uppercase tracking-wide text-ink-500">
+              <TableHeader className="bg-canvas text-[11px] uppercase tracking-wide text-ink-500">
                 <TableRow className="hover:bg-transparent">
                   <TableHead className="px-4 py-3 sm:px-5">Annons</TableHead>
                   <TableHead className="px-4 py-3">Status</TableHead>
@@ -3149,13 +2727,13 @@ function AdminOverview({ app }) {
               </TableHeader>
               <TableBody>
                 {companyListings.map((item) => (
-                  <TableRow key={item.id} className="border-t border-black/10">
+                  <TableRow key={item.id} className="border-t border-veil/10">
                     <TableCell className="whitespace-normal px-4 py-3.5 align-top sm:px-5">
                       <div className="flex items-center gap-3">
                         <img
                           src={item.image}
                           alt={item.title}
-                          className="h-11 w-16 shrink-0 rounded-lg border border-black/10 object-cover"
+                          className="h-11 w-16 shrink-0 rounded-lg border border-veil/10 object-cover"
                           loading="lazy"
                         />
                         <div className="min-w-0">
@@ -3174,14 +2752,14 @@ function AdminOverview({ app }) {
                     <TableCell className="px-4 py-3.5 text-right font-semibold text-ink-800">{item.views.toLocaleString("sv-SE")}</TableCell>
                     <TableCell className="px-4 py-3.5 text-right font-semibold text-ink-800">{item.inquiries}</TableCell>
                     <TableCell className="px-4 py-3.5 text-right sm:px-5">
-                      <Button type="button" variant="ghost" size="icon" className="h-8 w-8 rounded-full text-ink-600 hover:bg-[#ffffff]">
-                        <MoreHorizontalIcon className="h-4 w-4" />
+                      <Button type="button" variant="ghost" size="icon" aria-label={`Visa ${item.title}`} onClick={() => navigateTo(`/app/listings/${encodeURIComponent(item.id)}`)} className="h-8 w-8 rounded-md text-ink-600 hover:bg-control">
+                        <ChevronRightIcon className="h-4 w-4" />
                       </Button>
                     </TableCell>
                   </TableRow>
                 ))}
                 {companyListings.length === 0 ? (
-                  <TableRow className="border-t border-black/10">
+                  <TableRow className="border-t border-veil/10">
                     <TableCell className="px-4 py-8 text-center text-sm font-semibold text-ink-500 sm:px-5" colSpan={5}>
                       Ingen data
                     </TableCell>
@@ -3191,15 +2769,15 @@ function AdminOverview({ app }) {
             </Table>
           </div>
 
-          <div className="flex items-center justify-between border-t border-black/10 px-4 py-3 text-xs text-ink-500 sm:px-5">
+          <div className="flex items-center justify-between border-t border-veil/10 px-4 py-3 text-xs text-ink-500 sm:px-5">
             <span>Visar {companyListings.length} annonser</span>
-            <Button type="button" variant="link" className="h-auto p-0 text-xs font-semibold text-[#0b0a0e]" onClick={() => navigateTo("/app/admin/annonser")}>
+            <Button type="button" variant="link" className="h-auto p-0 text-xs font-semibold text-strong" onClick={() => navigateTo("/app/admin/annonser")}>
               Visa alla
             </Button>
           </div>
-        </article>
+        </Card>
 
-        <article className="surface p-4 sm:p-5">
+        <Card className="gap-0 py-0 p-4 sm:p-5">
           <h2 className="text-lg font-semibold text-ink-900">Aktivitet</h2>
           <p className="mt-1 text-sm text-ink-600">Senaste händelserna</p>
           <ul className="mt-4 space-y-3">
@@ -3208,17 +2786,17 @@ function AdminOverview({ app }) {
               const hasNext = index < activityItems.length - 1;
               return (
                 <li key={item.id} className="relative pl-9">
-                  <span className="absolute left-0 top-0 inline-flex h-7 w-7 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] text-ink-700">
+                  <span className="absolute left-0 top-0 inline-flex h-7 w-7 items-center justify-center rounded-full border border-veil/10 bg-control text-ink-700">
                     <Icon className="h-3.5 w-3.5" />
                   </span>
-                  {hasNext ? <span className="absolute left-[13px] top-7 h-[calc(100%+0.65rem)] w-px bg-black/10" /> : null}
+                  {hasNext ? <span className="absolute left-[13px] top-7 h-[calc(100%+0.65rem)] w-px bg-veil/10" /> : null}
                   <p className="text-sm font-semibold text-ink-800">{item.text}</p>
                   <p className="mt-0.5 text-xs text-ink-500">{item.timestamp}</p>
                 </li>
               );
             })}
             {activityItems.length === 0 ? (
-              <li className="rounded-2xl border border-dashed border-black/15 bg-[#fafafa] px-4 py-8 text-center text-sm font-semibold text-ink-500">
+              <li className="rounded-2xl border border-dashed border-veil/15 bg-canvas px-4 py-8 text-center text-sm font-semibold text-ink-500">
                 Ingen data
               </li>
             ) : null}
@@ -3226,245 +2804,31 @@ function AdminOverview({ app }) {
           <Button type="button" variant="secondary" className="h-auto mt-4 w-full py-2 text-xs" onClick={() => navigateTo("/app/admin/aktivitet")}>
             Se all aktivitet
           </Button>
-        </article>
+        </Card>
       </section>
 
     </div>
   );
 }
 
-function AdminProfile({ app }) {
-  const user = app?.user;
-  const [saving, setSaving] = useState(false);
-  const [draft, setDraft] = useState({
-    legalEntity: "",
-    organizationNumber: "",
-    companyType: "",
-    portfolioSize: "",
-    logoUrl: "",
-    companyDescription: "",
-    websiteUrl: "",
-    contactEmail: "",
-    approvedEmailDomain: "",
-    approvalFlow: "admin_approves_broker",
-    listingModeration: "broker_publishes_direct",
-    termsAdminAuthority: false,
-    termsPlatformRules: false
-  });
-
-  useEffect(() => {
-    setDraft({
-      legalEntity: user?.profile?.legalEntity || user?.profile?.companyName || "",
-      organizationNumber: user?.profile?.organizationNumber || "",
-      companyType: user?.profile?.companyType || "",
-      portfolioSize: user?.profile?.portfolioSize || "",
-      logoUrl: user?.profile?.logoUrl || "",
-      companyDescription: user?.profile?.companyDescription || "",
-      websiteUrl: user?.profile?.websiteUrl || "",
-      contactEmail: user?.profile?.contactEmail || user?.email || "",
-      approvedEmailDomain: user?.profile?.approvedEmailDomain || "",
-      approvalFlow: user?.profile?.approvalFlow || "admin_approves_broker",
-      listingModeration: user?.profile?.listingModeration || "broker_publishes_direct",
-      termsAdminAuthority: Boolean(user?.profile?.termsAdminAuthority),
-      termsPlatformRules: Boolean(user?.profile?.termsPlatformRules)
-    });
-  }, [user?.email, user?.profile]);
-
-  async function saveAdminProfile() {
-    if (!app?.updateProfile) {
-      app?.pushToast?.("Kunde inte spara adminprofilen just nu.", "error");
-      return;
-    }
-    setSaving(true);
-    try {
-      const legalEntity = String(draft.legalEntity || "").trim();
-      await app.updateProfile({
-        profile: {
-          ...(user?.profile || {}),
-          legalEntity,
-          companyName: legalEntity,
-          organizationNumber: String(draft.organizationNumber || "").trim(),
-          companyType: String(draft.companyType || "").trim(),
-          portfolioSize: String(draft.portfolioSize || "").trim(),
-          logoUrl: String(draft.logoUrl || "").trim(),
-          companyDescription: String(draft.companyDescription || "").trim(),
-          websiteUrl: String(draft.websiteUrl || "").trim(),
-          contactEmail: String(draft.contactEmail || "").trim(),
-          approvedEmailDomain: String(draft.approvedEmailDomain || "").trim(),
-          approvalFlow: draft.approvalFlow,
-          listingModeration: draft.listingModeration,
-          termsAdminAuthority: Boolean(draft.termsAdminAuthority),
-          termsPlatformRules: Boolean(draft.termsPlatformRules)
-        }
-      });
-      app?.pushToast?.("Adminprofil uppdaterad.", "success");
-    } catch (error) {
-      app?.pushToast?.(error.message || "Kunde inte spara adminprofilen.", "error");
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  return (
-    <article className="surface mx-auto w-full max-w-[920px] p-5 sm:p-6">
-      <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Adminpanel</p>
-          <h1 className="mt-1 text-2xl font-semibold text-ink-900">Adminprofil</h1>
-          <p className="mt-1 text-sm text-ink-600">Hantera bolagets uppgifter och administratörens inställningar.</p>
-        </div>
-      </div>
-
-      <div className="grid gap-5 lg:grid-cols-2">
-        <label className="space-y-1.5 text-sm">
-          <span className="text-xs font-semibold uppercase tracking-wide text-ink-500">Organisationsnummer</span>
-          <Input value={draft.organizationNumber} onChange={(event) => setDraft((prev) => ({ ...prev, organizationNumber: event.target.value }))} />
-        </label>
-        <label className="space-y-1.5 text-sm">
-          <span className="text-xs font-semibold uppercase tracking-wide text-ink-500">Bolagsnamn</span>
-          <Input value={draft.legalEntity} onChange={(event) => setDraft((prev) => ({ ...prev, legalEntity: event.target.value }))} />
-        </label>
-        <label className="space-y-1.5 text-sm">
-          <span className="text-xs font-semibold uppercase tracking-wide text-ink-500">Bolagstyp</span>
-          <Select value={draft.companyType} onValueChange={(value) => setDraft((prev) => ({ ...prev, companyType: value }))}>
-            <SelectTrigger className="w-full"><SelectValue placeholder="Välj bolagstyp" /></SelectTrigger>
-            <SelectContent>
-              {COMPANY_TYPE_OPTIONS.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </label>
-        <label className="space-y-1.5 text-sm">
-          <span className="text-xs font-semibold uppercase tracking-wide text-ink-500">Portföljstorlek</span>
-          <Select value={draft.portfolioSize} onValueChange={(value) => setDraft((prev) => ({ ...prev, portfolioSize: value }))}>
-            <SelectTrigger className="w-full"><SelectValue placeholder="Välj portföljstorlek" /></SelectTrigger>
-            <SelectContent>
-              {PORTFOLIO_SIZE_OPTIONS.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </label>
-        <div className="grid gap-1.5 text-sm lg:col-span-2">
-          <span className="text-sm font-semibold text-ink-700">Logotyp</span>
-          <label className="flex min-h-[132px] cursor-pointer flex-col items-center justify-center rounded-2xl border border-dashed border-black/15 bg-[#fafafa] px-5 py-6 text-center transition hover:bg-black/5">
-            <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] text-ink-700">
-              <ArrowUpIcon className="h-4 w-4" />
-            </span>
-            <span className="mt-3 text-base font-semibold text-ink-700">Dra och släpp eller klicka för att ladda upp</span>
-            <span className="mt-1 text-sm text-ink-500">PNG eller SVG · max 2 MB · rekommenderat 400 × 400 px</span>
-            <input
-              type="file"
-              accept="image/png,image/svg+xml,image/jpeg,image/webp"
-              className="hidden"
-              onChange={async (event) => {
-                const file = event.target.files?.[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = () => {
-                  setDraft((prev) => ({ ...prev, logoUrl: String(reader.result || "") }));
-                };
-                reader.readAsDataURL(file);
-              }}
-            />
-          </label>
-        </div>
-        <label className="space-y-1.5 text-sm lg:col-span-2">
-          <span className="text-xs font-semibold uppercase tracking-wide text-ink-500">Bolagsbeskrivning</span>
-          <Textarea className="min-h-[112px]" value={draft.companyDescription} onChange={(event) => setDraft((prev) => ({ ...prev, companyDescription: event.target.value }))} />
-        </label>
-        <label className="space-y-1.5 text-sm">
-          <span className="text-xs font-semibold uppercase tracking-wide text-ink-500">Webbplats</span>
-          <Input value={draft.websiteUrl} onChange={(event) => setDraft((prev) => ({ ...prev, websiteUrl: event.target.value }))} />
-        </label>
-        <label className="space-y-1.5 text-sm">
-          <span className="text-xs font-semibold uppercase tracking-wide text-ink-500">Kontaktmejl</span>
-          <Input value={draft.contactEmail} onChange={(event) => setDraft((prev) => ({ ...prev, contactEmail: event.target.value }))} />
-        </label>
-        <label className="space-y-1.5 text-sm lg:col-span-2">
-          <span className="text-xs font-semibold uppercase tracking-wide text-ink-500">Godkänd e-postdomän</span>
-          <Input value={draft.approvedEmailDomain} onChange={(event) => setDraft((prev) => ({ ...prev, approvedEmailDomain: event.target.value }))} />
-        </label>
-      </div>
-
-      <div className="mt-6 grid gap-4 lg:grid-cols-2">
-        <div>
-          <p className="text-sm font-semibold text-ink-700">Godkännandeflöde</p>
-          <div className="mt-3 space-y-3">
-            {APPROVAL_FLOW_OPTIONS.map((option) => (
-              <Button
-                key={option.key}
-                type="button"
-                variant="outline"
-                className={`h-auto w-full justify-start gap-3 !rounded-2xl px-4 py-3 text-left font-normal ${
-                  draft.approvalFlow === option.key
-                    ? "border-[#0b0a0e] bg-[#f8fafc]"
-                    : "border-black/10 hover:bg-black/5"
-                }`}
-                onClick={() => setDraft((prev) => ({ ...prev, approvalFlow: option.key }))}
-              >
-                <span className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${draft.approvalFlow === option.key ? "border-[#0b0a0e]" : "border-black/20"}`}>
-                  <span className={`h-2.5 w-2.5 rounded-full ${draft.approvalFlow === option.key ? "bg-[#0b0a0e]" : "bg-transparent"}`} />
-                </span>
-                <span>
-                  <span className="block text-[0.92rem] font-semibold leading-tight text-[#0b0a0e]">{option.title}</span>
-                  <span className="mt-1 block text-[0.8rem] leading-snug text-ink-600">{option.description}</span>
-                </span>
-              </Button>
-            ))}
-          </div>
-        </div>
-        <div>
-          <p className="text-sm font-semibold text-ink-700">Annonsmoderering</p>
-          <div className="mt-3 space-y-3">
-            {LISTING_MODERATION_OPTIONS.map((option) => (
-              <Button
-                key={option.key}
-                type="button"
-                variant="outline"
-                className={`h-auto w-full justify-start gap-3 !rounded-2xl px-4 py-3 text-left font-normal ${
-                  draft.listingModeration === option.key
-                    ? "border-[#0b0a0e] bg-[#f8fafc]"
-                    : "border-black/10 hover:bg-black/5"
-                }`}
-                onClick={() => setDraft((prev) => ({ ...prev, listingModeration: option.key }))}
-              >
-                <span className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${draft.listingModeration === option.key ? "border-[#0b0a0e]" : "border-black/20"}`}>
-                  <span className={`h-2.5 w-2.5 rounded-full ${draft.listingModeration === option.key ? "bg-[#0b0a0e]" : "bg-transparent"}`} />
-                </span>
-                <span>
-                  <span className="block text-[0.92rem] font-semibold leading-tight text-[#0b0a0e]">{option.title}</span>
-                  <span className="mt-1 block text-[0.8rem] leading-snug text-ink-600">{option.description}</span>
-                </span>
-              </Button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-6 flex justify-end">
-        <Button type="button" className="h-auto px-4 py-2" disabled={saving} onClick={saveAdminProfile}>
-          {saving ? "Sparar..." : "Spara ändringar"}
-        </Button>
-      </div>
-    </article>
-  );
-}
-
 function AdminPlaceholder({ sectionKey }) {
   const title = SECTION_TITLES[sectionKey] || "Sektion";
   return (
-    <article className="surface p-6 sm:p-8">
-      <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Adminpanel</p>
-      <h1 className="mt-2 text-2xl font-semibold text-ink-900">{title}</h1>
-      <p className="mt-2 text-sm text-ink-600">
-        Den här sektionen är under uppbyggnad och kommer snart med full funktionalitet.
-      </p>
-      <div className="mt-5 rounded-2xl border border-black/10 bg-[#fafafa] p-4 text-sm text-ink-700">
+    <Card className="gap-0 py-0 p-6 sm:p-8">
+
+      <Card className="gap-0 py-0 mt-5 rounded-xl border border-veil/10 bg-canvas p-4 text-sm text-ink-700">
         Kommer snart.
-      </div>
-    </article>
+      </Card>
+    </Card>
   );
 }
 
 function AdminProspectsPage({ app }) {
+  const [loadError, setLoadError] = useState("");
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedProspect, setSelectedProspect] = useState(null);
   const [prospects, setProspects] = useState([]);
   const [loading, setLoading] = useState(true);
   const companyListings = ownedAdminListings(app);
@@ -3474,11 +2838,12 @@ function AdminProspectsPage({ app }) {
     let cancelled = false;
     async function load() {
       setLoading(true);
+      setLoadError("");
       try {
         const { prospects: list } = await prospectsApi.listForCompany();
         if (!cancelled) setProspects(list);
-      } catch (_error) {
-        if (!cancelled) setProspects([]);
+      } catch (error) {
+        if (!cancelled) setLoadError(error.message || "Kunde inte ladda prospekten.");
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -3487,32 +2852,33 @@ function AdminProspectsPage({ app }) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [refreshKey]);
+
+  const filteredProspects = prospects.filter((prospect) => (statusFilter === "all" || prospect.status === statusFilter) && `${prospect.title} ${listingById.get(String(prospect.listingId))?.title || ""}`.toLocaleLowerCase("sv").includes(query.trim().toLocaleLowerCase("sv")));
 
   return (
     <div className="space-y-4">
-      <header className="surface p-4 sm:p-5">
-        <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Adminpanel</p>
-        <h1 className="mt-1 text-2xl font-semibold text-ink-900">Prospekt</h1>
-        <p className="mt-1 text-sm text-ink-600">
-          Överblick över prospekt skapade av dig eller dina mäklare. Skapande och redigering sker i respektive mäklares egen panel.
-        </p>
-      </header>
 
-      <article className="surface overflow-hidden">
-        <div className="border-b border-black/10 px-4 py-4 sm:px-5">
+
+      {loadError ? <div role="alert" className="text-sm text-rose-700">{loadError}<Button variant="link" onClick={() => setRefreshKey((value) => value + 1)}>Försök igen</Button></div> : null}
+      <Card className="gap-0 py-0 overflow-hidden">
+        <div className="border-b border-veil/10 px-4 py-4 sm:px-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Prospekt</p>
               <p className="mt-1 text-sm text-ink-600">Skapande och redigering sker i respektive mäklares egen panel.</p>
             </div>
-            <Badge variant="outline" className="h-auto rounded-full bg-black/10 px-2 py-0.5 text-[11px] font-semibold text-ink-700">{prospects.length} rader</Badge>
+            <Badge variant="outline" className="h-auto rounded-full bg-veil/10 px-2 py-0.5 text-[11px] font-semibold text-ink-700">{prospects.length} prospekt</Badge>
           </div>
         </div>
 
+        <div className="flex flex-wrap items-center gap-3 border-b border-veil/10 p-4 sm:px-5">
+          <Input aria-label="Sök prospekt" className="w-full sm:max-w-sm" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Sök prospekt eller objekt..." />
+          <Select value={statusFilter} onValueChange={setStatusFilter}><SelectTrigger aria-label="Prospektstatus"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Alla statusar</SelectItem><SelectItem value="draft">Utkast</SelectItem><SelectItem value="published">Publicerad</SelectItem><SelectItem value="archived">Arkiverad</SelectItem></SelectContent></Select>
+        </div>
         <div className="overflow-x-auto">
           <Table className="min-w-[720px]">
-            <TableHeader className="bg-[#fafafa] text-[11px] uppercase tracking-wide text-ink-500">
+            <TableHeader className="bg-canvas text-[11px] uppercase tracking-wide text-ink-500">
               <TableRow className="hover:bg-transparent">
                 <TableHead className="px-4 py-3 sm:px-5">Prospekt</TableHead>
                 <TableHead className="px-4 py-3">Objekt</TableHead>
@@ -3522,17 +2888,15 @@ function AdminProspectsPage({ app }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {prospects.map((prospect) => {
+              {filteredProspects.map((prospect) => {
                 const listing = listingById.get(String(prospect.listingId));
                 return (
-                  <TableRow key={prospect.id} className="border-t border-black/10">
+                  <TableRow key={prospect.id} className="border-t border-veil/10">
                     <TableCell className="whitespace-normal px-4 py-3.5 align-top sm:px-5">
                       <div className="flex items-center gap-3">
-                        <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#0b0a0e] text-white">
-                          <PdfIcon className="h-4 w-4" />
-                        </span>
+                        <ProspectIcon />
                         <span className="min-w-0">
-                          <span className="block truncate font-semibold text-ink-900">{prospect.title}</span>
+                          <Button variant="link" className="h-auto max-w-full justify-start p-0 font-semibold" onClick={() => setSelectedProspect(prospect)}>{prospect.title}</Button>
                           <span className="block truncate text-xs text-ink-600">{listing?.title || listing?.address || prospect.listingId}</span>
                         </span>
                       </div>
@@ -3548,17 +2912,17 @@ function AdminProspectsPage({ app }) {
                   </TableRow>
                 );
               })}
-              {!loading && prospects.length === 0 ? (
+              {!loading && !loadError && filteredProspects.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="whitespace-normal border-t border-black/10 px-4 py-10 text-center sm:px-5">
-                    <p className="font-semibold text-ink-900">Inga prospekt än</p>
+                  <TableCell colSpan={5} className="whitespace-normal border-t border-veil/10 px-4 py-10 text-center sm:px-5">
+                    <p className="font-semibold text-ink-900">Inga prospekt att visa</p>
                     <p className="mt-1 text-sm text-ink-500">Dina mäklare kan skapa prospekt från sina egna objekt.</p>
                   </TableCell>
                 </TableRow>
               ) : null}
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="whitespace-normal border-t border-black/10 px-4 py-10 text-center text-sm text-ink-600 sm:px-5">
+                  <TableCell colSpan={5} className="whitespace-normal border-t border-veil/10 px-4 py-10 text-center text-sm text-ink-600 sm:px-5">
                     Laddar prospekt...
                   </TableCell>
                 </TableRow>
@@ -3566,47 +2930,75 @@ function AdminProspectsPage({ app }) {
             </TableBody>
           </Table>
         </div>
-      </article>
+      </Card>
+      <Sheet open={Boolean(selectedProspect)} onOpenChange={(open) => { if (!open) setSelectedProspect(null); }}>
+        <SheetContent className="admin-workspace data-[side=right]:w-full data-[side=right]:sm:max-w-xl gap-0 p-0">
+          <SheetHeader className="border-b border-veil/10 p-6 pr-12"><SheetTitle className="text-xl">{selectedProspect?.title}</SheetTitle><SheetDescription>Prospektöversikt · Läsbehörighet</SheetDescription></SheetHeader>
+          {selectedProspect ? <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-6">
+            <StatusPill status={selectedProspect.status} variant="prospect" />
+            <dl className="grid grid-cols-2 gap-5 text-sm">
+              <div><dt className="text-ink-500">Objekt</dt><dd className="mt-1 font-medium">{listingById.get(String(selectedProspect.listingId))?.title || "Objekt"}</dd></div>
+              <div><dt className="text-ink-500">Version</dt><dd className="mt-1 font-medium">{selectedProspect.currentVersion ? `v${selectedProspect.currentVersion}` : "Utkast"}</dd></div>
+              <div><dt className="text-ink-500">Uppdaterad</dt><dd className="mt-1 font-medium">{formatDate(selectedProspect.updatedAt)}</dd></div>
+            </dl>
+            {(selectedProspect.publishedSections || []).map((section) => <Card key={section.id} className="gap-2 p-4"><h3 className="font-semibold">{section.title}</h3><p className="whitespace-pre-wrap text-sm text-ink-700">{section.body}</p></Card>)}
+            <p className="rounded-lg bg-canvas p-4 text-sm text-ink-500">Ansvarig mäklare redigerar och delar prospektet från sin panel.</p>
+          </div> : null}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
 
-function AdminPanelPage({ app, pathname }) {
+function AdminPanelPage({ app, pathname: routePathname }) {
+  // Profil, Adminprofil, Inställningar and Hjälp are a window over a page (the account window), not a page: the page is the one it
+  // was opened from, and it stays in the shell behind the window.
+  const account = parseAccountPath(routePathname, typeof window !== "undefined" ? window.location.hash : "", normalizeAppRole(app?.user?.role));
+  const pathname = account ? accountBackgroundPath("/app/admin") : routePathname;
   const sectionKey = sectionFromPath(pathname);
   const currentSectionLabel = SECTION_TITLES[sectionKey] || "Översikt";
   const companyListings = ownedAdminListings(app);
+  const assistantListings = useMemo(
+    () => ownedAdminListingRecords(app),
+    [app?.listings, app?.user?.id, app?.adminCompany?.id, app?.user?.profile?.companyId, app?.companyBrokers]
+  );
   const notificationCount = countAdminNotifications(app);
+  useEffect(() => {
+    const legacy = pathname.match(/^\/app\/admin\/(sparade-objekt|sparade-sokningar)\/?$/);
+    if (legacy) navigateTo(`/app/admin/profil#${legacy[1]}`, { replace: true });
+  }, [pathname]);
   const hasCompanyProfile = Boolean(app?.adminCompany?.id || app?.user?.profile?.companyId || app?.user?.profile?.companyName || app?.user?.profile?.legalEntity);
-  const shouldShowEmptyCompanyPage = !hasCompanyProfile && !["adminprofil", "hjalp", "installningar", "notifikationer", "maklare", "annonser", "prospekt"].includes(sectionKey);
+  const shouldShowEmptyCompanyPage = !hasCompanyProfile && !["adminprofil", "hjalp", "installningar", "notifikationer", "maklare", "annonser", "prospekt", "assistent"].includes(sectionKey);
 
   return (
-    <AdminPanelShell
-      pathname={pathname}
-      navItems={ADMIN_NAV_ITEMS}
-      bottomNavItems={ADMIN_BOTTOM_NAV_ITEMS}
-      sectionTitle={currentSectionLabel}
-      onLogout={app?.logout}
-      badges={{ annonser: companyListings.length, notifikationer: notificationCount }}
-      fullBleedContent={sectionKey === "meddelanden"}
-      contentKey={shouldShowEmptyCompanyPage ? "empty-company" : sectionKey}
-    >
-      {shouldShowEmptyCompanyPage ? <EmptyCompanyAdminPage app={app} sectionKey={sectionKey} /> : null}
-      {!shouldShowEmptyCompanyPage && sectionKey === "oversikt" ? <AdminOverview app={app} /> : null}
-      {!shouldShowEmptyCompanyPage && sectionKey === "annonser" ? <AdminListingsPage listings={companyListings} /> : null}
-      {!shouldShowEmptyCompanyPage && sectionKey === "leads" ? <AdminLeadMatchesPage app={app} /> : null}
-      {!shouldShowEmptyCompanyPage && sectionKey === "prospekt" ? <AdminProspectsPage app={app} /> : null}
-      {!shouldShowEmptyCompanyPage && sectionKey === "inkorg" ? <AdminInquiriesPage pathname={pathname} /> : null}
-      {!shouldShowEmptyCompanyPage && sectionKey === "notifikationer" ? <AdminNotificationsPage app={app} /> : null}
-      {!shouldShowEmptyCompanyPage && sectionKey === "maklare" ? <AdminBrokersPage app={app} /> : null}
-      {!shouldShowEmptyCompanyPage && sectionKey === "statistik" ? <AdminStatistics app={app} /> : null}
-      {!shouldShowEmptyCompanyPage && sectionKey === "aktivitet" ? <AdminActivityPage /> : null}
-      {sectionKey === "meddelanden" ? <MessagesPage app={app} /> : null}
-      {sectionKey === "sparade-objekt" ? <PanelProfileSection app={app} basePath="/app/admin/profil" forcedTab="favorites" /> : null}
-      {sectionKey === "sparade-sokningar" ? <PanelProfileSection app={app} basePath="/app/admin/profil" forcedTab="history" /> : null}
-      {sectionKey === "profil" ? <PanelProfileSection app={app} basePath="/app/admin/profil" /> : null}
-      {sectionKey === "adminprofil" ? <AdminProfile app={app} /> : null}
-      {!shouldShowEmptyCompanyPage && sectionKey !== "oversikt" && sectionKey !== "annonser" && sectionKey !== "leads" && sectionKey !== "prospekt" && sectionKey !== "inkorg" && sectionKey !== "notifikationer" && sectionKey !== "maklare" && sectionKey !== "meddelanden" && sectionKey !== "sparade-objekt" && sectionKey !== "sparade-sokningar" && sectionKey !== "profil" && sectionKey !== "adminprofil" && sectionKey !== "statistik" && sectionKey !== "aktivitet" ? <AdminPlaceholder sectionKey={sectionKey} /> : null}
-    </AdminPanelShell>
+    <BrokerAssistantProvider panel="admin" userName={app?.user?.name} listings={assistantListings} leads={app?.leads}>
+      <AdminPanelShell
+        pathname={pathname}
+        navItems={ADMIN_NAV_ITEMS}
+        bottomNavItems={ADMIN_BOTTOM_NAV_ITEMS}
+        sectionTitle={currentSectionLabel}
+        onLogout={app?.logout}
+        badges={{ annonser: companyListings.length, notifikationer: notificationCount }}
+        fullBleedContent={sectionKey === "meddelanden" || sectionKey === "assistent"}
+        hideAssistantLauncher={sectionKey === "assistent"}
+        contentKey={shouldShowEmptyCompanyPage ? "empty-company" : sectionKey}
+      >
+        {shouldShowEmptyCompanyPage ? <EmptyCompanyAdminPage app={app} sectionKey={sectionKey} /> : null}
+        {sectionKey === "assistent" ? <BrokerAssistantPage /> : null}
+        {!shouldShowEmptyCompanyPage && sectionKey === "oversikt" ? <AdminOverview app={app} /> : null}
+        {!shouldShowEmptyCompanyPage && sectionKey === "annonser" ? <AdminListingsPage listings={companyListings} /> : null}
+        {!shouldShowEmptyCompanyPage && sectionKey === "leads" ? <AdminLeadMatchesPage app={app} /> : null}
+        {!shouldShowEmptyCompanyPage && sectionKey === "prospekt" ? <AdminProspectsPage app={app} /> : null}
+        {!shouldShowEmptyCompanyPage && sectionKey === "inkorg" ? <AdminInquiriesPage pathname={pathname} /> : null}
+        {!shouldShowEmptyCompanyPage && sectionKey === "notifikationer" ? <AdminNotificationsPage app={app} /> : null}
+        {!shouldShowEmptyCompanyPage && sectionKey === "maklare" ? <AdminBrokersPage app={app} /> : null}
+        {!shouldShowEmptyCompanyPage && sectionKey === "statistik" ? <AdminStatistics app={app} /> : null}
+        {!shouldShowEmptyCompanyPage && sectionKey === "aktivitet" ? <AdminActivityPage /> : null}
+        {sectionKey === "meddelanden" ? <MessagesPage app={app} /> : null}
+        {!shouldShowEmptyCompanyPage && sectionKey !== "oversikt" && sectionKey !== "annonser" && sectionKey !== "leads" && sectionKey !== "prospekt" && sectionKey !== "inkorg" && sectionKey !== "notifikationer" && sectionKey !== "maklare" && sectionKey !== "meddelanden" && sectionKey !== "profil" && sectionKey !== "adminprofil" && sectionKey !== "statistik" && sectionKey !== "aktivitet" && sectionKey !== "assistent" ? <AdminPlaceholder sectionKey={sectionKey} /> : null}
+      </AdminPanelShell>
+      {account ? <AccountWindow app={app} base={account.base} pageKey={account.page.key} /> : null}
+    </BrokerAssistantProvider>
   );
 }
 

@@ -4,7 +4,8 @@ import ListingVisualCard from "../../components/app/ListingVisualCard";
 import ViewingRequestModal from "../../components/app/ViewingRequestModal";
 import Breadcrumbs from "../../components/layout/Breadcrumbs";
 import { formatSek } from "../../lib/formatters";
-import { PLATFORM_GOOGLE_MAP_STYLE } from "../../lib/googleMapStyles";
+import { platformMapStyle } from "../../lib/googleMapStyles";
+import { useIsDark } from "../../lib/theme";
 import { normalizePopularListingFallback, popularListingFallbackKey } from "../../lib/popularListingFallback";
 import { listings as baseListingDataset } from "../../data/mockData";
 import { navigateTo } from "../../lib/router";
@@ -189,6 +190,10 @@ function ListingAreaGoogleMap({ lat, lng, title }) {
   const mapRef = useRef(null);
   const markerRef = useRef(null);
   const [status, setStatus] = useState("loading");
+  const dark = useIsDark();
+  // The map is made after the script has loaded, which can be after the theme changed: it takes the theme of that moment.
+  const darkRef = useRef(dark);
+  darkRef.current = dark;
 
   useEffect(() => {
     let cancelled = false;
@@ -206,7 +211,7 @@ function ListingAreaGoogleMap({ lat, lng, title }) {
           mapRef.current = new maps.Map(containerRef.current, {
             center,
             zoom: 15,
-            styles: PLATFORM_GOOGLE_MAP_STYLE,
+            styles: platformMapStyle(darkRef.current),
             disableDefaultUI: false,
             zoomControl: true,
             streetViewControl: true,
@@ -240,19 +245,24 @@ function ListingAreaGoogleMap({ lat, lng, title }) {
     };
   }, [lat, lng, title]);
 
+  // The map follows the theme.
+  useEffect(() => {
+    mapRef.current?.setOptions({ styles: platformMapStyle(dark) });
+  }, [dark]);
+
   return (
-    <div className="relative h-80 w-full overflow-hidden rounded-2xl border border-black/10 bg-[#ffffff]">
+    <div className="relative h-80 w-full overflow-hidden rounded-2xl border border-veil/10 bg-surface">
       <div ref={containerRef} className="absolute inset-0" />
       {status === "loading" ? (
-        <div className="absolute inset-0 grid place-items-center bg-[#ffffff]/55 text-xs font-semibold text-ink-700">Laddar karta...</div>
+        <div className="absolute inset-0 grid place-items-center bg-surface/55 text-xs font-semibold text-ink-700">Laddar karta...</div>
       ) : null}
       {status === "missing_key" ? (
-        <div className="absolute inset-0 grid place-items-center bg-[#ffffff]/70 px-4 text-center text-xs font-semibold text-rose-700">
+        <div className="absolute inset-0 grid place-items-center bg-surface/70 px-4 text-center text-xs font-semibold text-rose-700">
           Google Maps API-nyckel saknas.
         </div>
       ) : null}
       {status === "error" ? (
-        <div className="absolute inset-0 grid place-items-center bg-[#ffffff]/70 px-4 text-center text-xs font-semibold text-rose-700">
+        <div className="absolute inset-0 grid place-items-center bg-surface/70 px-4 text-center text-xs font-semibold text-rose-700">
           Google Maps kunde inte laddas.
         </div>
       ) : null}
@@ -303,18 +313,18 @@ function ListingStreetView({ lat, lng }) {
   }, [lat, lng]);
 
   return (
-    <div className="relative h-[62vh] min-h-[420px] w-full overflow-hidden rounded-2xl border border-black/10 bg-[#ffffff]">
+    <div className="relative h-[62vh] min-h-[420px] w-full overflow-hidden rounded-2xl border border-veil/10 bg-surface">
       <div ref={containerRef} className="absolute inset-0" />
       {status === "loading" ? (
-        <div className="absolute inset-0 grid place-items-center bg-[#ffffff]/55 text-xs font-semibold text-ink-700">Laddar gatuvy...</div>
+        <div className="absolute inset-0 grid place-items-center bg-surface/55 text-xs font-semibold text-ink-700">Laddar gatuvy...</div>
       ) : null}
       {status === "missing_key" ? (
-        <div className="absolute inset-0 grid place-items-center bg-[#ffffff]/70 px-4 text-center text-xs font-semibold text-rose-700">
+        <div className="absolute inset-0 grid place-items-center bg-surface/70 px-4 text-center text-xs font-semibold text-rose-700">
           Google Maps API-nyckel saknas.
         </div>
       ) : null}
       {status === "error" ? (
-        <div className="absolute inset-0 grid place-items-center bg-[#ffffff]/70 px-4 text-center text-xs font-semibold text-rose-700">
+        <div className="absolute inset-0 grid place-items-center bg-surface/70 px-4 text-center text-xs font-semibold text-rose-700">
           Gatuvy kunde inte laddas här.
         </div>
       ) : null}
@@ -506,26 +516,26 @@ function ListingTransitCard({ lat, lng, fallbackTransit = [] }) {
   }, [lat, lng, fallbackTransit]);
 
   return (
-    <article className="rounded-2xl border border-black/10 bg-[#ffffff] p-4">
+    <article className="rounded-2xl border border-veil/10 bg-surface p-4">
       <div className="flex items-center justify-between gap-2">
         <h3 className="inline-flex items-center gap-2 text-xl font-semibold">
-          <img src={trainPictogram} alt="" aria-hidden="true" className="h-[33px] w-[33px] object-contain" />
+          <img src={trainPictogram} alt="" aria-hidden="true" className="h-[33px] w-[33px] object-contain dark:hue-rotate-180 dark:invert" />
           Kollektivtrafik
         </h3>
       </div>
       <div className="mt-5 grid gap-2 sm:grid-cols-2">
         {stops.length > 0 ? (
           stops.map((stop) => (
-            <article key={stop.id} className="rounded-xl border border-black/10 bg-[#f6f6f4] px-3 py-3">
+            <article key={stop.id} className="rounded-xl border border-veil/10 bg-subtle px-3 py-3">
               <div className="flex items-start gap-2.5">
-                <div className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-black/10 bg-[#ffffff] text-ink-800">
+                <div className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-veil/10 bg-surface text-ink-800">
                   {stop.kind === "train" ? <TrainIcon className="h-5 w-5" /> : <BusIcon className="h-5 w-5" />}
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold text-ink-900">{stop.name}</p>
                   <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                     {stop.lines.map((line) => (
-                      <span key={`${stop.id}-line-${line}`} className="inline-flex min-h-[24px] min-w-[30px] items-center justify-center rounded-[6px] bg-[#0b0a0e] px-2 py-1 text-xs font-semibold leading-none text-white">
+                      <span key={`${stop.id}-line-${line}`} className="inline-flex min-h-[24px] min-w-[30px] items-center justify-center rounded-[6px] bg-strong px-2 py-1 text-xs font-semibold leading-none text-on-strong">
                         {line}
                       </span>
                     ))}
@@ -754,8 +764,8 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
     else window.scrollTo({ top: 0, behavior: "auto" });
   }, [listingId, isGalleryView]);
 
-  const actionButtonClass = "inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-black/10 bg-[#ffffff] px-3 text-xs font-semibold text-ink-700 hover:bg-[#ffffff]";
-  const saveActionButtonClass = "inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-black/10 bg-[#ffffff] px-3 text-xs font-semibold text-ink-700 transition hover:bg-[#ffffff]";
+  const actionButtonClass = "inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-veil/10 bg-surface px-3 text-xs font-semibold text-ink-700 hover:bg-surface";
+  const saveActionButtonClass = "inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-veil/10 bg-surface px-3 text-xs font-semibold text-ink-700 transition hover:bg-surface";
 
   function handleToggleSave() {
     if (!resolvedFavoriteListingId) return;
@@ -815,7 +825,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
           <Button type="button" variant="outline" className={`h-auto ${actionButtonClass}`} onClick={() => navigateTo(backHref)}>
             {backLabel}
           </Button>
-          <div className="mt-4 rounded-2xl border border-black/10 bg-[#ffffff] p-6">
+          <div className="mt-4 rounded-2xl border border-veil/10 bg-surface p-6">
             <h1 className="text-2xl font-semibold">Objektet hittades inte</h1>
             <p className="mt-2 text-sm text-ink-600">Det här objektet kan ha tagits bort eller saknar data.</p>
           </div>
@@ -826,22 +836,22 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
 
   if (isGalleryView) {
     return (
-      <section ref={pageRef} className="h-full overflow-y-auto bg-[#ffffff]">
+      <section ref={pageRef} className="h-full overflow-y-auto bg-page">
         <div className="mx-auto w-full max-w-7xl p-4 sm:p-6">
-          <div className="grid grid-cols-1 items-center gap-3 border-b border-black/10 pb-3 sm:grid-cols-[1fr_auto_1fr]">
+          <div className="grid grid-cols-1 items-center gap-3 border-b border-veil/10 pb-3 sm:grid-cols-[1fr_auto_1fr]">
             <div />
 
             <Tabs value={galleryTab} onValueChange={setGalleryTab} className="justify-self-center">
               <TabsList variant="line" className="h-auto gap-6 bg-transparent p-0">
                 <TabsTrigger
                   value="images"
-                  className="h-auto rounded-none border-b-2 border-transparent px-0 pb-0.5 text-xs font-semibold text-ink-600 shadow-none transition after:hidden hover:bg-transparent hover:text-black data-active:border-[#0b0a0e] data-active:bg-transparent data-active:text-[#0b0a0e] data-active:shadow-none"
+                  className="h-auto rounded-none border-b-2 border-transparent px-0 pb-0.5 text-xs font-semibold text-ink-600 shadow-none transition after:hidden hover:bg-transparent hover:text-strong data-active:border-strong data-active:bg-transparent data-active:text-strong data-active:shadow-none"
                 >
                   Bilder
                 </TabsTrigger>
                 <TabsTrigger
                   value="street"
-                  className="h-auto rounded-none border-b-2 border-transparent px-0 pb-0.5 text-xs font-semibold text-ink-600 shadow-none transition after:hidden hover:bg-transparent hover:text-black data-active:border-[#0b0a0e] data-active:bg-transparent data-active:text-[#0b0a0e] data-active:shadow-none"
+                  className="h-auto rounded-none border-b-2 border-transparent px-0 pb-0.5 text-xs font-semibold text-ink-600 shadow-none transition after:hidden hover:bg-transparent hover:text-strong data-active:border-strong data-active:bg-transparent data-active:text-strong data-active:shadow-none"
                 >
                   Gatuvy
                 </TabsTrigger>
@@ -860,7 +870,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                 onClick={handleToggleSave}
                 aria-label={isSaved ? "Sparad" : "Spara"}
               >
-                <StarIcon className={`h-3.5 w-3.5 ${isSaved ? "fill-current text-[#0b0a0e]" : ""}`} />
+                <StarIcon className={`h-3.5 w-3.5 ${isSaved ? "fill-current text-strong" : ""}`} />
                 {isSaved ? "Sparad" : "Spara"}
               </Button>
               <Button type="button" variant="outline" className={`h-auto ${actionButtonClass}`} onClick={handleShare}>
@@ -874,7 +884,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
             {galleryTab === "images" ? (
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {images.map((image, index) => (
-                  <div key={`${image}-${index}`} className="overflow-hidden rounded-2xl border border-black/10 bg-[#ffffff]">
+                  <div key={`${image}-${index}`} className="overflow-hidden rounded-2xl border border-veil/10 bg-surface">
                     <img src={image} alt={`${listing.title} ${index + 1}`} className="h-48 w-full object-cover sm:h-52" />
                   </div>
                 ))}
@@ -886,7 +896,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                   href={googleMapsHref}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-[#ffffff] px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-[#ffffff]"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-veil/10 bg-surface px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-surface"
                 >
                   Öppna i Google Maps
                   <ExternalLinkIcon className="h-3.5 w-3.5" />
@@ -914,8 +924,8 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
 
         <div className="mt-4 space-y-4">
           <div className="grid gap-6">
-            <div className="relative h-72 overflow-hidden rounded-3xl border border-black/10 bg-[#ffffff] sm:h-[420px]">
-              <div className="grid h-full grid-cols-2 gap-0.5 bg-[#ffffff]">
+            <div className="relative h-72 overflow-hidden rounded-3xl border border-veil/10 bg-surface sm:h-[420px]">
+              <div className="grid h-full grid-cols-2 gap-0.5 bg-page">
                 <div
                   role="button"
                   tabIndex={0}
@@ -941,7 +951,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                       onClick={(event) => { event.stopPropagation(); handleToggleSave(); }}
                       aria-label={isSaved ? "Sparad" : "Spara"}
                     >
-                      <StarIcon className={`h-3.5 w-3.5 ${isSaved ? "fill-current text-[#0b0a0e]" : ""}`} />
+                      <StarIcon className={`h-3.5 w-3.5 ${isSaved ? "fill-current text-strong" : ""}`} />
                       {isSaved ? "Sparad" : "Spara"}
                     </Button>
                     <Button type="button" variant="outline" className={`h-auto ${actionButtonClass}`} onClick={(event) => { event.stopPropagation(); handleShare(); }}>
@@ -951,7 +961,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                   </div>
                   <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/45 via-black/10 to-transparent px-4 pb-4 pt-16">
                     <span
-                      className="pointer-events-auto inline-flex items-center justify-center gap-3 rounded-full border border-black/10 bg-[#ffffff] px-4 py-2.5 text-sm font-semibold text-[#0b0a0e] transition hover:border-[#0b0a0e]"
+                      className="pointer-events-auto inline-flex items-center justify-center gap-3 rounded-full border border-veil/10 bg-surface px-4 py-2.5 text-sm font-semibold text-strong transition hover:border-strong"
                       onClick={(event) => {
                         event.stopPropagation();
                         openGalleryOverlay(0);
@@ -966,7 +976,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                         }
                       }}
                     >
-                      <img src={imagesPictogram} alt="" aria-hidden="true" className="h-[26px] w-[26px] object-contain" />
+                      <img src={imagesPictogram} alt="" aria-hidden="true" className="h-[26px] w-[26px] object-contain dark:hue-rotate-180 dark:invert" />
                       Se alla bilder
                     </span>
                   </div>
@@ -978,7 +988,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                       key={`gallery-side-${image}-${index}`}
                       type="button"
                       variant="ghost"
-                      className="gallery-mosaic-tile relative block h-full w-full min-h-0 overflow-hidden bg-[#ffffff] p-0 text-left hover:bg-[#ffffff]"
+                      className="gallery-mosaic-tile relative block h-full w-full min-h-0 overflow-hidden bg-surface p-0 text-left hover:bg-surface"
                       onClick={() => openGalleryOverlay(index + 1)}
                     >
                       <img src={image} alt={`${listing.title} forhandsbild ${index + 2}`} className="absolute inset-0 h-full w-full object-cover" />
@@ -989,19 +999,19 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
             </div>
 
             <div className="grid gap-6 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-              <article className="flex h-full flex-col rounded-3xl border border-black/10 bg-[#ffffff] p-5">
+              <article className="flex h-full flex-col rounded-3xl border border-veil/10 bg-surface p-5">
                 <h2 className="text-2xl font-semibold leading-tight text-ink-900">{listing.title}</h2>
                 <div className="mt-2 space-y-3">
                   <p className="flex items-center gap-1.5 text-sm text-ink-500">
                     <PinIcon className="h-4 w-4" />
                     {listing.district} • {listing.address}
                   </p>
-                  <div className="inline-flex flex-wrap items-center overflow-hidden rounded-full border border-black/10 bg-[#ffffff] text-base font-semibold text-ink-700">
+                  <div className="inline-flex flex-wrap items-center overflow-hidden rounded-full border border-veil/10 bg-surface text-base font-semibold text-ink-700">
                     <div className="inline-flex items-center gap-2.5 px-4 py-2.5">
                       <RulerIcon className="h-5 w-5 text-ink-600" />
                       {listing.sizeSqm} kvm
                     </div>
-                    <span className="h-5 w-px bg-black/10" />
+                    <span className="h-5 w-px bg-veil/10" />
                     <div className="inline-flex items-center gap-2.5 px-4 py-2.5">
                       <UserIcon className="h-5 w-5 text-ink-600" />
                       {listing.capacity} platser
@@ -1019,7 +1029,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                       return (
                         <li
                           key={`about-${amenity}`}
-                          className="inline-flex min-h-[42px] items-center gap-1.5 rounded-full border border-black/10 bg-[#ffffff] px-3 py-1.5 text-[0.875rem] font-semibold leading-5 text-ink-700"
+                          className="inline-flex min-h-[42px] items-center gap-1.5 rounded-full border border-veil/10 bg-surface px-3 py-1.5 text-[0.875rem] font-semibold leading-5 text-ink-700"
                         >
                           <Icon className="h-3.5 w-3.5 shrink-0 text-ink-700" />
                           {amenity}
@@ -1028,12 +1038,12 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                     })}
                   </ul>
                 </div>
-                <div className="mt-auto border-t border-black/10 pt-4">
+                <div className="mt-auto border-t border-veil/10 pt-4">
                   <div className="flex justify-center">
                     <Button
                       type="button"
                       variant="outline"
-                      className="h-auto rounded-full px-4 py-2.5 text-sm font-semibold text-ink-700 hover:border-[#0b0a0e]/25 hover:text-[#0b0a0e]"
+                      className="h-auto rounded-full px-4 py-2.5 text-sm font-semibold text-ink-700 hover:border-strong/25 hover:text-strong"
                       onClick={openAboutOverlay}
                     >
                       Läs mer
@@ -1042,7 +1052,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                 </div>
               </article>
 
-              <div className="relative h-80 overflow-hidden rounded-3xl border border-black/10 bg-[#ffffff] sm:h-[440px]">
+              <div className="relative h-80 overflow-hidden rounded-3xl border border-veil/10 bg-surface sm:h-[440px]">
                 <iframe 
                   src="https://app.archilogic.com/viewer?sceneId=d47471f6-f59c-4efe-8bf9-fe0239f143a9&s=m3s1p0fhslt0xfstumrbrjrhrd" 
                   height="100%" 
@@ -1058,11 +1068,11 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
             <div className="space-y-6">
               <ListingTransitCard lat={insight.center.lat} lng={insight.center.lng} fallbackTransit={insight.transit} />
 
-              <article className="rounded-3xl border border-black/10 bg-[#ffffff] p-4">
+              <article className="rounded-3xl border border-veil/10 bg-surface p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="min-w-0 flex-1 pr-2">
                     <h2 className="inline-flex items-center gap-2 text-xl font-semibold">
-                      <img src={locationPictogram} alt="" aria-hidden="true" className="h-[33px] w-[33px] object-contain" />
+                      <img src={locationPictogram} alt="" aria-hidden="true" className="h-[33px] w-[33px] object-contain dark:hue-rotate-180 dark:invert" />
                       Området
                     </h2>
                   </div>
@@ -1071,17 +1081,17 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                     spacing={1}
                     value={[areaViewMode]}
                     onValueChange={(next) => next[0] && setAreaViewMode(next[0])}
-                    className="rounded-full border border-black/10 bg-[#ffffff] p-1.5"
+                    className="rounded-full border border-veil/10 bg-surface p-1.5"
                   >
                     <ToggleGroupItem
                       value="map"
-                      className="h-auto min-h-[34px] rounded-full px-3.5 text-xs font-semibold text-ink-700 data-[state=on]:bg-[#0b0a0e] data-[state=on]:text-white"
+                      className="h-auto min-h-[34px] rounded-full px-3.5 text-xs font-semibold text-ink-700 data-[state=on]:bg-strong data-[state=on]:text-on-strong"
                     >
                       Karta
                     </ToggleGroupItem>
                     <ToggleGroupItem
                       value="street"
-                      className="h-auto min-h-[34px] rounded-full px-3.5 text-xs font-semibold text-ink-700 data-[state=on]:bg-[#0b0a0e] data-[state=on]:text-white"
+                      className="h-auto min-h-[34px] rounded-full px-3.5 text-xs font-semibold text-ink-700 data-[state=on]:bg-strong data-[state=on]:text-on-strong"
                     >
                       Gatuvy
                     </ToggleGroupItem>
@@ -1098,7 +1108,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                   href={googleMapsHref}
                   target="_blank"
                   rel="noreferrer"
-                  className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-[#ffffff] px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-[#ffffff]"
+                  className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-veil/10 bg-surface px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-surface"
                 >
                   Öppna i Google Maps
                   <ExternalLinkIcon className="h-3.5 w-3.5" />
@@ -1107,27 +1117,27 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
             </div>
 
             <aside className="space-y-6 lg:sticky lg:top-6 lg:self-start">
-              <article className="rounded-3xl border border-black/10 bg-[#ffffff] p-5">
+              <article className="rounded-3xl border border-veil/10 bg-surface p-5">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Tillgänglighet</p>
                     <p className="mt-1 text-sm font-semibold text-ink-900">{listing.availability || "Efter överenskommelse"}</p>
                   </div>
-                  <Badge variant="outline" className="h-auto rounded-full bg-[#ffffff] px-2.5 py-1 text-[11px] font-semibold text-ink-700">
+                  <Badge variant="outline" className="h-auto rounded-full bg-surface px-2.5 py-1 text-[11px] font-semibold text-ink-700">
                     {listing.term || "Flexibelt avtal"}
                   </Badge>
                 </div>
 
-                <div className="mt-4 border-t border-black/10 pt-4">
+                <div className="mt-4 border-t border-veil/10 pt-4">
                   <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Hyra per månad</p>
-                  <p className="mt-1 text-[28px] font-semibold leading-none text-[#0b0a0e]">{formatSek(listing.priceMonthly)}</p>
+                  <p className="mt-1 text-[28px] font-semibold leading-none text-strong">{formatSek(listing.priceMonthly)}</p>
                 </div>
 
-                <div className="mt-4 border-t border-black/10 pt-4">
+                <div className="mt-4 border-t border-veil/10 pt-4">
                   <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Mäklare</p>
-                  <div className="mt-2 flex items-center gap-3 rounded-2xl border border-black/10 bg-[#f8f8f7] p-3">
+                  <div className="mt-2 flex items-center gap-3 rounded-2xl border border-veil/10 bg-canvas p-3">
                     <Avatar className="h-11 w-11 shrink-0">
-                      <AvatarFallback className="bg-[#0b0a0e] text-sm font-semibold text-white">{brokerInitials}</AvatarFallback>
+                      <AvatarFallback className="bg-strong text-sm font-semibold text-on-strong">{brokerInitials}</AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
                       <p className="truncate text-base font-semibold text-ink-900">{brokerName}</p>
@@ -1142,7 +1152,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                     className="h-auto w-full gap-1.5 rounded-full px-4 py-3 text-sm font-semibold"
                     onClick={() => setBookingListing(listing)}
                   >
-                    <CalendarIcon className="h-4 w-4 text-white" />
+                    <CalendarIcon className="h-4 w-4 text-on-strong" />
                     Boka visning
                   </Button>
                   <Button
@@ -1177,7 +1187,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
         >
           <DialogContent
             showCloseButton={false}
-            className="z-[72] flex max-h-[calc(100vh-2rem)] w-full max-w-2xl flex-col gap-0 overflow-hidden rounded-3xl border border-black/10 bg-[#ffffff] p-0 shadow-[0_16px_40px_rgba(15,25,48,0.12)] ring-0 sm:max-h-[calc(100vh-2.5rem)]"
+            className="z-[72] flex max-h-[calc(100vh-2rem)] w-full max-w-2xl flex-col gap-0 overflow-hidden rounded-3xl border border-veil/10 bg-surface p-0 shadow-[0_16px_40px_rgba(15,25,48,0.12)] ring-0 sm:max-h-[calc(100vh-2.5rem)]"
           >
             <div className="flex items-start justify-between gap-4 px-6 pb-0 pt-6 sm:px-7 sm:pt-7">
               <div>
@@ -1191,7 +1201,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                 type="button"
                 variant="outline"
                 size="icon"
-                className="close-circle-button rounded-full text-xl leading-none text-ink-700 hover:border-[#0b0a0e]/25 hover:text-[#0b0a0e]"
+                className="close-circle-button rounded-full text-xl leading-none text-ink-700 hover:border-strong/25 hover:text-strong"
                 onClick={closeAboutOverlay}
                 aria-label="Stäng"
               >
@@ -1205,7 +1215,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                 ))}
               </div>
 
-              <div className="mt-6 border-t border-black/10 pt-5">
+              <div className="mt-6 border-t border-veil/10 pt-5">
                 <h4 className="text-base font-semibold text-ink-900">Bekvämligheter</h4>
                 <ul className="mt-3 flex flex-wrap gap-2">
                   {displayAmenities.map((amenity) => {
@@ -1213,7 +1223,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                     return (
                       <li
                         key={`overlay-amenity-${amenity}`}
-                        className="inline-flex min-h-[42px] items-center gap-1.5 rounded-full border border-black/10 bg-[#ffffff] px-3 py-1.5 text-[0.875rem] font-semibold leading-5 text-ink-700"
+                        className="inline-flex min-h-[42px] items-center gap-1.5 rounded-full border border-veil/10 bg-surface px-3 py-1.5 text-[0.875rem] font-semibold leading-5 text-ink-700"
                       >
                         <Icon className="h-3.5 w-3.5 shrink-0 text-ink-700" />
                         {amenity}
@@ -1223,7 +1233,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                 </ul>
               </div>
 
-              <div className="mt-6 border-t border-black/10 pt-5">
+              <div className="mt-6 border-t border-veil/10 pt-5">
                 <h4 className="text-base font-semibold text-ink-900">Service i området</h4>
                 <ul className="mt-3 space-y-1.5 text-sm text-ink-700">
                   {insight.services.map((item) => (
@@ -1232,11 +1242,11 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                 </ul>
               </div>
 
-              <div className="mt-6 flex justify-center border-t border-black/10 pt-5">
+              <div className="mt-6 flex justify-center border-t border-veil/10 pt-5">
                 <Button
                   type="button"
                   variant="outline"
-                  className="h-auto rounded-full px-4 py-2.5 text-sm font-semibold text-ink-700 hover:border-[#0b0a0e]/25 hover:text-[#0b0a0e]"
+                  className="h-auto rounded-full px-4 py-2.5 text-sm font-semibold text-ink-700 hover:border-strong/25 hover:text-strong"
                   onClick={closeAboutOverlay}
                 >
                   Stäng
@@ -1248,14 +1258,14 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
 
         {galleryOverlayOpen && typeof document !== "undefined"
           ? createPortal(
-            <div className="fixed inset-0 z-[90] h-dvh overflow-hidden bg-[#ffffff]">
-              <div className="h-full overflow-y-auto overscroll-none bg-[#ffffff] pb-24">
-                <div className="sticky top-0 z-10 border-b border-black/10 bg-[#ffffff]/95 backdrop-blur-md">
+            <div className="fixed inset-0 z-[90] h-dvh overflow-hidden bg-page">
+              <div className="h-full overflow-y-auto overscroll-none bg-page pb-24">
+                <div className="sticky top-0 z-10 border-b border-veil/10 bg-page/95 backdrop-blur-md">
                   <div className="mx-auto grid w-full max-w-[1600px] grid-cols-1 items-center gap-4 px-4 py-4 sm:grid-cols-[1fr_auto_1fr] sm:px-6">
                     <Button
                       type="button"
                       variant="outline"
-                      className="h-auto w-auto justify-self-start gap-1.5 rounded-full border-black/20 px-3 py-2 text-xs font-semibold text-ink-700 hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
+                      className="h-auto w-auto justify-self-start gap-1.5 rounded-full border-veil/20 px-3 py-2 text-xs font-semibold text-ink-700 hover:border-strong hover:text-strong"
                       onClick={closeGalleryOverlay}
                     >
                       <XIcon className="h-3.5 w-3.5" />
@@ -1266,13 +1276,13 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                       <TabsList variant="line" className="h-auto gap-6 bg-transparent p-0">
                         <TabsTrigger
                           value="images"
-                          className="h-auto rounded-none border-b-2 border-transparent px-0 pb-0.5 text-sm font-semibold text-ink-600 shadow-none transition after:hidden hover:bg-transparent hover:text-black data-active:border-[#0b0a0e] data-active:bg-transparent data-active:text-[#0b0a0e] data-active:shadow-none"
+                          className="h-auto rounded-none border-b-2 border-transparent px-0 pb-0.5 text-sm font-semibold text-ink-600 shadow-none transition after:hidden hover:bg-transparent hover:text-strong data-active:border-strong data-active:bg-transparent data-active:text-strong data-active:shadow-none"
                         >
                           Galleri
                         </TabsTrigger>
                         <TabsTrigger
                           value="street"
-                          className="h-auto rounded-none border-b-2 border-transparent px-0 pb-0.5 text-sm font-semibold text-ink-600 shadow-none transition after:hidden hover:bg-transparent hover:text-black data-active:border-[#0b0a0e] data-active:bg-transparent data-active:text-[#0b0a0e] data-active:shadow-none"
+                          className="h-auto rounded-none border-b-2 border-transparent px-0 pb-0.5 text-sm font-semibold text-ink-600 shadow-none transition after:hidden hover:bg-transparent hover:text-strong data-active:border-strong data-active:bg-transparent data-active:text-strong data-active:shadow-none"
                         >
                           Gatuvy
                         </TabsTrigger>
@@ -1291,7 +1301,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                         onClick={handleToggleSave}
                         aria-label={isSaved ? "Sparad" : "Spara"}
                       >
-                        <StarIcon className={`h-3.5 w-3.5 ${isSaved ? "fill-current text-[#0b0a0e]" : ""}`} />
+                        <StarIcon className={`h-3.5 w-3.5 ${isSaved ? "fill-current text-strong" : ""}`} />
                         {isSaved ? "Sparad" : "Spara"}
                       </Button>
                       <Button type="button" variant="outline" className={`h-auto ${actionButtonClass}`} onClick={handleShare}>
@@ -1322,13 +1332,13 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                       ))}
                     </div>
                   ) : (
-                    <div className="rounded-3xl border border-black/10 bg-[#ffffff] p-3 sm:p-4">
+                    <div className="rounded-3xl border border-veil/10 bg-surface p-3 sm:p-4">
                       <ListingStreetView lat={insight.center.lat} lng={insight.center.lng} />
                       <a
                         href={googleMapsHref}
                         target="_blank"
                         rel="noreferrer"
-                        className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-[#ffffff] px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-[#ffffff]"
+                        className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-veil/10 bg-surface px-3 py-2 text-xs font-semibold text-ink-700 hover:bg-surface"
                       >
                         Öppna i Google Maps
                         <ExternalLinkIcon className="h-3.5 w-3.5" />
@@ -1337,10 +1347,10 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                   )}
                 </div>
 
-                <div className="fixed inset-x-0 bottom-0 z-10 border-t border-black/10 bg-[#ffffff]/95 backdrop-blur-md">
+                <div className="fixed inset-x-0 bottom-0 z-10 border-t border-veil/10 bg-page/95 backdrop-blur-md">
                   <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-4 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
                     <div className="flex flex-wrap items-center gap-3">
-                      <div className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-[#ffffff] px-3 py-2">
+                      <div className="inline-flex items-center gap-2 rounded-full border border-veil/10 bg-surface px-3 py-2">
                         <Avatar className="h-8 w-8 shrink-0">
                           <AvatarFallback className="bg-[#84c4be] text-xs font-semibold text-white">{brokerInitials}</AvatarFallback>
                         </Avatar>
@@ -1349,17 +1359,17 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                           <span className="block truncate text-xs text-ink-600">{ownerCompanyName || "Mäklarfirma AB"}</span>
                         </span>
                       </div>
-                      <div className="inline-flex min-h-[42px] items-center overflow-hidden rounded-full border border-black/10 bg-[#ffffff] text-[0.875rem] font-semibold leading-5 text-ink-700">
+                      <div className="inline-flex min-h-[42px] items-center overflow-hidden rounded-full border border-veil/10 bg-surface text-[0.875rem] font-semibold leading-5 text-ink-700">
                         <span className="inline-flex items-center gap-1.5 px-3 py-1.5">
                           <RulerIcon className="h-3.5 w-3.5 shrink-0 text-ink-700" />
                           {listing.sizeSqm || "-"} kvm
                         </span>
-                        <span className="h-5 w-px bg-black/10" />
+                        <span className="h-5 w-px bg-veil/10" />
                         <span className="inline-flex items-center gap-1.5 px-3 py-1.5">
                           <UserIcon className="h-3.5 w-3.5 shrink-0 text-ink-700" />
                           {listing.capacity || "-"} platser
                         </span>
-                        <span className="h-5 w-px bg-black/10" />
+                        <span className="h-5 w-px bg-veil/10" />
                         <span className="inline-flex items-center gap-1.5 px-3 py-1.5">
                           <BuildingIcon className="h-3.5 w-3.5 shrink-0 text-ink-700" />
                           {formatSek(listing.priceMonthly)}/månad
@@ -1372,7 +1382,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                         className="h-auto gap-1.5 rounded-full px-4 py-2.5 text-sm font-semibold"
                         onClick={() => setBookingListing(listing)}
                       >
-                        <CalendarIcon className="h-4 w-4 text-white" />
+                        <CalendarIcon className="h-4 w-4 text-on-strong" />
                         Boka visning
                       </Button>
                       <Button

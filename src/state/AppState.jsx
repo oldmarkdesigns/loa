@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@workos-inc/authkit-react";
 import { useConvexAuth } from "convex/react";
-import { aiApi, authApi, favoriteApi, leadsApi, listingApi, profileApi, viewingsApi } from "../api";
+import { aiApi, authApi, favoriteApi, leadsApi, listingApi, matchFeedbackApi, profileApi, viewingsApi } from "../api";
 import { navigateTo, normalizeAppRole } from "../lib/router";
 import {
   analyticsEventNames,
@@ -733,6 +733,17 @@ export function AppProvider({ children }) {
     }
   }
 
+  /** Fire-and-forget: a renter saw a match and said why it isn't for them. Never blocks browsing. */
+  async function recordMatchDismissal(listingId, reason) {
+    if (!listingId || !reason) return;
+    try {
+      await matchFeedbackApi.dismiss(listingId, reason);
+      pushToast("Tack, vi tar hänsyn till det i sökningen.", "info");
+    } catch (_error) {
+      // Feedback is a nice-to-have signal, never worth surfacing an error toast over.
+    }
+  }
+
   async function createListing(payload) {
     const response = await listingApi.createListing(payload);
     await refreshCoreData();
@@ -875,6 +886,7 @@ export function AppProvider({ children }) {
       toggleFavorite,
       requestViewing,
       recordListingView,
+      recordMatchDismissal,
       createListing,
       updateListing,
       deleteListing,

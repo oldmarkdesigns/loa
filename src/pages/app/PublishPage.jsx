@@ -1,16 +1,26 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { cn } from "cn";
 import FurnishingToggle from "../../components/app/FurnishingToggle";
-import AdminPanelShell from "../../components/layout/AdminPanelShell";
+import AssistantOrb from "../../components/app/AssistantOrb";
+import PublishStage from "../../components/app/PublishStage";
+import PublishStart from "../../components/app/PublishStart";
+import { StepField, StepFields, UnitInput, checkOptionClass } from "../../components/app/StepFields";
+import PublishImportUpload from "../../components/app/PublishImportUpload";
+import PublishImportReading from "../../components/app/PublishImportReading";
+import ImportedListingEditor from "../../components/app/ImportedListingEditor";
+import PublishImportReview, { PublishImportDone } from "../../components/app/PublishImportReview";
+import EditorWorkspace from "../../components/layout/EditorWorkspace";
+import { ChevronLeft, ChevronRight, XIcon } from "lucide-react";
 import FieldLabel from "../../components/app/FieldLabel";
 import ListingPreview from "../../components/app/ListingPreview";
-import { formatSek, parseAmenities } from "../../lib/formatters";
 import { amenityIconFor, propertyAmenityOptions } from "../../lib/propertyAmenityIcons";
 import { navigateTo, normalizeAppRole } from "../../lib/router";
 import { districtOptions, listingTypes } from "../../data/mockData";
-import { ADMIN_NAV_ITEMS, ADMIN_BOTTOM_NAV_ITEMS } from "./AdminPanelPage";
-import { BROKER_NAV_ITEMS, BROKER_BOTTOM_NAV_ITEMS } from "./BrokerPanelPage";
+import { buildPayload, computeQualityScore, getStepErrors, initialDraft, listMissingFields, mergeAmenities } from "../../lib/listingDraft";
+import { MAX_IMAGES, fileToImageEntry } from "../../lib/listingImages";
+import { accessHoursOptions, availabilityOptions, contractFlexOptions, furnishedOptions, layoutTypeOptions, parkingTypeOptions, termOptions, transitDistanceOptions } from "../../lib/listingOptions";
+import { classifyImportFiles, parseListingDocuments, sampleImportFiles, takeQueuedImportFiles } from "../../lib/listingImport";
 import {
-  ArrowLeftIcon,
   BuildingIcon,
   CheckBadgeIcon,
   ExternalLinkIcon,
@@ -24,30 +34,47 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
+import { Progress } from "@/components/ui/progress";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 const publishSteps = [
-  { id: "basic", label: "Grundinfo" },
-  { id: "terms", label: "Villkor" },
-  { id: "media", label: "Media & innehåll" },
-  { id: "review", label: "Granska & publicera" }
+  { id: "title", label: "Rubrik", question: "Vad ska annonsen heta?", helper: "Skriv en kort rubrik som säger typ, område och största fördelen." },
+  { id: "place", label: "Plats", question: "Var ligger lokalen?", helper: "Välj område, lokaltyp och skriv adressen." },
+  { id: "size", label: "Storlek", question: "Hur stor är lokalen och hur många passar den för?", helper: "Ange yta och ungefärlig teamkapacitet." },
+  { id: "rent", label: "Hyra", question: "Vad kostar lokalen och hur ser avtalet ut?", helper: "Ange månadshyra och normal avtalstid." },
+  { id: "availability", label: "Tillgänglighet", question: "När kan en hyresgäst flytta in?", helper: "Välj tillgänglighet och hur snabbt ni brukar svara." },
+  { id: "access", label: "Läge", question: "Vad behöver hyresgästen veta om vardagen i lokalen?", helper: "Lägg till kommunikationer, access, parkering och planlösning." },
+  { id: "requirements", label: "Krav", question: "Vilka viktiga villkor ska synas?", helper: "Markera bara det som gäller för lokalen." },
+  { id: "photos", label: "Bilder", question: "Vilka bilder ska sälja in lokalen?", helper: "Första bilden används som omslagsfoto." },
+  { id: "amenities", label: "Innehåll", question: "Vad ingår eller utmärker lokalen?", helper: "Välj bekvämligheter och lägg till egna nyckelord vid behov." },
+  { id: "description", label: "Beskrivning", question: "Hur skulle du beskriva lokalen för rätt hyresgäst?", helper: "Skriv kort om planlösning, känsla, läge och vad som ingår." },
+  { id: "review", label: "Granska", question: "Ser allt rätt ut?", helper: "Kontrollera sammanfattningen innan annonsen publiceras." }
 ];
 
-const termOptions = ["3 månader", "6 månader", "12 månader", "24 månader", "36 månader", "Flexibelt avtal"];
-const availabilityOptions = ["Ledig nu", "Inom 2 veckor", "Inom 1 månad", "Inom 2 månader", "Efter överenskommelse"];
 const amenityOptions = propertyAmenityOptions;
-const propertyCardAmenityChipClass = "inline-flex min-h-[42px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-black/10 bg-[#ffffff] px-3 py-1.5 text-[0.875rem] font-semibold leading-5 text-ink-700";
-const furnishedOptions = [
-  { value: "all", label: "Alla" },
-  { value: "yes", label: "Möblerad" },
-  { value: "no", label: "Omöblerad" }
-];
-const transitDistanceOptions = ["Alla", "0-3 min", "3-7 min", "7-12 min", "12+ min"];
-const contractFlexOptions = ["Alla", "Korttid", "Långtid", "Flexibelt avtal", "Break option"];
-const accessHoursOptions = ["Alla", "24/7", "Kontorstid", "Kväll/helg"];
-const parkingTypeOptions = ["Alla", "Ingen parkering", "Garage", "Gatuparkering", "Laddplatser"];
-const layoutTypeOptions = ["Alla", "Öppet landskap", "Cellkontor", "Hybrid", "Showroom"];
-const MAX_IMAGES = 10;
+const propertyCardAmenityChipClass = "inline-flex min-h-[42px] shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-veil/10 bg-control px-3 py-1.5 text-[0.875rem] font-semibold leading-5 text-ink-700";
+// Between questions the orb first acknowledges the answer ("received"), then works on it
+// with an animation that fits the step ("processing"). All nine orb states are in play.
+const ORB_IDLE_STATE = "breathing";
+const ORB_RECEIVED_STATE = "listening";
+const ORB_SAVING_STATE = "connecting";
+const ORB_UPLOAD_STATE = "searching";
+const orbStateByStep = {
+  title: "composing",
+  place: "searching",
+  size: "shaping",
+  rent: "solving",
+  availability: "working",
+  access: "connecting",
+  requirements: "solving",
+  photos: "searching",
+  amenities: "weaving",
+  description: "composing"
+};
+const RECEIVED_MS = 380;
+const PROCESSING_MS = 640;
+const textEntrySelector = "input[type=text], input[type=number], input[type=date], input:not([type]), textarea";
+const firstControlSelector = `${textEntrySelector}, input[type=checkbox], button:not([disabled]), [role=combobox], [role=checkbox]`;
 const publishFaqItems = [
   {
     q: "Hur många bilder bör en annons ha?",
@@ -76,244 +103,91 @@ const publishTips = [
   "Lägg till bekvämligheter som hyresgäster faktiskt filtrerar på."
 ];
 
-const initialDraft = {
-  title: "",
-  district: "Norrmalm",
-  address: "",
-  type: "Kontor",
-  description: "",
-  priceMonthly: "",
-  sizeSqm: "",
-  capacity: "",
-  term: "12 månader",
-  availability: "Ledig nu",
-  responseHours: "2",
-  transitDistance: "",
-  moveInDate: "",
-  contractFlex: "",
-  accessHours: "",
-  parkingType: "",
-  layoutType: "",
-  includeOperatingCosts: false,
-  accessibilityAdapted: false,
-  ecoCertified: false,
-  images: [
-    {
-      id: "seed-cover",
-      src: "/object-images/object-4.jpeg",
-      name: "Omslagsbild"
-    }
-  ],
-  amenities: ["Mötesrum", "Fiber", "Kök"],
-  additionalAmenities: "",
-  furnished: "all"
-};
+// While documents are read, the orb works through four phases; each has its own animation and message.
+const importStageOrbStates = { reading: "searching", identifying: "weaving", extracting: "composing", verifying: "solving" };
 
-function toNumber(value) {
-  return Number(value || 0);
+function importStageMessage(progress) {
+  if (progress.stage === "identifying") return "Hittar objekt och uppgifter…";
+  if (progress.stage === "extracting") return "Hämtar yta, hyra, adress och bilder…";
+  if (progress.stage === "verifying") return "Kontrollerar att allt stämmer…";
+  return progress.currentName ? `Läser ${progress.currentName}…` : "Läser dina filer…";
 }
 
-function loadImage(src) {
-  return new Promise((resolve, reject) => {
-    const image = new Image();
-    image.onload = () => resolve(image);
-    image.onerror = () => reject(new Error("Kunde inte läsa bilden."));
-    image.src = src;
-  });
-}
-
-function readFileAsDataUrl(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result || ""));
-    reader.onerror = () => reject(new Error("Kunde inte läsa filen."));
-    reader.readAsDataURL(file);
-  });
-}
-
-async function optimizeImageFile(file) {
-  const objectUrl = URL.createObjectURL(file);
-
-  try {
-    const image = await loadImage(objectUrl);
-    const maxSide = 1600;
-    const scale = Math.min(1, maxSide / Math.max(image.width || 1, image.height || 1));
-    const width = Math.max(1, Math.round((image.width || 1) * scale));
-    const height = Math.max(1, Math.round((image.height || 1) * scale));
-
-    const canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
-    const context = canvas.getContext("2d");
-    if (!context) {
-      return await readFileAsDataUrl(file);
-    }
-    context.drawImage(image, 0, 0, width, height);
-    return canvas.toDataURL("image/jpeg", 0.82);
-  } catch (_error) {
-    return await readFileAsDataUrl(file);
-  } finally {
-    URL.revokeObjectURL(objectUrl);
-  }
-}
-
-async function fileToImageEntry(file) {
-  const src = await optimizeImageFile(file);
-  return {
-    id: crypto.randomUUID(),
-    src,
-    name: file.name || "Uppladdad bild"
-  };
-}
-
-function mergeAmenities(draft) {
-  const textAmenities = parseAmenities(draft.additionalAmenities);
-  const furnishedAmenity = draft.furnished === "yes"
-    ? ["Möblerad"]
-    : draft.furnished === "no"
-      ? ["Omöblerad"]
-      : [];
-  return Array.from(new Set([...(draft.amenities || []), ...textAmenities, ...furnishedAmenity]));
-}
-
-function computeQualityScore(draft) {
-  let score = 0;
-  if (draft.title.trim()) score += 14;
-  if (draft.address.trim()) score += 12;
-  if (draft.district) score += 8;
-  if (draft.type) score += 8;
-  if (toNumber(draft.priceMonthly) > 0) score += 14;
-  if (toNumber(draft.sizeSqm) > 0) score += 12;
-  if (toNumber(draft.capacity) > 0) score += 10;
-  if (draft.term) score += 5;
-  if (draft.availability) score += 5;
-  if (toNumber(draft.responseHours) > 0) score += 4;
-  if (draft.transitDistance) score += 3;
-  if (draft.moveInDate) score += 3;
-  if (draft.contractFlex) score += 3;
-  if (draft.accessHours) score += 2;
-  if (draft.parkingType) score += 2;
-  if (draft.layoutType) score += 2;
-  if (draft.includeOperatingCosts) score += 2;
-  if (draft.accessibilityAdapted) score += 2;
-  if (draft.ecoCertified) score += 2;
-  if (draft.description.trim().length >= 40) score += 10;
-  if (Array.isArray(draft.images) && draft.images.length > 0) score += 8;
-  if (mergeAmenities(draft).length > 0) score += 10;
-  return Math.min(100, score);
-}
-
-function getStepErrors(stepId, draft) {
-  if (stepId === "basic") {
-    const missing = [];
-    if (!draft.title.trim()) missing.push("Rubrik");
-    if (!draft.address.trim()) missing.push("Adress");
-    if (!draft.district) missing.push("Område");
-    if (!draft.type) missing.push("Typ");
-    return missing;
-  }
-
-  if (stepId === "terms") {
-    const missing = [];
-    if (toNumber(draft.priceMonthly) <= 0) missing.push("Månadshyra");
-    if (toNumber(draft.sizeSqm) <= 0) missing.push("Storlek");
-    if (toNumber(draft.capacity) <= 0) missing.push("Team / platser");
-    if (!draft.term) missing.push("Avtalstid");
-    if (!draft.availability) missing.push("Tillgänglighet");
-    return missing;
-  }
-
-  if (stepId === "media") {
-    const missing = [];
-    if (!Array.isArray(draft.images) || draft.images.length === 0) missing.push("Minst en bild");
-    if (!draft.description.trim()) missing.push("Beskrivning");
-    if (mergeAmenities(draft).length === 0) missing.push("Minst en bekvämlighet");
-    return missing;
-  }
-
-  return [];
-}
-
-function buildPayload(draft, status = "draft") {
-  const imageList = Array.isArray(draft.images) ? draft.images.map((image) => image.src).filter(Boolean) : [];
-  return {
-    title: draft.title.trim(),
-    district: draft.district,
-    address: draft.address.trim(),
-    type: draft.type,
-    description: draft.description.trim(),
-    priceMonthly: toNumber(draft.priceMonthly),
-    sizeSqm: toNumber(draft.sizeSqm),
-    capacity: toNumber(draft.capacity),
-    term: draft.term,
-    availability: draft.availability,
-    responseHours: Math.max(1, toNumber(draft.responseHours || 2)),
-    transitDistance: draft.transitDistance || "",
-    moveInDate: draft.moveInDate || "",
-    contractFlex: draft.contractFlex || "",
-    accessHours: draft.accessHours || "",
-    parkingType: draft.parkingType || "",
-    layoutType: draft.layoutType || "",
-    includeOperatingCosts: Boolean(draft.includeOperatingCosts),
-    accessibilityAdapted: Boolean(draft.accessibilityAdapted),
-    ecoCertified: Boolean(draft.ecoCertified),
-    image: imageList[0] || "",
-    images: imageList,
-    amenities: mergeAmenities(draft),
-    status
-  };
-}
-
-function StepPills({ currentIndex, onSelect }) {
-  return (
-    <div className="grid gap-2 sm:grid-cols-4">
-      {publishSteps.map((step, index) => {
-        const active = currentIndex === index;
-        const complete = index < currentIndex;
-        return (
-          <Button
-            key={step.id}
-            type="button"
-            variant="outline"
-            className={`h-auto flex-col items-start rounded-2xl px-3 py-2 text-left text-xs font-semibold ${
-              active
-                ? "border-[#0b0a0e] bg-[#0b0a0e] text-white hover:bg-[#0b0a0e]/90"
-                : complete
-                  ? "border-[#c8d1de] text-ink-800"
-                  : "border-black/10 text-ink-600"
-            }`}
-            onClick={() => onSelect(index)}
-          >
-            <span className="opacity-80">Steg {index + 1}</span>
-            <p className="mt-0.5">{step.label}</p>
-          </Button>
-        );
-      })}
-    </div>
-  );
-}
-
-function PublishPage({ app, pathname = "/app/publish" }) {
+function PublishPage({ app, onClose }) {
   const { createListing, updateListing, publishListing, pushToast } = app;
   const activeRole = normalizeAppRole(app.user?.role);
   const isCompanyAdmin = activeRole === "company_admin";
-  const panelNavItems = isCompanyAdmin ? ADMIN_NAV_ITEMS : BROKER_NAV_ITEMS;
-  const panelBottomNavItems = isCompanyAdmin ? ADMIN_BOTTOM_NAV_ITEMS : BROKER_BOTTOM_NAV_ITEMS;
   const myListingsPath = isCompanyAdmin ? "/app/admin/annonser" : "/app/broker/objekt";
 
+  // choose → manual | upload → reading → review → imported. "manual" is also where a single imported listing gets edited.
+  const [mode, setMode] = useState("choose");
   const [stepIndex, setStepIndex] = useState(0);
   const [draft, setDraft] = useState(initialDraft);
+  const [savedDraft, setSavedDraft] = useState(JSON.stringify(initialDraft));
   const [draftListingId, setDraftListingId] = useState(null);
   const [publishedListing, setPublishedListing] = useState(null);
   const [pending, setPending] = useState(false);
   const [uploadingImages, setUploadingImages] = useState(false);
   const [feedback, setFeedback] = useState("");
-  const [showFaqTips, setShowFaqTips] = useState(false);
   const [duplicateWarning, setDuplicateWarning] = useState(false);
   const [attemptedByStep, setAttemptedByStep] = useState({});
+  // The beat between two questions: null → "received" → "processing" → null.
+  const [advancePhase, setAdvancePhase] = useState(null);
+  const [importFiles, setImportFiles] = useState([]);
+  const [readOnArrival, setReadOnArrival] = useState(false);
+  const [importError, setImportError] = useState("");
+  const [importProgress, setImportProgress] = useState({ files: {}, stage: "reading", value: 0, currentName: "" });
+  const [importItems, setImportItems] = useState([]);
+  const [importSelected, setImportSelected] = useState({});
+  const [importBusy, setImportBusy] = useState(false);
+  const [editingImportId, setEditingImportId] = useState(null);
+  const [dragActive, setDragActive] = useState(false);
+  const [orbPulse, setOrbPulse] = useState(null);
+  const stepRef = useRef(null);
+  const headingRef = useRef(null);
+  const advanceTimers = useRef([]);
+  const pulseTimer = useRef(null);
+  const readingAbort = useRef(null);
 
+  const advancing = advancePhase !== null;
+  const busy = pending || uploadingImages || advancing || importBusy;
+  const draftDirty = JSON.stringify(draft) !== savedDraft;
+  const importDirty = importItems.some((item) => item.status === "review" || item.status === "error");
+  const dirty = !publishedListing && (
+    mode === "manual" ? draftDirty
+      : mode === "review" ? importDirty
+        : false
+  );
   const currentStep = publishSteps[stepIndex];
   const qualityScore = useMemo(() => computeQualityScore(draft), [draft]);
+
+  const orbState = pending || importBusy
+    ? ORB_SAVING_STATE
+    : uploadingImages
+      ? ORB_UPLOAD_STATE
+      : mode === "reading"
+        ? importStageOrbStates[importProgress.stage] || "searching"
+        : dragActive
+          ? ORB_RECEIVED_STATE
+          : orbPulse
+            ? orbPulse
+            : advancePhase === "received"
+              ? ORB_RECEIVED_STATE
+              : advancePhase === "processing"
+                ? orbStateByStep[currentStep.id] || "working"
+                : ORB_IDLE_STATE;
+  const orbEngaged = busy || mode === "reading" || dragActive || Boolean(orbPulse);
+  const statusMessage = advancing
+    ? "Tar emot ditt svar…"
+    : mode === "reading"
+      ? importStageMessage(importProgress)
+      : importBusy
+        ? "Sparar annonserna…"
+        : uploadingImages
+          ? "Bearbetar bilder…"
+          : pending
+            ? "Sparar annonsen…"
+            : "";
 
   const currentErrors = useMemo(() => {
     if (!attemptedByStep[currentStep.id]) {
@@ -321,6 +195,7 @@ function PublishPage({ app, pathname = "/app/publish" }) {
     }
     return getStepErrors(currentStep.id, draft);
   }, [attemptedByStep, currentStep.id, draft]);
+  const inlineError = feedback || (currentErrors.length > 0 ? `Fyll i obligatoriska fält: ${currentErrors.join(", ")}.` : "");
 
   const firstInvalidStepIndex = useMemo(() => {
     for (let index = 0; index < publishSteps.length - 1; index += 1) {
@@ -331,6 +206,52 @@ function PublishPage({ app, pathname = "/app/publish" }) {
     }
     return null;
   }, [draft]);
+
+  function clearAdvanceTimers() {
+    advanceTimers.current.forEach((timer) => window.clearTimeout(timer));
+    advanceTimers.current = [];
+  }
+
+  useEffect(() => () => {
+    clearAdvanceTimers();
+    window.clearTimeout(pulseTimer.current);
+    readingAbort.current?.abort();
+  }, []);
+
+  // Files attached in the broker assistant arrive already chosen: show them and start reading straight away.
+  useEffect(() => {
+    const queued = takeQueuedImportFiles();
+    if (queued.length === 0) return;
+    setImportFiles(queued);
+    setMode("upload");
+    setReadOnArrival(true);
+  }, []);
+
+  useEffect(() => {
+    if (!readOnArrival || mode !== "upload" || importFiles.length === 0) return;
+    setReadOnArrival(false);
+    void startReading();
+  }, [readOnArrival, mode, importFiles]);
+
+  // Each new screen takes focus: a text field when it leads the screen, otherwise the question
+  // itself so screen readers announce it before the controls.
+  useEffect(() => {
+    if (publishedListing || mode === "imported") return undefined;
+    const timer = window.setTimeout(() => {
+      // Never yank focus from a control the person has already reached themselves.
+      if (stepRef.current?.contains(document.activeElement)) return;
+      const first = stepRef.current?.querySelector(firstControlSelector);
+      const target = first?.matches(textEntrySelector) ? first : headingRef.current;
+      target?.focus({ preventScroll: true });
+    }, 60);
+    return () => window.clearTimeout(timer);
+  }, [mode, stepIndex, publishedListing]);
+
+  function pulseOrb(state = ORB_RECEIVED_STATE, duration = 900) {
+    window.clearTimeout(pulseTimer.current);
+    setOrbPulse(state);
+    pulseTimer.current = window.setTimeout(() => setOrbPulse(null), duration);
+  }
 
   function markStepAttempt(stepId) {
     setAttemptedByStep((prev) => ({ ...prev, [stepId]: true }));
@@ -434,7 +355,22 @@ function PublishPage({ app, pathname = "/app/publish" }) {
     }));
   }
 
+  function resetManualDraft() {
+    setDraft(initialDraft);
+    setSavedDraft(JSON.stringify(initialDraft));
+    setDraftListingId(null);
+    setPublishedListing(null);
+    setFeedback("");
+    setDuplicateWarning(false);
+    setAttemptedByStep({});
+    setStepIndex(0);
+  }
+
   async function saveDraft() {
+    if (mode === "review") {
+      await saveImportDrafts();
+      return;
+    }
     setPending(true);
     setFeedback("");
     try {
@@ -447,6 +383,7 @@ function PublishPage({ app, pathname = "/app/publish" }) {
         setDraftListingId(response.listing.id);
         setDuplicateWarning(Boolean(response?.duplicateWarning));
       }
+      setSavedDraft(JSON.stringify(draft));
       pushToast("Utkast sparat.", "success");
     } catch (error) {
       setFeedback(error.message || "Kunde inte spara utkastet.");
@@ -455,20 +392,56 @@ function PublishPage({ app, pathname = "/app/publish" }) {
     }
   }
 
-  function handleNextStep() {
-    if (stepIndex >= publishSteps.length - 1) {
-      return;
+  function goToStep(nextIndex) {
+    setFeedback("");
+    setStepIndex(Math.max(0, Math.min(nextIndex, publishSteps.length - 1)));
+  }
+
+  function startManual() {
+    pulseOrb();
+    setMode("manual");
+  }
+
+  function goBack() {
+    if (stepIndex > 0) {
+      goToStep(stepIndex - 1);
+    } else {
+      setMode("choose");
     }
+  }
+
+  function handleNextStep() {
+    if (advancing || stepIndex >= publishSteps.length - 1) return;
 
     const errors = getStepErrors(currentStep.id, draft);
     if (errors.length > 0) {
       markStepAttempt(currentStep.id);
-      setFeedback(`Fyll i obligatoriska fält: ${errors.join(", ")}.`);
+      setFeedback("");
       return;
     }
 
     setFeedback("");
-    setStepIndex((index) => Math.min(index + 1, publishSteps.length - 1));
+    clearAdvanceTimers();
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+      goToStep(stepIndex + 1);
+      return;
+    }
+    setAdvancePhase("received");
+    advanceTimers.current = [
+      window.setTimeout(() => setAdvancePhase("processing"), RECEIVED_MS),
+      window.setTimeout(() => {
+        goToStep(stepIndex + 1);
+        setAdvancePhase(null);
+      }, RECEIVED_MS + PROCESSING_MS)
+    ];
+  }
+
+  // Enter in a text field answers the question, like the Nästa button.
+  function handleFieldKeyDown(event) {
+    if (event.key !== "Enter" || event.nativeEvent.isComposing) return;
+    if (!event.target.matches?.("input[type=text], input[type=number], input[type=date], input:not([type])")) return;
+    event.preventDefault();
+    handleNextStep();
   }
 
   async function handlePublish() {
@@ -508,543 +481,798 @@ function PublishPage({ app, pathname = "/app/publish" }) {
   }
 
   function resetFlow() {
-    setDraft(initialDraft);
-    setDraftListingId(null);
-    setPublishedListing(null);
+    clearAdvanceTimers();
+    readingAbort.current?.abort();
+    resetManualDraft();
     setPending(false);
     setUploadingImages(false);
-    setFeedback("");
-    setDuplicateWarning(false);
-    setAttemptedByStep({});
-    setStepIndex(0);
+    setAdvancePhase(null);
+    setImportFiles([]);
+    setImportError("");
+    setImportItems([]);
+    setImportSelected({});
+    setImportBusy(false);
+    setEditingImportId(null);
+    setMode("choose");
   }
 
+  // ── Import from documents ────────────────────────────────────────────────────────────────
+
+  function addImportFiles(fileList) {
+    const { accepted, problems } = classifyImportFiles(fileList, importFiles);
+    setImportError(problems.join(" "));
+    if (accepted.length > 0) {
+      setImportFiles((prev) => [...prev, ...accepted]);
+      pulseOrb();
+    }
+  }
+
+  function useSampleFiles() {
+    setImportError("");
+    setImportFiles(sampleImportFiles());
+    pulseOrb();
+  }
+
+  function removeImportFile(id) {
+    setImportError("");
+    setImportFiles((prev) => prev.filter((file) => file.id !== id));
+  }
+
+  function handleReadingProgress(event, total) {
+    setImportProgress((prev) => {
+      const files = { ...prev.files };
+      let { stage, value, currentName } = prev;
+      if (event.phase === "file-start") {
+        files[event.file.id] = { status: "reading" };
+        stage = "reading";
+        currentName = event.file.name;
+      } else if (event.phase === "identifying") {
+        stage = "identifying";
+      } else if (event.phase === "file-done") {
+        files[event.file.id] = { status: "done", count: event.count };
+      } else if (event.phase === "extracting") {
+        stage = "extracting";
+        value = 84;
+      } else if (event.phase === "verifying") {
+        stage = "verifying";
+        value = 95;
+      }
+      if (event.phase === "file-start" || event.phase === "identifying" || event.phase === "file-done") {
+        const done = Object.values(files).filter((file) => file.status === "done").length;
+        value = 6 + Math.round((done / total) * 68);
+      }
+      return { files, stage, value, currentName };
+    });
+  }
+
+  async function startReading() {
+    if (importFiles.length === 0) return;
+    const controller = new AbortController();
+    readingAbort.current = controller;
+    const total = importFiles.length;
+    setImportError("");
+    setImportProgress({ files: {}, stage: "reading", value: 4, currentName: importFiles[0].name });
+    setMode("reading");
+    try {
+      const { listings } = await parseListingDocuments(importFiles, {
+        signal: controller.signal,
+        onProgress: (event) => handleReadingProgress(event, total)
+      });
+      setImportItems(listings);
+      setImportSelected(Object.fromEntries(listings.map((item) => [item.id, true])));
+      setMode("review");
+    } catch (error) {
+      if (error?.name === "AbortError") return;
+      setImportError("Kunde inte läsa dokumenten. Försök igen.");
+      setMode("upload");
+    }
+  }
+
+  function cancelReading() {
+    readingAbort.current?.abort();
+    setMode("upload");
+  }
+
+  function patchImportItem(id, patch) {
+    setImportItems((prev) => prev.map((item) => (item.id === id ? { ...item, ...patch } : item)));
+  }
+
+  function toggleImportItem(id, checked) {
+    setImportSelected((prev) => ({ ...prev, [id]: checked }));
+  }
+
+  function toggleAllImportItems(checked) {
+    setImportSelected(Object.fromEntries(importItems.filter((item) => item.status !== "published").map((item) => [item.id, checked])));
+  }
+
+  function removeImportItem(id) {
+    const remaining = importItems.filter((item) => item.id !== id);
+    setImportItems(remaining);
+    setImportSelected((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+    if (remaining.length === 0) setMode("upload");
+  }
+
+  function startImportEdit(id) {
+    setEditingImportId(id);
+  }
+
+  // Approving hands the edited draft back: the reviewer has looked at it, so nothing is left to double-check, and a
+  // listing with everything filled in is selected for publishing.
+  function approveImportItem(id, nextDraft) {
+    setImportItems((prev) => prev.map((item) => (
+      item.id === id ? { ...item, draft: nextDraft, uncertain: [], error: "", status: item.status === "error" ? "review" : item.status } : item
+    )));
+    if (listMissingFields(nextDraft).length === 0) setImportSelected((prev) => ({ ...prev, [id]: true }));
+  }
+
+  // Saves or publishes every selected listing one after the other; a failure only marks that listing.
+  async function runImportBatch(publish) {
+    const targets = importItems.filter((item) => importSelected[item.id] && item.status !== "published");
+    if (targets.length === 0) return { done: 0, failed: 0 };
+    setImportBusy(true);
+    let failed = 0;
+    for (const item of targets) {
+      let listingId = item.listingId;
+      patchImportItem(item.id, { status: publish ? "publishing" : "saving", error: "" });
+      try {
+        const payload = buildPayload(item.draft, "draft");
+        if (listingId) {
+          await updateListing(listingId, payload);
+        } else {
+          const created = await createListing(payload);
+          listingId = created.listing.id;
+        }
+        if (publish) await publishListing(listingId);
+        patchImportItem(item.id, { status: publish ? "published" : "draft", listingId });
+      } catch (error) {
+        failed += 1;
+        patchImportItem(item.id, { status: "error", listingId, error: error?.message || "Kunde inte spara annonsen." });
+      }
+    }
+    setImportBusy(false);
+    return { done: targets.length - failed, failed };
+  }
+
+  async function publishImportItems() {
+    const { done, failed } = await runImportBatch(true);
+    if (done > 0 && failed === 0) setMode("imported");
+  }
+
+  async function saveImportDrafts() {
+    const { done } = await runImportBatch(false);
+    if (done > 0) pushToast(done === 1 ? "Utkast sparat." : `${done} utkast sparade.`, "success");
+  }
+
+  const selectedImportItems = importItems.filter((item) => importSelected[item.id] && item.status !== "published");
+  const blockedImportItems = selectedImportItems.filter((item) => listMissingFields(item.draft).length > 0);
+  const canPublishImport = selectedImportItems.length > 0 && blockedImportItems.length === 0 && !busy;
+  const importHint = blockedImportItems.length === 0
+    ? ""
+    : blockedImportItems.length === 1
+      ? "1 valt objekt saknar uppgifter. Välj Granska för att komplettera det."
+      : `${blockedImportItems.length} valda objekt saknar uppgifter. Välj Granska för att komplettera dem.`;
+  const publishedImportItems = importItems.filter((item) => item.status === "published");
+  const unpublishedImportCount = importItems.length - publishedImportItems.length;
+  const editingImportItem = importItems.find((item) => item.id === editingImportId) || null;
+
+  const phaseLabel = publishedListing || mode === "imported"
+    ? null
+    : mode === "manual"
+      ? `Fråga ${stepIndex + 1} av ${publishSteps.length}`
+      : { upload: "Ladda upp", reading: "Läser in", review: "Granska" }[mode] || null;
+  const progressValue = mode === "manual"
+    ? ((stepIndex + 1) / publishSteps.length) * 100
+    : { choose: 0, upload: 20, reading: 45, review: 75, imported: 100 }[mode];
+  const showSaveDraft = mode === "manual" || mode === "review";
+
+  const reviewRows = [
+    ["Rubrik", draft.title || "-"],
+    ["Område", draft.district || "-"],
+    ["Typ", draft.type || "-"],
+    ["Yta", `${draft.sizeSqm || "-"} kvm`],
+    ["Team", `${draft.capacity || "-"} platser`],
+    ["Inflyttning", draft.moveInDate || "-"],
+    ["Kommunaltrafik", draft.transitDistance || "-"],
+    ["Avtalsflex", draft.contractFlex || "-"],
+    ["Access", draft.accessHours || "-"],
+    ["Parkering", draft.parkingType || "-"],
+    ["Planlösning", draft.layoutType || "-"],
+    ["Driftkostnader ingår", draft.includeOperatingCosts ? "Ja" : "Nej"],
+    ["Tillgänglighetsanpassad", draft.accessibilityAdapted ? "Ja" : "Nej"],
+    ["Miljöcertifierad", draft.ecoCertified ? "Ja" : "Nej"],
+    ["Bilder", String(draft.images.length)],
+    ["Omslagsfoto", draft.images[0]?.name || "Valt"]
+  ];
+
+  const stageProps = { groupRef: stepRef, headingRef };
+
   return (
-    <AdminPanelShell
-      pathname={myListingsPath}
-      navItems={panelNavItems}
-      bottomNavItems={panelBottomNavItems}
-      sectionTitle="Publicera annons"
-      onLogout={app?.logout}
-    >
-      <div className="space-y-5">
-        <header className="px-1 py-1">
-          <Button
-            type="button"
-            variant="ghost"
-            className="mb-2 h-auto gap-1.5 px-0 text-sm font-semibold text-ink-700 hover:bg-transparent hover:text-[#0b0a0e]"
-            onClick={() => navigateTo(myListingsPath)}
-          >
-            <ArrowLeftIcon className="h-4 w-4" />
-            Tillbaka till mina lokaler
-          </Button>
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Annonsflöde</p>
-              <h1 className="mt-1 text-2xl font-semibold">Publicera annons</h1>
-              <p className="mt-2 text-sm text-ink-600">
-                Lägg upp en komplett annons steg för steg. Utkast sparas löpande och du publicerar när allt är klart.
-              </p>
-            </div>
-          </div>
-        </header>
-
-        <div className={publishedListing ? "grid items-start gap-4" : "grid items-start gap-4 xl:grid-cols-[1.35fr_0.9fr]"}>
-          <div className="space-y-4">
-          <article className="surface self-start p-4 sm:p-5">
-            {!publishedListing ? (
-              <StepPills
-                currentIndex={stepIndex}
-                onSelect={(index) => {
-                  if (index <= stepIndex) {
-                    setStepIndex(index);
-                    return;
-                  }
-                  const errors = getStepErrors(currentStep.id, draft);
-                  if (errors.length > 0) {
-                    markStepAttempt(currentStep.id);
-                    setFeedback(`Fyll i obligatoriska fält i "${currentStep.label}" innan du går vidare.`);
-                    return;
-                  }
-                  setFeedback("");
-                  setStepIndex(index);
-                }}
-              />
-            ) : null}
-
-            {!publishedListing ? (
-              <div className="mt-5 space-y-5">
-                {currentStep.id === "basic" ? (
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <label className="sm:col-span-2">
-                      <FieldLabel required>Rubrik</FieldLabel>
-                      <Input value={draft.title} onChange={(event) => updateField("title", event.target.value)} placeholder="Ex. Modernt kontor nära T-centralen" />
-                    </label>
-                    <label>
-                      <FieldLabel required>Område</FieldLabel>
-                      <Select value={draft.district} onValueChange={(value) => updateField("district", value)}>
-                        <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {districtOptions.map((district) => <SelectItem key={district} value={district}>{district}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </label>
-                    <label>
-                      <FieldLabel required>Typ</FieldLabel>
-                      <Select value={draft.type} onValueChange={(value) => updateField("type", value)}>
-                        <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {listingTypes.map((type) => <SelectItem key={type} value={type}>{type}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </label>
-                    <label className="sm:col-span-2">
-                      <FieldLabel required>Adress</FieldLabel>
-                      <Input value={draft.address} onChange={(event) => updateField("address", event.target.value)} placeholder="Ex. Kungsgatan 12, Stockholm" />
-                    </label>
-                  </div>
-                ) : null}
-
-                {currentStep.id === "terms" ? (
-                  <div className="space-y-4">
-                    <div className="grid gap-4 sm:grid-cols-3">
-                      <label>
-                        <FieldLabel required>Månadshyra</FieldLabel>
-                        <Input type="number" min="0" value={draft.priceMonthly} onChange={(event) => updateField("priceMonthly", event.target.value)} placeholder="Ex. 75000" />
-                      </label>
-                      <label>
-                        <FieldLabel required>Storlek (kvm)</FieldLabel>
-                        <Input type="number" min="0" value={draft.sizeSqm} onChange={(event) => updateField("sizeSqm", event.target.value)} placeholder="Ex. 180" />
-                      </label>
-                      <label>
-                        <FieldLabel required>Team / platser</FieldLabel>
-                        <Input type="number" min="1" value={draft.capacity} onChange={(event) => updateField("capacity", event.target.value)} placeholder="Ex. 16" />
-                      </label>
-                      <label>
-                        <FieldLabel required>Avtalstid</FieldLabel>
-                        <Select value={draft.term} onValueChange={(value) => updateField("term", value)}>
-                          <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            {termOptions.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                      </label>
-                      <label>
-                        <FieldLabel required>Tillgänglighet</FieldLabel>
-                        <Select value={draft.availability} onValueChange={(value) => updateField("availability", value)}>
-                          <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            {availabilityOptions.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                      </label>
-                      <label>
-                        <FieldLabel>Svarstid (timmar)</FieldLabel>
-                        <Input type="number" min="1" value={draft.responseHours} onChange={(event) => updateField("responseHours", event.target.value)} placeholder="Ex. 2" />
-                      </label>
-                    </div>
-
-                    <div className="grid gap-4 sm:grid-cols-3">
-                      <label>
-                        <FieldLabel>Inflyttning</FieldLabel>
-                        <Input type="date" value={draft.moveInDate || ""} onChange={(event) => updateField("moveInDate", event.target.value)} />
-                      </label>
-                      <label>
-                        <FieldLabel>Kommunaltrafik</FieldLabel>
-                        <Select value={draft.transitDistance || "Alla"} onValueChange={(value) => updateField("transitDistance", value === "Alla" ? "" : value)}>
-                          <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            {transitDistanceOptions.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                      </label>
-                      <label>
-                        <FieldLabel>Avtalsflex</FieldLabel>
-                        <Select value={draft.contractFlex || "Alla"} onValueChange={(value) => updateField("contractFlex", value === "Alla" ? "" : value)}>
-                          <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            {contractFlexOptions.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                      </label>
-                      <label>
-                        <FieldLabel>Access</FieldLabel>
-                        <Select value={draft.accessHours || "Alla"} onValueChange={(value) => updateField("accessHours", value === "Alla" ? "" : value)}>
-                          <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            {accessHoursOptions.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                      </label>
-                      <label>
-                        <FieldLabel>Parkering</FieldLabel>
-                        <Select value={draft.parkingType || "Alla"} onValueChange={(value) => updateField("parkingType", value === "Alla" ? "" : value)}>
-                          <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            {parkingTypeOptions.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                      </label>
-                      <label>
-                        <FieldLabel>Planlösning</FieldLabel>
-                        <Select value={draft.layoutType || "Alla"} onValueChange={(value) => updateField("layoutType", value === "Alla" ? "" : value)}>
-                          <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            {layoutTypeOptions.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                      </label>
-                    </div>
-
-                    <div className="grid gap-2 sm:grid-cols-3">
-                      <label className="inline-flex h-[46px] items-center gap-2 rounded-2xl border border-black/10 bg-[#ffffff] px-3 text-xs font-semibold text-ink-700">
-                        <Checkbox checked={Boolean(draft.includeOperatingCosts)} onCheckedChange={(checked) => updateField("includeOperatingCosts", Boolean(checked))} />
-                        Driftkostn. ingår
-                      </label>
-                      <label className="inline-flex h-[46px] items-center gap-2 rounded-2xl border border-black/10 bg-[#ffffff] px-3 text-xs font-semibold text-ink-700">
-                        <Checkbox checked={Boolean(draft.accessibilityAdapted)} onCheckedChange={(checked) => updateField("accessibilityAdapted", Boolean(checked))} />
-                        Tillgänglighetsanp.
-                      </label>
-                      <label className="inline-flex h-[46px] items-center gap-2 rounded-2xl border border-black/10 bg-[#ffffff] px-3 text-xs font-semibold text-ink-700">
-                        <Checkbox checked={Boolean(draft.ecoCertified)} onCheckedChange={(checked) => updateField("ecoCertified", Boolean(checked))} />
-                        Miljöcertifierad
-                      </label>
-                    </div>
-                  </div>
-                ) : null}
-
-                {currentStep.id === "media" ? (
-                  <div className="space-y-4">
-                    <div className="rounded-2xl border border-black/10 bg-[#ffffff] p-3">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <Button type="button" variant="secondary" className="h-auto cursor-pointer gap-1.5 px-3 py-2 text-xs" render={<label />}>
-                          <UploadIcon className="h-4 w-4" />
-                          Ladda upp bilder
-                          <input type="file" accept="image/*" multiple className="hidden" onChange={(event) => void handleAddImages(event)} />
-                        </Button>
-                        <div className="flex items-center gap-2 text-xs">
-                          <span className="text-ink-600">{draft.images.length}/{MAX_IMAGES} bilder</span>
-                          {uploadingImages ? <span className="font-semibold text-ink-700">Bearbetar bilder...</span> : null}
+    <EditorWorkspace size="focus" title="Publicera annons" dirty={dirty} busy={busy} onClose={onClose} onSaveDraft={saveDraft}>
+      {(close) => (
+        <>
+          <header className="shrink-0 bg-surface">
+            <div className="flex items-center justify-between gap-3 px-5 py-3">
+              <div className="flex min-w-0 items-baseline gap-2.5">
+                <p className="text-sm font-semibold text-ink-900">Publicera annons</p>
+                {phaseLabel ? <p className="truncate text-xs font-semibold text-ink-500">{phaseLabel}</p> : null}
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                {mode === "manual" && !publishedListing ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger render={<Button type="button" variant="outline" size="icon" aria-label="FAQ och tips" />}>
+                      <LightbulbIcon className="h-4 w-4" />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" side="bottom" className="w-80">
+                      <div className="space-y-3 p-2">
+                        <div>
+                          <p className="text-sm font-semibold text-strong">FAQ och tips</p>
+                          <p className="mt-1 text-xs text-ink-500">Snabb hjälp medan du fyller i annonsen.</p>
+                        </div>
+                        <div className="grid gap-2">
+                          {publishFaqItems.slice(0, 3).map((item) => (
+                            <div key={item.q} className="rounded-lg border border-veil/10 bg-surface px-3 py-2">
+                              <p className="text-xs font-semibold text-ink-900">{item.q}</p>
+                              <p className="mt-1 text-xs leading-relaxed text-ink-600">{item.a}</p>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="rounded-lg border border-veil/10 bg-canvas px-3 py-2">
+                          <p className="text-xs font-semibold uppercase tracking-wide text-ink-700">Snabba tips</p>
+                          <ul className="mt-2 space-y-1.5 text-xs leading-relaxed text-ink-600">
+                            {publishTips.map((tip) => (
+                              <li key={tip}>• {tip}</li>
+                            ))}
+                          </ul>
                         </div>
                       </div>
-                      <p className="mt-2 text-xs text-ink-600">
-                        Första bilden är omslagsfoto. Du kan välja omslag, ändra ordning, ersätta och radera bilder.
-                      </p>
-
-                      <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                        {draft.images.map((image, index) => (
-                          <article key={image.id} className="rounded-2xl border border-black/10 bg-[#ffffff] p-2.5">
-                            <div className="relative">
-                              <img src={image.src} alt={image.name || `Bild ${index + 1}`} className="h-32 w-full rounded-xl border border-black/10 object-cover" />
-                              {index === 0 ? (
-                                <Badge className="h-auto absolute left-2 top-2 rounded-full bg-[#0b0a0e] px-2 py-0.5 text-[10px] font-semibold text-white">
-                                  Omslagsfoto
-                                </Badge>
-                              ) : null}
-                            </div>
-                            <div className="mt-2 space-y-1.5">
-                              <div className="flex flex-wrap gap-1.5">
-                                {index !== 0 ? (
-                                  <Button type="button" variant="outline" className="h-auto rounded-xl px-2.5 py-1 text-[11px] font-semibold text-ink-700" onClick={() => setCoverImage(index)}>
-                                    Sätt som omslag
-                                  </Button>
-                                ) : null}
-
-                                <Button type="button" variant="outline" className="h-auto cursor-pointer rounded-xl px-2.5 py-1 text-[11px] font-semibold text-ink-700" render={<label />}>
-                                  Ersätt bild
-                                  <input type="file" accept="image/*" className="hidden" onChange={(event) => void handleReplaceImage(index, event)} />
-                                </Button>
-                              </div>
-                              <div className="flex flex-wrap gap-1.5">
-                                <Button type="button" variant="outline" className="h-auto rounded-xl px-2.5 py-1 text-[11px] font-semibold text-ink-700" onClick={() => moveImage(index, -1)} disabled={index === 0}>
-                                  Flytta vänster
-                                </Button>
-                                <Button type="button" variant="outline" className="h-auto rounded-xl px-2.5 py-1 text-[11px] font-semibold text-ink-700" onClick={() => moveImage(index, 1)} disabled={index === draft.images.length - 1}>
-                                  Flytta höger
-                                </Button>
-                                <Button type="button" variant="outline" className="h-auto rounded-xl border-rose-200 bg-rose-50 px-2.5 py-1 text-[11px] font-semibold text-rose-700 hover:bg-rose-100 hover:text-rose-700" onClick={() => removeImage(index)}>
-                                  Radera
-                                </Button>
-                              </div>
-                            </div>
-                          </article>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div>
-                        <FieldLabel>Möblering</FieldLabel>
-                        <FurnishingToggle
-                          options={furnishedOptions}
-                          value={draft.furnished}
-                          onChange={(nextValue) => updateField("furnished", nextValue)}
-                        />
-                      </div>
-                      <label>
-                        <FieldLabel>Egna nyckelord (komma-separerat)</FieldLabel>
-                        <Input
-                          value={draft.additionalAmenities}
-                          onChange={(event) => updateField("additionalAmenities", event.target.value)}
-                          placeholder="Ex. showroom, takterrass, säkerhetsdörr"
-                        />
-                      </label>
-                    </div>
-
-                    <div>
-                      <FieldLabel required>Bekvämligheter</FieldLabel>
-                      <div className="flex flex-wrap gap-2">
-                        {amenityOptions.map((amenity) => {
-                          const active = draft.amenities.includes(amenity.value);
-                          const Icon = amenity.icon;
-                          return (
-                            <Button
-                              key={amenity.value}
-                              type="button"
-                              variant="outline"
-                              className={`h-auto rounded-xl px-3 py-2 text-xs font-semibold ${
-                                active
-                                  ? "border-[#0b0a0e] bg-[#0b0a0e] text-white hover:bg-[#0b0a0e]/90"
-                                  : "border-black/10 text-ink-700"
-                              }`}
-                              onClick={() => toggleAmenity(amenity.value)}
-                            >
-                              <span className="inline-flex items-center gap-1.5">
-                                <Icon className="h-4 w-4 shrink-0" />
-                                {amenity.label}
-                              </span>
-                            </Button>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    <label className="mt-2 block">
-                      <FieldLabel required>Beskrivning</FieldLabel>
-                      <Textarea
-                        className="min-h-32"
-                        value={draft.description}
-                        onChange={(event) => updateField("description", event.target.value)}
-                        placeholder="Beskriv lokalen, planlösning, vad som ingår och varför den passar rätt hyresgäst."
-                      />
-                    </label>
-                  </div>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 ) : null}
-
-                {currentStep.id === "review" ? (
-                  <div className="space-y-4 rounded-2xl border border-black/10 bg-[#ffffff] p-4">
-                    <div className="rounded-xl border border-black/10 bg-[#ffffff] px-3 py-2 text-sm font-semibold text-ink-700">
-                      Granska annonsen. När du publicerar blir objektet synligt direkt för hyresgäster.
-                    </div>
-                    <div className="grid gap-3 text-sm sm:grid-cols-2">
-                      <div className="rounded-xl border border-black/10 bg-[#ffffff] px-3 py-2"><span className="text-ink-500">Rubrik:</span> {draft.title || "-"}</div>
-                      <div className="rounded-xl border border-black/10 bg-[#ffffff] px-3 py-2"><span className="text-ink-500">Område:</span> {draft.district || "-"}</div>
-                      <div className="rounded-xl border border-black/10 bg-[#ffffff] px-3 py-2"><span className="text-ink-500">Typ:</span> {draft.type || "-"}</div>
-                      <div className="rounded-xl border border-black/10 bg-[#ffffff] px-3 py-2"><span className="text-ink-500">Yta:</span> {draft.sizeSqm || "-"} kvm</div>
-                      <div className="rounded-xl border border-black/10 bg-[#ffffff] px-3 py-2"><span className="text-ink-500">Team:</span> {draft.capacity || "-"} platser</div>
-                      <div className="rounded-xl border border-black/10 bg-[#ffffff] px-3 py-2"><span className="text-ink-500">Inflyttning:</span> {draft.moveInDate || "-"}</div>
-                      <div className="rounded-xl border border-black/10 bg-[#ffffff] px-3 py-2"><span className="text-ink-500">Kommunaltrafik:</span> {draft.transitDistance || "-"}</div>
-                      <div className="rounded-xl border border-black/10 bg-[#ffffff] px-3 py-2"><span className="text-ink-500">Avtalsflex:</span> {draft.contractFlex || "-"}</div>
-                      <div className="rounded-xl border border-black/10 bg-[#ffffff] px-3 py-2"><span className="text-ink-500">Access:</span> {draft.accessHours || "-"}</div>
-                      <div className="rounded-xl border border-black/10 bg-[#ffffff] px-3 py-2"><span className="text-ink-500">Parkering:</span> {draft.parkingType || "-"}</div>
-                      <div className="rounded-xl border border-black/10 bg-[#ffffff] px-3 py-2"><span className="text-ink-500">Planlösning:</span> {draft.layoutType || "-"}</div>
-                      <div className="rounded-xl border border-black/10 bg-[#ffffff] px-3 py-2"><span className="text-ink-500">Driftkostn. ingår:</span> {draft.includeOperatingCosts ? "Ja" : "Nej"}</div>
-                      <div className="rounded-xl border border-black/10 bg-[#ffffff] px-3 py-2"><span className="text-ink-500">Tillgänglighetsanp.:</span> {draft.accessibilityAdapted ? "Ja" : "Nej"}</div>
-                      <div className="rounded-xl border border-black/10 bg-[#ffffff] px-3 py-2"><span className="text-ink-500">Miljöcertifierad:</span> {draft.ecoCertified ? "Ja" : "Nej"}</div>
-                      <div className="rounded-xl border border-black/10 bg-[#ffffff] px-3 py-2"><span className="text-ink-500">Bilder:</span> {draft.images.length}</div>
-                      <div className="rounded-xl border border-black/10 bg-[#ffffff] px-3 py-2"><span className="text-ink-500">Omslagsfoto:</span> {draft.images[0]?.name || "Valt"}</div>
-                    </div>
-                    <div className="rounded-xl border border-black/10 bg-[#ffffff] px-3 py-2 text-sm">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Beskrivning</p>
-                      <p className="mt-1 text-ink-700">{draft.description || "-"}</p>
-                    </div>
-                    <div className="rounded-xl border border-black/10 bg-[#ffffff] px-3 py-2">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Bekvämligheter</p>
-                      <div className="mt-2 flex flex-wrap gap-1.5">
-                        {mergeAmenities(draft).map((amenity) => {
-                          const Icon = amenityIconFor(amenity);
-                          return (
-                            <span key={amenity} className={propertyCardAmenityChipClass}>
-                              <Icon className="h-3.5 w-3.5 shrink-0 text-ink-700" />
-                              {amenity}
-                            </span>
-                          );
-                        })}
-                        {mergeAmenities(draft).length === 0 ? <span className="text-xs text-ink-500">Inga valda.</span> : null}
-                      </div>
-                    </div>
-                  </div>
-                ) : null}
-
-                {feedback ? <p className="rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">{feedback}</p> : null}
-                {currentErrors.length > 0 ? <p className="rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">Saknade fält: {currentErrors.join(", ")}.</p> : null}
-                {duplicateWarning ? <p className="rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">Liknande annons hittad. Kontrollera rubrik/adress innan publicering.</p> : null}
-
-                <div className="flex flex-wrap items-center justify-between gap-2 border-t border-black/10 pt-4">
-                  {stepIndex > 0 ? (
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      className="h-auto px-4"
-                      onClick={() => setStepIndex((index) => Math.max(0, index - 1))}
-                      disabled={pending}
-                    >
-                      Föregående
-                    </Button>
-                  ) : null}
-
-                  <div className="ml-auto flex flex-wrap gap-2">
-                    <Button type="button" variant="secondary" className="h-auto px-4" onClick={() => void saveDraft()} disabled={pending || uploadingImages}>
-                      <SaveIcon className="mr-1.5 h-4 w-4" />
-                      {pending ? "Sparar..." : "Spara utkast"}
-                    </Button>
-
-                    {currentStep.id !== "review" ? (
-                      <Button type="button" className="h-auto px-4" onClick={handleNextStep} disabled={pending || uploadingImages}>
-                        Nästa steg
-                      </Button>
-                    ) : (
-                      <Button type="button" className="h-auto px-4" onClick={() => void handlePublish()} disabled={pending || uploadingImages}>
-                        <BuildingIcon className="mr-1.5 h-4 w-4" />
-                        {pending ? "Publicerar..." : "Publicera annons"}
-                      </Button>
-                    )}
-                  </div>
-                </div>
+                <Button type="button" variant="outline" size="icon" aria-label="Stäng publicering" disabled={busy} onClick={close}>
+                  <XIcon />
+                </Button>
               </div>
+            </div>
+            {!publishedListing ? (
+              <Progress
+                value={progressValue}
+                aria-label="Framsteg i publiceringen"
+                className="gap-0 [&_[data-slot=progress-track]]:h-0.5 [&_[data-slot=progress-track]]:rounded-none [&_[data-slot=progress-indicator]]:duration-500"
+              />
             ) : (
-              <div className="space-y-6">
-                <div className="flex flex-col gap-4 rounded-3xl border border-black/10 bg-[#ffffff] p-5 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="flex gap-4">
-                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-700">
-                      <CheckBadgeIcon className="h-6 w-6" />
-                    </span>
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Publicerad</p>
-                      <h2 className="mt-1 text-3xl font-semibold leading-tight text-[#0b0a0e]">Annonsen är publicerad</h2>
-                      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-700">
-                        Objektet är nu aktivt i sökflödet och kan ses av hyresgäster. Förhandsgranskningen nedan visar hur annonsen presenteras.
-                      </p>
-                    </div>
-                  </div>
-                  <Button
-                    type="button"
-                    className="h-auto shrink-0 px-5"
-                    onClick={() => navigateTo(`/app/listings/${encodeURIComponent(publishedListing.id)}`)}
-                  >
+              <div className="h-0.5 bg-border" />
+            )}
+          </header>
+
+          <div className="min-h-0 flex-1 overflow-y-auto bg-surface">
+            {publishedListing ? (
+              <div className="mx-auto flex w-full max-w-2xl flex-col items-center px-5 pb-8 pt-[clamp(1.25rem,6vh,3rem)] text-center">
+                <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-700">
+                  <CheckBadgeIcon className="h-7 w-7" />
+                </span>
+                <h2 className="mt-5 text-2xl font-semibold tracking-tight text-strong sm:text-3xl">Annonsen är publicerad</h2>
+                <p className="mt-3 max-w-md text-base leading-relaxed text-ink-600">
+                  Objektet är nu aktivt i sökflödet och kan ses av hyresgäster. Förhandsgranskningen nedan visar hur annonsen presenteras.
+                </p>
+                <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
+                  <Button type="button" className="h-auto px-4" onClick={() => navigateTo(`/app/listings/${encodeURIComponent(publishedListing.id)}`)}>
                     Visa annons live
                     <ExternalLinkIcon className="ml-1.5 h-4 w-4" />
                   </Button>
+                  <Button type="button" variant="secondary" className="h-auto px-4" onClick={() => navigateTo(myListingsPath)}>
+                    Gå till mina objekt
+                  </Button>
+                  <Button type="button" variant="secondary" className="h-auto px-4" onClick={resetFlow}>
+                    Publicera ytterligare annons
+                  </Button>
                 </div>
+                <div className="mt-10 w-full text-left">
+                  <div className="mb-3 flex items-center justify-between gap-2">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Förhandsgranskning</p>
+                    <Badge variant="outline" className="h-auto rounded-full bg-control px-3 py-1 text-xs font-semibold text-ink-700">
+                      Kvalitet {qualityScore}
+                    </Badge>
+                  </div>
+                  <ListingPreview draft={draft} />
+                </div>
+              </div>
+            ) : mode === "imported" ? (
+              <div className="mx-auto flex w-full max-w-2xl flex-col items-center px-5 pb-8 pt-[clamp(1.25rem,6vh,3rem)] text-center">
+                <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-700">
+                  <CheckBadgeIcon className="h-7 w-7" />
+                </span>
+                <h2 className="mt-5 text-2xl font-semibold tracking-tight text-strong sm:text-3xl">
+                  {publishedImportItems.length === 1 ? "1 annons är publicerad" : `${publishedImportItems.length} annonser är publicerade`}
+                </h2>
+                <p className="mt-3 max-w-md text-base leading-relaxed text-ink-600">Objekten är nu aktiva i sökflödet och kan ses av hyresgäster.</p>
+                <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
+                  <Button type="button" className="h-auto px-4" onClick={() => navigateTo(myListingsPath)}>
+                    Gå till mina objekt
+                  </Button>
+                  {unpublishedImportCount > 0 ? (
+                    <Button type="button" variant="secondary" className="h-auto px-4" onClick={() => setMode("review")}>
+                      Granska resterande ({unpublishedImportCount})
+                    </Button>
+                  ) : (
+                    <Button type="button" variant="secondary" className="h-auto px-4" onClick={resetFlow}>
+                      Publicera fler
+                    </Button>
+                  )}
+                </div>
+                <div className="mt-10 w-full">
+                  <PublishImportDone items={publishedImportItems} onOpenListing={(listingId) => navigateTo(`/app/listings/${encodeURIComponent(listingId)}`)} />
+                </div>
+              </div>
+            ) : (
+              <div className="mx-auto flex w-full max-w-2xl flex-col items-center px-5 pb-8 pt-[clamp(1.25rem,6vh,3rem)] text-center">
+                <AssistantOrb state={orbState} speed={busy || mode === "reading" ? 1.3 : 1} engaged={orbEngaged} />
+                <p role="status" aria-live="polite" className="sr-only">{statusMessage}</p>
 
-                <div className="grid gap-4 lg:grid-cols-[minmax(0,0.95fr)_minmax(280px,0.45fr)]">
-                  <article className="rounded-3xl border border-black/10 bg-[#ffffff] p-4 sm:p-5">
-                    <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Förhandsgranskning</p>
-                        <h3 className="mt-1 text-xl font-semibold text-[#0b0a0e]">Publicerad annons</h3>
+                {mode === "choose" ? (
+                  <PublishStage
+                    key="choose"
+                    question="Hur vill du skapa annonsen?"
+                    helper="Fyll i uppgifterna själv eller låt oss läsa in dina befintliga dokument."
+                    {...stageProps}
+                  >
+                    <PublishStart onManual={startManual} onUpload={() => setMode("upload")} />
+                  </PublishStage>
+                ) : null}
+
+                {mode === "upload" ? (
+                  <PublishStage
+                    key="upload"
+                    question="Vilka dokument vill du läsa in?"
+                    helper="Lägg till Excel-ark, prospekt eller annan data. Flera filer och flera objekt går bra."
+                    actions={(
+                      <>
+                        <Button type="button" variant="secondary" className="h-auto px-4" onClick={() => setMode("choose")}>
+                          <ChevronLeft className="mr-1.5 h-4 w-4" />
+                          Föregående
+                        </Button>
+                        <Button type="button" className="h-auto px-4" onClick={() => void startReading()} disabled={importFiles.length === 0}>
+                          {importFiles.length === 0 ? "Läs in filer" : importFiles.length === 1 ? "Läs in 1 fil" : `Läs in ${importFiles.length} filer`}
+                          <ChevronRight className="ml-1.5 h-4 w-4" />
+                        </Button>
+                      </>
+                    )}
+                    {...stageProps}
+                  >
+                    <PublishImportUpload
+                      files={importFiles}
+                      error={importError}
+                      onAddFiles={addImportFiles}
+                      onRemoveFile={removeImportFile}
+                      onUseSamples={useSampleFiles}
+                      onDragActiveChange={setDragActive}
+                    />
+                  </PublishStage>
+                ) : null}
+
+                {mode === "reading" ? (
+                  <PublishStage
+                    key="reading"
+                    question="Läser in dina dokument"
+                    helper={importStageMessage(importProgress)}
+                    actions={(
+                      <Button type="button" variant="secondary" className="h-auto px-4" onClick={cancelReading}>
+                        Avbryt inläsning
+                      </Button>
+                    )}
+                    {...stageProps}
+                  >
+                    <PublishImportReading files={importFiles} progress={importProgress} />
+                  </PublishStage>
+                ) : null}
+
+                {mode === "review" ? (
+                  <PublishStage
+                    key="review-import"
+                    question={`Vi hittade ${importItems.length} objekt`}
+                    helper="Granska uppgifterna innan något publiceras. Komplettera det som saknas med Granska."
+                    actions={(
+                      <>
+                        {importHint ? <p className="w-full text-center text-sm font-medium text-amber-700">{importHint}</p> : null}
+                        <Button type="button" variant="secondary" className="h-auto px-4" onClick={() => setMode("upload")} disabled={busy}>
+                          <ChevronLeft className="mr-1.5 h-4 w-4" />
+                          Föregående
+                        </Button>
+                        <Button type="button" className="h-auto px-4" onClick={() => void publishImportItems()} disabled={!canPublishImport}>
+                          <BuildingIcon className="mr-1.5 h-4 w-4" />
+                          {importBusy
+                            ? "Publicerar..."
+                            : selectedImportItems.length === 1
+                              ? "Publicera 1 annons"
+                              : `Publicera ${selectedImportItems.length} annonser`}
+                        </Button>
+                      </>
+                    )}
+                    {...stageProps}
+                  >
+                    <PublishImportReview
+                      items={importItems}
+                      selected={importSelected}
+                      onToggle={toggleImportItem}
+                      onToggleAll={toggleAllImportItems}
+                      onEdit={startImportEdit}
+                      onRemove={removeImportItem}
+                    />
+                  </PublishStage>
+                ) : null}
+
+                {mode === "manual" ? (
+                  <PublishStage
+                    key={`manual-${currentStep.id}`}
+                    question={currentStep.question}
+                    helper={currentStep.helper}
+                    advancing={advancing}
+                    onFieldsKeyDown={handleFieldKeyDown}
+                    actions={(
+                      <>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          className="h-auto px-4"
+                          onClick={goBack}
+                          disabled={pending || advancing}
+                        >
+                          <ChevronLeft className="mr-1.5 h-4 w-4" />
+                          Föregående
+                        </Button>
+
+                        {currentStep.id !== "review" ? (
+                          <Button type="button" className="h-auto px-4" onClick={handleNextStep} disabled={busy}>
+                            Nästa
+                            <ChevronRight className="ml-1.5 h-4 w-4" />
+                          </Button>
+                        ) : (
+                          <Button type="button" className="h-auto px-4" onClick={() => void handlePublish()} disabled={busy}>
+                            <BuildingIcon className="mr-1.5 h-4 w-4" />
+                            {pending ? "Publicerar..." : "Publicera annons"}
+                          </Button>
+                        )}
+                      </>
+                    )}
+                    {...stageProps}
+                  >
+                    {currentStep.id === "title" ? (
+                      <StepFields>
+                        <StepField label="Rubrik" required className="max-w-md">
+                          <Input value={draft.title} onChange={(event) => updateField("title", event.target.value)} placeholder="Ex. Modernt kontor nära T-centralen" />
+                        </StepField>
+                      </StepFields>
+                    ) : null}
+
+                    {currentStep.id === "place" ? (
+                      <div className="mx-auto grid w-full max-w-[26rem] grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-2">
+                        <StepField label="Område" required>
+                          <Select value={draft.district} onValueChange={(value) => updateField("district", value)}>
+                            <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {districtOptions.map((district) => <SelectItem key={district} value={district}>{district}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </StepField>
+                        <StepField label="Typ" required>
+                          <Select value={draft.type} onValueChange={(value) => updateField("type", value)}>
+                            <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {listingTypes.map((type) => <SelectItem key={type} value={type}>{type}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </StepField>
+                        <StepField label="Adress" required className="sm:col-span-2">
+                          <Input value={draft.address} onChange={(event) => updateField("address", event.target.value)} placeholder="Ex. Kungsgatan 12, Stockholm" />
+                        </StepField>
                       </div>
-                      <Badge variant="outline" className="h-auto rounded-full bg-[#ffffff] px-3 py-1 text-xs font-semibold text-ink-700">
-                        Kvalitet {qualityScore}
-                      </Badge>
-                    </div>
-                    <ListingPreview draft={draft} />
-                  </article>
+                    ) : null}
 
-                  <aside className="rounded-3xl border border-black/10 bg-[#ffffff] p-4 sm:p-5">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Nästa steg</p>
-                    <h3 className="mt-1 text-lg font-semibold text-[#0b0a0e]">Annonsen är live</h3>
-                    <p className="mt-2 text-sm leading-relaxed text-ink-700">
-                      Du kan öppna den publika sidan, gå tillbaka till dina objekt eller skapa en ny annons.
-                    </p>
-                    <div className="mt-5 grid gap-2">
-                      <Button
-                        type="button"
-                        className="h-auto w-full px-4"
-                        onClick={() => navigateTo(`/app/listings/${encodeURIComponent(publishedListing.id)}`)}
-                      >
-                        Visa annons live
-                      </Button>
-                      <Button type="button" variant="secondary" className="h-auto w-full px-4" onClick={() => navigateTo(myListingsPath)}>
-                        Gå till mina objekt
-                      </Button>
-                      <Button type="button" variant="secondary" className="h-auto w-full px-4" onClick={resetFlow}>
-                        Publicera ytterligare annons
-                      </Button>
-                    </div>
-                  </aside>
-                </div>
+                    {currentStep.id === "size" ? (
+                      <StepFields>
+                        <StepField label="Storlek" required className="sm:w-40">
+                          <UnitInput unit="kvm" type="number" min="0" value={draft.sizeSqm} onChange={(event) => updateField("sizeSqm", event.target.value)} placeholder="180" />
+                        </StepField>
+                        <StepField label="Team / platser" required className="sm:w-40">
+                          <Input type="number" min="1" inputMode="numeric" value={draft.capacity} onChange={(event) => updateField("capacity", event.target.value)} placeholder="16" />
+                        </StepField>
+                      </StepFields>
+                    ) : null}
+
+                    {currentStep.id === "rent" ? (
+                      <StepFields>
+                        <StepField label="Månadshyra" required className="sm:w-48">
+                          <UnitInput unit="kr/mån" type="number" min="0" value={draft.priceMonthly} onChange={(event) => updateField("priceMonthly", event.target.value)} placeholder="75000" />
+                        </StepField>
+                        <StepField label="Avtalstid" required className="sm:w-52">
+                          <Select value={draft.term} onValueChange={(value) => updateField("term", value)}>
+                            <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {termOptions.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </StepField>
+                      </StepFields>
+                    ) : null}
+
+                    {currentStep.id === "availability" ? (
+                      <StepFields>
+                        <StepField label="Tillgänglighet" required className="sm:w-56">
+                          <Select value={draft.availability} onValueChange={(value) => updateField("availability", value)}>
+                            <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {availabilityOptions.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </StepField>
+                        <StepField label="Svarstid" className="sm:w-32">
+                          <UnitInput unit="tim" type="number" min="1" value={draft.responseHours} onChange={(event) => updateField("responseHours", event.target.value)} placeholder="2" />
+                        </StepField>
+                        <StepField label="Inflyttning" className="sm:w-44">
+                          <Input type="date" value={draft.moveInDate || ""} onChange={(event) => updateField("moveInDate", event.target.value)} />
+                        </StepField>
+                      </StepFields>
+                    ) : null}
+
+                    {currentStep.id === "access" ? (
+                      <StepFields>
+                        <StepField label="Kommunaltrafik" className="sm:w-44">
+                          <Select value={draft.transitDistance || "Alla"} onValueChange={(value) => updateField("transitDistance", value === "Alla" ? "" : value)}>
+                            <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {transitDistanceOptions.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </StepField>
+                        <StepField label="Avtalsflex" className="sm:w-44">
+                          <Select value={draft.contractFlex || "Alla"} onValueChange={(value) => updateField("contractFlex", value === "Alla" ? "" : value)}>
+                            <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {contractFlexOptions.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </StepField>
+                        <StepField label="Access" className="sm:w-44">
+                          <Select value={draft.accessHours || "Alla"} onValueChange={(value) => updateField("accessHours", value === "Alla" ? "" : value)}>
+                            <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {accessHoursOptions.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </StepField>
+                        <StepField label="Parkering" className="sm:w-44">
+                          <Select value={draft.parkingType || "Alla"} onValueChange={(value) => updateField("parkingType", value === "Alla" ? "" : value)}>
+                            <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {parkingTypeOptions.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </StepField>
+                        <StepField label="Planlösning" className="sm:w-44">
+                          <Select value={draft.layoutType || "Alla"} onValueChange={(value) => updateField("layoutType", value === "Alla" ? "" : value)}>
+                            <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {layoutTypeOptions.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </StepField>
+                      </StepFields>
+                    ) : null}
+
+                    {currentStep.id === "requirements" ? (
+                      <StepFields className="gap-2">
+                        <label className={checkOptionClass}>
+                          <Checkbox checked={Boolean(draft.includeOperatingCosts)} onCheckedChange={(checked) => updateField("includeOperatingCosts", Boolean(checked))} />
+                          Driftkostnader ingår
+                        </label>
+                        <label className={checkOptionClass}>
+                          <Checkbox checked={Boolean(draft.accessibilityAdapted)} onCheckedChange={(checked) => updateField("accessibilityAdapted", Boolean(checked))} />
+                          Tillgänglighetsanpassad
+                        </label>
+                        <label className={checkOptionClass}>
+                          <Checkbox checked={Boolean(draft.ecoCertified)} onCheckedChange={(checked) => updateField("ecoCertified", Boolean(checked))} />
+                          Miljöcertifierad
+                        </label>
+                      </StepFields>
+                    ) : null}
+
+                    {currentStep.id === "photos" ? (
+                      <div className="mx-auto w-full max-w-xl space-y-4">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <Button type="button" variant="secondary" className="h-auto cursor-pointer gap-1.5 px-3 py-2 text-xs" nativeButton={false} render={<label />}>
+                            <UploadIcon className="h-4 w-4" />
+                            Ladda upp bilder
+                            <input type="file" accept="image/*" multiple className="hidden" onChange={(event) => void handleAddImages(event)} />
+                          </Button>
+                          <div className="flex items-center gap-2 text-xs">
+                            <span className="text-ink-600">{draft.images.length}/{MAX_IMAGES} bilder</span>
+                            {uploadingImages ? <span className="font-semibold text-ink-700">Bearbetar bilder...</span> : null}
+                          </div>
+                        </div>
+                        <p className="text-xs text-ink-600">
+                          Första bilden är omslagsfoto. Du kan välja omslag, ändra ordning, ersätta och radera bilder.
+                        </p>
+
+                        <div className="grid gap-x-4 gap-y-5 sm:grid-cols-2">
+                          {draft.images.map((image, index) => (
+                            <div key={image.id} className="space-y-2">
+                              <div className="relative">
+                                <img src={image.src} alt={image.name || `Bild ${index + 1}`} className="h-36 w-full rounded-xl object-cover ring-1 ring-veil/10" />
+                                {index === 0 ? (
+                                  <Badge className="h-auto absolute left-2 top-2 rounded-full bg-strong px-2 py-0.5 text-[10px] font-semibold text-on-strong">
+                                    Omslagsfoto
+                                  </Badge>
+                                ) : null}
+                              </div>
+                              <div className="space-y-1.5">
+                                <div className="flex flex-wrap gap-1.5">
+                                  {index !== 0 ? (
+                                    <Button type="button" variant="outline" className="h-auto rounded-md px-2.5 py-1 text-[11px] font-semibold text-ink-700" onClick={() => setCoverImage(index)}>
+                                      Sätt som omslag
+                                    </Button>
+                                  ) : null}
+
+                                  <Button type="button" variant="outline" className="h-auto cursor-pointer rounded-md px-2.5 py-1 text-[11px] font-semibold text-ink-700" nativeButton={false} render={<label />}>
+                                    Ersätt bild
+                                    <input type="file" accept="image/*" className="hidden" onChange={(event) => void handleReplaceImage(index, event)} />
+                                  </Button>
+                                </div>
+                                <div className="flex flex-wrap gap-1.5">
+                                  <Button type="button" variant="outline" className="h-auto rounded-md px-2.5 py-1 text-[11px] font-semibold text-ink-700" onClick={() => moveImage(index, -1)} disabled={index === 0}>
+                                    Flytta vänster
+                                  </Button>
+                                  <Button type="button" variant="outline" className="h-auto rounded-md px-2.5 py-1 text-[11px] font-semibold text-ink-700" onClick={() => moveImage(index, 1)} disabled={index === draft.images.length - 1}>
+                                    Flytta höger
+                                  </Button>
+                                  <Button type="button" variant="outline" className="h-auto rounded-md border-rose-200 bg-rose-50 px-2.5 py-1 text-[11px] font-semibold text-rose-700 hover:bg-rose-100 hover:text-rose-700" onClick={() => removeImage(index)}>
+                                    Radera
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+
+                    {currentStep.id === "amenities" ? (
+                      <div className="mx-auto w-full max-w-xl space-y-6">
+                        <div className="grid gap-x-4 gap-y-5 sm:grid-cols-[18rem_minmax(0,1fr)]">
+                          <div>
+                            <FieldLabel>Möblering</FieldLabel>
+                            <FurnishingToggle
+                              options={furnishedOptions}
+                              value={draft.furnished}
+                              onChange={(nextValue) => updateField("furnished", nextValue)}
+                            />
+                          </div>
+                          <StepField label="Egna nyckelord">
+                            <Input
+                              value={draft.additionalAmenities}
+                              onChange={(event) => updateField("additionalAmenities", event.target.value)}
+                              placeholder="Komma-separerade, t.ex. showroom"
+                            />
+                          </StepField>
+                        </div>
+
+                        <div>
+                          <FieldLabel required>Bekvämligheter</FieldLabel>
+                          <div className="flex flex-wrap gap-2">
+                            {amenityOptions.map((amenity) => {
+                              const active = draft.amenities.includes(amenity.value);
+                              const Icon = amenity.icon;
+                              return (
+                                <Button
+                                  key={amenity.value}
+                                  type="button"
+                                  variant="outline"
+                                  className={`h-auto rounded-xl px-3 py-2 text-xs font-semibold ${
+                                    active
+                                      ? "border-strong bg-strong text-on-strong hover:bg-strong/90"
+                                      : "border-veil/10 text-ink-700"
+                                  }`}
+                                  onClick={() => toggleAmenity(amenity.value)}
+                                >
+                                  <span className="inline-flex items-center gap-1.5">
+                                    <Icon className="h-4 w-4 shrink-0" />
+                                    {amenity.label}
+                                  </span>
+                                </Button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    ) : null}
+
+                    {currentStep.id === "description" ? (
+                      <StepFields>
+                        <StepField label="Beskrivning" required className="max-w-lg">
+                          <Textarea
+                            className="min-h-36"
+                            value={draft.description}
+                            onChange={(event) => updateField("description", event.target.value)}
+                            placeholder="Beskriv lokalen, planlösning, vad som ingår och varför den passar rätt hyresgäst."
+                          />
+                        </StepField>
+                      </StepFields>
+                    ) : null}
+
+                    {currentStep.id === "review" ? (
+                      <div className="mx-auto w-full max-w-2xl space-y-6">
+                        <p className="text-center text-sm font-semibold text-ink-700">
+                          Granska annonsen. När du publicerar blir objektet synligt direkt för hyresgäster.
+                        </p>
+                        <dl className="grid gap-x-10 text-sm sm:grid-cols-2">
+                          {reviewRows.map(([label, value]) => (
+                            <div key={label} className="flex items-baseline justify-between gap-4 border-b border-veil/10 py-2.5">
+                              <dt className="shrink-0 text-ink-500">{label}</dt>
+                              <dd className="min-w-0 break-words text-right font-medium text-ink-900">{value}</dd>
+                            </div>
+                          ))}
+                        </dl>
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Beskrivning</p>
+                          <p className="mt-1.5 text-sm leading-relaxed text-ink-700">{draft.description || "-"}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Bekvämligheter</p>
+                          <div className="mt-2 flex flex-wrap gap-1.5">
+                            {mergeAmenities(draft).map((amenity) => {
+                              const Icon = amenityIconFor(amenity);
+                              return (
+                                <span key={amenity} className={propertyCardAmenityChipClass}>
+                                  <Icon className="h-3.5 w-3.5 shrink-0 text-ink-700" />
+                                  {amenity}
+                                </span>
+                              );
+                            })}
+                            {mergeAmenities(draft).length === 0 ? <span className="text-xs text-ink-500">Inga valda.</span> : null}
+                          </div>
+                        </div>
+                      </div>
+                    ) : null}
+
+                    {inlineError ? <p role="alert" className="text-center text-sm font-medium text-rose-600">{inlineError}</p> : null}
+                    {duplicateWarning ? <p className="text-center text-sm text-amber-700">Liknande annons hittad. Kontrollera rubrik/adress innan publicering.</p> : null}
+                  </PublishStage>
+                ) : null}
               </div>
             )}
-          </article>
-
-            {!publishedListing ? (
-            <article className="surface p-4">
-              <Accordion
-                value={showFaqTips ? ["faq-tips"] : []}
-                onValueChange={(next) => setShowFaqTips(next.length > 0)}
-              >
-                <AccordionItem value="faq-tips" className="border-b-0">
-                  <AccordionTrigger className="items-center p-0 hover:no-underline [&>svg]:hidden">
-                    <h3 className="text-base font-semibold">FAQ och tips</h3>
-                    <span
-                      aria-hidden="true"
-                      className="ui-chevron transition-transform duration-200 group-aria-expanded/accordion-trigger:rotate-180"
-                    />
-                  </AccordionTrigger>
-                  <AccordionContent className="p-0">
-                    <div className="grid gap-3 pt-3 sm:grid-cols-2">
-                      {publishFaqItems.slice(0, 4).map((item) => (
-                        <div key={item.q} className="rounded-xl border border-black/10 bg-[#ffffff] px-3 py-2.5">
-                          <p className="text-xs font-semibold text-ink-900">{item.q}</p>
-                          <p className="mt-1 text-xs text-ink-600">{item.a}</p>
-                        </div>
-                      ))}
-                      <div className="rounded-xl border border-black/10 bg-[#ffffff] px-3 py-2.5">
-                        <p className="text-xs font-semibold text-ink-900">{publishFaqItems[4].q}</p>
-                        <p className="mt-1 text-xs text-ink-600">{publishFaqItems[4].a}</p>
-                      </div>
-                      <div className="rounded-xl border border-black/10 bg-[#ffffff] px-3 py-2.5">
-                        <p className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-ink-700">
-                          Snabba tips
-                          <LightbulbIcon className="h-4 w-4 text-[#0b0a0e]" />
-                        </p>
-                        <ul className="mt-2 space-y-1.5 text-xs text-ink-600">
-                          {publishTips.map((tip) => (
-                            <li key={tip}>{tip}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </article>
-            ) : null}
           </div>
 
-          {!publishedListing ? (
-          <aside className="space-y-4 xl:sticky xl:top-4 xl:self-start">
-            <article className="surface p-4">
-              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                <h3 className="text-xl font-semibold text-[#0b0a0e]">Förhandsvisning</h3>
-                <div className="min-w-[120px] rounded-xl border border-black/10 bg-[#ffffff] px-2.5 py-2">
-                  <div className="flex items-end justify-between gap-2">
-                    <span className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">Kvalitet</span>
-                    <span className="text-base font-semibold leading-none text-ink-900">{qualityScore}</span>
-                  </div>
-                  <div className="mt-1.5 h-1.5 w-full rounded-full bg-[#dce3ef]">
-                    <div className="h-full rounded-full bg-[#0b0a0e]" style={{ width: `${qualityScore}%` }} />
-                  </div>
-                </div>
-              </div>
-              <ListingPreview draft={draft} />
-            </article>
-          </aside>
+          {editingImportItem ? (
+            <ImportedListingEditor
+              key={editingImportItem.id}
+              item={editingImportItem}
+              position={importItems.findIndex((entry) => entry.id === editingImportItem.id) + 1}
+              total={importItems.length}
+              others={app.listings || []}
+              app={app}
+              onApprove={(nextDraft) => approveImportItem(editingImportItem.id, nextDraft)}
+              onClose={() => setEditingImportId(null)}
+            />
           ) : null}
-        </div>
-      </div>
-    </AdminPanelShell>
+
+          {!publishedListing && mode !== "imported" ? (
+            <footer className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-t border-border bg-surface px-5 py-3">
+              <Button type="button" variant="outline" className="h-auto px-4" onClick={close} disabled={busy}>
+                Avbryt
+              </Button>
+              {showSaveDraft ? (
+                <Button type="button" variant="secondary" className="h-auto px-4" onClick={() => void saveDraft()} disabled={busy}>
+                  <SaveIcon className="mr-1.5 h-4 w-4" />
+                  {pending || importBusy ? "Sparar..." : "Spara utkast"}
+                </Button>
+              ) : <span />}
+            </footer>
+          ) : null}
+        </>
+      )}
+    </EditorWorkspace>
   );
 }
 

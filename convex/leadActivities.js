@@ -43,7 +43,7 @@ export const list = queryGeneric({
 export const create = mutationGeneric({
   args: {
     leadId: v.string(),
-    type: v.union(v.literal("note"), v.literal("call"), v.literal("email"), v.literal("viewing")),
+    type: v.union(v.literal("note"), v.literal("call"), v.literal("email"), v.literal("meeting"), v.literal("viewing")),
     body: v.string()
   },
   handler: async (ctx, args) => {

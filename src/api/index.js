@@ -150,3 +150,8 @@ export const prospectSharingApi = {
 export const aiApi = {
   runSearch: (payload) => apiClient.query(convexApiRefs.ai.search, payload, "Kunde inte köra AI-sökningen.")
 };
+
+export const matchFeedbackApi = {
+  dismiss: (listingId, reason) =>
+    apiClient.mutation(convexApiRefs.matchFeedback.dismiss, { listingId, reason }, "Kunde inte spara din återkoppling.")
+};

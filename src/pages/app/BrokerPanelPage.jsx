@@ -1,16 +1,22 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Area, AreaChart } from "recharts";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
+import EditorWorkspace from "../../components/layout/EditorWorkspace";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { Card } from "@/components/ui/card";
+import { useEffect, useMemo, useState } from "react";
+import LeadAssistant from "../../components/app/LeadAssistant";
+import { LeadActivityLog, LeadInterestCard, leadCardClass } from "../../components/app/LeadPanelCards";
+import { firstName as firstNameOf } from "../../lib/leadAssistant";
+import BrokerOverview from "../../components/admin/BrokerOverview";
 import { leadActivitiesApi, listingApi, prospectCommentsApi, prospectsApi } from "../../api";
 import { formatDate } from "../../lib/formatters";
-import { navigateTo } from "../../lib/router";
+import { navigateTo, normalizeAppRole } from "../../lib/router";
 import AdminPanelShell from "../../components/layout/AdminPanelShell";
+import { BrokerAssistantPage, BrokerAssistantProvider } from "../../components/app/BrokerAssistant";
 import SidePanelFrame from "../../components/layout/SidePanelFrame";
 import StatusPill, {
   LEAD_STATUS_ORDER,
   listingStatusLabel,
   listingStatusOptions,
-  leadStatusLabel,
   leadStatusOptions
 } from "../../components/app/StatusPill";
 import {
@@ -19,21 +25,19 @@ import {
   CalendarIcon,
   LayoutDashboardIcon,
   MessageSquareIcon,
-  MoreHorizontalIcon,
   PdfIcon,
   PlusIcon,
-  SearchIcon,
   SettingsGearIcon,
   SparklesIcon,
-  StarIcon,
   SupportIcon,
   UserIcon,
   UsersGroupIcon,
   XIcon
 } from "../../components/icons/UiIcons";
-import PanelProfileSection from "./PanelProfileSection";
+import AccountWindow from "../../components/account/AccountWindow";
+import { accountBackgroundPath, parseAccountPath } from "../../lib/accountPages";
 import MessagesPage from "./MessagesPage";
-import { useListingEditorState, ListingEditorSections, ListingEditorFooterActions } from "../../components/app/ListingEditorOverlay";
+import ListingEditorOverlay from "../../components/app/ListingEditorOverlay";
 import { useProspectEditorState, ProspectEditorSections, ProspectEditorFooterActions } from "../../components/app/ProspectEditorSections";
 import ProspectCommentThread from "../../components/app/ProspectCommentThread";
 import ProspectVersionHistoryPanel from "../../components/app/ProspectVersionHistoryPanel";
@@ -42,18 +46,23 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { Archive, ArrowUpRight, Bot, ChevronLeft, ChevronRight, CircleDot, Coins, Eye, EyeOff, FileText, LayoutDashboard, MapPin, MessageSquare, Paperclip, Pencil, Settings, Sparkles, Trash2, UserRound, Users } from "lucide-react";
+import { cn } from "cn";
+import ProspectAssistant from "../../components/app/ProspectAssistant";
+import ProspectIcon from "../../components/app/ProspectIcon";
+import RowActionsMenu from "../../components/app/RowActionsMenu";
+import { reviewProspect } from "../../lib/prospectAssistant";
+import { useMediaQuery } from "../../lib/useMediaQuery";
 
 export const BROKER_NAV_ITEMS = [
-  { key: "oversikt", label: "Översikt", path: "/app/broker", Icon: LayoutDashboardIcon },
-  { key: "objekt", label: "Dina objekt", path: "/app/broker/objekt", Icon: BuildingIcon },
-  { key: "leads", label: "Leads", path: "/app/broker/leads", Icon: SparklesIcon },
-  { key: "prospekt", label: "Prospekt", path: "/app/broker/prospekt", Icon: PdfIcon },
-  { key: "meddelanden", label: "Meddelanden", path: "/app/broker/meddelanden", Icon: MessageSquareIcon },
-  { key: "sparade-objekt", label: "Sparade objekt", path: "/app/broker/sparade-objekt", Icon: StarIcon },
-  { key: "sparade-sokningar", label: "Sparade sökningar", path: "/app/broker/sparade-sokningar", Icon: SearchIcon }
+  { key: "oversikt", label: "Översikt", path: "/app/broker", Icon: LayoutDashboardIcon, group: "Arbetsyta" },
+  { key: "assistent", label: "AI-assistent", path: "/app/broker/assistent", Icon: Bot, group: "Arbetsyta" },
+  { key: "objekt", label: "Dina objekt", path: "/app/broker/objekt", Icon: BuildingIcon, group: "Objekt" },
+  { key: "prospekt", label: "Prospekt", path: "/app/broker/prospekt", Icon: PdfIcon, group: "Objekt" },
+  { key: "leads", label: "Leads", path: "/app/broker/leads", Icon: SparklesIcon, group: "Hyresgäster" },
+  { key: "meddelanden", label: "Meddelanden", path: "/app/broker/meddelanden", Icon: MessageSquareIcon, group: "Hyresgäster" }
 ];
 
 export const BROKER_BOTTOM_NAV_ITEMS = [
@@ -64,20 +73,22 @@ export const BROKER_BOTTOM_NAV_ITEMS = [
 
 const BROKER_SECTION_TITLES = {
   oversikt: "Översikt",
+  assistent: "AI-assistent",
   objekt: "Dina objekt",
   leads: "Leads",
   prospekt: "Prospekt",
   meddelanden: "Meddelanden",
-  "sparade-objekt": "Sparade objekt",
-  "sparade-sokningar": "Sparade sökningar",
   profil: "Profil",
   installningar: "Inställningar",
   hjalp: "Hjälp"
 };
 
+// Saved listings and searches used to be pages of their own; they are cards on the profile now.
+const LEGACY_SECTIONS = { "sparade-objekt": "profil", "sparade-sokningar": "profil" };
+
 function sectionFromPath(pathname) {
   const match = pathname.match(/^\/(?:app\/)?broker\/([^/?#]+)/);
-  const key = match?.[1] || "oversikt";
+  const key = LEGACY_SECTIONS[match?.[1]] || match?.[1] || "oversikt";
   return BROKER_SECTION_TITLES[key] ? key : "oversikt";
 }
 
@@ -90,6 +101,7 @@ const ACTIVITY_TYPES = [
   { value: "note", label: "Notering" },
   { value: "call", label: "Samtal" },
   { value: "email", label: "E-post" },
+  { value: "meeting", label: "Möte" },
   { value: "viewing", label: "Visning" }
 ];
 
@@ -128,55 +140,10 @@ function scoreClass(score) {
   return "text-ink-700";
 }
 
-function SparkKpiCard({ card, series }) {
-  const data = series.map((value, index) => ({ x: index + 1, y: value }));
-  return (
-    <article className="surface p-4">
-      <div className="flex items-start justify-between gap-3">
-        <p className="text-sm text-ink-600">{card.label}</p>
-        <Badge variant="outline" className="h-auto rounded-full bg-[#ffffff] px-2 py-0.5 text-xs font-semibold text-ink-700">
-          {card.delta}
-        </Badge>
-      </div>
-      <p className="mt-3 text-[30px] font-semibold leading-none text-[#0b0a0e]">{card.value}</p>
-      <p className="mt-2 text-xs text-ink-500">{card.meta}</p>
-      <div className="mt-3 h-16">
-        {data.length > 0 ? (
-          <ChartContainer config={{ y: { label: card.label, color: "#0b0a0e" } }} className="h-full w-full">
-            <AreaChart data={data} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
-              <defs>
-                <linearGradient id={`broker-kpi-${card.key}`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="var(--color-y)" stopOpacity={0.22} />
-                  <stop offset="100%" stopColor="var(--color-y)" stopOpacity={0.03} />
-                </linearGradient>
-              </defs>
-              <Area
-                type="monotone"
-                dataKey="y"
-                stroke="var(--color-y)"
-                strokeWidth={1.7}
-                fill={`url(#broker-kpi-${card.key})`}
-                fillOpacity={1}
-              />
-              <ChartTooltip
-                cursor={{ stroke: "#0b0a0e", strokeOpacity: 0.18, strokeWidth: 1 }}
-                content={<ChartTooltipContent hideLabel />}
-              />
-            </AreaChart>
-          </ChartContainer>
-        ) : (
-          <div className="grid h-full place-items-center rounded-xl border border-dashed border-black/15 bg-[#fafafa] text-xs font-semibold text-ink-500">
-            Ingen data
-          </div>
-        )}
-      </div>
-    </article>
-  );
-}
-
 function useBrokerListingsData(app) {
   const { user, leads = [], updateListing } = app;
 
+  const [listingLoadError, setListingLoadError] = useState("");
   const [publisherListings, setPublisherListings] = useState([]);
   const [isLoadingListings, setIsLoadingListings] = useState(true);
 
@@ -188,6 +155,7 @@ function useBrokerListingsData(app) {
     }
 
     setIsLoadingListings(true);
+    setListingLoadError("");
     try {
       const { listings: allListings } = await listingApi.getListings({
         county: "Stockholms län",
@@ -207,8 +175,8 @@ function useBrokerListingsData(app) {
         readyNow: false
       });
       setPublisherListings(allListings.filter((listing) => listing.ownerId === user.id));
-    } catch (_error) {
-      setPublisherListings([]);
+    } catch (error) {
+      setListingLoadError(error.message || "Kunde inte ladda objekten.");
     } finally {
       setIsLoadingListings(false);
     }
@@ -262,243 +230,67 @@ function useBrokerListingsData(app) {
       .sort((a, b) => timeValue(b.updatedAt) - timeValue(a.updatedAt));
   }, [leadCountByListingId, ownListings]);
 
-  return { user, updateListing, isLoadingListings, listingPerformance, ownLeads, ownListings, refreshPublisherListings };
+  return { listingLoadError, user, updateListing, isLoadingListings, listingPerformance, ownLeads, ownListings, refreshPublisherListings };
 }
 
 function BrokerOverviewSection({ app }) {
-  const { isLoadingListings, listingPerformance, ownLeads, ownListings } = useBrokerListingsData(app);
-
-  const activeCount = listingPerformance.filter((listing) => listing.status === "active").length;
-  const draftCount = listingPerformance.filter((listing) => listing.status !== "active").length;
-  const totalViews = listingPerformance.reduce((sum, listing) => sum + listing.views, 0);
-  const totalLeads = ownLeads.length;
-  const conversionRate = totalViews > 0 ? (totalLeads / totalViews) * 100 : 0;
-  const averageResponse = listingPerformance.length
-    ? Math.round(listingPerformance.reduce((sum, listing) => sum + Number(listing.responseHours || 0), 0) / listingPerformance.length)
-    : 0;
-
-  const pipelineEntries = useMemo(() => {
-    const counts = new Map();
-    ownLeads.forEach((lead) => {
-      const status = String(lead.status || "Nytt");
-      counts.set(status, (counts.get(status) || 0) + 1);
-    });
-
-    const fallbackOrder = LEAD_STATUS_ORDER;
-    const dynamicStatuses = Array.from(counts.keys()).filter((status) => !fallbackOrder.includes(status));
-    const order = [...fallbackOrder, ...dynamicStatuses];
-
-    return order
-      .filter((status) => counts.has(status))
-      .map((status) => ({ status, label: leadStatusLabel(status), count: counts.get(status) || 0 }));
-  }, [ownLeads]);
-
-  const topPerformers = useMemo(() => {
-    return [...listingPerformance]
-      .sort((a, b) => b.views - a.views)
-      .slice(0, 5);
-  }, [listingPerformance]);
-
-  const activityFeed = useMemo(() => {
-    const listingEvents = listingPerformance.map((listing) => ({
-      id: `listing-${listing.id}`,
-      label: `${listing.title} uppdaterades`,
-      date: listing.updatedAt,
-      meta: `${listingStatusLabel(listing.status)} • ${listing.district}`
-    }));
-
-    const leadEvents = ownLeads.map((lead) => {
-      const related = ownListings.find((listing) => String(listing.id) === String(lead.listingId));
-      return {
-        id: `lead-${lead.id}`,
-        label: `Lead: ${lead.status || "Nytt"}`,
-        date: lead.updatedAt || lead.createdAt,
-        meta: related ? related.title : "Objekt saknas"
-      };
-    });
-
-    return [...listingEvents, ...leadEvents]
-      .sort((a, b) => timeValue(b.date) - timeValue(a.date))
-      .slice(0, 6);
-  }, [listingPerformance, ownLeads, ownListings]);
-
-  const maxViews = topPerformers.length > 0
-    ? Math.max(...topPerformers.map((entry) => entry.views))
-    : 1;
-
-  const kpiCards = [
-    {
-      key: "active",
-      label: "Aktiva objekt",
-      value: activeCount.toLocaleString("sv-SE"),
-      delta: `${draftCount} utkast`,
-      meta: `${listingPerformance.length} objekt totalt`
-    },
-    {
-      key: "views",
-      label: "Visningar",
-      value: totalViews.toLocaleString("sv-SE"),
-      delta: "30 dagar",
-      meta: "Riktig listingViews-data"
-    },
-    {
-      key: "leads",
-      label: "Leads",
-      value: totalLeads.toLocaleString("sv-SE"),
-      delta: `${conversionRate.toFixed(1)}%`,
-      meta: "Konvertering från visningar"
-    },
-    {
-      key: "response",
-      label: "Snittsvarstid",
-      value: `${averageResponse}h`,
-      delta: "Genomsnitt",
-      meta: "Från objektens svarstid"
-    }
-  ];
-  const sparklineSeries = {
-    active: [Math.max(0, activeCount - 2), Math.max(0, activeCount - 1), activeCount, activeCount, listingPerformance.length],
-    views: topPerformers.slice(0, 6).map((listing) => listing.views),
-    leads: topPerformers.slice(0, 6).map((listing) => listing.listingLeads),
-    response: listingPerformance.slice(0, 6).map((listing) => Number(listing.responseHours || averageResponse || 0))
-  };
-
-  return (
-    <div className="space-y-5">
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Hyresvärd</p>
-          <h1 className="mt-1 text-2xl font-semibold">Översikt</h1>
-          <p className="mt-2 text-sm text-ink-600">
-            Statistik och prestanda för dina objekt och leads.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button type="button" variant="secondary" className="h-auto px-4 py-2" onClick={() => navigateTo("/app/broker/leads")}>
-            <CalendarIcon className="mr-1.5 h-4 w-4" />
-            Intressen
-          </Button>
-          <Button type="button" className="h-auto px-4 py-2" onClick={() => navigateTo("/app/publish")}>
-            <span className="mr-1.5 text-base leading-none">+</span>
-            Publicera ny annons
-          </Button>
-        </div>
-      </header>
-
-      {isLoadingListings ? (
-        <div className="rounded-2xl border border-black/10 bg-[#fafafa] px-4 py-5 text-sm text-ink-600">
-          Laddar statistik...
-        </div>
-      ) : null}
-
-      <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        {kpiCards.map((card) => (
-          <SparkKpiCard key={card.key} card={card} series={sparklineSeries[card.key] || []} />
-        ))}
-      </section>
-
-      <div className="grid gap-4 xl:grid-cols-2">
-        <article className="surface p-4 sm:p-5">
-          <h3 className="text-lg font-semibold">Objektprestanda</h3>
-          <p className="mt-1 text-xs text-ink-600">Visningar och leads per objekt</p>
-          <div className="mt-4 space-y-3">
-            {topPerformers.length === 0 ? (
-              <p className="rounded-2xl border border-black/10 bg-[#fafafa] px-3 py-4 text-sm text-ink-600">
-                Publicera ditt första objekt för att se statistik.
-              </p>
-            ) : null}
-            {topPerformers.map((entry) => {
-              const width = Math.max(8, Math.round((entry.views / maxViews) * 100));
-              return (
-                <div key={entry.id}>
-                  <div className="mb-1 flex items-center justify-between gap-2 text-xs">
-                    <span className="truncate font-semibold">{entry.title}</span>
-                    <span className="text-ink-600">{entry.views.toLocaleString("sv-SE")} visningar</span>
-                  </div>
-                  <div className="h-2.5 rounded-full bg-[#ffffff]">
-                    <div className="h-full rounded-full bg-[#0b0a0e]" style={{ width: `${width}%` }} />
-                  </div>
-                  <div className="mt-1 text-[11px] text-ink-600">
-                    {entry.listingLeads} leads • konvertering {entry.conversion.toFixed(2)}%
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </article>
-
-        <article className="surface p-4">
-          <h3 className="text-sm font-semibold">Överblick</h3>
-          <div className="mt-2 grid gap-2 sm:grid-cols-2">
-            <div className="rounded-xl border border-black/10 bg-[#ffffff] px-2.5 py-2">
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">Aktiva objekt</p>
-              <p className="mt-1 text-xl font-semibold leading-none">{activeCount}</p>
-              <p className="mt-1 text-[11px] text-ink-600">{draftCount} utkast</p>
-            </div>
-            <div className="rounded-xl border border-black/10 bg-[#ffffff] px-2.5 py-2">
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">Visningar</p>
-              <p className="mt-1 text-xl font-semibold leading-none">{totalViews.toLocaleString("sv-SE")}</p>
-              <p className="mt-1 text-[11px] text-ink-600">30 dagar</p>
-            </div>
-            <div className="rounded-xl border border-black/10 bg-[#ffffff] px-2.5 py-2">
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">Leads</p>
-              <p className="mt-1 text-xl font-semibold leading-none">{totalLeads}</p>
-              <p className="mt-1 text-[11px] text-ink-600">Konv. {conversionRate.toFixed(1)}%</p>
-            </div>
-            <div className="rounded-xl border border-black/10 bg-[#ffffff] px-2.5 py-2">
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">Svarstid</p>
-              <p className="mt-1 text-xl font-semibold leading-none">{averageResponse}h</p>
-              <p className="mt-1 text-[11px] text-ink-600">Genomsnitt</p>
-            </div>
-          </div>
-        </article>
-
-        <article className="surface p-4 sm:p-5">
-          <h3 className="text-lg font-semibold">Lead-pipeline</h3>
-          <p className="mt-1 text-xs text-ink-600">Status över alla inkomna intressen</p>
-          <div className="mt-4 space-y-2">
-            {pipelineEntries.length === 0 ? (
-              <p className="rounded-2xl border border-black/10 bg-[#fafafa] px-3 py-4 text-sm text-ink-600">
-                Inga leads ännu.
-              </p>
-            ) : null}
-            {pipelineEntries.map((entry) => (
-              <div key={entry.status} className="flex items-center justify-between rounded-xl border border-black/10 bg-[#ffffff] px-3 py-2">
-                <span className="text-sm text-ink-700">{entry.label}</span>
-                <span className="text-sm font-semibold text-ink-900">{entry.count}</span>
-              </div>
-            ))}
-          </div>
-        </article>
-
-        <article className="surface p-4 sm:p-5">
-          <h3 className="text-lg font-semibold">Senaste aktivitet</h3>
-          <div className="mt-3 space-y-2">
-            {activityFeed.length === 0 ? (
-              <p className="rounded-2xl border border-black/10 bg-[#fafafa] px-3 py-4 text-sm text-ink-600">
-                Aktivitet visas när objekt eller leads uppdateras.
-              </p>
-            ) : null}
-            {activityFeed.map((event) => (
-              <div key={event.id} className="rounded-xl border border-black/10 bg-[#ffffff] px-3 py-2.5">
-                <p className="text-sm font-semibold">{event.label}</p>
-                <p className="text-xs text-ink-600">{event.meta}</p>
-                <p className="mt-1 text-[11px] text-ink-500">{formatDate(event.date)}</p>
-              </div>
-            ))}
-          </div>
-        </article>
-      </div>
-    </div>
-  );
+  const { isLoadingListings, listingLoadError, listingPerformance, ownLeads, refreshPublisherListings } = useBrokerListingsData(app);
+  return <BrokerOverview app={app} listings={listingPerformance} leads={ownLeads} loading={isLoadingListings} error={listingLoadError} onRetry={refreshPublisherListings} />;
 }
 
 function BrokerListingsSection({ app }) {
-  const { isLoadingListings, listingPerformance, refreshPublisherListings } = useBrokerListingsData(app);
+  const { listingLoadError, isLoadingListings, listingPerformance, refreshPublisherListings } = useBrokerListingsData(app);
 
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("alla");
   const [selectedListingId, setSelectedListingId] = useState(null);
+  const [busyListingId, setBusyListingId] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const deleting = Boolean(deleteTarget) && busyListingId === deleteTarget.id;
+
+  // The same lifecycle actions as in the editor: hide an active listing, publish any other, or delete it.
+  async function changeVisibility(listing) {
+    setBusyListingId(listing.id);
+    try {
+      if (listing.status === "active") {
+        await app.updateListing(listing.id, { status: "draft" });
+        app.pushToast("Objekt dolt.", "info");
+      } else {
+        await app.publishListing(listing.id);
+      }
+      await refreshPublisherListings();
+    } catch (error) {
+      app.pushToast(error.message || "Åtgärden misslyckades. Försök igen.", "error");
+    } finally {
+      setBusyListingId(null);
+    }
+  }
+
+  async function confirmDeleteListing() {
+    if (!deleteTarget) return;
+    setBusyListingId(deleteTarget.id);
+    try {
+      await app.deleteListing(deleteTarget.id);
+      setDeleteOpen(false);
+      await refreshPublisherListings();
+    } catch (error) {
+      app.pushToast(error.message || "Kunde inte radera objektet.", "error");
+    } finally {
+      setBusyListingId(null);
+    }
+  }
+
+  const listingActions = (listing) => {
+    const active = listing.status === "active";
+    const busy = busyListingId === listing.id;
+    return [
+      { key: "edit", label: "Redigera", icon: Pencil, onSelect: () => setSelectedListingId(listing.id) },
+      { key: "visibility", label: active ? "Dölj objekt" : "Publicera objekt", icon: active ? EyeOff : Eye, disabled: busy, onSelect: () => void changeVisibility(listing) },
+      "separator",
+      { key: "delete", label: "Radera", icon: Trash2, destructive: true, disabled: busy, onSelect: () => { setDeleteTarget(listing); setDeleteOpen(true); } }
+    ];
+  };
 
   const filteredListings = useMemo(() => {
     const lowered = query.trim().toLowerCase();
@@ -512,48 +304,33 @@ function BrokerListingsSection({ app }) {
   }, [listingPerformance, query, statusFilter]);
 
   const selectedListing = selectedListingId
-    ? filteredListings.find((listing) => String(listing.id) === String(selectedListingId)) || null
+    ? listingPerformance.find((listing) => String(listing.id) === String(selectedListingId)) || null
     : null;
 
   return (
     <div className="space-y-5">
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Hyresvärd</p>
-          <h1 className="mt-1 text-2xl font-semibold">Dina objekt</h1>
-          <p className="mt-2 text-sm text-ink-600">
-            Hantera dina aktiva och inaktiva objekt.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button type="button" variant="secondary" className="h-auto px-4 py-2" onClick={() => navigateTo("/app/broker/leads")}>
-            <CalendarIcon className="mr-1.5 h-4 w-4" />
-            Intressen
-          </Button>
-          <Button type="button" className="h-auto px-4 py-2" onClick={() => navigateTo("/app/publish")}>
-            <span className="mr-1.5 text-base leading-none">+</span>
-            Publicera ny annons
-          </Button>
-        </div>
-      </header>
 
-      <section className="surface overflow-hidden">
-        <div className="border-b border-black/10 px-4 py-4 sm:px-5">
+
+      {listingLoadError ? <div role="alert" className="text-sm text-rose-700">{listingLoadError}<Button variant="link" onClick={refreshPublisherListings}>Försök igen</Button></div> : null}
+      <Card className="gap-0 py-0 overflow-hidden">
+        <div className="border-b border-veil/10 px-4 py-4 sm:px-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Hantera objekt</p>
-              <p className="mt-1 text-sm text-ink-600">Klicka på en rad för att öppna objektet.</p>
+              <p className="mt-1 text-sm text-ink-600">Välj ett objekt för att redigera uppgifterna.</p>
             </div>
-            <Badge variant="outline" className="h-auto rounded-full bg-black/10 px-2 py-0.5 text-[11px] font-semibold text-ink-700">{filteredListings.length} rader</Badge>
+            <Badge variant="outline" className="h-auto rounded-full bg-veil/10 px-2 py-0.5 text-[11px] font-semibold text-ink-700">{filteredListings.length} objekt</Badge>
           </div>
-          <div className="mt-3 grid gap-2 sm:grid-cols-[280px_170px]">
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+          <div className="grid min-w-0 flex-1 gap-2 sm:max-w-[460px] sm:grid-cols-[minmax(200px,1fr)_170px]">
             <Input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
+              aria-label="Sök objekt"
               placeholder="Sök titel, adress eller område"
             />
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger>
+              <SelectTrigger aria-label="Objektstatus">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -564,57 +341,45 @@ function BrokerListingsSection({ app }) {
               </SelectContent>
             </Select>
           </div>
+          <div className="ml-auto flex flex-wrap items-center gap-2"><Button type="button" variant="secondary" className="h-auto px-4 py-2" onClick={() => navigateTo("/app/broker/leads")}>
+            <CalendarIcon className="mr-1.5 h-4 w-4" />
+            Intressen
+          </Button>
+<Button type="button" className="h-auto px-4 py-2" onClick={() => navigateTo("/app/publish")}>
+            <span className="mr-1.5 text-base leading-none">+</span>
+            Publicera ny annons
+          </Button></div>
+          </div>
         </div>
 
-        <div className="hidden border-b border-black/10 bg-[#fafafa] px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-ink-500 sm:grid sm:grid-cols-[minmax(0,1fr)_100px_96px_72px_84px] sm:items-center sm:gap-4 sm:px-5">
-          <span>Objekt</span>
-          <span>Status</span>
-          <span className="text-right">Visningar</span>
-          <span className="text-right">Leads</span>
-          <span className="text-right">Yta</span>
-        </div>
+        <Table className="min-w-[640px]">
+          <TableHeader className="bg-canvas"><TableRow><TableHead className="pl-5">Objekt</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Visningar</TableHead><TableHead className="text-right">Leads</TableHead><TableHead className="text-right">Yta</TableHead><TableHead className="pr-5 text-right">Åtgärder</TableHead></TableRow></TableHeader>
+          <TableBody>
+            {filteredListings.map((listing) => <TableRow key={listing.id}>
+              <TableCell className="py-2 pl-5"><div className="flex items-center gap-3"><img src={listing.image || "/object-images/object-1.jpeg"} alt="" className="h-10 w-14 shrink-0 rounded-md object-cover" /><div><Button variant="link" className="h-auto min-h-0 justify-start p-0 font-semibold" onClick={() => setSelectedListingId(listing.id)}>{listing.title || listing.address}</Button><p className="mt-0.5 text-xs leading-4 text-ink-500">{listing.district} · {listing.address}</p></div></div></TableCell>
+              <TableCell><StatusPill status={listing.status} variant="listing" /></TableCell>
+              <TableCell className="text-right tabular-nums">{listing.views.toLocaleString("sv-SE")}</TableCell>
+              <TableCell className="text-right tabular-nums">{listing.listingLeads}</TableCell>
+              <TableCell className="text-right tabular-nums">{listing.sizeSqm} m²</TableCell>
+              <TableCell className="pr-5 text-right"><RowActionsMenu label={`Åtgärder för ${listing.title || listing.address}`} actions={listingActions(listing)} /></TableCell>
+            </TableRow>)}
+            {isLoadingListings || filteredListings.length === 0 ? <TableRow><TableCell colSpan={6} className="whitespace-normal py-12 text-center"><p className="font-medium">{isLoadingListings ? "Laddar dina objekt..." : "Inga objekt matchar dina filter"}</p>{!isLoadingListings ? <Button variant="link" onClick={() => { setQuery(""); setStatusFilter("alla"); }}>Rensa filter</Button> : null}</TableCell></TableRow> : null}
+          </TableBody>
+        </Table>
+      </Card>
 
-        <div className="divide-y divide-black/10">
-          {filteredListings.map((listing) => (
-            <Button
-              key={listing.id}
-              type="button"
-              variant="ghost"
-              className="h-auto flex w-full items-center gap-4 px-4 py-3.5 text-left font-normal transition hover:bg-[#fafafa] sm:grid sm:grid-cols-[minmax(0,1fr)_100px_96px_72px_84px] sm:px-5"
-              onClick={() => setSelectedListingId(listing.id)}
-            >
-              <div className="flex min-w-0 items-center gap-3">
-                <img
-                  src={listing.image || "/object-images/object-1.jpeg"}
-                  alt={listing.title}
-                  className="h-12 w-16 shrink-0 rounded-lg border border-black/10 object-cover"
-                />
-                <span className="min-w-0">
-                  <span className="block truncate font-semibold text-ink-900">{listing.title || listing.address}</span>
-                  <span className="block truncate text-xs text-ink-600">{listing.district} • {listing.address}</span>
-                </span>
-              </div>
-              <span className="hidden sm:block">
-                <StatusPill status={listing.status} variant="listing" />
-              </span>
-              <span className="hidden text-right text-sm font-semibold text-ink-800 sm:block">{listing.views.toLocaleString("sv-SE")}</span>
-              <span className="hidden text-right text-sm font-semibold text-ink-800 sm:block">{listing.listingLeads}</span>
-              <span className="hidden text-right text-xs font-semibold text-ink-500 sm:block">{listing.sizeSqm} kvm</span>
-            </Button>
-          ))}
-          {!isLoadingListings && filteredListings.length === 0 ? (
-            <div className="px-4 py-10 text-center sm:px-5">
-              <p className="font-semibold text-ink-900">Inga objekt matchar dina filter</p>
-              <p className="mt-1 text-sm text-ink-500">Publicera en annons för att se den här.</p>
-            </div>
-          ) : null}
-          {isLoadingListings ? (
-            <div className="px-4 py-10 text-center text-sm text-ink-600 sm:px-5">
-              Laddar dina objekt...
-            </div>
-          ) : null}
-        </div>
-      </section>
+      <AlertDialog open={deleteOpen} onOpenChange={(open) => { if (!deleting) setDeleteOpen(open); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Radera objektet?</AlertDialogTitle>
+            <AlertDialogDescription>Objektet ”{deleteTarget?.title || deleteTarget?.address}” tas bort. Åtgärden kan inte ångras.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Avbryt</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" disabled={deleting} onClick={confirmDeleteListing}>{deleting ? "Raderar..." : "Radera objekt"}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {selectedListing ? (
         <ListingEditorSidePanel
@@ -628,136 +393,69 @@ function BrokerListingsSection({ app }) {
   );
 }
 
-function ListingEditorSidePanel({ listing, app, onClose, onMutated }) {
-  const editor = useListingEditorState(listing, app, { onMutated });
-
-  return (
-    <SidePanelFrame widthClassName="w-[min(700px,100vw)]" onClose={onClose}>
-      {(handleClose) => (
-        <>
-          <div className="border-b border-black/10 px-5 py-4">
-            <div className="flex items-start justify-between gap-4">
-              <div className="min-w-0">
-                <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Objektredigering</p>
-                <h2 className="mt-1 truncate text-xl font-semibold text-ink-900">{editor.draft.title || "Hantera objekt"}</h2>
-                <p className="mt-1 truncate text-sm text-ink-600">{editor.draft.address}, Stockholm</p>
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                aria-label="Stäng"
-                className="h-10 w-10 shrink-0 rounded-full"
-                onClick={handleClose}
-              >
-                <XIcon className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-
-          <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
-            <ListingEditorSections listing={listing} editor={editor} />
-          </div>
-
-          <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-black/10 px-5 py-4">
-            <ListingEditorFooterActions listing={listing} editor={editor} onClosed={handleClose} />
-          </div>
-        </>
-      )}
-    </SidePanelFrame>
-  );
+function ListingEditorSidePanel(props) {
+  return <ListingEditorOverlay {...props} />;
 }
 
 function ProspectWorkspaceCard({ title, children }) {
   return (
-    <section className="surface p-4 sm:p-5">
+    <Card className="gap-0 py-0 p-4 sm:p-5">
       <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">{title}</p>
       <div className="mt-3">{children}</div>
-    </section>
+    </Card>
   );
 }
 
-const PROSPECT_WORKSPACE_TABS = [
-  { key: "prospekt", label: "Prospekt", Icon: PdfIcon },
-  { key: "samarbete", label: "Samarbete", Icon: UsersGroupIcon },
-  { key: "installningar", label: "Inställningar", Icon: SettingsGearIcon }
+
+// The sidebar of "Redigera prospekt": the six sections, then the rest of the workspace.
+const PROSPECT_SECTION_ICONS = { overview: LayoutDashboard, description: FileText, terms: Coins, location: MapPin, contact: UserRound, materials: Paperclip };
+const PROSPECT_WORKSPACE_ENTRIES = [
+  { key: "kommentarer", label: "Kommentarer", Icon: MessageSquare },
+  { key: "samarbete", label: "Samarbete", Icon: Users },
+  { key: "installningar", label: "Inställningar", Icon: Settings }
 ];
 
-function ProspectWorkspaceTabNav({ tabs, activeKey, onSelect }) {
-  const navRef = useRef(null);
-  const hasAnimatedRef = useRef(false);
-  const [indicator, setIndicator] = useState(null);
-
-  useLayoutEffect(() => {
-    const nav = navRef.current;
-    if (!nav) return;
-    const activeEl = nav.querySelector('[data-active="true"]');
-    if (!activeEl) {
-      setIndicator((prev) => (prev ? { ...prev, visible: false } : prev));
-      return;
-    }
-    setIndicator({
-      left: activeEl.offsetLeft,
-      width: activeEl.offsetWidth,
-      visible: true,
-      animate: hasAnimatedRef.current
-    });
-    hasAnimatedRef.current = true;
-  }, [activeKey, tabs]);
-
-  return (
-    <nav ref={navRef} className="relative flex gap-1">
-      <span
-        aria-hidden="true"
-        className={`admin-nav-indicator-h ${indicator?.animate ? "is-animated" : ""}`}
-        style={
-          indicator?.visible
-            ? { transform: `translateX(${indicator.left}px)`, width: `${indicator.width}px`, opacity: 1 }
-            : { opacity: 0 }
-        }
-      />
-      {tabs.map((tab) => {
-        const active = tab.key === activeKey;
-        return (
-          <button
-            key={tab.key}
-            type="button"
-            data-active={active ? "true" : "false"}
-            className={`admin-nav-row menu-hover-row relative z-[1] inline-flex items-center gap-2 px-3.5 py-2 text-sm font-semibold ${
-              active ? "text-white" : "text-ink-700 hover:bg-black/5"
-            }`}
-            onClick={() => onSelect(tab.key)}
-          >
-            <tab.Icon className="h-4 w-4 shrink-0" />
-            {tab.label}
-          </button>
-        );
-      })}
-    </nav>
-  );
-}
+const PROSPECT_SECTION_STEPS = [
+  { kind: "overview", label: "Översikt", prompt: "Börja med det viktigaste om objektet." },
+  { kind: "description", label: "Beskrivning", prompt: "Gör lokalen tydlig och lätt att förstå." },
+  { kind: "terms", label: "Villkor", prompt: "Lägg in hyrestid, deposition och uppsägningstid." },
+  { kind: "location", label: "Läge", prompt: "Beskriv kommunikationer och närområde." },
+  { kind: "contact", label: "Kontakt", prompt: "Välj ansvarig kontaktperson." },
+  { kind: "materials", label: "Material", prompt: "Lägg till bilagor och egna sektioner." }
+];
 
 function ProspectWorkspaceSidePanel({ prospectId, listingId, app, onClose, onMutated }) {
   const [prospect, setProspect] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [activeTab, setActiveTab] = useState("prospekt");
+  const [prospectStep, setProspectStep] = useState(0);
   const [comments, setComments] = useState([]);
   const [commentsPending, setCommentsPending] = useState(false);
   const [archiving, setArchiving] = useState(false);
+  const [confirmArchive, setConfirmArchive] = useState(false);
+  // From the lg breakpoint the assistant sits beside the form; below it, it takes the form's place while open.
+  const [assistantOpen, setAssistantOpen] = useState(false);
+  const sidebar = useMediaQuery("(min-width: 1024px)");
 
   async function loadProspect() {
     setLoading(true);
+    setLoadError("");
     try {
       const { prospect: loaded } = await prospectsApi.getProspect(prospectId);
       setProspect(loaded);
+    } catch (error) {
+      setLoadError(error.message || "Kunde inte ladda prospektet.");
     } finally {
       setLoading(false);
     }
   }
 
   async function loadComments() {
-    const { comments: list } = await prospectCommentsApi.listComments(prospectId);
-    setComments(list);
+    try {
+      const { comments: list } = await prospectCommentsApi.listComments(prospectId);
+      setComments(list);
+    } catch (error) { app.pushToast(error.message || "Kunde inte ladda kommentarer.", "error"); }
   }
 
   useEffect(() => {
@@ -778,29 +476,47 @@ function ProspectWorkspaceSidePanel({ prospectId, listingId, app, onClose, onMut
     try {
       await prospectCommentsApi.addComment(prospectId, sectionId, body);
       await loadComments();
+    } catch (error) {
+      app.pushToast(error.message || "Kunde inte spara kommentaren.", "error");
     } finally {
       setCommentsPending(false);
     }
   }
 
-  async function archiveProspect(handleClose) {
+  async function archiveProspect() {
     setArchiving(true);
     try {
       await prospectsApi.archiveProspect(prospectId);
       app.pushToast("Prospekt arkiverat.", "info");
       await onMutated?.();
-      handleClose();
+      onClose();
+    } catch (error) {
+      app.pushToast(error.message || "Kunde inte arkivera prospektet.", "error");
     } finally {
       setArchiving(false);
     }
   }
 
+  const prospectGaps = new Set(reviewProspect({ title: editor.title, sections: editor.sections }).map((finding) => finding.section).filter(Boolean));
+
+  // The assistant points at a section (or another tab of the workspace) by opening it.
+  function focusProspectTarget(target) {
+    const index = PROSPECT_SECTION_STEPS.findIndex((step) => step.kind === target);
+    if (index >= 0) {
+      setActiveTab("prospekt");
+      setProspectStep(index);
+    } else {
+      setActiveTab(target);
+    }
+    setAssistantOpen(false);
+  }
+
   return (
-    <SidePanelFrame widthClassName="w-[min(560px,100vw)]" onClose={onClose}>
+    <EditorWorkspace size="wide" title="Redigera prospekt" dirty={editor.dirty} busy={editor.saving || editor.publishing || Boolean(editor.uploadingSectionId) || archiving} onClose={onClose} onSaveDraft={editor.saveDraft}>
       {(handleClose) => (
-        <>
-          <div className="border-b border-black/10 px-5 py-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Titel</p>
+        <Tabs value={activeTab} onValueChange={setActiveTab} orientation={sidebar ? "vertical" : "horizontal"} className="flex min-h-0 flex-1 flex-col gap-0">
+          <header className="shrink-0 border-b border-veil/10 bg-surface px-5 py-4 sm:px-8">
+            <p className="text-xs text-ink-500">Redigera prospekt</p>
             <div className="mt-1.5 flex items-center gap-3">
               {prospect ? (
                 <Input
@@ -809,34 +525,65 @@ function ProspectWorkspaceSidePanel({ prospectId, listingId, app, onClose, onMut
                   onChange={(event) => editor.setTitle(event.target.value)}
                   placeholder="Namnge prospektet..."
                   aria-label="Titel"
+                  disabled={editor.saving || editor.publishing}
                 />
               ) : (
                 <p className="flex-1 py-2 text-[15px] text-ink-500">Laddar...</p>
               )}
+              <Button type="button" variant="outline" className="shrink-0 lg:hidden" aria-pressed={assistantOpen} onClick={() => setAssistantOpen((open) => !open)}>
+                <Sparkles className="mr-1.5 h-4 w-4" />
+                Assistent
+              </Button>
               <Button
                 type="button"
                 variant="outline"
                 size="icon"
                 aria-label="Stäng"
-                className="h-10 w-10 shrink-0 rounded-full"
+                className="h-10 w-10 shrink-0 rounded-md"
                 onClick={handleClose}
               >
                 <XIcon className="h-4 w-4" />
               </Button>
             </div>
-            <div className="mt-3">
-              <ProspectWorkspaceTabNav tabs={PROSPECT_WORKSPACE_TABS} activeKey={activeTab} onSelect={setActiveTab} />
-            </div>
-          </div>
+          </header>
 
-          <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
-            {loading || !prospect ? (
+          <div className="relative flex min-h-0 flex-1 flex-col lg:flex-row">
+            <nav aria-label="Prospektets innehåll" className="shrink-0 border-b border-veil/10 bg-surface lg:w-[248px] lg:overflow-y-auto lg:border-b-0 lg:border-r">
+              <ul className="flex gap-1 overflow-x-auto p-3 lg:flex-col lg:overflow-visible">
+                {[...PROSPECT_SECTION_STEPS.map((step, index) => ({ id: step.kind, label: step.label, Icon: PROSPECT_SECTION_ICONS[step.kind], current: activeTab === "prospekt" && prospectStep === index, gap: prospectGaps.has(step.kind), open: () => { setActiveTab("prospekt"); setProspectStep(index); } })),
+                  ...PROSPECT_WORKSPACE_ENTRIES.map(({ key, label, Icon }) => ({ id: key, label, Icon, current: activeTab === key, gap: false, open: () => setActiveTab(key) }))].map(({ id, label, Icon, current, gap, open }) => (
+                  <li key={id} className={cn("shrink-0 lg:shrink", id === "kommentarer" && "lg:mt-3 lg:border-t lg:border-veil/10 lg:pt-3")}>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      aria-current={current ? "page" : undefined}
+                      className={cn("h-10 min-h-0 w-full justify-start gap-2.5 px-3 text-sm font-semibold", current ? "bg-strong text-on-strong hover:bg-strong hover:text-on-strong" : "text-ink-600")}
+                      onClick={open}
+                    >
+                      <Icon aria-hidden="true" className="h-4 w-4" />
+                      <span className="truncate">{label}</span>
+                      {gap ? <span role="img" aria-label="Uppgifter saknas" className="ml-auto h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" /> : null}
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+
+          <div className="min-h-0 min-w-0 flex-1 overflow-y-auto bg-canvas p-5 sm:p-8">
+            {loadError ? <div role="alert" className="space-y-3"><p>{loadError}</p><Button variant="outline" onClick={loadProspect}>Försök igen</Button></div> : loading || !prospect ? (
               <p className="text-sm text-ink-500">Laddar prospekt...</p>
             ) : (
-              <div className="space-y-4">
-                {activeTab === "prospekt" ? (
-                  <>
-                    <ProspectEditorSections editor={editor} listingSummary={prospect.listingSummary} />
+              <div className="mx-auto max-w-3xl space-y-4">
+                <TabsContent value="prospekt">
+                  <div className="mb-4">
+                    <h2 className="text-lg font-semibold text-strong">{PROSPECT_SECTION_STEPS[prospectStep].label}</h2>
+                    <p className="mt-1 text-sm text-ink-500">{PROSPECT_SECTION_STEPS[prospectStep].prompt}</p>
+                  </div>
+                  <fieldset disabled={editor.saving || editor.publishing} className="min-w-0">
+                    <ProspectEditorSections editor={editor} listingSummary={prospect.listingSummary} activeKind={PROSPECT_SECTION_STEPS[prospectStep].kind} />
+                  </fieldset>
+                </TabsContent>
+                <TabsContent value="kommentarer">
                     <ProspectWorkspaceCard title="Kommentarer">
                       <div className="h-72">
                         <ProspectCommentThread
@@ -847,17 +594,16 @@ function ProspectWorkspaceSidePanel({ prospectId, listingId, app, onClose, onMut
                         />
                       </div>
                     </ProspectWorkspaceCard>
-                  </>
-                ) : null}
+                </TabsContent>
 
-                {activeTab === "samarbete" ? (
+                <TabsContent value="samarbete">
                   <ProspectShareSheet prospectId={prospect.id} listingId={listingId} prospect={prospect} app={app} />
-                ) : null}
+                </TabsContent>
 
-                {activeTab === "installningar" ? (
+                <TabsContent value="installningar">
                   <div className="space-y-4">
                     {prospect.status !== "archived" ? (
-                      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4">
+                      <Card className="gap-0 py-0 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-rose-200 bg-rose-50 p-4">
                         <div>
                           <p className="text-sm font-semibold text-rose-900">Arkivera prospekt</p>
                           <p className="mt-1 text-xs text-rose-700">Döljer prospektet från din lista.</p>
@@ -865,48 +611,87 @@ function ProspectWorkspaceSidePanel({ prospectId, listingId, app, onClose, onMut
                         <Button
                           type="button"
                           variant="outline"
-                          className="h-auto shrink-0 gap-1.5 rounded-xl border-rose-200 px-4 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-100 hover:text-rose-700"
-                          onClick={() => archiveProspect(handleClose)}
-                          disabled={archiving}
+                          className="h-auto shrink-0 gap-1.5 rounded-md border-rose-200 px-4 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-100 hover:text-rose-700"
+                          onClick={() => setConfirmArchive(true)}
+                          disabled={archiving || editor.dirty || editor.saving || editor.publishing}
                         >
                           <ArchiveIcon className="h-4 w-4" />
                           {archiving ? "Arkiverar..." : "Arkivera"}
                         </Button>
-                      </div>
+                      </Card>
                     ) : null}
                     <ProspectWorkspaceCard title="Versionshistorik">
-                      <ProspectVersionHistoryPanel prospectId={prospect.id} app={app} onRestored={loadProspect} />
+                      {editor.dirty ? <p className="text-sm text-ink-500">Spara utkastet innan du återställer en version eller arkiverar prospektet.</p> : <ProspectVersionHistoryPanel prospectId={prospect.id} app={app} onRestored={loadProspect} />}
                     </ProspectWorkspaceCard>
                   </div>
-                ) : null}
+                </TabsContent>
               </div>
             )}
           </div>
 
-          {prospect && activeTab === "prospekt" ? (
-            <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-black/10 px-5 py-4">
-              <ProspectEditorFooterActions editor={editor} />
+
+            {prospect ? (
+              <aside
+                aria-label="Assistent"
+                className={cn(
+                  "min-h-0 w-full shrink-0 border-l border-veil/10 bg-canvas p-3 lg:w-[360px]",
+                  assistantOpen ? "flex max-lg:absolute max-lg:inset-0 max-lg:z-10" : "hidden lg:flex"
+                )}
+              >
+                <ProspectAssistant editor={editor} listing={prospect.listingSummary} user={app.user} onFocus={focusProspectTarget} className="w-full" />
+              </aside>
+            ) : null}
+          </div>
+
+          {prospect ? (
+            <div className="flex shrink-0 items-center justify-between gap-3 border-t border-veil/10 bg-surface px-5 py-4">
+              <Button type="button" variant="outline" disabled={editor.saving || editor.publishing} onClick={handleClose}>Avbryt</Button>
+              {activeTab === "prospekt" ? (
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                  {editor.error ? <p role="alert" className="w-full text-sm text-rose-700">{editor.error}</p> : null}
+                  {editor.hasUnpublishedChanges ? <span className="mr-1 text-xs font-semibold text-amber-700">Opublicerade ändringar</span> : null}
+                  {prospectStep > 0 ? <Button type="button" variant="outline" disabled={editor.saving || editor.publishing} onClick={() => setProspectStep((index) => Math.max(0, index - 1))}><ChevronLeft className="h-4 w-4" />Föregående</Button> : null}
+                  {prospectStep < PROSPECT_SECTION_STEPS.length - 1 ? <Button type="button" disabled={editor.saving || editor.publishing} onClick={() => setProspectStep((index) => Math.min(index + 1, PROSPECT_SECTION_STEPS.length - 1))}>Nästa steg<ChevronRight className="h-4 w-4" /></Button> : <ProspectEditorFooterActions editor={editor} />}
+                </div>
+              ) : (
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                  <ProspectEditorFooterActions editor={editor} />
+                </div>
+              )}
             </div>
           ) : null}
-        </>
+          <AlertDialog open={confirmArchive} onOpenChange={(open) => { if (!archiving) setConfirmArchive(open); }}>
+            <AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Arkivera prospektet?</AlertDialogTitle><AlertDialogDescription>Prospektet döljs från den aktiva listan. Sparat innehåll behålls.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel disabled={archiving}>Avbryt</AlertDialogCancel><AlertDialogAction disabled={archiving} onClick={archiveProspect}>{archiving ? "Arkiverar..." : "Arkivera prospekt"}</AlertDialogAction></AlertDialogFooter></AlertDialogContent>
+          </AlertDialog>
+        </Tabs>
       )}
-    </SidePanelFrame>
+    </EditorWorkspace>
   );
 }
 
+
 function BrokerProspectsSection({ app }) {
   const { ownListings } = useBrokerListingsData(app);
+  const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [loadError, setLoadError] = useState("");
   const [prospects, setProspects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedProspectId, setSelectedProspectId] = useState(null);
   const [creatingListingId, setCreatingListingId] = useState("");
   const [creating, setCreating] = useState(false);
+  const [archiveTarget, setArchiveTarget] = useState(null);
+  const [archiveOpen, setArchiveOpen] = useState(false);
+  const [archiving, setArchiving] = useState(false);
 
   async function loadProspects() {
     setLoading(true);
+    setLoadError("");
     try {
       const { prospects: list } = await prospectsApi.listMine();
       setProspects(list);
+    } catch (error) {
+      setLoadError(error.message || "Kunde inte ladda prospekten.");
     } finally {
       setLoading(false);
     }
@@ -918,6 +703,28 @@ function BrokerProspectsSection({ app }) {
 
   const listingById = new Map(ownListings.map((listing) => [String(listing.id), listing]));
   const selectedProspect = prospects.find((prospect) => prospect.id === selectedProspectId) || null;
+
+  const filteredProspects = prospects.filter((prospect) => (statusFilter === "all" || prospect.status === statusFilter) && `${prospect.title} ${listingById.get(String(prospect.listingId))?.title || ""}`.toLocaleLowerCase("sv").includes(query.trim().toLocaleLowerCase("sv")));
+
+  async function archiveFromList() {
+    if (!archiveTarget) return;
+    setArchiving(true);
+    try {
+      await prospectsApi.archiveProspect(archiveTarget.id);
+      app.pushToast("Prospekt arkiverat.", "info");
+      setArchiveOpen(false);
+      await loadProspects();
+    } catch (error) {
+      app.pushToast(error.message || "Kunde inte arkivera prospektet.", "error");
+    } finally {
+      setArchiving(false);
+    }
+  }
+
+  const prospectActions = (prospect) => [
+    { key: "edit", label: "Redigera", icon: Pencil, onSelect: () => setSelectedProspectId(prospect.id) },
+    prospect.status !== "archived" && { key: "archive", label: "Arkivera", icon: Archive, onSelect: () => { setArchiveTarget(prospect); setArchiveOpen(true); } }
+  ];
 
   async function createProspect() {
     const listingId = creatingListingId || ownListings[0]?.id;
@@ -937,14 +744,10 @@ function BrokerProspectsSection({ app }) {
 
   return (
     <div className="space-y-5">
-      <header>
-        <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Hyresvärd</p>
-        <h1 className="mt-1 text-2xl font-semibold">Prospekt</h1>
-        <p className="mt-2 text-sm text-ink-600">Skapa, dela och versionshantera prospekt för dina objekt.</p>
-      </header>
 
-      <section className="surface overflow-hidden">
-        <div className="border-b border-black/10 px-4 py-4 sm:px-5">
+
+      <Card className="gap-0 py-0 overflow-hidden">
+        <div className="border-b border-veil/10 px-4 py-4 sm:px-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
               <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Prospekt</p>
@@ -954,7 +757,7 @@ function BrokerProspectsSection({ app }) {
                     value={creatingListingId || ownListings[0]?.id || ""}
                     onValueChange={setCreatingListingId}
                   >
-                    <SelectTrigger className="w-auto min-w-[200px]">
+                    <SelectTrigger aria-label="Välj objekt för nytt prospekt" className="w-auto min-w-[200px]">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -972,78 +775,70 @@ function BrokerProspectsSection({ app }) {
                 <p className="mt-1 text-sm text-ink-600">Du har inga objekt än.</p>
               )}
             </div>
-            <Badge variant="outline" className="h-auto shrink-0 rounded-full bg-black/10 px-2 py-0.5 text-[11px] font-semibold text-ink-700">{prospects.length} rader</Badge>
+            <Badge variant="outline" className="h-auto shrink-0 rounded-full bg-veil/10 px-2 py-0.5 text-[11px] font-semibold text-ink-700">{prospects.length} prospekt</Badge>
           </div>
         </div>
 
+        <div className="flex flex-wrap gap-3 border-b border-veil/10 p-4 sm:px-5">
+          <Input aria-label="Sök prospekt" className="w-full sm:max-w-sm" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Sök prospekt eller objekt..." />
+          <Select value={statusFilter} onValueChange={setStatusFilter}><SelectTrigger aria-label="Prospektstatus"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Alla statusar</SelectItem><SelectItem value="draft">Utkast</SelectItem><SelectItem value="published">Publicerad</SelectItem><SelectItem value="archived">Arkiverad</SelectItem></SelectContent></Select>
+        </div>
+        {loadError ? <div role="alert" className="p-5 text-sm text-rose-700">{loadError}<Button variant="link" onClick={loadProspects}>Försök igen</Button></div> : null}
         <div className="overflow-x-auto">
           <Table className="min-w-[860px]">
-            <TableHeader className="bg-[#fafafa] text-[11px] uppercase tracking-wide text-ink-500">
+            <TableHeader className="bg-canvas text-[11px] uppercase tracking-wide text-ink-500">
               <TableRow className="hover:bg-transparent">
                 <TableHead className="px-4 py-3 sm:px-5">Prospekt</TableHead>
                 <TableHead className="px-4 py-3">Objekt</TableHead>
                 <TableHead className="px-4 py-3">Status</TableHead>
                 <TableHead className="px-4 py-3">Version</TableHead>
                 <TableHead className="px-4 py-3">Uppdaterad</TableHead>
-                <TableHead className="px-4 py-3 text-right sm:px-5">Action</TableHead>
+                <TableHead className="px-4 py-3 text-right sm:px-5">Åtgärder</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {prospects.map((prospect) => {
+              {filteredProspects.map((prospect) => {
                 const listing = listingById.get(String(prospect.listingId));
                 return (
                   <TableRow
                     key={prospect.id}
-                    className="cursor-pointer border-t border-black/10 transition hover:bg-[#fafafa]"
+                    className="cursor-pointer border-t border-veil/10 transition hover:bg-canvas"
                     onClick={() => setSelectedProspectId(prospect.id)}
                   >
-                    <TableCell className="whitespace-normal px-4 py-3.5 align-top sm:px-5">
+                    <TableCell className="whitespace-normal px-4 py-2 align-top sm:px-5">
                       <div className="flex items-center gap-3">
-                        <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#0b0a0e] text-white">
-                          <PdfIcon className="h-4 w-4" />
-                        </span>
+                        <ProspectIcon />
                         <span className="min-w-0">
                           <span className="block truncate font-semibold text-ink-900">{prospect.title}</span>
                           <span className="block truncate text-xs text-ink-600">{listing?.title || listing?.address || prospect.listingId}</span>
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell className="px-4 py-3.5 align-top font-semibold text-ink-800">{listing?.title || "Objekt"}</TableCell>
-                    <TableCell className="px-4 py-3.5 align-top">
+                    <TableCell className="px-4 py-2 align-top font-semibold text-ink-800">{listing?.title || "Objekt"}</TableCell>
+                    <TableCell className="px-4 py-2 align-top">
                       <StatusPill status={prospect.status} variant="prospect" />
                     </TableCell>
-                    <TableCell className="px-4 py-3.5 align-top text-sm font-semibold text-ink-700">
+                    <TableCell className="px-4 py-2 align-top text-sm font-semibold text-ink-700">
                       {prospect.currentVersion ? `v${prospect.currentVersion}` : "Utkast"}
                     </TableCell>
-                    <TableCell className="px-4 py-3.5 align-top text-xs font-semibold text-ink-500">{relativeTime(prospect.updatedAt)}</TableCell>
-                    <TableCell className="px-4 py-3.5 text-right sm:px-5">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-9 w-9 rounded-full text-ink-600 hover:bg-[#ffffff]"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          setSelectedProspectId(prospect.id);
-                        }}
-                      >
-                        <MoreHorizontalIcon className="h-4 w-4" />
-                      </Button>
+                    <TableCell className="px-4 py-2 align-top text-xs font-semibold text-ink-500">{relativeTime(prospect.updatedAt)}</TableCell>
+                    <TableCell className="px-4 py-2 text-right sm:px-5">
+                      <RowActionsMenu label={`Åtgärder för ${prospect.title}`} actions={prospectActions(prospect)} />
                     </TableCell>
                   </TableRow>
                 );
               })}
-              {!loading && prospects.length === 0 ? (
+              {!loading && !loadError && filteredProspects.length === 0 ? (
                 <TableRow className="hover:bg-transparent">
-                  <TableCell colSpan={6} className="whitespace-normal border-t border-black/10 px-4 py-10 text-center sm:px-5">
-                    <p className="font-semibold text-ink-900">Inga prospekt än</p>
+                  <TableCell colSpan={6} className="whitespace-normal border-t border-veil/10 px-4 py-10 text-center sm:px-5">
+                    <p className="font-semibold text-ink-900">Inga prospekt att visa</p>
                     <p className="mt-1 text-sm text-ink-500">Skapa ett prospekt för ett av dina objekt.</p>
                   </TableCell>
                 </TableRow>
               ) : null}
               {loading ? (
                 <TableRow className="hover:bg-transparent">
-                  <TableCell colSpan={6} className="whitespace-normal border-t border-black/10 px-4 py-10 text-center text-sm text-ink-600 sm:px-5">
+                  <TableCell colSpan={6} className="whitespace-normal border-t border-veil/10 px-4 py-10 text-center text-sm text-ink-600 sm:px-5">
                     Laddar prospekt...
                   </TableCell>
                 </TableRow>
@@ -1051,7 +846,20 @@ function BrokerProspectsSection({ app }) {
             </TableBody>
           </Table>
         </div>
-      </section>
+      </Card>
+
+      <AlertDialog open={archiveOpen} onOpenChange={(open) => { if (!archiving) setArchiveOpen(open); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Arkivera prospektet?</AlertDialogTitle>
+            <AlertDialogDescription>Prospektet döljs från den aktiva listan. Sparat innehåll behålls.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={archiving}>Avbryt</AlertDialogCancel>
+            <AlertDialogAction disabled={archiving} onClick={archiveFromList}>{archiving ? "Arkiverar..." : "Arkivera prospekt"}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {selectedProspect ? (
         <ProspectWorkspaceSidePanel
@@ -1066,25 +874,13 @@ function BrokerProspectsSection({ app }) {
   );
 }
 
-function LeadDetailPanel({ lead, app, onClose }) {
-  const [draft, setDraft] = useState({
-    status: lead?.status || "new",
-    followUpDate: lead?.followUpDate || "",
-    notes: lead?.notes || ""
-  });
+export function LeadDetailPanel({ lead, app, onClose }) {
   const [activities, setActivities] = useState([]);
-  const [isLoadingActivities, setIsLoadingActivities] = useState(false);
-  const [activityType, setActivityType] = useState("note");
-  const [activityBody, setActivityBody] = useState("");
+  const [isLoadingActivities, setIsLoadingActivities] = useState(true);
+  const [assistantDirty, setAssistantDirty] = useState(false);
+  const [freshActivityId, setFreshActivityId] = useState(null);
   const [pending, setPending] = useState(false);
-
-  useEffect(() => {
-    setDraft({
-      status: lead?.status || "new",
-      followUpDate: lead?.followUpDate || "",
-      notes: lead?.notes || ""
-    });
-  }, [lead?.id, lead?.status, lead?.followUpDate, lead?.notes]);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -1095,7 +891,7 @@ function LeadDetailPanel({ lead, app, onClose }) {
         const response = await leadActivitiesApi.getActivities(lead.id);
         if (!cancelled) setActivities(response.activities || []);
       } catch (_error) {
-        if (!cancelled) setActivities([]);
+        if (!cancelled) setError("Kunde inte ladda aktivitetsloggen. Öppna leadet igen för att försöka på nytt.");
       } finally {
         if (!cancelled) setIsLoadingActivities(false);
       }
@@ -1106,53 +902,60 @@ function LeadDetailPanel({ lead, app, onClose }) {
     };
   }, [lead?.id]);
 
+  useEffect(() => {
+    if (!freshActivityId) return undefined;
+    const timer = window.setTimeout(() => setFreshActivityId(null), 4000);
+    return () => window.clearTimeout(timer);
+  }, [freshActivityId]);
+
   if (!lead) return null;
 
-  async function saveLead() {
-    setPending(true);
+  // "meeting" needs the newer backend; against an older deployment it is kept as a note instead of being lost.
+  async function logActivity(type, body) {
     try {
-      await app.updateLead(lead.id, {
-        status: draft.status,
-        followUpDate: draft.followUpDate,
-        notes: draft.notes
-      });
-    } finally {
-      setPending(false);
+      return await leadActivitiesApi.addActivity(lead.id, type, body);
+    } catch (caught) {
+      if (type !== "meeting") throw caught;
+      return leadActivitiesApi.addActivity(lead.id, "note", `Möte: ${body}`);
     }
   }
 
-  async function addActivity(event) {
-    event.preventDefault();
-    const body = activityBody.trim();
-    if (!body) return;
+  // Called by the assistant once the person confirms a proposal. null means "leave as it is".
+  async function applyAssistantUpdate({ type, body, status, followUpDate }) {
+    setError("");
     setPending(true);
     try {
-      await leadActivitiesApi.addActivity(lead.id, activityType, body);
-      setActivityBody("");
+      let created = null;
+      if (type && body) created = (await logActivity(type, body))?.activity || null;
+      const patch = {};
+      if (status) patch.status = status;
+      if (followUpDate !== null && followUpDate !== undefined) patch.followUpDate = followUpDate;
+      if (Object.keys(patch).length > 0) await app.updateLead(lead.id, patch);
       const response = await leadActivitiesApi.getActivities(lead.id);
       setActivities(response.activities || []);
+      if (created?.id) setFreshActivityId(created.id);
     } finally {
       setPending(false);
     }
   }
 
   return (
-    <SidePanelFrame widthClassName="w-[min(560px,100vw)]" onClose={onClose}>
+    <EditorWorkspace size="medium" title="Hantera lead" dirty={assistantDirty} busy={pending} onClose={onClose}>
       {(handleClose) => (
         <>
-        <div className="border-b border-black/10 px-5 py-4">
+        <div className="shrink-0 border-b border-border px-5 py-4">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Lead</p>
-              <h2 className="mt-1 truncate text-xl font-semibold text-ink-900">{lead.renter?.name || lead.renter?.email || "Hyresgäst"}</h2>
-              <p className="mt-1 truncate text-sm text-ink-600">{lead.listing?.title || "Objekt"}</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">Lead</p>
+              <h2 className="mt-0.5 truncate text-xl font-semibold text-ink-900">{lead.renter?.name || lead.renter?.email || "Hyresgäst"}</h2>
+              <p className="mt-0.5 text-sm text-ink-500">Berätta vad som hänt så hjälper assistenten dig vidare.</p>
             </div>
             <Button
               type="button"
               variant="outline"
               size="icon"
               aria-label="Stäng"
-              className="h-10 w-10 shrink-0 rounded-full"
+              className="h-10 w-10 shrink-0 rounded-md"
               onClick={handleClose}
             >
               <XIcon className="h-4 w-4" />
@@ -1160,104 +963,66 @@ function LeadDetailPanel({ lead, app, onClose }) {
           </div>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <label>
-              <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-ink-500">Status</span>
-              <Select value={draft.status} onValueChange={(value) => setDraft((prev) => ({ ...prev, status: value }))}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {leadStatusOptions().map((status) => (
-                    <SelectItem key={status.value} value={status.value}>{status.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </label>
-            <label>
-              <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-ink-500">Uppföljning</span>
-              <Input
-                type="date"
-                value={draft.followUpDate || ""}
-                onChange={(event) => setDraft((prev) => ({ ...prev, followUpDate: event.target.value }))}
+        {/* Two columns that share the height between them: only the log and the conversation scroll, never the overlay. */}
+        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto bg-canvas p-4 md:overflow-hidden md:p-5">
+          {error && <p role="alert" className="mb-4 shrink-0 rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">{error}</p>}
+          <div className="grid min-h-0 flex-1 gap-4 md:grid-cols-[minmax(250px,300px)_minmax(0,1fr)] md:grid-rows-[minmax(0,1fr)]">
+            <div className="flex min-h-0 flex-col gap-4">
+              <LeadInterestCard
+                lead={lead}
+                followUp={lead.followUpDate ? { label: formatDate(lead.followUpDate), overdue: isOverdueFollowUp(lead.followUpDate) } : null}
               />
-            </label>
-            <label className="sm:col-span-2">
-              <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-ink-500">Anteckningar</span>
-              <Textarea
-                className="min-h-[120px]"
-                value={draft.notes}
-                onChange={(event) => setDraft((prev) => ({ ...prev, notes: event.target.value }))}
-                placeholder="Intern anteckning om behov, nästa steg eller invändningar."
+              <LeadActivityLog
+                activities={activities.map((activity) => ({
+                  ...activity,
+                  label: ACTIVITY_TYPES.find((type) => type.value === activity.type)?.label || activity.type,
+                  when: relativeTime(activity.createdAt)
+                }))}
+                loading={isLoadingActivities}
+                freshId={freshActivityId}
               />
-            </label>
+            </div>
+            <LeadAssistant
+              className={`md:min-h-0 ${leadCardClass}`}
+              lead={lead}
+              activities={activities}
+              loading={isLoadingActivities}
+              brokerName={firstNameOf(app.user?.name)}
+              onApply={applyAssistantUpdate}
+              onDirtyChange={setAssistantDirty}
+            />
           </div>
-
-          <Button type="button" className="h-auto mt-4 px-4 py-2" disabled={pending} onClick={saveLead}>
-            Spara lead
-          </Button>
-
-          <section className="mt-6 border-t border-black/10 pt-5">
-            <div className="mb-3 flex items-center justify-between gap-3">
-              <h3 className="text-lg font-semibold">Aktivitetslogg</h3>
-              <Badge variant="outline" className="h-auto rounded-full bg-[#f7f7f7] px-2 py-0.5 text-xs font-semibold text-ink-700">
-                {activities.length}
-              </Badge>
-            </div>
-
-            <form className="rounded-2xl border border-black/10 bg-[#fafafa] p-3" onSubmit={addActivity}>
-              <div className="grid gap-2 sm:grid-cols-[150px_1fr]">
-                <Select value={activityType} onValueChange={setActivityType}>
-                  <SelectTrigger className="text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ACTIVITY_TYPES.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Input
-                  className="text-sm"
-                  value={activityBody}
-                  onChange={(event) => setActivityBody(event.target.value)}
-                  placeholder="Lägg till aktivitet"
-                />
-              </div>
-              <Button type="submit" variant="secondary" className="h-auto mt-2 w-full justify-center py-2 text-xs" disabled={pending || !activityBody.trim()}>
-                Lägg till
-              </Button>
-            </form>
-
-            <div className="mt-3 space-y-2">
-              {isLoadingActivities ? (
-                <p className="rounded-2xl border border-black/10 bg-[#ffffff] px-3 py-4 text-sm text-ink-600">Laddar aktivitetslogg...</p>
-              ) : null}
-              {!isLoadingActivities && activities.length === 0 ? (
-                <p className="rounded-2xl border border-black/10 bg-[#ffffff] px-3 py-4 text-sm text-ink-600">Ingen aktivitet ännu.</p>
-              ) : null}
-              {activities.map((activity) => (
-                <article key={activity.id} className="rounded-2xl border border-black/10 bg-[#ffffff] px-3 py-2.5">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm font-semibold">{ACTIVITY_TYPES.find((type) => type.value === activity.type)?.label || activity.type}</p>
-                    <p className="text-[11px] font-medium text-ink-500">{relativeTime(activity.createdAt)}</p>
-                  </div>
-                  <p className="mt-1 text-sm text-ink-700">{activity.body}</p>
-                </article>
-              ))}
-            </div>
-          </section>
         </div>
+        <footer className="flex shrink-0 items-center justify-between gap-3 border-t border-border bg-surface px-5 py-3">
+          <p className="text-xs text-ink-500">{pending ? "Sparar…" : "Ändringar du bekräftar sparas direkt"}</p>
+          <Button variant="outline" disabled={pending} onClick={handleClose}>Stäng</Button>
+        </footer>
         </>
       )}
-    </SidePanelFrame>
+    </EditorWorkspace>
   );
 }
 
 function BrokerLeadsSection({ app }) {
   const { leads, updateLead } = app;
   const [selectedLeadId, setSelectedLeadId] = useState(null);
+  const [savingLeadIds, setSavingLeadIds] = useState({});
+  const [statusOverrides, setStatusOverrides] = useState({});
+  async function saveInlineStatus(lead, status) {
+    if (!status || savingLeadIds[lead.id]) return;
+    const previous = statusOverrides[lead.id] || lead.status || "new";
+    setStatusOverrides((prev) => ({ ...prev, [lead.id]: status }));
+    setSavingLeadIds((prev) => ({ ...prev, [lead.id]: true }));
+    try {
+      await updateLead(lead.id, { status });
+      setStatusOverrides((prev) => { const next = { ...prev }; delete next[lead.id]; return next; });
+    } catch (error) {
+      setStatusOverrides((prev) => ({ ...prev, [lead.id]: previous }));
+      app.pushToast(error.message || "Kunde inte spara statusen. Försök igen.", "error");
+    } finally {
+      setSavingLeadIds((prev) => ({ ...prev, [lead.id]: false }));
+    }
+  }
 
   const rows = useMemo(() => {
     return [...(Array.isArray(leads) ? leads : [])]
@@ -1279,51 +1044,47 @@ function BrokerLeadsSection({ app }) {
 
   return (
     <div className="space-y-4">
-      <header>
-        <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">LEADS</p>
-        <h1 className="mt-1 text-2xl font-semibold text-ink-900">Leads</h1>
-        <p className="mt-1 text-sm text-ink-600">Inkommande intresse för dina objekt.</p>
-      </header>
+
 
       <section className="grid gap-3 md:grid-cols-3">
-        <article className="rounded-3xl bg-[#F3F7F7] p-4">
+        <Card className="gap-0 bg-tint p-4">
           <p className="text-sm text-ink-600">Totala leads</p>
-          <p className="mt-3 text-[30px] font-semibold leading-none text-[#0b0a0e]">{rows.length}</p>
+          <p className="mt-3 text-[30px] font-semibold leading-none text-strong">{rows.length}</p>
           <p className="mt-2 text-xs text-ink-500">Alla aktiva intresseanmälningar</p>
-        </article>
-        <article className="rounded-3xl bg-[#F3F7F7] p-4">
+        </Card>
+        <Card className="gap-0 bg-tint p-4">
           <p className="text-sm text-ink-600">Förfallna uppföljningar</p>
-          <p className="mt-3 text-[30px] font-semibold leading-none text-[#0b0a0e]">{overdueCount}</p>
+          <p className="mt-3 text-[30px] font-semibold leading-none text-strong">{overdueCount}</p>
           <p className="mt-2 text-xs text-ink-500">Beräknat i klienten från dagens datum</p>
-        </article>
-        <article className="rounded-3xl bg-[#F3F7F7] p-4">
+        </Card>
+        <Card className="gap-0 bg-tint p-4">
           <p className="text-sm text-ink-600">Bokade visningar</p>
-          <p className="mt-3 text-[30px] font-semibold leading-none text-[#0b0a0e]">{viewingCount}</p>
+          <p className="mt-3 text-[30px] font-semibold leading-none text-strong">{viewingCount}</p>
           <p className="mt-2 text-xs text-ink-500">Snittmatch {avgScore}%</p>
-        </article>
+        </Card>
       </section>
 
-      <section className="surface overflow-hidden">
-        <div className="border-b border-black/10 px-4 py-4 sm:px-5">
+      <Card className="gap-0 py-0 overflow-hidden">
+        <div className="border-b border-veil/10 px-4 py-4 sm:px-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Intresseanmälningar</p>
-              <p className="mt-1 text-sm text-ink-600">Klicka på en rad för status, anteckningar, uppföljning och logg.</p>
+              <p className="mt-1 text-sm text-ink-600">Klicka på en rad för att följa upp med hjälp av assistenten och se loggen.</p>
             </div>
-            <Badge variant="outline" className="h-auto rounded-full bg-black/10 px-2 py-0.5 text-[11px] font-semibold text-ink-700">{rows.length} rader</Badge>
+            <Badge variant="outline" className="h-auto rounded-full bg-veil/10 px-2 py-0.5 text-[11px] font-semibold text-ink-700">{rows.length} rader</Badge>
           </div>
         </div>
 
         <div className="overflow-x-auto">
           <Table className="min-w-[900px]">
-            <TableHeader className="bg-[#fafafa] text-[11px] uppercase tracking-wide text-ink-500">
+            <TableHeader className="bg-canvas text-[11px] uppercase tracking-wide text-ink-500">
               <TableRow className="hover:bg-transparent">
                 <TableHead className="px-4 py-3 sm:px-5">Hyresgäst</TableHead>
                 <TableHead className="px-4 py-3">Objekt</TableHead>
                 <TableHead className="px-4 py-3">Status</TableHead>
                 <TableHead className="px-4 py-3 text-right">Match</TableHead>
                 <TableHead className="px-4 py-3">Tid</TableHead>
-                <TableHead className="px-4 py-3 text-right sm:px-5">Action</TableHead>
+                <TableHead className="px-4 py-3 text-right sm:px-5">Åtgärder</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -1333,15 +1094,15 @@ function BrokerLeadsSection({ app }) {
                 return (
                   <TableRow
                     key={lead.id}
-                    className={`cursor-pointer border-t border-black/10 transition hover:bg-[#fafafa] ${
-                      overdue ? "shadow-[inset_3px_0_0_#0b0a0e]" : ""
+                    className={`cursor-pointer border-t border-veil/10 transition hover:bg-canvas ${
+                      overdue ? "shadow-[inset_3px_0_0_rgb(var(--strong))]" : ""
                     }`}
-                    onClick={() => setSelectedLeadId(lead.id)}
+                    onClick={(event) => { if (!event.target.closest("button, [role=combobox], [role=option], [data-slot=select-content]")) setSelectedLeadId(lead.id); }}
                   >
-                    <TableCell className="whitespace-normal px-4 py-3.5 align-top sm:px-5">
+                    <TableCell className="whitespace-normal px-4 py-2 align-top sm:px-5">
                       <div className="flex items-center gap-3">
-                        <Avatar className="h-10 w-10 shrink-0">
-                          <AvatarFallback className="bg-[#0b0a0e] text-sm font-semibold text-white">{initialsForName(renterName)}</AvatarFallback>
+                        <Avatar className="h-9 w-9 shrink-0">
+                          <AvatarFallback className="bg-strong text-xs font-semibold text-on-strong">{initialsForName(renterName)}</AvatarFallback>
                         </Avatar>
                         <span className="min-w-0">
                           <span className="block truncate font-semibold text-ink-900">{renterName}</span>
@@ -1351,10 +1112,10 @@ function BrokerLeadsSection({ app }) {
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell className="px-4 py-3.5 align-top font-semibold text-ink-800">{lead.listing?.title || "Objekt"}</TableCell>
-                    <TableCell className="whitespace-normal px-4 py-3.5 align-top">
+                    <TableCell className="px-4 py-2 align-top font-semibold text-ink-800">{lead.listing?.title || "Objekt"}</TableCell>
+                    <TableCell className="whitespace-normal px-4 py-2 align-top">
                       <div className="flex flex-wrap items-center gap-2">
-                        <StatusPill status={lead.status} />
+                        <StatusPill status={statusOverrides[lead.id] || lead.status} />
                         {overdue ? (
                           <Badge variant="outline" className="h-auto rounded-full border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-800">
                             Förfallen
@@ -1362,50 +1123,33 @@ function BrokerLeadsSection({ app }) {
                         ) : null}
                       </div>
                     </TableCell>
-                    <TableCell className={`px-4 py-3.5 text-right font-semibold ${scoreClass(Number(lead.fitScore || 0))}`}>
+                    <TableCell className={`px-4 py-2 text-right font-semibold ${scoreClass(Number(lead.fitScore || 0))}`}>
                       {Number(lead.fitScore || 0)}%
                     </TableCell>
-                    <TableCell className="px-4 py-3.5 align-top text-xs font-semibold text-ink-500">{relativeTime(lead.createdAt)}</TableCell>
-                    <TableCell className="whitespace-normal px-4 py-3.5 text-right sm:px-5">
-                      <div className="flex justify-end gap-2">
-                        <Select
-                          value={lead.status || "new"}
-                          onValueChange={(value) => {
-                            void updateLead(lead.id, { status: value });
-                          }}
-                        >
-                          <SelectTrigger
-                            className="w-[168px] text-xs"
-                            onClick={(event) => event.stopPropagation()}
-                          >
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {leadStatusOptions().map((status) => (
-                              <SelectItem key={status.value} value={status.value}>{status.label}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="h-9 w-9 rounded-full text-ink-600 hover:bg-[#ffffff]"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            setSelectedLeadId(lead.id);
-                          }}
-                        >
-                          <MoreHorizontalIcon className="h-4 w-4" />
-                        </Button>
-                      </div>
+                    <TableCell className="px-4 py-2 align-top text-xs font-semibold text-ink-500">{relativeTime(lead.createdAt)}</TableCell>
+                    <TableCell className="whitespace-normal px-4 py-2 text-right sm:px-5">
+                      <RowActionsMenu
+                        label={`Åtgärder för ${renterName}`}
+                        actions={[
+                          { key: "open", label: "Öppna intresseanmälan", icon: ArrowUpRight, onSelect: () => setSelectedLeadId(lead.id) },
+                          {
+                            key: "status",
+                            label: "Ändra status",
+                            icon: CircleDot,
+                            disabled: Boolean(savingLeadIds[lead.id]),
+                            value: statusOverrides[lead.id] || lead.status || "new",
+                            options: leadStatusOptions(),
+                            onValueChange: (value) => void saveInlineStatus(lead, value)
+                          }
+                        ]}
+                      />
                     </TableCell>
                   </TableRow>
                 );
               })}
               {rows.length === 0 ? (
                 <TableRow className="hover:bg-transparent">
-                  <TableCell colSpan={6} className="whitespace-normal border-t border-black/10 px-4 py-10 text-center sm:px-5">
+                  <TableCell colSpan={6} className="whitespace-normal border-t border-veil/10 px-4 py-10 text-center sm:px-5">
                     <p className="font-semibold text-ink-900">Inga intresseanmälningar ännu</p>
                     <p className="mt-1 text-sm text-ink-500">Nya förfrågningar visas här när hyresgäster bokar visning.</p>
                   </TableCell>
@@ -1414,47 +1158,57 @@ function BrokerLeadsSection({ app }) {
             </TableBody>
           </Table>
         </div>
-      </section>
+      </Card>
 
       {selectedLead ? <LeadDetailPanel lead={selectedLead} app={app} onClose={() => setSelectedLeadId(null)} /> : null}
     </div>
   );
 }
 
-function BrokerPlaceholder({ sectionKey }) {
-  return (
-    <div className="rounded-3xl border border-black/10 bg-[#ffffff] p-6 text-sm text-ink-600">
-      {BROKER_SECTION_TITLES[sectionKey] || "Sidan"} kommer snart.
-    </div>
-  );
-}
-
-function BrokerPanelPage({ app, pathname }) {
+function BrokerPanelPage({ app, pathname: routePathname }) {
+  // Profil, Inställningar and Hjälp are a window over a page (the account window), not a page: the page is the one it was opened
+  // from, and it stays in the shell behind the window.
+  const account = parseAccountPath(routePathname, typeof window !== "undefined" ? window.location.hash : "", normalizeAppRole(app?.user?.role));
+  const pathname = account ? accountBackgroundPath("/app/broker") : routePathname;
   const sectionKey = sectionFromPath(pathname);
   const currentSectionLabel = BROKER_SECTION_TITLES[sectionKey] || "Översikt";
   const leadCount = Array.isArray(app?.leads) ? app.leads.length : 0;
+  const assistantData = useBrokerListingsData(app);
+
+  useEffect(() => {
+    const legacy = pathname.match(/^\/app\/broker\/(sparade-objekt|sparade-sokningar)\/?$/);
+    if (legacy) navigateTo(`/app/broker/profil#${legacy[1]}`, { replace: true });
+  }, [pathname]);
 
   return (
-    <AdminPanelShell
-      pathname={pathname}
-      navItems={BROKER_NAV_ITEMS}
-      bottomNavItems={BROKER_BOTTOM_NAV_ITEMS}
-      sectionTitle={currentSectionLabel}
-      onLogout={app?.logout}
-      badges={{ leads: leadCount }}
-      fullBleedContent={sectionKey === "meddelanden"}
-      contentKey={sectionKey}
+    <BrokerAssistantProvider
+      panel="broker"
+      userName={app?.user?.name}
+      listings={assistantData.listingPerformance}
+      leads={assistantData.ownLeads}
+      loading={assistantData.isLoadingListings}
+      error={assistantData.listingLoadError}
     >
-      {sectionKey === "oversikt" ? <BrokerOverviewSection app={app} /> : null}
-      {sectionKey === "objekt" ? <BrokerListingsSection app={app} /> : null}
-      {sectionKey === "leads" ? <BrokerLeadsSection app={app} /> : null}
-      {sectionKey === "prospekt" ? <BrokerProspectsSection app={app} /> : null}
-      {sectionKey === "meddelanden" ? <MessagesPage app={app} /> : null}
-      {sectionKey === "sparade-objekt" ? <PanelProfileSection app={app} basePath="/app/broker/profil" forcedTab="favorites" /> : null}
-      {sectionKey === "sparade-sokningar" ? <PanelProfileSection app={app} basePath="/app/broker/profil" forcedTab="history" /> : null}
-      {sectionKey === "profil" ? <PanelProfileSection app={app} basePath="/app/broker/profil" /> : null}
-      {sectionKey === "installningar" || sectionKey === "hjalp" ? <BrokerPlaceholder sectionKey={sectionKey} /> : null}
-    </AdminPanelShell>
+      <AdminPanelShell
+        pathname={pathname}
+        navItems={BROKER_NAV_ITEMS}
+        bottomNavItems={BROKER_BOTTOM_NAV_ITEMS}
+        sectionTitle={currentSectionLabel}
+        onLogout={app?.logout}
+        badges={{ leads: leadCount }}
+        fullBleedContent={sectionKey === "meddelanden" || sectionKey === "assistent"}
+        hideAssistantLauncher={sectionKey === "assistent"}
+        contentKey={sectionKey}
+      >
+        {sectionKey === "oversikt" ? <BrokerOverviewSection app={app} /> : null}
+        {sectionKey === "assistent" ? <BrokerAssistantPage /> : null}
+        {sectionKey === "objekt" ? <BrokerListingsSection app={app} /> : null}
+        {sectionKey === "leads" ? <BrokerLeadsSection app={app} /> : null}
+        {sectionKey === "prospekt" ? <BrokerProspectsSection app={app} /> : null}
+        {sectionKey === "meddelanden" ? <MessagesPage app={app} /> : null}
+      </AdminPanelShell>
+      {account ? <AccountWindow app={app} base={account.base} pageKey={account.page.key} /> : null}
+    </BrokerAssistantProvider>
   );
 }
 

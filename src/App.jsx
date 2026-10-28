@@ -23,6 +23,7 @@ import ViewingsPage from "./pages/app/ViewingsPage";
 import { defaultAppPathForRole, defaultAppPathForUser, navigateTo, normalizeAppRole, usePathname } from "./lib/router";
 import { AppProvider, useAppState } from "./state/AppState";
 import { TooltipProvider } from "./components/ui/tooltip";
+import { clearBootTheme } from "./lib/theme";
 
 function AppContent() {
   const pathname = usePathname();
@@ -228,9 +229,9 @@ function AppContent() {
 
       if (pathname === "/app/favorites") {
         const favoritesTarget = role === "company_admin"
-          ? "/app/admin/sparade-objekt"
+          ? "/app/admin/profil#sparade-objekt"
           : role === "broker"
-            ? "/app/broker/sparade-objekt"
+            ? "/app/broker/profil#sparade-objekt"
             : "/app/profile?tab=favorites";
         navigateTo(favoritesTarget, { replace: true });
         return;
@@ -290,9 +291,14 @@ function AppContent() {
     return () => observer.disconnect();
   }, [pathname, app.isBootstrapping]);
 
+  // Once the app has started the panels' own provider has the theme (see index.html).
+  useEffect(() => {
+    if (!app.isBootstrapping) clearBootTheme();
+  }, [app.isBootstrapping]);
+
   if (app.isBootstrapping) {
     return (
-      <main className="min-h-screen bg-[#ffffff]" aria-hidden="true">
+      <main className="min-h-screen" aria-hidden="true">
         <div className="h-screen w-full" />
       </main>
     );
@@ -340,26 +346,31 @@ function AppContent() {
     const guestToken = decodeURIComponent(pathname.slice("/prospekt/dela/".length));
     content = <ProspectGuestPage token={guestToken} />;
   } else if (pathname.startsWith("/app")) {
-    const listingDetailMatch = pathname.match(/^\/app\/listings\/([^/]+)(?:\/gallery)?$/);
-    const manageListingMatch = pathname.match(/^\/app\/my-listings\/([^/]+)$/);
-    const prospectMatch = pathname.match(/^\/app\/prospekt\/([^/]+)$/);
+    const isPublishOpen = pathname === "/app/publish";
+    const publishBackground = isPublishOpen ? window.history.state?.publishBackground : null;
+    const backgroundPathname = isPublishOpen
+      ? (publishBackground?.split(/[?#]/)[0] || (normalizeAppRole(app.user?.role) === "company_admin" ? "/app/admin/annonser" : "/app/broker/objekt"))
+      : pathname;
+    const listingDetailMatch = backgroundPathname.match(/^\/app\/listings\/([^/]+)(?:\/gallery)?$/);
+    const manageListingMatch = backgroundPathname.match(/^\/app\/my-listings\/([^/]+)$/);
+    const prospectMatch = backgroundPathname.match(/^\/app\/prospekt\/([^/]+)$/);
     const listingId = listingDetailMatch ? decodeURIComponent(listingDetailMatch[1]) : null;
-    const isListingGalleryPath = Boolean(pathname.match(/^\/app\/listings\/[^/]+\/gallery$/));
+    const isListingGalleryPath = Boolean(backgroundPathname.match(/^\/app\/listings\/[^/]+\/gallery$/));
     const managedListingId = manageListingMatch ? decodeURIComponent(manageListingMatch[1]) : null;
     const prospectId = prospectMatch ? decodeURIComponent(prospectMatch[1]) : null;
-    const isAdminPath = pathname === "/app/admin" || pathname.startsWith("/app/admin/");
-    const isBrokerPath = pathname === "/app/broker" || pathname.startsWith("/app/broker/");
+    const isAdminPath = backgroundPathname === "/app/admin" || backgroundPathname.startsWith("/app/admin/");
+    const isBrokerPath = backgroundPathname === "/app/broker" || backgroundPathname.startsWith("/app/broker/");
 
     if (!app.user) {
-      if (pathname === "/app/rent") {
+      if (backgroundPathname === "/app/rent") {
         content = (
-          <AppShell pathname={pathname} user={null} isGuest onRequireAuth={openAuthOverlay}>
+          <AppShell pathname={backgroundPathname} user={null} isGuest onRequireAuth={openAuthOverlay}>
             <RentPage app={app} isGuest onRequireAuth={openAuthOverlay} />
           </AppShell>
         );
       } else if (listingId) {
         content = (
-          <AppShell pathname={pathname} user={null} isGuest onRequireAuth={openAuthOverlay}>
+          <AppShell pathname={backgroundPathname} user={null} isGuest onRequireAuth={openAuthOverlay}>
             <ListingDetailPage app={app} listingId={listingId} isGuest onRequireAuth={openAuthOverlay} initialView={isListingGalleryPath ? "gallery" : "detail"} />
           </AppShell>
         );
@@ -381,10 +392,10 @@ function AppContent() {
     const activeRole = normalizeAppRole(app.user?.role);
 
     if (isAdminPath) {
-      appRouteContent = <AdminPanelPage app={app} pathname={pathname} />;
+      appRouteContent = <AdminPanelPage app={app} pathname={backgroundPathname} />;
     } else if (isBrokerPath) {
-      appRouteContent = <BrokerPanelPage app={app} pathname={pathname} />;
-    } else if (pathname === "/app/rent") {
+      appRouteContent = <BrokerPanelPage app={app} pathname={backgroundPathname} />;
+    } else if (backgroundPathname === "/app/rent") {
       appRouteContent = <RentPage app={app} onRequireAuth={openAuthOverlay} />;
     } else if (listingId) {
       appRouteContent = <ListingDetailPage app={app} listingId={listingId} initialView={isListingGalleryPath ? "gallery" : "detail"} />;
@@ -392,16 +403,14 @@ function AppContent() {
       appRouteContent = <ManageListingPage app={app} listingId={managedListingId} />;
     } else if (prospectId) {
       appRouteContent = <ProspectRenterPage app={app} prospectId={prospectId} />;
-    } else if (pathname === "/app/viewings") {
+    } else if (backgroundPathname === "/app/viewings") {
       appRouteContent = <ViewingsPage app={app} />;
-    } else if (pathname === "/app/messages") {
+    } else if (backgroundPathname === "/app/messages") {
       appRouteContent = <MessagesPage app={app} />;
-    } else if (pathname === "/app/profile") {
+    } else if (backgroundPathname === "/app/profile") {
       appRouteContent = <ProfilePage app={app} />;
-    } else if (pathname === "/app/settings") {
+    } else if (backgroundPathname === "/app/settings") {
       appRouteContent = <SettingsPage app={app} />;
-    } else if (pathname === "/app/publish") {
-      appRouteContent = <PublishPage app={app} pathname={pathname} />;
     } else {
       appRouteContent = activeRole === "company_admin"
         ? <AdminPanelPage app={app} pathname="/app/admin" />
@@ -412,17 +421,24 @@ function AppContent() {
 
       content = (
         <AppShell
-          pathname={pathname}
+          pathname={backgroundPathname}
           user={app.user}
           listings={app.listings}
-          notifications={app.notifications}
-          companyBrokers={app.companyBrokers}
           myCompanies={app.myCompanies}
           onSwitchRole={app.switchRole}
           onSwitchCompany={app.switchActiveCompany}
           onLogout={app.logout}
         >
           {appRouteContent}
+          {isPublishOpen ? (
+            <PublishPage
+              app={app}
+              onClose={() => {
+                if (publishBackground) window.history.back();
+                else navigateTo(backgroundPathname, { replace: true });
+              }}
+            />
+          ) : null}
         </AppShell>
       );
     }

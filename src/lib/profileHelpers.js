@@ -180,6 +180,7 @@ export function normalizeProgram(program = {}, fallbackIndex = 0) {
   return {
     id: String(program.id || `program-${fallbackIndex + 1}`),
     title: String(program.title || "").trim() || `Lokalprogram ${fallbackIndex + 1}`,
+    contextNotes: Object.fromEntries(Object.entries(program.contextNotes || {}).filter(([, value]) => typeof value === "string")),
     district: program.district || "Alla",
     type,
     teamSize: program.teamSize || "",

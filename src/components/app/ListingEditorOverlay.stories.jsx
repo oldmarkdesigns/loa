@@ -39,13 +39,16 @@ export const EditFieldsAndToggleAmenity = {
     await userEvent.type(titleInput, "Nytt namn");
     await expect(titleInput).toHaveValue("Nytt namn");
 
-    const descriptionArea = canvas.getByDisplayValue("Fint kontor.");
+    // The description has a category of its own in the sidebar.
+    await userEvent.click(canvas.getByRole("tab", { name: "Beskrivning" }));
+    const descriptionArea = await canvas.findByDisplayValue("Fint kontor.");
     await expect(descriptionArea.tagName).toBe("TEXTAREA");
 
-    // Fiber starts active (border/bg styled), toggling should flip its pressed look.
+    // Fiber starts active (pressed), toggling flips it.
+    await userEvent.click(canvas.getByRole("tab", { name: "Bekvämligheter" }));
     const fiberButton = canvas.getByRole("button", { name: /fiber/i });
-    const initiallyActive = fiberButton.className.includes("bg-[#0b0a0e]");
+    await expect(fiberButton).toHaveAttribute("aria-pressed", "true");
     await userEvent.click(fiberButton);
-    await expect(fiberButton.className.includes("bg-[#0b0a0e]")).toBe(!initiallyActive);
+    await expect(fiberButton).toHaveAttribute("aria-pressed", "false");
   }
 };

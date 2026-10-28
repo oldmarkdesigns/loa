@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { expect, fn, within } from "storybook/test";
+import { expect, fn, waitFor, within } from "storybook/test";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import ProfileMenuDropdown from "./ProfileMenuDropdown";
 
@@ -33,6 +33,7 @@ export const RenterMenu = {
     const menu = within(document.body);
     await menu.findByText("Profil");
     await expect(menu.queryByText("Dina objekt")).not.toBeInTheDocument();
+    await expect(menu.queryByRole("menuitem", { name: "Växla till adminläge" })).not.toBeInTheDocument();
     await userEvent.click(menu.getByText("Sparade objekt"));
     await expect(window.location.pathname + window.location.search).toBe("/app/profile?tab=favorites");
   }
@@ -45,7 +46,29 @@ export const BrokerMenu = {
     await userEvent.click(trigger);
     const menu = within(document.body);
     await menu.findByText("Dina objekt");
+    await expect(menu.getByRole("menuitem", { name: "Växla till adminläge" })).toBeInTheDocument();
     await userEvent.click(menu.getByText("Logga ut"));
     await expect(args.onLogout).toHaveBeenCalledOnce();
   }
+};
+
+async function switchToAdminMode({ canvas, userEvent, args }, role, path) {
+  args.onSwitchRole.mockClear();
+  const start = window.location.pathname + window.location.search;
+  await userEvent.click(canvas.getByRole("button", { name: "Öppna profilmeny" }));
+  await userEvent.click(await within(document.body).findByRole("menuitem", { name: "Växla till adminläge" }));
+  await waitFor(() => expect(args.onSwitchRole).toHaveBeenCalledWith(role));
+  await waitFor(() => expect(window.location.pathname).toBe(path));
+  window.history.replaceState(null, "", start);
+}
+
+// While searching, the first row of the menu leads to the workspace, and the active role follows.
+export const BrokerSwitchesToAdminMode = {
+  args: { user: { role: "renter", roles: ["renter", "broker"], name: "Test Broker" } },
+  play: (context) => switchToAdminMode(context, "broker", "/app/broker")
+};
+
+export const CompanyAdminSwitchesToAdminMode = {
+  args: { user: { role: "renter", roles: ["renter", "broker", "company_admin"], name: "Test Admin" } },
+  play: (context) => switchToAdminMode(context, "company_admin", "/app/admin")
 };

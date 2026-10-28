@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { Card } from "@/components/ui/card";
+import { useMemo, useRef, useState } from "react";
 import { prospectsApi } from "../../api";
 import { BuildingIcon, CheckIcon, CoinsIcon, PaperclipIcon, PencilIcon, PinIcon, PlusIcon, TrashIcon, UploadIcon, UserIcon, XIcon } from "../icons/UiIcons";
 import { Input } from "@/components/ui/input";
@@ -134,6 +135,22 @@ export function useProspectEditorState(prospect, app, { onMutated } = {}) {
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [uploadingSectionId, setUploadingSectionId] = useState(null);
+  const [error, setError] = useState("");
+  const fingerprint = (name, items) => JSON.stringify([name, sectionsFingerprint(items)]);
+  const [savedFingerprint, setSavedFingerprint] = useState(() => fingerprint(prospect.title || "", buildInitialSections(prospect.draftSections)));
+  // The editor starts over from the stored prospect whenever it has been loaded or replaced (after a save, say). This is
+  // done while rendering rather than in an effect, so whatever mounts alongside the loaded prospect, the assistant
+  // included, never sees the content that was there before.
+  const loadedKey = `${prospect.id}:${prospect.updatedAt}`;
+  const [syncedKey, setSyncedKey] = useState(loadedKey);
+  if (syncedKey !== loadedKey) {
+    const next = buildInitialSections(prospect.draftSections);
+    setSyncedKey(loadedKey);
+    setTitle(prospect.title || "");
+    setSections(next);
+    setSavedFingerprint(fingerprint(prospect.title || "", next));
+  }
+  const dirty = fingerprint(title, sections) !== savedFingerprint;
 
   const hasUnpublishedChanges = useMemo(() => {
     if (!prospect.currentVersion) return sections.some((section) => section.body.trim()) || Boolean(title.trim());
@@ -196,10 +213,19 @@ export function useProspectEditorState(prospect, app, { onMutated } = {}) {
     }
   }
 
-  async function saveDraft() {
+  /** Replaces the title and sections at once, for an assistant that edits several parts in one go (and undoes it). */
+  function replaceContent(next) {
+    setTitle(next.title);
+    setSections(next.sections);
+  }
+
+  /** Saves the draft, or `override` ({ title, sections }) when it has only just been set and the state has not caught up. */
+  async function saveDraft(override) {
+    const target = override && Array.isArray(override.sections) ? override : { title, sections };
     setSaving(true);
+    setError("");
     try {
-      const orderedSections = sections.map((section, index) => {
+      const orderedSections = target.sections.map((section, index) => {
         const composedBody = composeBodyFromFields(section.kind, section.fields);
         return {
           ...section,
@@ -207,9 +233,14 @@ export function useProspectEditorState(prospect, app, { onMutated } = {}) {
           order: index
         };
       });
-      const { prospect: updated } = await prospectsApi.saveDraft(prospect.id, title, orderedSections);
+      const { prospect: updated } = await prospectsApi.saveDraft(prospect.id, target.title, orderedSections);
+      setSavedFingerprint(fingerprint(target.title, target.sections));
       app.pushToast("Utkast sparat.", "success");
       await onMutated?.(updated);
+      return true;
+    } catch (error) {
+      setError(error.message || "Kunde inte spara utkastet.");
+      return false;
     } finally {
       setSaving(false);
     }
@@ -218,10 +249,12 @@ export function useProspectEditorState(prospect, app, { onMutated } = {}) {
   async function publishVersion() {
     setPublishing(true);
     try {
-      await saveDraft();
+      if (!await saveDraft()) return;
       const { prospect: updated } = await prospectsApi.publishVersion(prospect.id);
       app.pushToast(`Version ${updated.currentVersion} publicerad.`, "success");
       await onMutated?.(updated);
+    } catch (error) {
+      setError(error.message || "Kunde inte publicera versionen.");
     } finally {
       setPublishing(false);
     }
@@ -229,6 +262,8 @@ export function useProspectEditorState(prospect, app, { onMutated } = {}) {
 
   return {
     title,
+    dirty,
+    error,
     setTitle,
     sections,
     saving,
@@ -241,6 +276,7 @@ export function useProspectEditorState(prospect, app, { onMutated } = {}) {
     removeSection,
     removeAttachment,
     uploadAttachment,
+    replaceContent,
     saveDraft,
     publishVersion
   };
@@ -257,7 +293,7 @@ function FactRow({ label, value }) {
 }
 
 function FactList({ children }) {
-  return <div className="divide-y divide-black/5 rounded-xl bg-[#fafafa] px-3">{children}</div>;
+  return <div className="divide-y divide-veil/5 rounded-xl bg-canvas px-3">{children}</div>;
 }
 
 function AmenityChips({ amenities }) {
@@ -265,7 +301,7 @@ function AmenityChips({ amenities }) {
   return (
     <div className="flex flex-wrap gap-1.5">
       {amenities.map((amenity) => (
-        <Badge key={amenity} variant="outline" className="h-auto rounded-2xl border-ink-200 bg-[#ffffff] px-3 py-1 text-xs font-semibold text-ink-700">{amenity}</Badge>
+        <Badge key={amenity} variant="outline" className="h-auto rounded-2xl border-ink-200 bg-control px-3 py-1 text-xs font-semibold text-ink-700">{amenity}</Badge>
       ))}
     </div>
   );
@@ -306,7 +342,7 @@ function PresetSelectField({ label, placeholder, value, presets, onChange }) {
             variant="outline"
             size="icon"
             aria-label="Bekräfta värde"
-            className="h-[30px] w-[30px] shrink-0 rounded-xl border-black/10 text-ink-700 hover:border-[#0b0a0e] hover:bg-transparent hover:text-[#0b0a0e]"
+            className="h-[30px] w-[30px] shrink-0 rounded-md border-veil/10 text-ink-700 hover:border-strong hover:bg-transparent hover:text-strong"
             onClick={confirmCustom}
           >
             <CheckIcon className="h-3.5 w-3.5" />
@@ -415,6 +451,7 @@ function PredefinedSectionBody({ section, listingSummary, updateSectionField, up
         <AmenityChips amenities={listingSummary?.amenities} />
         <Textarea
           className="min-h-16"
+          aria-label={section.title}
           value={section.body}
           onChange={(event) => updateSectionField(section.id, "body", event.target.value)}
           placeholder={PREDEFINED_SECTION_META.description.placeholder}
@@ -443,6 +480,7 @@ function PredefinedSectionBody({ section, listingSummary, updateSectionField, up
   return (
     <Textarea
       className="min-h-16"
+      aria-label={section.title}
       value={section.body}
       onChange={(event) => updateSectionField(section.id, "body", event.target.value)}
       placeholder={PREDEFINED_SECTION_META[section.kind]?.placeholder}
@@ -451,10 +489,11 @@ function PredefinedSectionBody({ section, listingSummary, updateSectionField, up
 }
 
 function SectionAttachments({ section, uploadingSectionId, uploadAttachment, removeAttachment }) {
+  const fileInputRef = useRef(null);
   return (
     <div className="mt-3 flex flex-wrap items-center gap-2">
       {(section.attachments || []).map((attachment, index) => (
-        <Badge key={`${attachment.storageId}-${index}`} variant="outline" className="h-auto gap-1.5 rounded-2xl border-ink-200 bg-[#ffffff] px-3 py-1 text-xs font-semibold text-ink-700">
+        <Badge key={`${attachment.storageId}-${index}`} variant="outline" className="h-auto gap-1.5 rounded-2xl border-ink-200 bg-control px-3 py-1 text-xs font-semibold text-ink-700">
           <PaperclipIcon className="h-3.5 w-3.5" />
           <span className="max-w-[160px] truncate">{attachment.fileName}</span>
           <Button type="button" variant="ghost" size="icon" className="h-4 w-4 hover:bg-transparent" aria-label="Ta bort bilaga" onClick={() => removeAttachment(section.id, index)}>
@@ -462,17 +501,18 @@ function SectionAttachments({ section, uploadingSectionId, uploadAttachment, rem
           </Button>
         </Badge>
       ))}
-      <Button type="button" variant="secondary" className="h-auto cursor-pointer px-3 py-1.5 text-xs" render={<label />}>
-        <input
+      <input
+          ref={fileInputRef}
           type="file"
           className="hidden"
-          disabled={uploadingSectionId === section.id}
+          disabled={Boolean(uploadingSectionId)}
           onChange={(event) => {
             const file = event.target.files?.[0];
             event.target.value = "";
             if (file) void uploadAttachment(section.id, file);
           }}
         />
+      <Button type="button" variant="secondary" disabled={Boolean(uploadingSectionId)} className="h-auto px-3 py-1.5 text-xs" onClick={() => fileInputRef.current?.click()}>
         <PaperclipIcon className="mr-1.5 h-3.5 w-3.5" />
         {uploadingSectionId === section.id ? "Laddar upp..." : "Bifoga fil"}
       </Button>
@@ -480,10 +520,11 @@ function SectionAttachments({ section, uploadingSectionId, uploadAttachment, rem
   );
 }
 
-export function ProspectEditorSections({ editor, listingSummary }) {
+export function ProspectEditorSections({ editor, listingSummary, activeKind = null }) {
   const { sections, uploadingSectionId, updateSectionField, updateSectionFieldValue, removeSection, removeAttachment, uploadAttachment, addSection } = editor;
-  const predefinedSections = sections.filter((section) => PREDEFINED_ORDER.includes(section.kind));
+  const predefinedSections = sections.filter((section) => PREDEFINED_ORDER.includes(section.kind) && (!activeKind || section.kind === activeKind));
   const customSections = sections.filter((section) => !PREDEFINED_ORDER.includes(section.kind));
+  const showCustomSections = !activeKind || activeKind === "materials";
 
   return (
     <div className="space-y-3">
@@ -491,9 +532,9 @@ export function ProspectEditorSections({ editor, listingSummary }) {
         const meta = PREDEFINED_SECTION_META[section.kind];
         const Icon = meta.Icon;
         return (
-          <section key={section.id} className="rounded-2xl border border-black/10 bg-[#ffffff] p-3.5 sm:p-4">
+          <Card key={section.id} className="gap-0 py-0 p-3.5 sm:p-4">
             <div className="flex items-center gap-2">
-              <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#f3f7f7] text-ink-700">
+              <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-tint text-ink-700">
                 <Icon className="h-3.5 w-3.5" />
               </span>
               <h3 className="text-sm font-semibold text-ink-900">{meta.label}</h3>
@@ -512,19 +553,20 @@ export function ProspectEditorSections({ editor, listingSummary }) {
               uploadAttachment={uploadAttachment}
               removeAttachment={removeAttachment}
             />
-          </section>
+          </Card>
         );
       })}
 
-      {customSections.length > 0 ? (
+      {showCustomSections && customSections.length > 0 ? (
         <p className="pt-2 text-[11px] font-semibold uppercase tracking-wide text-ink-500">Egna sektioner</p>
       ) : null}
 
-      {customSections.map((section) => (
-        <section key={section.id} className="rounded-2xl border border-black/10 bg-[#ffffff] p-3.5 sm:p-4">
+      {showCustomSections ? customSections.map((section) => (
+        <Card key={section.id} className="gap-0 py-0 p-3.5 sm:p-4">
           <div className="flex items-start justify-between gap-3">
             <Input
               className="font-semibold"
+              aria-label="Sektionens rubrik"
               value={section.title}
               onChange={(event) => updateSectionField(section.id, "title", event.target.value)}
               placeholder="Sektionsrubrik"
@@ -534,13 +576,14 @@ export function ProspectEditorSections({ editor, listingSummary }) {
               variant="outline"
               size="icon"
               aria-label="Ta bort sektion"
-              className="h-9 w-9 shrink-0 rounded-full border-black/10 text-ink-500 hover:border-rose-200 hover:bg-transparent hover:text-rose-600"
+              className="h-9 w-9 shrink-0 rounded-md border-veil/10 text-ink-500 hover:border-rose-200 hover:bg-transparent hover:text-rose-600"
               onClick={() => removeSection(section.id)}
             >
               <TrashIcon className="h-4 w-4" />
             </Button>
           </div>
           <Textarea
+            aria-label={section.title || "Sektionens innehåll"}
             className="mt-2.5 min-h-20"
             value={section.body}
             onChange={(event) => updateSectionField(section.id, "body", event.target.value)}
@@ -552,13 +595,13 @@ export function ProspectEditorSections({ editor, listingSummary }) {
             uploadAttachment={uploadAttachment}
             removeAttachment={removeAttachment}
           />
-        </section>
-      ))}
+        </Card>
+      )) : null}
 
-      <Button type="button" variant="secondary" className="h-auto w-full justify-center px-4 py-3" onClick={addSection}>
+      {showCustomSections ? <Button type="button" variant="secondary" className="h-auto w-full justify-center px-4 py-3" onClick={addSection}>
         <PlusIcon className="mr-1.5 h-4 w-4" />
         Lägg till anpassad sektion
-      </Button>
+      </Button> : null}
     </div>
   );
 }
@@ -566,13 +609,14 @@ export function ProspectEditorSections({ editor, listingSummary }) {
 export function ProspectEditorFooterActions({ editor }) {
   return (
     <>
+      {editor.error ? <p role="alert" className="w-full text-sm text-rose-700">{editor.error}</p> : null}
       {editor.hasUnpublishedChanges ? (
         <span className="mr-auto text-xs font-semibold text-amber-700">Opublicerade ändringar</span>
       ) : null}
-      <Button type="button" variant="secondary" className="h-auto px-4 py-2 text-sm" onClick={editor.saveDraft} disabled={editor.saving || editor.publishing}>
+      <Button type="button" variant="secondary" className="h-auto px-4 py-2 text-sm" onClick={editor.saveDraft} disabled={editor.saving || editor.publishing || Boolean(editor.uploadingSectionId)}>
         {editor.saving ? "Sparar..." : "Spara utkast"}
       </Button>
-      <Button type="button" className="h-auto px-4 py-2 text-sm" onClick={editor.publishVersion} disabled={editor.publishing}>
+      <Button type="button" className="h-auto px-4 py-2 text-sm" onClick={editor.publishVersion} disabled={editor.publishing || editor.saving || Boolean(editor.uploadingSectionId)}>
         {editor.publishing ? "Publicerar..." : "Publicera ny version"}
       </Button>
     </>

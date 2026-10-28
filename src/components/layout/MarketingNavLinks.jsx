@@ -8,17 +8,18 @@ export const marketingPrimaryItems = [
 export const marketingSectionItems = [
   { label: "Så fungerar det", hash: "#sa-fungerar-det" },
   { label: "Lokalprogram", hash: "#lokalprogram" },
+  { label: "TOC-kalkylator", hash: "#toc-kalkylator" },
   { label: "Priser", hash: "#priser" },
   { label: "FAQ", hash: "#faq" }
 ];
 
-function baseNavClass(active = false) {
-  return `nav-underline-anim text-sm font-semibold transition hover:text-[#0b0a0e] ${
-    active ? "nav-underline-anim-active text-[#0b0a0e]" : "text-[#0b0a0e]"
-  }`;
+// `light` is for links over a dark image: white text and a white underline.
+function baseNavClass(active = false, light = false) {
+  const text = light ? "text-white hover:text-white nav-underline-anim-light" : "text-strong hover:text-strong";
+  return `nav-underline-anim text-sm font-semibold transition ${text} ${active ? "nav-underline-anim-active" : ""}`;
 }
 
-function MarketingNavLinks({ hrefPrefix = "", onSectionLinkClick, onPublish, onPrimaryNavClick, showPublish = true, activeHref, activeHash }) {
+function MarketingNavLinks({ hrefPrefix = "", onSectionLinkClick, onPublish, onPrimaryNavClick, showPublish = true, activeHref, activeHash, light = false }) {
   return (
     <>
       {marketingPrimaryItems.map((item) => {
@@ -26,7 +27,7 @@ function MarketingNavLinks({ hrefPrefix = "", onSectionLinkClick, onPublish, onP
           <a
             key={item.label}
             href={item.href}
-            className={baseNavClass(activeHref === item.href)}
+            className={baseNavClass(activeHref === item.href, light)}
             onClick={(event) => {
               if (onPrimaryNavClick?.(event, item) === true) {
                 return;
@@ -45,7 +46,7 @@ function MarketingNavLinks({ hrefPrefix = "", onSectionLinkClick, onPublish, onP
           <a
             key={item.hash}
             href={href}
-            className={baseNavClass(activeHash === item.hash)}
+            className={baseNavClass(activeHash === item.hash, light)}
             onClick={onSectionLinkClick ? (event) => onSectionLinkClick(event, item.hash) : undefined}
           >
             {item.label}
@@ -56,7 +57,7 @@ function MarketingNavLinks({ hrefPrefix = "", onSectionLinkClick, onPublish, onP
         <Button
           type="button"
           variant="outline"
-          className="h-auto gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-[#0b0a0e] hover:bg-[#0b0a0e] hover:text-white"
+          className="h-auto gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-strong hover:bg-strong hover:text-on-strong"
           onClick={onPublish}
         >
           <span aria-hidden="true" className="text-sm leading-none">+</span>

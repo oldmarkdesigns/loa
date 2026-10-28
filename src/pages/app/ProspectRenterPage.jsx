@@ -77,7 +77,7 @@ function ProspectRenterPage({ prospectId }) {
           ) : (
             prospect.publishedSections.map((section) => (
               <section key={section.id} className="surface p-4 sm:p-5">
-                <h2 className="text-lg font-semibold text-[#0b0a0e]">{section.title}</h2>
+                <h2 className="text-lg font-semibold text-strong">{section.title}</h2>
                 <p className="mt-2 whitespace-pre-wrap text-sm text-ink-700">{section.body}</p>
                 {section.attachments?.length > 0 ? (
                   <div className="mt-3 flex flex-wrap gap-2">
@@ -85,7 +85,7 @@ function ProspectRenterPage({ prospectId }) {
                       <Badge
                         key={`${attachment.storageId}-${index}`}
                         variant="outline"
-                        className="h-auto gap-1.5 rounded-2xl border-ink-200 bg-[#ffffff] px-3 py-1 text-xs font-semibold text-ink-700 hover:bg-[#ffffff]"
+                        className="h-auto gap-1.5 rounded-2xl border-ink-200 bg-surface px-3 py-1 text-xs font-semibold text-ink-700 hover:bg-surface"
                         render={<a href={attachment.url} target="_blank" rel="noopener noreferrer" />}
                       >
                         <PaperclipIcon className="h-3.5 w-3.5" />

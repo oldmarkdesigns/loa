@@ -29,12 +29,12 @@ function ProspectCommentThread({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex flex-wrap gap-1.5 border-b border-black/10 pb-3">
+      <div className="flex flex-wrap gap-1.5 border-b border-veil/10 pb-3">
         <Button
           type="button"
           variant="outline"
           className={`h-auto rounded-2xl border-ink-200 px-3 py-1 text-xs font-semibold text-ink-700 transition ${
-            activeSectionId === "general" ? "border-[#0b0a0e] bg-[#0b0a0e] text-white hover:bg-[#0b0a0e]/90" : ""
+            activeSectionId === "general" ? "border-strong bg-strong text-on-strong hover:bg-strong/90" : ""
           }`}
           onClick={() => setActiveSectionId("general")}
         >
@@ -46,7 +46,7 @@ function ProspectCommentThread({
             type="button"
             variant="outline"
             className={`h-auto rounded-2xl border-ink-200 px-3 py-1 text-xs font-semibold text-ink-700 transition ${
-              activeSectionId === section.id ? "border-[#0b0a0e] bg-[#0b0a0e] text-white hover:bg-[#0b0a0e]/90" : ""
+              activeSectionId === section.id ? "border-strong bg-strong text-on-strong hover:bg-strong/90" : ""
             }`}
             onClick={() => setActiveSectionId(section.id)}
           >
@@ -60,7 +60,7 @@ function ProspectCommentThread({
           <p className="text-sm text-ink-500">Inga kommentarer än på den här sektionen.</p>
         ) : (
           commentsForSection.map((comment) => (
-            <div key={comment.id} className="rounded-2xl border border-black/10 bg-[#fafafa] p-3">
+            <div key={comment.id} className="rounded-2xl border border-veil/10 bg-canvas p-3">
               <div className="flex items-center justify-between gap-2">
                 <span className="text-sm font-semibold text-ink-900">
                   {comment.authorType === "guest" ? `${comment.guestName} (gäst)` : comment.authorName || "Användare"}
@@ -73,7 +73,7 @@ function ProspectCommentThread({
         )}
       </div>
 
-      <form className="shrink-0 space-y-2 border-t border-black/10 pt-3" onSubmit={handleSubmit}>
+      <form className="shrink-0 space-y-2 border-t border-veil/10 pt-3" onSubmit={handleSubmit}>
         {requireGuestName ? (
           <Input
             placeholder="Ditt namn"

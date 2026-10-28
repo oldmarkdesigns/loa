@@ -1,3 +1,4 @@
+import { Card } from "@/components/ui/card";
 import { useState } from "react";
 import {
   BuildingIcon,
@@ -17,7 +18,6 @@ import {
 } from "../icons/UiIcons";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 
 function listFromDelimitedValue(value) {
@@ -67,6 +67,8 @@ function programSummary(program = {}) {
     { key: "moveInDate", label: "Inflyttning", value: program.moveInDate || "-", Icon: CalendarIcon },
     { key: "contractFlex", label: "Avtal", value: program.contractFlex || "Alla", Icon: ClockIcon },
     { key: "transit", label: "Kollektivtrafik", value: program.transitDistance || "Alla", Icon: MapIcon },
+    { key: "access", label: "Tillträde", value: program.accessHours || "Alla", Icon: ClockIcon },
+    { key: "layout", label: "Planlösning", value: program.layoutType || "Alla", Icon: BuildingIcon },
     { key: "parking", label: "Parkering", value: program.parkingType || "Alla", Icon: CarIcon },
     {
       key: "prefs",
@@ -81,23 +83,6 @@ function programSummary(program = {}) {
   ];
 }
 
-function programProgress(program = {}) {
-  const preferredTypes = listFromDelimitedValue(program.type);
-  const amenities = listFromDelimitedValue(program.amenities);
-  const checks = [
-    isFilled(program.district, { disallowAll: true }),
-    isFilled(preferredTypes, { disallowAll: true }),
-    isFilled(program.teamSize),
-    isFilled(program.maxBudget) || isFilled(program.minBudget),
-    isFilled(program.moveInDate),
-    isFilled(program.transitDistance),
-    amenities.length > 0
-  ];
-  const done = checks.filter(Boolean).length;
-  const total = checks.length;
-  return { done, total, percent: total > 0 ? Math.round((done / total) * 100) : 0 };
-}
-
 export function programPreview(program = {}) {
   const parts = [];
   const types = listFromDelimitedValue(program.type);
@@ -109,159 +94,59 @@ export function programPreview(program = {}) {
 }
 
 function LocalProgramModule({
+  title = "Lokalprogram",
   programs = [],
   canEdit = true,
   onAddProgram,
   onEditProgram,
   onDeleteProgram
 }) {
-  const initialOpenId = programs[0]?.id || "";
-  const [expandedProgramIds, setExpandedProgramIds] = useState(() => new Set(initialOpenId ? [initialOpenId] : []));
-
-  function toggleExpanded(programId) {
-    setExpandedProgramIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(programId)) next.delete(programId);
-      else next.add(programId);
-      return next;
-    });
-  }
-
+  const [expandedProgramIds, setExpandedProgramIds] = useState([]);
   return (
-    <article className="rounded-3xl border border-black/10 bg-[#ffffff] p-5 sm:p-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="text-2xl font-semibold text-[#0b0a0e]">Lokalprogram</h2>
-          <p className="mt-1 text-sm text-ink-600">Flera behov kan sparas separat för olika team, lägen eller tidslinjer.</p>
-        </div>
-        {canEdit ? (
-          <Button
-            type="button"
-            className="h-auto gap-2 rounded-full px-4 py-2 text-sm font-semibold"
-            onClick={onAddProgram}
-          >
-            <PlusIcon className="h-4 w-4" />
-            Lägg till
-          </Button>
-        ) : null}
+    <Card className="gap-0 overflow-hidden p-0">
+      <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
+        <div className="flex items-center gap-2"><h2 className="text-base font-semibold">{title}</h2><Badge variant="secondary">{programs.length}</Badge></div>
+        {canEdit && <Button variant="outline" size="sm" onClick={onAddProgram}><PlusIcon className="mr-1.5 h-4 w-4" />Lägg till</Button>}
       </div>
-
-      {programs.length === 0 ? (
-        <Button
-          type="button"
-          variant="outline"
-          className="h-auto mt-5 w-full justify-between gap-4 rounded-2xl border-dashed border-black/20 bg-[#f8fafc] p-4 text-left font-normal hover:border-[#0b0a0e]/40"
-          onClick={onAddProgram}
-        >
-          <span>
-            <span className="block text-sm font-semibold text-[#0b0a0e]">Inget lokalprogram ännu</span>
-            <span className="mt-0.5 block text-sm text-ink-600">Lägg till första programmet för bättre matchning.</span>
-          </span>
-          <PlusIcon className="h-5 w-5 shrink-0 text-[#0b0a0e]" />
-        </Button>
-      ) : (
-        <Accordion
-          value={Array.from(expandedProgramIds)}
-          onValueChange={(next) => setExpandedProgramIds(new Set(next))}
-          className="mt-5 space-y-3"
-        >
+      {!programs.length ? <div className="p-5"><p className="text-sm text-ink-500">Inget lokalprogram ännu.</p>{canEdit && <Button variant="link" className="mt-1 h-auto p-0" onClick={onAddProgram}>Skapa ditt första lokalprogram</Button>}</div> : (
+        <Accordion value={expandedProgramIds} onValueChange={setExpandedProgramIds} className="gap-2 p-3">
           {programs.map((program, index) => {
-            const expanded = expandedProgramIds.has(program.id);
-            const progress = programProgress(program);
             const amenities = listFromDelimitedValue(program.amenities);
-            return (
-              <AccordionItem key={program.id} value={program.id} className="rounded-2xl border border-b-0 border-black/10 bg-[#ffffff]">
-                <AccordionTrigger className="items-center gap-3 p-4 hover:no-underline [&>svg]:hidden">
-                  <span className="min-w-0">
-                    <span className="flex flex-wrap items-center gap-2">
-                      <span className="truncate text-base font-semibold text-[#0b0a0e]">{program.title || `Lokalprogram ${index + 1}`}</span>
-                      {index === 0 ? (
-                        <Badge variant="outline" className="h-auto rounded-full bg-[#f8fafc] px-2.5 py-1 text-[11px] font-semibold text-ink-600">Aktivt i sök</Badge>
-                      ) : null}
-                    </span>
-                    <span className="mt-1 block truncate text-sm text-ink-600">{programPreview(program)}</span>
+            const summary = programSummary(program);
+            return <AccordionItem key={program.id} value={program.id} className="overflow-hidden rounded-lg border border-border">
+              <AccordionTrigger className="h-12 items-center gap-3 bg-canvas px-3 py-2 hover:bg-tint-2 hover:no-underline [&>svg]:h-4 [&>svg]:w-4">
+                <span className="flex min-w-0 flex-1 items-center gap-2">
+                  <BuildingIcon className="h-4 w-4 shrink-0 text-ink-500" />
+                  <span className="max-w-[160px] shrink-0 truncate text-sm font-medium">{program.title || `Lokalprogram ${index + 1}`}</span>
+                  {index === 0 && <Badge variant="secondary" className="shrink-0 text-[10px]">Aktivt</Badge>}
+                  <span className="ml-auto flex min-w-0 items-center divide-x divide-border overflow-x-auto whitespace-nowrap text-xs font-normal text-ink-600">
+                    {summary.filter((item) => ["district", "type", "teamSize", "budget"].includes(item.key)).map((item) => (
+                      <span key={item.key} className="shrink-0 px-3 first:pl-0 last:pr-0" title={`${item.label}: ${item.value === "-" ? "Inte angivet" : item.value}`}>
+                        <span className="sr-only">{item.label}: </span>
+                        {item.value === "-" ? "Inte angivet" : item.key === "teamSize" ? `${item.value} platser` : item.value}
+                      </span>
+                    ))}
                   </span>
-                  <span className="flex shrink-0 items-center gap-2">
-                    <span className="hidden text-xs font-semibold text-ink-500 sm:inline">{progress.percent}%</span>
-                    <ChevronRightIcon className={`h-5 w-5 text-ink-600 transition-transform ${expanded ? "rotate-90" : ""}`} />
-                  </span>
-                </AccordionTrigger>
-
-                <AccordionContent className="p-0">
-                  <div className="border-t border-black/10 p-4 pt-3">
-                    <div className="rounded-2xl border border-black/10 bg-[#f8fafc] p-3">
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="text-sm font-semibold text-ink-700">{progress.percent}% klart</p>
-                        <p className="text-xs font-semibold text-ink-500">{progress.done} av {progress.total}</p>
-                      </div>
-                      <Progress
-                        value={progress.percent}
-                        className="mt-2 [&_[data-slot=progress-track]]:h-3 [&_[data-slot=progress-track]]:border [&_[data-slot=progress-track]]:border-black/10 [&_[data-slot=progress-track]]:bg-[#eef2f8] [&_[data-slot=progress-indicator]]:bg-[#0b0a0e]"
-                      />
-                    </div>
-
-                    <div className="mt-4 grid gap-x-6 gap-y-4 sm:grid-cols-2">
-                      {programSummary(program).map(({ key, label, value, Icon }) => (
-                        <div key={key} className="flex min-w-0 items-start gap-2.5">
-                          <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-black/10 bg-[#ffffff] text-[#0b0a0e]">
-                            <Icon className="h-3.5 w-3.5" />
-                          </span>
-                          <div className="min-w-0">
-                            <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">{label}</p>
-                            <p className="mt-0.5 truncate text-[15px] font-semibold text-ink-900">{value}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {amenities.length > 0 ? (
-                      <div className="mt-4 border-t border-black/10 pt-4">
-                        <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-ink-700">Bekvämligheter</p>
-                        <div className="flex flex-wrap gap-2">
-                          {amenities.map((amenity) => (
-                            <span
-                              key={amenity}
-                              className="inline-flex shrink-0 items-center whitespace-nowrap rounded-full border border-black/10 bg-[#ffffff] px-3 py-1.5 text-xs font-semibold text-ink-700"
-                            >
-                              {amenity}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    ) : null}
-
-                    {canEdit ? (
-                      <div className="mt-4 flex flex-wrap justify-end gap-2">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="h-auto gap-1.5 rounded-full px-3.5 py-2 text-xs font-semibold text-ink-700 hover:border-[#0b0a0e] hover:text-[#0b0a0e]"
-                          onClick={() => onEditProgram(program.id)}
-                        >
-                          <PencilIcon className="h-3.5 w-3.5" />
-                          Redigera
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="h-auto gap-1.5 rounded-full border-rose-200 px-3.5 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-50 hover:text-rose-700"
-                          onClick={() => onDeleteProgram(program.id)}
-                          disabled={programs.length <= 1}
-                          title={programs.length <= 1 ? "Minst ett lokalprogram behövs" : "Radera lokalprogram"}
-                        >
-                          <TrashIcon className="h-3.5 w-3.5" />
-                          Radera
-                        </Button>
-                      </div>
-                    ) : null}
+                </span>
+              </AccordionTrigger>
+              <AccordionContent className="p-0 [&_p:not(:last-child)]:mb-0">
+                <div className="border-t border-border p-4 sm:p-5">
+                  <div className="grid gap-5 sm:grid-cols-2">
+                    {[{ title: "Lokal och budget", keys: ["district","type","teamSize","size","budget","moveInDate"] }, { title: "Avtal och önskemål", keys: ["contractFlex","transit","access","layout","parking","prefs"] }].map((group) => <section key={group.title}>
+                      <h3 className="mb-2 text-xs font-semibold text-ink-900">{group.title}</h3>
+                      <dl className="divide-y divide-border">{summary.filter((item) => group.keys.includes(item.key)).map((item) => <div key={item.key} className="flex items-start justify-between gap-4 py-2"><dt className="shrink-0 text-xs text-ink-500">{item.label}</dt><dd className="min-w-0 break-words text-right text-xs font-medium text-ink-900">{item.value === "-" ? (canEdit ? <Button type="button" variant="ghost" size="icon" className="!h-6 !min-h-6 w-6 rounded-md p-0 text-ink-500 hover:text-ink-900" aria-label={`Redigera ${item.label.toLocaleLowerCase("sv-SE")}`} title={`Redigera ${item.label.toLocaleLowerCase("sv-SE")}`} onClick={() => onEditProgram(program.id)}><PencilIcon className="h-3.5 w-3.5" /></Button> : <span className="font-normal text-ink-500">Inte angivet</span>) : item.value}</dd></div>)}</dl>
+                    </section>)}
                   </div>
-                </AccordionContent>
-              </AccordionItem>
-            );
+                  {Object.values(program.contextNotes || {}).some(Boolean) && <div className="mt-4 space-y-2 border-t border-border pt-4"><h3 className="text-xs font-semibold">Egna önskemål</h3>{Object.entries(program.contextNotes || {}).filter(([, text]) => text.trim()).map(([category, text]) => <div key={category}><p className="text-xs font-medium text-ink-500">{category}</p><p className="whitespace-pre-wrap break-words text-sm">{text}</p></div>)}</div>}
+                  {amenities.length > 0 && <div className="mt-4 flex flex-wrap gap-1.5 border-t border-border pt-4">{amenities.map((amenity) => <Badge key={amenity} variant="secondary" className="h-auto px-2 py-1 text-xs font-normal">{amenity}</Badge>)}</div>}
+                  {canEdit && <div className="mt-4 flex justify-end gap-2 border-t border-border pt-3"><Button variant="ghost" size="sm" disabled={programs.length <= 1} title={programs.length <= 1 ? "Minst ett lokalprogram behövs" : "Radera lokalprogram"} onClick={() => onDeleteProgram(program.id)}><TrashIcon className="mr-1.5 h-4 w-4" />Radera</Button><Button variant="outline" size="sm" onClick={() => onEditProgram(program.id)}><PencilIcon className="mr-1.5 h-4 w-4" />Redigera</Button></div>}
+                </div>
+              </AccordionContent>
+            </AccordionItem>;
           })}
         </Accordion>
       )}
-    </article>
+    </Card>
   );
 }
 

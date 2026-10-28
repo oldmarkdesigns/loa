@@ -1,11 +1,13 @@
 import { navigateTo, normalizeAppRole } from "../../lib/router";
+import { useTheme } from "../../lib/theme";
 import { Icon } from "../icons/Icon";
+import { ThemeToggle } from "./ThemeToggle";
 import { DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 
 function MenuRow({ icon, children, onClick }) {
   return (
     <DropdownMenuItem
-      className="menu-hover-row w-full gap-2 rounded-xl px-3 py-2 font-semibold text-ink-700 focus:bg-black/5 focus:text-ink-700"
+      className="menu-hover-row w-full gap-2 rounded-xl px-3 py-2 font-semibold text-ink-700 focus:bg-veil/5 focus:text-ink-700"
       onClick={onClick}
     >
       <Icon name={icon} className="h-4 w-4" />
@@ -21,6 +23,7 @@ function ProfileMenuDropdown({
   onLogout,
   onHelp
 }) {
+  const { available: themeAvailable } = useTheme();
   const normalizedRoles = Array.from(new Set([
     ...(Array.isArray(user?.roles) ? user.roles : []),
     user?.role
@@ -37,16 +40,9 @@ function ProfileMenuDropdown({
     : activeRole === "broker"
       ? "/app/broker/profil"
       : "/app/profile";
-  const savedListingsPath = activeRole === "company_admin"
-    ? "/app/admin/sparade-objekt"
-    : activeRole === "broker"
-      ? "/app/broker/sparade-objekt"
-      : "/app/profile?tab=favorites";
-  const savedSearchesPath = activeRole === "company_admin"
-    ? "/app/admin/sparade-sokningar"
-    : activeRole === "broker"
-      ? "/app/broker/sparade-sokningar"
-      : "/app/profile?tab=history";
+  // In the panels the saved listings and searches are cards on the profile.
+  const savedListingsPath = activeRole === "renter" ? "/app/profile?tab=favorites" : `${profileBasePath}#sparade-objekt`;
+  const savedSearchesPath = activeRole === "renter" ? "/app/profile?tab=history" : `${profileBasePath}#sparade-sokningar`;
 
   async function navigateToBrokerPath(path) {
     setMenuOpen(false);
@@ -56,10 +52,36 @@ function ProfileMenuDropdown({
     navigateTo(path);
   }
 
+  // The way over from searching to the workspace. (The workspace has the way back at the top of its side menu.)
+  async function switchToAdminMode() {
+    setMenuOpen(false);
+    if (hasCompanyAdminAccess) {
+      await onSwitchRole?.("company_admin");
+      navigateTo("/app/admin");
+      return;
+    }
+    if (isRenterMode) await onSwitchRole?.("broker");
+    navigateTo("/app/broker");
+  }
+
   return (
     <>
+      {/* The theme, at the top as in the profile menu of the workspace: the one place to switch it in search mode (so a visitor who is
+          not signed in has none, and gets what is stored in the browser, light by default). */}
+      {themeAvailable ? (
+        <>
+          <div className="flex items-center justify-between gap-3 px-3 py-0.5">
+            <span className="text-[13px] font-medium text-ink-600">Tema</span>
+            <ThemeToggle />
+          </div>
+          <DropdownMenuSeparator className="my-3 bg-veil/10" />
+        </>
+      ) : null}
       {hasBrokerAccess ? (
         <>
+          <MenuRow icon="switchMode" onClick={switchToAdminMode}>
+            Växla till adminläge
+          </MenuRow>
           <MenuRow icon="building" onClick={() => navigateToBrokerPath(willBeCompanyAdmin ? "/app/admin/annonser" : "/app/broker/objekt")}>
             Dina objekt
           </MenuRow>
@@ -69,7 +91,7 @@ function ProfileMenuDropdown({
           <MenuRow icon="calendar" onClick={() => navigateToBrokerPath(willBeCompanyAdmin ? "/app/admin/leads" : "/app/broker/leads")}>
             Intresse och visningar
           </MenuRow>
-          <DropdownMenuSeparator className="my-3 bg-black/10" />
+          <DropdownMenuSeparator className="my-3 bg-veil/10" />
         </>
       ) : null}
       <MenuRow
@@ -81,29 +103,6 @@ function ProfileMenuDropdown({
       >
         Profil
       </MenuRow>
-      {hasCompanyAdminAccess && activeRole === "renter" ? (
-        <MenuRow
-          icon="switchHorizontal"
-          onClick={async () => {
-            setMenuOpen(false);
-            await onSwitchRole?.("company_admin");
-            navigateTo("/app/admin");
-          }}
-        >
-          Växla till Företag
-        </MenuRow>
-      ) : null}
-      {!hasCompanyAdminAccess && hasBrokerAccess && activeRole === "renter" ? (
-        <MenuRow
-          icon="switchHorizontal"
-          onClick={async () => {
-            setMenuOpen(false);
-            await onSwitchRole?.("broker");
-          }}
-        >
-          Växla till hyresvärd
-        </MenuRow>
-      ) : null}
       <MenuRow
         icon="star"
         onClick={() => {
@@ -131,7 +130,7 @@ function ProfileMenuDropdown({
       >
         Inställningar
       </MenuRow>
-      <DropdownMenuSeparator className="my-3 bg-black/10" />
+      <DropdownMenuSeparator className="my-3 bg-veil/10" />
       {isRenterMode && !hasBrokerAccess ? (
         <MenuRow
           icon="checkBadge"

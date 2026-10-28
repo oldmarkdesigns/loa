@@ -20,7 +20,7 @@ function ListingPreview({ draft }) {
   const amenityChipClass = "h-auto min-h-[42px] shrink-0 gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-[0.875rem] font-semibold leading-5 text-ink-700";
 
   return (
-    <article className="overflow-hidden rounded-2xl border border-black/10 bg-[#ffffff]">
+    <article className="overflow-hidden rounded-2xl border border-veil/10 bg-surface">
       <img
         src={coverImage}
         alt={draft.title || "Objekt"}
@@ -30,7 +30,7 @@ function ListingPreview({ draft }) {
         <div>
           <div className="flex items-start justify-between gap-2">
             <p className="text-lg font-semibold">{draft.title || "Rubrik saknas"}</p>
-            <Badge variant="outline" className="h-auto shrink-0 rounded-2xl border-ink-200 bg-[#ffffff] px-3 py-1 text-xs font-semibold text-ink-700">{draft.type || "-"}</Badge>
+            <Badge variant="outline" className="h-auto shrink-0 rounded-2xl border-ink-200 bg-control px-3 py-1 text-xs font-semibold text-ink-700">{draft.type || "-"}</Badge>
           </div>
           <p className="mt-2 text-sm text-ink-600">{draft.district || "Område saknas"} • {draft.address || "Adress saknas"}</p>
         </div>

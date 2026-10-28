@@ -34,7 +34,7 @@ function ManageListingPage({ app, listingId }) {
       {listing ? (
         <ListingEditorOverlay listing={listing} app={app} onClose={() => navigateTo(myListingsPath)} />
       ) : (
-        <div className="rounded-2xl border border-black/10 bg-[#ffffff] p-6">
+        <div className="rounded-2xl border border-veil/10 bg-surface p-6">
           <h1 className="text-2xl font-semibold">Objektet kunde inte öppnas</h1>
           <p className="mt-2 text-sm text-ink-600">Du har inte åtkomst till objektet eller så har det tagits bort.</p>
         </div>

@@ -111,6 +111,7 @@ export const ShareIcon = createSemanticIcon("share", "ShareIcon");
 export const ArrowLeftIcon = createSemanticIcon("arrowLeft", "ArrowLeftIcon");
 export const ArrowRightIcon = createSemanticIcon("arrowRight", "ArrowRightIcon");
 export const SwitchHorizontalIcon = createSemanticIcon("switchHorizontal", "SwitchHorizontalIcon");
+export const SwitchModeIcon = createSemanticIcon("switchMode", "SwitchModeIcon");
 
 export function ChevronRightIcon({ className }) {
   return (

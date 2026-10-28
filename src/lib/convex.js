@@ -97,5 +97,8 @@ export const convexApiRefs = {
   },
   ai: {
     search: queryRef("ai:search")
+  },
+  matchFeedback: {
+    dismiss: mutationRef("matchFeedback:dismiss")
   }
 };

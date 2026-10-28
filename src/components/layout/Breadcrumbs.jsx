@@ -21,7 +21,7 @@ function Breadcrumbs({ items = [], className = "" }) {
               {item.to && !isLast ? (
                 <BreadcrumbLink
                   render={<button type="button" onClick={() => navigateTo(item.to)} />}
-                  className="text-xs font-semibold text-ink-700 hover:text-black"
+                  className="text-xs font-semibold text-ink-700 hover:text-strong"
                 >
                   {item.label}
                 </BreadcrumbLink>

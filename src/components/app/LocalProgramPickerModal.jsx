@@ -46,7 +46,7 @@ function LocalProgramPickerModal({ programs, onClose, onSelect }) {
       }}
       onOpenChangeComplete={handleOpenChangeComplete}
     >
-      <DialogContent showCloseButton={false} className="max-w-lg rounded-3xl border border-black/10 bg-[#ffffff] p-5 sm:p-6">
+      <DialogContent showCloseButton={false} className="max-w-lg rounded-3xl border border-veil/10 bg-surface p-5 sm:p-6">
         <DialogHeader className="gap-1 text-left">
           <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Lokalprogram</p>
           <DialogTitle className="text-lg font-semibold text-ink-900">Vilket lokalprogram vill ni söka med?</DialogTitle>
@@ -65,10 +65,10 @@ function LocalProgramPickerModal({ programs, onClose, onSelect }) {
             <RadioPrimitive.Root
               key={program.id}
               value={program.id}
-              className="group/program-item flex w-full items-center justify-between gap-3 rounded-2xl border border-black/15 bg-[#ffffff] px-4 py-3 text-left transition outline-none hover:border-[#0b0a0e]/50 focus-visible:ring-3 focus-visible:ring-ring/50 data-checked:border-[#0b0a0e] data-checked:shadow-[0_0_0_1px_rgba(15,25,48,0.2)]"
+              className="group/program-item flex w-full items-center justify-between gap-3 rounded-2xl border border-veil/15 bg-surface px-4 py-3 text-left transition outline-none hover:border-strong/50 focus-visible:ring-3 focus-visible:ring-ring/50 data-checked:border-strong data-checked:shadow-[0_0_0_1px_rgba(15,25,48,0.2)]"
             >
               <span className="flex min-w-0 items-center gap-3">
-                <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#0b0a0e] text-white">
+                <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-strong text-on-strong">
                   <BuildingIcon className="h-4 w-4" />
                 </span>
                 <span className="min-w-0">
@@ -76,14 +76,14 @@ function LocalProgramPickerModal({ programs, onClose, onSelect }) {
                   <span className="block truncate text-xs text-ink-500">{programPreview(program)}</span>
                 </span>
               </span>
-              <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-black/20 group-data-checked/program-item:border-[#0b0a0e]">
-                <RadioPrimitive.Indicator className="h-2 w-2 rounded-full bg-[#0b0a0e]" />
+              <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-veil/20 group-data-checked/program-item:border-strong">
+                <RadioPrimitive.Indicator className="h-2 w-2 rounded-full bg-strong" />
               </span>
             </RadioPrimitive.Root>
           ))}
         </RadioGroupPrimitive>
 
-        <Button onClick={confirmSelection} className="h-auto w-full rounded-xl bg-[#0b0a0e] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#0b0a0e]/90">
+        <Button onClick={confirmSelection} className="h-auto w-full rounded-xl bg-strong px-4 py-2.5 text-sm font-semibold text-on-strong hover:bg-strong/90">
           Sök med lokalprogram
         </Button>
       </DialogContent>

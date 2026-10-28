@@ -1,4 +1,5 @@
 import { convex, convexApiRefs, hasConvexConfig } from "../lib/convex";
+import { decodeConvexKeys, encodeConvexKeys } from "../lib/convexKeys";
 
 class ApiError extends Error {
   constructor(status, message) {
@@ -27,7 +28,8 @@ async function run(kind, reference, args = {}, fallbackMessage) {
   requireConvex();
 
   try {
-    return await convex[kind](reference, args);
+    // Convex only takes ASCII field names, and some of the app's objects are keyed by a Swedish label (see src/lib/convexKeys.js).
+    return decodeConvexKeys(await convex[kind](reference, encodeConvexKeys(args)));
   } catch (error) {
     throw normalizeError(error, fallbackMessage);
   }

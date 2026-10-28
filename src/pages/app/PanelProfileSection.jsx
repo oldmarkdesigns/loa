@@ -1,5 +1,10 @@
+import LocalProgramWorkspace from "../../components/app/LocalProgramWorkspace";
+import LocalProgramFlow from "../../components/app/LocalProgramFlow";
+import { AccountPage, AccountRow, AccountSection } from "../../components/account/AccountLayout";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Card } from "@/components/ui/card";
 import { useEffect, useMemo, useRef, useState } from "react";
-import ListingVisualCard from "../../components/app/ListingVisualCard";
+import { SavedListingsCard, SavedSearchesCard } from "../../components/app/ProfileSavedCards";
 import LocalProgramModule from "../../components/app/LocalProgramModule";
 import ViewingRequestModal from "../../components/app/ViewingRequestModal";
 import {
@@ -17,12 +22,9 @@ import {
   PinIcon,
   RulerIcon,
   ShieldIcon,
-  TrashIcon,
   UserIcon,
-  XIcon
 } from "../../components/icons/UiIcons";
-import PremiumPromoCard from "../../components/shared/PremiumPromoCard";
-import { navigateTo } from "../../lib/router";
+import { navigateTo, normalizeAppRole } from "../../lib/router";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -39,9 +41,6 @@ import {
   layoutOptions,
   accessOptions,
   amenityOptions,
-  formatTimestamp,
-  buildHistoryChips,
-  buildHistoryDetails,
   buildRentSearchUrl,
   listFromDelimitedValue,
   normalizeAmenity,
@@ -94,7 +93,7 @@ const mockRenterMatches = [
   }
 ];
 
-function PanelProfileSection({ app, basePath, forcedTab }) {
+function PanelProfileSection({ app, page = "profil" }) {
   const {
     user,
     favorites = [],
@@ -104,11 +103,9 @@ function PanelProfileSection({ app, basePath, forcedTab }) {
     deleteSavedFilter
   } = app;
 
-  const activeTab = forcedTab || "profile";
   const [showProgramOverlay, setShowProgramOverlay] = useState(false);
   const [editingProgramId, setEditingProgramId] = useState(null);
-  const [showEditOverlay, setShowEditOverlay] = useState(false);
-  const [isProfileSetupCollapsed, setIsProfileSetupCollapsed] = useState(false);
+  const [editingProfile, setEditingProfile] = useState(false);
   const [dismissedBrokerApprovalCard, setDismissedBrokerApprovalCard] = useState(false);
   const [resendingBrokerVerification, setResendingBrokerVerification] = useState(false);
   const [savingProgram, setSavingProgram] = useState(false);
@@ -172,6 +169,7 @@ function PanelProfileSection({ app, basePath, forcedTab }) {
     const selectedProgram = renterPrograms.find((program) => program.id === editingProgramId) || createBlankProgram(renterPrograms.length);
     setProgramDraft({
       id: selectedProgram.id || "",
+      contextNotes: selectedProgram.contextNotes || {},
       title: selectedProgram.title || `Lokalprogram ${renterPrograms.length + 1}`,
       district: selectedProgram.district || "Alla",
       type: listFromDelimitedValue(selectedProgram.type),
@@ -213,6 +211,21 @@ function PanelProfileSection({ app, basePath, forcedTab }) {
   }, [profileSetupTasks]);
   const showProfileSetupCard = profileSetupProgress.done < profileSetupProgress.total;
 
+  // Links such as /app/broker/profil#sparade-objekt land on the card they name, also when the profile is already open.
+  useEffect(() => {
+    function scrollToHash() {
+      const id = window.location.hash.slice(1);
+      if (id) window.setTimeout(() => document.getElementById(id)?.scrollIntoView({ block: "start", behavior: "smooth" }), 300);
+    }
+    scrollToHash();
+    window.addEventListener("app:navigate", scrollToHash);
+    window.addEventListener("hashchange", scrollToHash);
+    return () => {
+      window.removeEventListener("app:navigate", scrollToHash);
+      window.removeEventListener("hashchange", scrollToHash);
+    };
+  }, []);
+
   function openNewProgramEditor() {
     setEditingProgramId(null);
     setShowProgramOverlay(true);
@@ -239,7 +252,7 @@ function PanelProfileSection({ app, basePath, forcedTab }) {
         }
       });
       app.pushToast?.("Profilen är uppdaterad.", "success");
-      setShowEditOverlay(false);
+      setEditingProfile(false);
     } catch (error) {
       app.pushToast?.(error.message || "Kunde inte spara profilen.", "error");
     } finally {
@@ -263,30 +276,33 @@ function PanelProfileSection({ app, basePath, forcedTab }) {
     }
   }
 
-  async function saveProgramChanges() {
+  // `draftOverride` is a program that has only just been finished (the new-program flow keeps its own draft); without one the
+  // editor's draft is saved. `keepOpen` leaves the window open for the flow's own "done" screen. Resolves to the saved program.
+  async function saveProgramChanges(draftOverride, { keepOpen = false, message = "Lokalprogram uppdaterat." } = {}) {
+    const source = draftOverride && typeof draftOverride.title === "string" ? draftOverride : programDraft;
     if (!updateProfile) {
       app.pushToast?.("Kunde inte spara ändringarna just nu.", "error");
-      return;
+      return null;
     }
     setSavingProgram(true);
     try {
       const nextProgram = {
-        ...programDraft,
-        id: programDraft.id || `program-${Date.now()}`,
-        title: String(programDraft.title || "").trim() || `Lokalprogram ${renterPrograms.length + 1}`,
-        type: Array.isArray(programDraft.type) ? programDraft.type.filter(Boolean) : [],
-        teamSize: String(programDraft.teamSize || "").trim(),
-        minSize: String(programDraft.minSize || "").trim(),
-        maxSize: String(programDraft.maxSize || "").trim(),
-        minBudget: String(programDraft.minBudget || "").trim(),
-        maxBudget: String(programDraft.maxBudget || "").trim(),
-        moveInDate: programDraft.moveInDate || "",
-        contractFlex: programDraft.contractFlex || "",
-        transitDistance: programDraft.transitDistance || "",
-        accessHours: programDraft.accessHours || "",
-        parkingType: programDraft.parkingType || "",
-        layoutType: programDraft.layoutType || "",
-        amenities: programDraft.amenities || ""
+        ...source,
+        id: source.id || `program-${Date.now()}`,
+        title: String(source.title || "").trim() || `Lokalprogram ${renterPrograms.length + 1}`,
+        type: Array.isArray(source.type) ? source.type.filter(Boolean) : [],
+        teamSize: String(source.teamSize || "").trim(),
+        minSize: String(source.minSize || "").trim(),
+        maxSize: String(source.maxSize || "").trim(),
+        minBudget: String(source.minBudget || "").trim(),
+        maxBudget: String(source.maxBudget || "").trim(),
+        moveInDate: source.moveInDate || "",
+        contractFlex: source.contractFlex || "",
+        transitDistance: source.transitDistance || "",
+        accessHours: source.accessHours || "",
+        parkingType: source.parkingType || "",
+        layoutType: source.layoutType || "",
+        amenities: source.amenities || ""
       };
       const nextPrograms = editingProgramId
         ? renterPrograms.map((program) => program.id === editingProgramId ? nextProgram : program)
@@ -305,11 +321,15 @@ function PanelProfileSection({ app, basePath, forcedTab }) {
           moveInTimeline: activeProgram.moveInDate || ""
         }
       });
-      app.pushToast?.("Lokalprogram uppdaterat.", "success");
-      setShowProgramOverlay(false);
-      setEditingProgramId(null);
+      app.pushToast?.(message, "success");
+      if (!keepOpen) {
+        setShowProgramOverlay(false);
+        setEditingProgramId(null);
+      }
+      return nextProgram;
     } catch (error) {
       app.pushToast?.(error.message || "Kunde inte spara lokalprogrammet.", "error");
+      return null;
     } finally {
       setSavingProgram(false);
     }
@@ -355,470 +375,61 @@ function PanelProfileSection({ app, basePath, forcedTab }) {
     });
   }
 
+  const startEditingProfile = () => {
+    setProfileDraft({ name: user?.name || "", phone: user?.phone || "", avatarUrl: user?.profile?.avatarUrl || "" });
+    setEditingProfile(true);
+  };
+  const shownAvatar = editingProfile ? profileDraft.avatarUrl : user?.profile?.avatarUrl;
+  const initials = (user?.name || user?.email || "A").split(" ").filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
+  const roleText = brokerVerificationApproved
+    ? "Verifierad mäklare"
+    : hasPendingBrokerVerification
+      ? "Verifiering pågår"
+      : normalizeAppRole(user?.role) === "company_admin"
+        ? "Bolagsadmin"
+        : "Mäklare";
+  const company = user?.profile?.companyName || user?.profile?.legalEntity;
+  const verificationCompany = `${brokerVerificationCompanyName}${brokerVerificationOrganizationNumber ? ` (${brokerVerificationOrganizationNumber})` : ""}`;
+  const showVerification = hasPendingBrokerVerification || (brokerVerificationApproved && !dismissedBrokerApprovalCard) || brokerVerificationRejected;
+
   return (
-    <section className="relative flex h-full min-h-0 flex-col">
-      {activeTab === "profile" ? (
-        <div className="space-y-4">
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div className="flex items-center gap-4">
-                <div className="relative">
-                  {user?.profile?.avatarUrl ? (
-                    <img
-                      src={user.profile.avatarUrl}
-                      alt={user?.name || "Profilbild"}
-                      className="h-36 w-36 rounded-full border border-black/10 object-cover"
-                    />
-                  ) : (
-                    <div className="inline-flex h-36 w-36 items-center justify-center rounded-full border border-black/10 bg-[#eef2f8] text-3xl font-semibold text-ink-700">
-                      {(user?.name || "AA")
-                        .split(" ")
-                        .filter(Boolean)
-                        .slice(0, 2)
-                        .map((part) => part[0]?.toUpperCase() || "")
-                        .join("")}
-                    </div>
-                  )}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    className="absolute right-1 top-1 h-9 w-9 rounded-full border-black/20 text-ink-700 hover:border-[#0b0a0e] hover:bg-transparent hover:text-[#0b0a0e]"
-                    aria-label="Redigera profilbild"
-                    onClick={() => setShowEditOverlay(true)}
-                  >
-                    <CameraIcon className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div>
-                  <p className="text-2xl font-semibold text-[#0b0a0e]">{user?.name || "Användare"}</p>
-                  <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-black/10 bg-[#ffffff] px-4 py-2 text-sm font-semibold text-[#241d1a]">
-                    <span
-                      className="inline-flex h-5 w-5 items-center justify-center bg-[#0b0a0e] text-white"
-                      style={{ clipPath: "polygon(50% 1%,58% 4%,66% 2%,73% 8%,81% 8%,88% 15%,96% 19%,99% 28%,97% 36%,99% 44%,94% 51%,95% 59%,89% 66%,86% 75%,78% 79%,71% 86%,62% 87%,55% 94%,47% 92%,39% 97%,32% 91%,23% 91%,18% 83%,9% 81%,6% 72%,1% 65%,3% 56%,0% 48%,6% 41%,4% 33%,10% 26%,11% 17%,20% 13%,25% 5%,34% 5%,42% 1%)" }}
-                    >
-                      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-3.5 w-3.5">
-                        <path d="M5.5 12.5l4 4 9-9" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </span>
-                    ID verifierad
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap items-start justify-end gap-2 self-start lg:ml-auto">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="h-auto gap-1.5 rounded-full border-black/20 px-4 py-2 text-xs font-semibold text-ink-700 hover:border-[#0b0a0e] hover:bg-transparent hover:text-[#0b0a0e]"
-                  onClick={() => setShowEditOverlay(true)}
-                >
-                  <PencilIcon className="h-4 w-4" />
-                  Hantera profil
+    <>
+      {page === "profil" ? (
+        <AccountPage title="Profil" description="Dina personuppgifter, profilbild och verifiering.">
+          <AccountSection
+            title="Personuppgifter"
+            action={
+              editingProfile ? null : (
+                <Button type="button" variant="outline" size="sm" className="min-h-0 !rounded-md" onClick={startEditingProfile}>
+                  <PencilIcon className="h-3.5 w-3.5" />
+                  Redigera
                 </Button>
-              </div>
-            </div>
-            <div className="hidden lg:block" />
-          </div>
-
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-            <div className="space-y-5">
-              {showProfileSetupCard ? (
-                <article className="rounded-3xl border border-black/10 bg-[#ffffff] p-5 sm:p-6">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="h-auto w-full justify-between gap-3 text-left font-normal hover:bg-transparent"
-                    onClick={() => setIsProfileSetupCollapsed((prev) => !prev)}
-                    aria-expanded={!isProfileSetupCollapsed}
-                  >
-                    <h2 className="text-2xl font-semibold text-[#0b0a0e]">Slutför din profil</h2>
-                    <Badge variant="outline" className="h-auto gap-1.5 rounded-full px-4 py-2 text-xs font-semibold text-ink-700 hover:border-[#0b0a0e] hover:text-[#0b0a0e]">
-                      {isProfileSetupCollapsed ? "Visa" : "Dölj"}
-                    </Badge>
-                  </Button>
-
-                  <div
-                    className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                      isProfileSetupCollapsed ? "max-h-0 opacity-0" : "max-h-[700px] opacity-100"
-                    }`}
-                  >
-                    <p className="mt-1 text-sm text-ink-600">Komplettera dina profiluppgifter.</p>
-
-                    <div className="mt-4">
-                      <p className="text-sm font-semibold text-ink-700">{profileSetupProgress.percent}% klart</p>
-                      <Progress
-                        value={profileSetupProgress.percent}
-                        className="mt-2 [&_[data-slot=progress-track]]:h-3 [&_[data-slot=progress-track]]:border [&_[data-slot=progress-track]]:border-black/10 [&_[data-slot=progress-track]]:bg-[#eef2f8] [&_[data-slot=progress-indicator]]:bg-[#0b0a0e]"
-                      />
-                    </div>
-
-                    <p className="mt-3 text-sm text-ink-600">
-                      {profileSetupProgress.done} av {profileSetupProgress.total} steg klara
-                    </p>
-
-                    <div className="mt-4 border-t border-black/10 pt-3">
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-700">Saker kvar att göra</p>
-                      <div className="mt-2 grid gap-1.5">
-                        {profileSetupTasks.map((task) => (
-                          <Button
-                            key={task.id}
-                            type="button"
-                            variant="ghost"
-                            className="h-auto justify-start gap-2.5 rounded-xl px-2 py-1.5 text-left text-[15px] font-normal text-ink-500 hover:bg-black/5"
-                            onClick={() => setShowEditOverlay(true)}
-                          >
-                            <span className={`inline-flex h-6 w-6 items-center justify-center rounded-full border ${
-                              task.done
-                                ? "border-transparent bg-[#0b0a0e] text-white"
-                                : "border-black/20 bg-[#ffffff] text-ink-500"
-                            }`}>
-                              {task.done ? (
-                                <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4">
-                                  <path d="M5.5 12.5l4 4 9-9" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                </svg>
-                              ) : <PencilIcon className="h-3.5 w-3.5" />}
-                            </span>
-                            <span>{task.label}</span>
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </article>
-              ) : null}
-
-              <div className="mb-4">
-                <LocalProgramModule
-                  programs={renterPrograms}
-                  canEdit
-                  onAddProgram={openNewProgramEditor}
-                  onEditProgram={openExistingProgramEditor}
-                  onDeleteProgram={deleteProgram}
-                />
-              </div>
-
-              <section className="pt-3">
-                <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                  <div>
-                    <h2 className="text-2xl font-semibold text-[#0b0a0e]">Hyresgäster som matchar dina lokaler</h2>
-                    <p className="mt-1 text-sm text-ink-600">Kuraterade profiler med tydlig matchning mot ditt utbud.</p>
-                  </div>
-                </div>
-                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                  {mockRenterMatches.map((renter) => (
-                    <article key={renter.id} className="relative rounded-3xl border border-black/10 bg-[#ffffff] p-4 sm:p-5">
-                      <Badge variant="outline" className="h-auto absolute right-3.5 top-3.5 rounded-full border-[#0b0a0e]/20 bg-[#f8fafc] px-3 py-1 text-sm font-semibold text-[#0b0a0e]">
-                        {renter.matchPercent}%
-                      </Badge>
-                      <div className="h-5" />
-                      <div className="mx-auto mt-3 flex h-28 w-28 items-center justify-center rounded-2xl border border-[#0b0a0e]/15 bg-[#f8fafc] text-3xl font-semibold tracking-wide text-[#0b0a0e]">
-                        {renter.logo}
-                      </div>
-                      <div className="mt-3 text-center">
-                        <p className="text-[20px] font-semibold leading-[1.15] text-[#241d1a]">{renter.name}</p>
-                        {renter.verified ? (
-                          <p className="mt-1 inline-flex items-center gap-1.5 text-sm font-semibold text-ink-700">
-                            <span className="inline-flex h-4 w-4 items-center justify-center bg-[#0b0a0e] text-white" style={{ clipPath: "polygon(50% 1%,58% 4%,66% 2%,73% 8%,81% 8%,88% 15%,96% 19%,99% 28%,97% 36%,99% 44%,94% 51%,95% 59%,89% 66%,86% 75%,78% 79%,71% 86%,62% 87%,55% 94%,47% 92%,39% 97%,32% 91%,23% 91%,18% 83%,9% 81%,6% 72%,1% 65%,3% 56%,0% 48%,6% 41%,4% 33%,10% 26%,11% 17%,20% 13%,25% 5%,34% 5%,42% 1%)" }}>
-                              <svg aria-hidden="true" viewBox="0 0 24 24" className="h-3 w-3">
-                                <path d="M5.5 12.5l4 4 9-9" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                              </svg>
-                            </span>
-                            Verifierad organisation
-                          </p>
-                        ) : null}
-                        <p className="mt-2 text-center text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-500">{renter.title}</p>
-                        <p className="mt-1.5 text-center text-base font-medium leading-snug text-[#241d1a]">{renter.summary}</p>
-                      </div>
-                      <ul className="mt-4 space-y-2.5 text-[#241d1a]">
-                        <li className="flex items-center gap-2.5 text-sm"><CalendarIcon className="h-4 w-4 text-ink-700" /><span>{renter.timeline}</span></li>
-                        <li className="flex items-center gap-2.5 text-sm"><CoinsIcon className="h-4 w-4 text-ink-700" /><span>{renter.budget}</span></li>
-                        <li className="flex items-center gap-2.5 text-sm"><LoungeIcon className="h-4 w-4 text-ink-700" /><span>{renter.furnishing}</span></li>
-                        <li className="flex items-center gap-2.5 text-sm"><UserIcon className="h-4 w-4 text-ink-700" /><span>{renter.people}</span></li>
-                      </ul>
-                    </article>
-                  ))}
-                </div>
-              </section>
-            </div>
-
-            <aside className="space-y-6 lg:sticky lg:top-0 lg:self-start">
-              <div className="space-y-6">
-                {hasPendingBrokerVerification ? (
-                  <article className="rounded-3xl border border-[#0b0a0e]/15 bg-[#f8fafc] p-5">
-                    <div className="flex items-start gap-3">
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#0b0a0e] text-white">
-                        <ShieldIcon className="h-5 w-5" />
-                      </span>
-                      <div>
-                        <p className="text-lg font-semibold text-[#0b0a0e]">Verifiering skickad</p>
-                        <p className="mt-1 text-sm leading-relaxed text-ink-600">
-                          Din förfrågan om att bli mäklare hos{" "}
-                          <span className="font-semibold text-[#0b0a0e]">
-                            {brokerVerificationCompanyName}
-                            {brokerVerificationOrganizationNumber ? ` (${brokerVerificationOrganizationNumber})` : ""}
-                          </span>{" "}
-                          väntar på godkännande.
-                        </p>
-                      </div>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="mt-4 h-auto w-full gap-2 rounded-full border-black/10 px-4 py-2.5 text-sm font-semibold text-[#0b0a0e] shadow-[0_1px_0_rgba(15,25,48,0.04)] hover:bg-transparent"
-                      onClick={() => navigateTo("/onboarding/publisher-profile?role=broker&intent=add-role")}
-                    >
-                      <ShieldIcon className="h-4 w-4" />
-                      Visa verifiering
+              )
+            }
+          >
+            <AccountRow label="Profilbild" description="Visas vid ditt namn i appen.">
+              <div className="flex items-center gap-3 sm:justify-end">
+                <Avatar className="size-12 shrink-0">
+                  <AvatarImage src={shownAvatar} alt={user?.name || "Profilbild"} />
+                  <AvatarFallback className="bg-tint-2 text-base font-semibold text-ink-700">{initials}</AvatarFallback>
+                </Avatar>
+                {editingProfile ? (
+                  <>
+                    <Button type="button" variant="outline" size="sm" className="min-h-0 !rounded-md" onClick={() => profileAvatarInputRef.current?.click()}>
+                      <CameraIcon className="h-3.5 w-3.5" />
+                      {profileDraft.avatarUrl ? "Byt foto" : "Lägg till"}
                     </Button>
-                  </article>
-                ) : null}
-
-                {!hasPendingBrokerVerification && brokerVerificationApproved && !dismissedBrokerApprovalCard ? (
-                  <article className="relative rounded-3xl border border-black/10 bg-[#ffffff] p-5 pr-12">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      className="absolute right-4 top-4 h-8 w-8 rounded-full border-black/10 text-ink-600 hover:border-[#0b0a0e] hover:bg-transparent hover:text-[#0b0a0e]"
-                      aria-label="Dölj verifieringskort"
-                      onClick={() => setDismissedBrokerApprovalCard(true)}
-                    >
-                      <XIcon className="h-3.5 w-3.5" />
-                    </Button>
-                    <div className="flex items-start gap-3">
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-700">
-                        <CheckBadgeIcon className="h-5 w-5" />
-                      </span>
-                      <div>
-                        <p className="text-lg font-semibold text-[#0b0a0e]">Verifiering godkänd</p>
-                        <p className="mt-1 text-sm leading-relaxed text-ink-700">
-                          Du är verifierad som mäklare för{" "}
-                          <span className="font-semibold text-[#0b0a0e]">
-                            {brokerVerificationCompanyName}
-                            {brokerVerificationOrganizationNumber ? ` (${brokerVerificationOrganizationNumber})` : ""}
-                          </span>.
-                        </p>
-                        {brokerApprovalNotification?.createdAt ? (
-                          <p className="mt-2 text-xs font-medium text-ink-600">
-                            Godkänd {new Date(brokerApprovalNotification.createdAt).toLocaleString("sv-SE", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
-                          </p>
-                        ) : null}
-                      </div>
-                    </div>
-                  </article>
-                ) : null}
-
-                {brokerVerificationRejected ? (
-                  <article className="rounded-3xl border border-black/10 bg-[#ffffff] p-5">
-                    <div className="flex items-start gap-3">
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-rose-100 bg-rose-50 text-rose-700">
-                        <ShieldIcon className="h-5 w-5" />
-                      </span>
-                      <div>
-                        <p className="text-lg font-semibold text-[#0b0a0e]">Verifiering nekad</p>
-                        <p className="mt-1 text-sm leading-relaxed text-ink-700">
-                          Bolagsadmin för{" "}
-                          <span className="font-semibold text-[#0b0a0e]">
-                            {brokerVerificationCompanyName}
-                            {brokerVerificationOrganizationNumber ? ` (${brokerVerificationOrganizationNumber})` : ""}
-                          </span>{" "}
-                          nekade din förfrågan om att bli verifierad som mäklare.
-                        </p>
-                      </div>
-                    </div>
-                    <Button
-                      type="button"
-                      className="mt-4 h-auto w-full gap-2 rounded-full px-4 py-2.5 text-sm font-semibold"
-                      disabled={resendingBrokerVerification}
-                      onClick={resendRejectedBrokerVerification}
-                    >
-                      {resendingBrokerVerification ? "Skickar..." : "Skicka förfrågan igen"}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="mt-2 h-auto w-full gap-2 rounded-full border-black/15 px-4 py-2.5 text-sm font-semibold text-[#0b0a0e] hover:border-[#0b0a0e] hover:bg-transparent"
-                      onClick={() => navigateTo("/onboarding/publisher-profile?role=broker&intent=add-role")}
-                    >
-                      Ändra organisationsnummer
-                    </Button>
-                  </article>
-                ) : null}
-
-                <PremiumPromoCard />
-              </div>
-            </aside>
-          </div>
-        </div>
-      ) : null}
-
-      {activeTab === "favorites" ? (
-        <div>
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <h2 className="text-xl font-semibold">Sparade objekt</h2>
-              <p className="mt-1 text-sm text-ink-600">Objekt du har sparat för uppföljning.</p>
-            </div>
-            <Badge variant="outline" className="h-auto rounded-full bg-[#ffffff] px-3 py-1 text-xs font-semibold text-ink-700">
-              {favoriteListings.length} sparade
-            </Badge>
-          </div>
-          {favoriteListings.length === 0 ? (
-            <p className="mt-3 rounded-2xl border border-black/10 bg-[#fafafa] px-3 py-3 text-sm text-ink-600">Inga sparade objekt ännu.</p>
-          ) : (
-            <div className="mt-3 grid gap-4 lg:grid-cols-3">
-              {favoriteListings.map((listing) => (
-                <ListingVisualCard
-                  key={listing.id}
-                  listing={listing}
-                  shortlisted={favoriteIds.has(String(listing.id))}
-                  onOpenListing={(selected) => navigateTo(`/app/listings/${encodeURIComponent(selected.id)}`)}
-                  onBookViewing={(selected) => setBookingListing(selected)}
-                  onToggleShortlist={(listingId) => app.toggleFavorite?.(listingId)}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      ) : null}
-
-      {activeTab === "history" ? (
-        <div>
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <h2 className="text-xl font-semibold">Sparade sökningar</h2>
-              <p className="mt-1 text-sm text-ink-600">Sökningar du har sparat för uppföljning.</p>
-            </div>
-            <Badge variant="outline" className="h-auto rounded-full bg-[#ffffff] px-3 py-1 text-xs font-semibold text-ink-700">
-              {filterPresets.length} sparade
-            </Badge>
-          </div>
-          {filterPresets.length === 0 ? (
-            <p className="mt-3 rounded-2xl border border-black/10 bg-[#fafafa] px-3 py-3 text-sm text-ink-600">Inga sparade sökningar ännu.</p>
-          ) : (
-            <div className="mt-3 grid gap-3">
-              {filterPresets.map((preset) => {
-                const chips = buildHistoryChips(preset.filters);
-                const details = buildHistoryDetails(preset.filters);
-                const targetUrl = buildRentSearchUrl(preset.filters);
-                return (
-                  <article
-                    key={preset.id}
-                    className="cursor-pointer rounded-2xl border border-black/10 bg-[#ffffff] p-3 transition hover:border-[#0b0a0e]/35"
-                    onClick={() => navigateTo(targetUrl)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        navigateTo(targetUrl);
-                      }
-                    }}
-                    tabIndex={0}
-                    role="button"
-                  >
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <div>
-                        <p className="text-sm font-semibold text-black">{preset.title || "Sparad sökning"}</p>
-                        <p className="text-xs text-ink-500">Uppdaterad {formatTimestamp(preset.updatedAt || preset.createdAt)}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="h-auto rounded-xl border-black/20 px-3 py-1.5 text-xs font-semibold text-ink-700 hover:bg-[#ffffff]"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            navigateTo(targetUrl);
-                          }}
-                        >
-                          Sök igen
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="h-auto rounded-xl border-rose-200 px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-50 hover:text-rose-700"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            deleteSavedFilter?.(preset.id);
-                          }}
-                        >
-                          Radera
-                        </Button>
-                      </div>
-                    </div>
-                    {details.length > 0 ? (
-                      <dl className="mt-3 grid gap-2 sm:grid-cols-2">
-                        {details.map((item) => (
-                          <div key={`${preset.id}-${item.label}-${item.value}`} className="rounded-xl border border-black/10 bg-[#ffffff] px-2.5 py-2">
-                            <dt className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">{item.label}</dt>
-                            <dd className="mt-0.5 text-xs font-medium text-ink-800">{item.value}</dd>
-                          </div>
-                        ))}
-                      </dl>
-                    ) : null}
-                    {chips.length > 0 ? (
-                      <div className="mt-2 flex flex-wrap gap-1.5">
-                        {chips.map((chip) => (
-                          <span key={`${preset.id}-${chip}`} className="rounded-full border border-black/10 bg-[#ffffff] px-2.5 py-1 text-[11px] font-semibold text-ink-700">
-                            {chip}
-                          </span>
-                        ))}
-                      </div>
-                    ) : null}
-                  </article>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      ) : null}
-
-      {showEditOverlay ? (
-        <div className="fixed inset-0 z-[90] h-dvh overflow-hidden bg-[#ffffff]">
-          <div className="h-full overflow-y-auto overscroll-none bg-[#ffffff] p-4 sm:p-6">
-            <div className="mx-auto w-full max-w-[1240px] rounded-3xl border border-black/10 bg-[#ffffff] p-5 sm:p-6">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h3 className="text-2xl font-semibold text-[#0b0a0e]">Hantera profil</h3>
-                  <p className="mt-1 text-sm text-ink-600">Redigera profilbild och kontaktuppgifter.</p>
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  className="close-circle-button rounded-full border-black/15 text-xl leading-none text-ink-700 hover:bg-transparent"
-                  onClick={() => setShowEditOverlay(false)}
-                  aria-label="Stäng"
-                >
-                  ×
-                </Button>
-              </div>
-
-              <div className="mt-5 grid gap-5 lg:grid-cols-[220px_minmax(0,680px)] lg:items-start">
-                <div className="flex items-start justify-center">
-                  <div className="relative flex flex-col items-center gap-2">
                     {profileDraft.avatarUrl ? (
-                      <img src={profileDraft.avatarUrl} alt="Profilbild" className="h-[220px] w-[220px] rounded-full border border-black/10 object-cover" />
-                    ) : (
-                      <div className="inline-flex h-[220px] w-[220px] items-center justify-center rounded-full border border-black/10 bg-[#eef2f8] text-6xl font-semibold text-ink-700">
-                        {(profileDraft.name || user?.email || "A").trim().charAt(0).toUpperCase()}
-                      </div>
-                    )}
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      className="absolute right-2 top-2 h-10 w-10 rounded-full border-black/20 text-ink-700 hover:border-[#0b0a0e] hover:bg-transparent hover:text-[#0b0a0e]"
-                      onClick={() => profileAvatarInputRef.current?.click()}
-                      aria-label="Byt foto"
-                    >
-                      <CameraIcon className="h-4 w-4" />
-                    </Button>
+                      <Button type="button" variant="ghost" size="sm" className="min-h-0 !rounded-md text-ink-600" onClick={() => setProfileDraft((prev) => ({ ...prev, avatarUrl: "" }))}>
+                        Ta bort
+                      </Button>
+                    ) : null}
                     <input
                       ref={profileAvatarInputRef}
                       className="hidden"
                       type="file"
                       accept="image/*"
+                      aria-label="Välj profilbild"
                       onChange={async (event) => {
                         const file = event.target.files?.[0];
                         if (!file) return;
@@ -830,90 +441,215 @@ function PanelProfileSection({ app, basePath, forcedTab }) {
                         }
                       }}
                     />
-                    {profileDraft.avatarUrl ? (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="h-auto gap-1.5 rounded-full border-black/20 px-3 py-1.5 text-xs font-semibold text-ink-700 hover:border-[#0b0a0e] hover:bg-transparent hover:text-[#0b0a0e]"
-                        onClick={() => setProfileDraft((prev) => ({ ...prev, avatarUrl: "" }))}
-                      >
-                        <TrashIcon className="h-3.5 w-3.5" />
-                        Ta bort foto
-                      </Button>
-                    ) : null}
-                  </div>
-                </div>
-                <div className="grid max-w-2xl gap-3 sm:grid-cols-2">
-                  <label className="grid gap-1 sm:col-span-2">
-                    <span className="text-xs font-semibold text-ink-600">Namn</span>
-                    <Input value={profileDraft.name} onChange={(event) => setProfileDraft((prev) => ({ ...prev, name: event.target.value }))} />
-                  </label>
-                  <label className="grid gap-1">
-                    <span className="text-xs font-semibold text-ink-600">Telefon</span>
-                    <Input value={profileDraft.phone} onChange={(event) => setProfileDraft((prev) => ({ ...prev, phone: event.target.value }))} />
-                  </label>
-                  <label className="grid gap-1">
-                    <span className="text-xs font-semibold text-ink-600">E-post</span>
-                    <Input value={user?.email || ""} disabled />
-                  </label>
-                  <div className="sm:col-span-2">
-                    <Button
-                      type="button"
-                      className="h-auto rounded-full px-4 py-2 text-xs font-semibold"
-                      onClick={saveProfileChanges}
-                      disabled={savingProfile}
-                    >
-                      {savingProfile ? "Sparar..." : "Spara ändringar"}
+                  </>
+                ) : null}
+              </div>
+            </AccountRow>
+            <AccountRow label="Namn" htmlFor="profile-name" field={editingProfile}>
+              {editingProfile ? (
+                <Input id="profile-name" value={profileDraft.name} onChange={(event) => setProfileDraft((prev) => ({ ...prev, name: event.target.value }))} />
+              ) : (
+                <span className="font-medium text-strong">{user?.name || "Inte angivet"}</span>
+              )}
+            </AccountRow>
+            <AccountRow label="E-post" description="Det du loggar in med. Kan inte ändras här." htmlFor="profile-email" field={editingProfile}>
+              {editingProfile ? <Input id="profile-email" value={user?.email || ""} disabled /> : <span className="break-all">{user?.email || "Inte angivet"}</span>}
+            </AccountRow>
+            <AccountRow label="Telefon" htmlFor="profile-phone" field={editingProfile}>
+              {editingProfile ? (
+                <Input id="profile-phone" value={profileDraft.phone} onChange={(event) => setProfileDraft((prev) => ({ ...prev, phone: event.target.value }))} />
+              ) : (
+                <span className={user?.phone ? "" : "text-ink-500"}>{user?.phone || "Inte angivet"}</span>
+              )}
+            </AccountRow>
+            <AccountRow label="Företag">
+              <span className={company ? "" : "text-ink-500"}>{company || "Inte angivet"}</span>
+            </AccountRow>
+            <AccountRow label="Roll">
+              <Badge variant="secondary" className="gap-1.5">
+                {brokerVerificationApproved ? <CheckBadgeIcon aria-hidden="true" className="h-3.5 w-3.5 shrink-0" /> : null}
+                {roleText}
+              </Badge>
+            </AccountRow>
+          </AccountSection>
+          {editingProfile ? (
+            <div className="-mt-4 flex justify-end gap-2">
+              <Button type="button" variant="outline" className="min-h-0" onClick={() => setEditingProfile(false)}>
+                Avbryt
+              </Button>
+              <Button type="button" className="min-h-0" onClick={saveProfileChanges} disabled={savingProfile}>
+                {savingProfile ? "Sparar..." : "Spara ändringar"}
+              </Button>
+            </div>
+          ) : null}
+
+          {showProfileSetupCard ? (
+            <AccountSection title="Slutför din profil" description={`${profileSetupProgress.done} av ${profileSetupProgress.total} steg klara`}>
+              <div className="py-4">
+                <p className="text-sm font-medium text-strong">{profileSetupProgress.percent}% klart</p>
+                <Progress
+                  value={profileSetupProgress.percent}
+                  className="mt-2 [&_[data-slot=progress-track]]:h-2.5 [&_[data-slot=progress-track]]:border [&_[data-slot=progress-track]]:border-veil/10 [&_[data-slot=progress-track]]:bg-tint-2 [&_[data-slot=progress-indicator]]:bg-strong"
+                />
+              </div>
+              {profileSetupTasks.map((task) => (
+                <AccountRow key={task.id} label={task.label}>
+                  {task.done ? (
+                    <span className="inline-flex items-center gap-1.5 text-ink-500">
+                      <CheckBadgeIcon aria-hidden="true" className="h-4 w-4" />
+                      Klart
+                    </span>
+                  ) : (
+                    <Button type="button" variant="outline" size="sm" className="min-h-0 !rounded-md" onClick={startEditingProfile}>
+                      Fyll i
+                    </Button>
+                  )}
+                </AccountRow>
+              ))}
+            </AccountSection>
+          ) : null}
+
+          {showVerification ? (
+            <AccountSection title="Verifiering som mäklare">
+              {hasPendingBrokerVerification ? (
+                <AccountRow align="start" label="Verifiering skickad" description={`Din förfrågan om att bli mäklare hos ${verificationCompany} väntar på godkännande.`}>
+                  <Button type="button" variant="outline" size="sm" className="min-h-0 !rounded-md" onClick={() => navigateTo("/onboarding/publisher-profile?role=broker&intent=add-role")}>
+                    <ShieldIcon className="h-3.5 w-3.5" />
+                    Visa verifiering
+                  </Button>
+                </AccountRow>
+              ) : null}
+              {!hasPendingBrokerVerification && brokerVerificationApproved && !dismissedBrokerApprovalCard ? (
+                <AccountRow
+                  align="start"
+                  label="Verifiering godkänd"
+                  description={`Du är verifierad som mäklare för ${verificationCompany}.${brokerApprovalNotification?.createdAt ? ` Godkänd ${new Date(brokerApprovalNotification.createdAt).toLocaleString("sv-SE", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}.` : ""}`}
+                >
+                  <Button type="button" variant="ghost" size="sm" className="min-h-0 !rounded-md text-ink-600" aria-label="Dölj verifieringskort" onClick={() => setDismissedBrokerApprovalCard(true)}>
+                    Dölj
+                  </Button>
+                </AccountRow>
+              ) : null}
+              {brokerVerificationRejected ? (
+                <AccountRow align="start" label="Verifiering nekad" description={`Bolagsadmin för ${verificationCompany} nekade din förfrågan om att bli verifierad som mäklare.`}>
+                  <div className="flex flex-col gap-2 sm:items-end">
+                    <Button type="button" size="sm" className="min-h-0 !rounded-md" disabled={resendingBrokerVerification} onClick={resendRejectedBrokerVerification}>
+                      {resendingBrokerVerification ? "Skickar..." : "Skicka förfrågan igen"}
+                    </Button>
+                    <Button type="button" variant="outline" size="sm" className="min-h-0 !rounded-md" onClick={() => navigateTo("/onboarding/publisher-profile?role=broker&intent=add-role")}>
+                      Ändra organisationsnummer
                     </Button>
                   </div>
-                </div>
-              </div>
+                </AccountRow>
+              ) : null}
+            </AccountSection>
+          ) : null}
 
-              <div className="mt-5 flex justify-end">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="h-auto rounded-full border-black/20 px-5 py-2.5 text-sm font-semibold text-ink-700"
-                  onClick={() => setShowEditOverlay(false)}
-                >
-                  Avbryt
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
+          <AccountSection title="Lokalflöde Premium">
+            <AccountRow align="start" label="Stick ut med Lokalflöde Premium" description="Premiumprofiler får i snitt fler relevanta förfrågningar och snabbare återkoppling.">
+              <Button type="button" variant="outline" size="sm" className="min-h-0 !rounded-md">
+                Uppgradera (demo)
+              </Button>
+            </AccountRow>
+          </AccountSection>
+        </AccountPage>
       ) : null}
 
-      {showProgramOverlay ? (
-        <div className="fixed inset-0 z-[90] h-dvh overflow-hidden bg-[#ffffff]">
-          <div className="h-full overflow-y-auto overscroll-none bg-[#ffffff] p-4 sm:p-6" onClick={() => {
-            setShowProgramOverlay(false);
-            setEditingProgramId(null);
-          }}>
-            <div className="mx-auto w-full max-w-[1240px] rounded-3xl border border-black/10 bg-[#ffffff] p-5 sm:p-6" onClick={(event) => event.stopPropagation()}>
-              <div className="flex items-start justify-between gap-3">
+      {page === "lokalprogram" ? (
+        <AccountPage title="Lokalprogram" description="Dina sökprofiler och de hyresgäster som matchar dem.">
+          <LocalProgramModule
+            title="Dina lokalprogram"
+            programs={renterPrograms}
+            canEdit
+            onAddProgram={openNewProgramEditor}
+            onEditProgram={openExistingProgramEditor}
+            onDeleteProgram={deleteProgram}
+          />
+          <AccountSection title="Hyresgäster som matchar dina lokaler" description="Kuraterade profiler med tydlig matchning mot ditt utbud.">
+            {mockRenterMatches.map((renter) => (
+              <div key={renter.id} className="flex items-start gap-3 border-b border-veil/10 py-4 last:border-b-0">
+                <Avatar className="size-10 shrink-0">
+                  <AvatarFallback className="bg-tint-2 text-sm font-semibold text-strong">{renter.logo}</AvatarFallback>
+                </Avatar>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <p className="text-sm font-semibold text-strong">{renter.name}</p>
+                    {renter.verified ? (
+                      <Badge variant="secondary" className="h-auto gap-1 px-2 py-0.5 text-[11px]">
+                        <CheckBadgeIcon aria-hidden="true" className="h-3 w-3" />
+                        Verifierad organisation
+                      </Badge>
+                    ) : null}
+                  </div>
+                  <p className="mt-0.5 text-[11px] font-semibold uppercase tracking-[0.1em] text-ink-500">{renter.title}</p>
+                  <p className="mt-1 text-sm leading-5 text-ink-700">{renter.summary}</p>
+                  <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-ink-600">
+                    <li className="flex items-center gap-1.5"><CalendarIcon className="h-3.5 w-3.5" />{renter.timeline}</li>
+                    <li className="flex items-center gap-1.5"><CoinsIcon className="h-3.5 w-3.5" />{renter.budget}</li>
+                    <li className="flex items-center gap-1.5"><LoungeIcon className="h-3.5 w-3.5" />{renter.furnishing}</li>
+                    <li className="flex items-center gap-1.5"><UserIcon className="h-3.5 w-3.5" />{renter.people}</li>
+                  </ul>
+                </div>
+                <Badge variant="outline" className="h-auto shrink-0 rounded-full bg-control px-2.5 py-1 text-sm font-semibold text-strong">
+                  {renter.matchPercent}%
+                </Badge>
+              </div>
+            ))}
+          </AccountSection>
+        </AccountPage>
+      ) : null}
+
+      {page === "sparat" ? (
+        <AccountPage title="Sparat" description="Objekt och sökningar du har sparat.">
+          <SavedListingsCard
+            listings={favoriteListings}
+            onOpen={(listing) => navigateTo(`/app/listings/${encodeURIComponent(listing.id)}`)}
+            onBook={(listing) => setBookingListing(listing)}
+            onRemove={(listingId) => app.toggleFavorite?.(listingId)}
+            onBrowse={() => navigateTo("/app/rent")}
+          />
+          <SavedSearchesCard
+            presets={filterPresets}
+            onSearch={(preset) => navigateTo(buildRentSearchUrl(preset.filters))}
+            onDelete={(presetId) => deleteSavedFilter?.(presetId)}
+            onBrowse={() => navigateTo("/app/rent")}
+          />
+        </AccountPage>
+      ) : null}
+
+      {showProgramOverlay && !editingProgramId ? (
+        <LocalProgramFlow
+          existingCount={renterPrograms.length}
+          onCreate={(program) => saveProgramChanges(program, { keepOpen: true, message: "Lokalprogram skapat." })}
+          onShowMatches={(program) => navigateTo(buildRentSearchUrl(program))}
+          onClose={() => { setShowProgramOverlay(false); setEditingProgramId(null); }}
+        />
+      ) : null}
+
+      {showProgramOverlay && editingProgramId ? (
+        <LocalProgramWorkspace onContextChange={(contextNotes) => setProgramDraft((prev) => ({ ...prev, contextNotes }))} draft={programDraft} editing={Boolean(editingProgramId)} busy={savingProgram} onSave={saveProgramChanges} onClose={() => { setShowProgramOverlay(false); setEditingProgramId(null); }}>
+          {(close, programStep) => (
+            <Card className={programStep === null ? "gap-0 py-0 mx-auto w-full border-0 bg-surface p-0 shadow-none" : "gap-0 overflow-visible border-0 bg-transparent p-0 shadow-none"} onClick={(event) => event.stopPropagation()}>
+              <div className={programStep === null ? "flex items-start justify-between gap-3 pr-2" : "hidden"}>
                 <div>
-                  <h3 className="text-2xl font-semibold text-[#0b0a0e]">Redigera lokalprogram</h3>
+                  <h3 className="text-lg font-semibold text-strong">{editingProgramId ? "Redigera lokalprogram" : "Nytt lokalprogram"}</h3>
                   <p className="mt-1 text-sm text-ink-600">Justera preferenser som används i matchning och sök.</p>
                 </div>
                 <Button
                   type="button"
                   variant="outline"
                   size="icon"
-                  className="close-circle-button rounded-full border-black/15 text-xl leading-none text-ink-700 hover:bg-transparent"
-                  onClick={() => {
-                    setShowProgramOverlay(false);
-                    setEditingProgramId(null);
-                  }}
+                  className="close-circle-button mr-1 rounded-md border-veil/15 text-xl leading-none text-ink-700 hover:bg-transparent"
+                  onClick={close}
                   aria-label="Stäng"
                 >
                   ×
                 </Button>
               </div>
 
-              <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                <label className="grid gap-1 sm:col-span-2 lg:col-span-3">
-                  <span className="text-xs font-semibold text-ink-600">Namn på lokalprogram</span>
+              {(programStep === null || programStep === 0) && <div className={`${programStep === null ? "mt-4" : ""} grid gap-3 sm:grid-cols-2 lg:grid-cols-12`}><h4 hidden={programStep !== null} className="border-b border-border pb-1.5 pt-1 text-xs font-semibold uppercase tracking-wide text-ink-600 sm:col-span-2 lg:col-span-12">Grunduppgifter</h4>
+<label className="flex min-w-0 flex-col justify-end gap-1.5 lg:col-span-4">
+                  <span className="text-xs font-semibold text-ink-600">{programStep === null ? "Namn på lokalprogram" : "Vad vill du kalla lokalprogrammet?"}</span>
                   <Input
                     value={programDraft.title}
                     onChange={(event) => setProgramDraft((prev) => ({ ...prev, title: event.target.value }))}
@@ -921,8 +657,8 @@ function PanelProfileSection({ app, basePath, forcedTab }) {
                   />
                 </label>
 
-                <label className="grid gap-1">
-                  <span className="text-xs font-semibold text-ink-600">Område</span>
+                <label className="flex min-w-0 flex-col justify-end gap-1.5 lg:col-span-4">
+                  <span className="text-xs font-semibold text-ink-600">{programStep === null ? "Område" : "Var vill ni sitta?"}</span>
                   <Select value={programDraft.district} onValueChange={(value) => setProgramDraft((prev) => ({ ...prev, district: value }))}>
                     <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -931,8 +667,8 @@ function PanelProfileSection({ app, basePath, forcedTab }) {
                   </Select>
                 </label>
 
-                <label className="grid gap-1">
-                  <span className="text-xs font-semibold text-ink-600">Typ av lokal</span>
+                <label className="flex min-w-0 flex-col justify-end gap-1.5 lg:col-span-4">
+                  <span className="text-xs font-semibold text-ink-600">{programStep === null ? "Typ av lokal" : "Vilken typ av lokal söker ni?"}</span>
                   <Select
                     value={Array.isArray(programDraft.type) && programDraft.type.length ? programDraft.type[0] : "Alla"}
                     onValueChange={(value) => setProgramDraft((prev) => ({ ...prev, type: value === "Alla" ? [] : [value] }))}
@@ -945,33 +681,37 @@ function PanelProfileSection({ app, basePath, forcedTab }) {
                   </Select>
                 </label>
 
-                <label className="grid gap-1">
-                  <span className="text-xs font-semibold text-ink-600">Minst platser</span>
+                </div>}
+{(programStep === null || programStep === 1) && <div className={`${programStep === null ? "mt-4" : ""} grid gap-3 sm:grid-cols-2 lg:grid-cols-12`}><h4 hidden={programStep !== null} className="border-b border-border pb-1.5 pt-1 text-xs font-semibold uppercase tracking-wide text-ink-600 sm:col-span-2 lg:col-span-12">Storlek och budget</h4>
+<label className="flex min-w-0 flex-col justify-end gap-1.5 lg:col-span-3">
+                  <span className="text-xs font-semibold text-ink-600">{programStep === null ? "Minst platser" : "Hur många platser behövs?"}</span>
                   <Input type="number" min="0" value={programDraft.teamSize} onChange={(event) => setProgramDraft((prev) => ({ ...prev, teamSize: event.target.value }))} />
                 </label>
 
-                <label className="grid gap-1">
-                  <span className="text-xs font-semibold text-ink-600">Min yta (kvm)</span>
+                <label className="flex min-w-0 flex-col justify-end gap-1.5 lg:col-span-3">
+                  <span className="text-xs font-semibold text-ink-600">{programStep === null ? "Min yta (kvm)" : "Minsta yta i kvm?"}</span>
                   <Input type="number" min="0" value={programDraft.minSize} onChange={(event) => setProgramDraft((prev) => ({ ...prev, minSize: event.target.value }))} />
                 </label>
 
-                <label className="grid gap-1">
-                  <span className="text-xs font-semibold text-ink-600">Max yta (kvm)</span>
+                <label className="flex min-w-0 flex-col justify-end gap-1.5 lg:col-span-3">
+                  <span className="text-xs font-semibold text-ink-600">{programStep === null ? "Max yta (kvm)" : "Största yta i kvm?"}</span>
                   <Input type="number" min="0" value={programDraft.maxSize} onChange={(event) => setProgramDraft((prev) => ({ ...prev, maxSize: event.target.value }))} />
                 </label>
 
-                <label className="grid gap-1">
-                  <span className="text-xs font-semibold text-ink-600">Max budget / mån</span>
+                <label className="flex min-w-0 flex-col justify-end gap-1.5 lg:col-span-3">
+                  <span className="text-xs font-semibold text-ink-600">{programStep === null ? "Max budget / mån" : "Maxbudget per månad?"}</span>
                   <Input type="number" min="0" value={programDraft.maxBudget} onChange={(event) => setProgramDraft((prev) => ({ ...prev, maxBudget: event.target.value }))} />
                 </label>
 
-                <label className="grid gap-1">
-                  <span className="text-xs font-semibold text-ink-600">Inflyttning</span>
+                </div>}
+{(programStep === null || programStep === 2) && <div className={`${programStep === null ? "mt-4" : ""} grid gap-3 sm:grid-cols-2 lg:grid-cols-12`}><h4 hidden={programStep !== null} className="border-b border-border pb-1.5 pt-1 text-xs font-semibold uppercase tracking-wide text-ink-600 sm:col-span-2 lg:col-span-12">Tid och avtal</h4>
+<label className="flex min-w-0 flex-col justify-end gap-1.5 lg:col-span-6">
+                  <span className="text-xs font-semibold text-ink-600">{programStep === null ? "Inflyttning" : "När vill ni flytta in?"}</span>
                   <Input type="date" value={programDraft.moveInDate} onChange={(event) => setProgramDraft((prev) => ({ ...prev, moveInDate: event.target.value }))} />
                 </label>
 
-                <label className="grid gap-1">
-                  <span className="text-xs font-semibold text-ink-600">Avtalsflexibilitet</span>
+                <label className="flex min-w-0 flex-col justify-end gap-1.5 lg:col-span-6">
+                  <span className="text-xs font-semibold text-ink-600">{programStep === null ? "Avtalsflexibilitet" : "Hur långt avtal passar er?"}</span>
                   <Select value={programDraft.contractFlex || "Alla"} onValueChange={(value) => setProgramDraft((prev) => ({ ...prev, contractFlex: value === "Alla" ? "" : value }))}>
                     <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -980,8 +720,10 @@ function PanelProfileSection({ app, basePath, forcedTab }) {
                   </Select>
                 </label>
 
-                <label className="grid gap-1">
-                  <span className="text-xs font-semibold text-ink-600">Kollektivtrafik</span>
+                </div>}
+{(programStep === null || programStep === 3) && <div className={`${programStep === null ? "mt-4" : ""} grid gap-3 sm:grid-cols-2 lg:grid-cols-12`}><h4 hidden={programStep !== null} className="border-b border-border pb-1.5 pt-1 text-xs font-semibold uppercase tracking-wide text-ink-600 sm:col-span-2 lg:col-span-12">Läge och tillgång</h4>
+<label className="flex min-w-0 flex-col justify-end gap-1.5 lg:col-span-3">
+                  <span className="text-xs font-semibold text-ink-600">{programStep === null ? "Kollektivtrafik" : "Hur nära kollektivtrafik?"}</span>
                   <Select value={programDraft.transitDistance || "Alla"} onValueChange={(value) => setProgramDraft((prev) => ({ ...prev, transitDistance: value === "Alla" ? "" : value }))}>
                     <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -990,8 +732,8 @@ function PanelProfileSection({ app, basePath, forcedTab }) {
                   </Select>
                 </label>
 
-                <label className="grid gap-1">
-                  <span className="text-xs font-semibold text-ink-600">Tillgång</span>
+                <label className="flex min-w-0 flex-col justify-end gap-1.5 lg:col-span-3">
+                  <span className="text-xs font-semibold text-ink-600">{programStep === null ? "Tillgång" : "När behöver ni tillgång?"}</span>
                   <Select value={programDraft.accessHours || "Alla"} onValueChange={(value) => setProgramDraft((prev) => ({ ...prev, accessHours: value === "Alla" ? "" : value }))}>
                     <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -1000,8 +742,8 @@ function PanelProfileSection({ app, basePath, forcedTab }) {
                   </Select>
                 </label>
 
-                <label className="grid gap-1">
-                  <span className="text-xs font-semibold text-ink-600">Parkering</span>
+                <label className="flex min-w-0 flex-col justify-end gap-1.5 lg:col-span-3">
+                  <span className="text-xs font-semibold text-ink-600">{programStep === null ? "Parkering" : "Vilken parkering behövs?"}</span>
                   <Select value={programDraft.parkingType || "Alla"} onValueChange={(value) => setProgramDraft((prev) => ({ ...prev, parkingType: value === "Alla" ? "" : value }))}>
                     <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -1010,8 +752,8 @@ function PanelProfileSection({ app, basePath, forcedTab }) {
                   </Select>
                 </label>
 
-                <label className="grid gap-1">
-                  <span className="text-xs font-semibold text-ink-600">Planlösning</span>
+                <label className="flex min-w-0 flex-col justify-end gap-1.5 lg:col-span-3">
+                  <span className="text-xs font-semibold text-ink-600">{programStep === null ? "Planlösning" : "Vilken planlösning passar?"}</span>
                   <Select value={programDraft.layoutType || "Alla"} onValueChange={(value) => setProgramDraft((prev) => ({ ...prev, layoutType: value === "Alla" ? "" : value }))}>
                     <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -1019,10 +761,9 @@ function PanelProfileSection({ app, basePath, forcedTab }) {
                     </SelectContent>
                   </Select>
                 </label>
-              </div>
-
-              <div className="mt-4 border-b border-black/10 pb-4">
-                <div className="rounded-2xl border border-black/10 bg-[#ffffff] p-3">
+              </div>}
+              <div hidden={programStep !== null && programStep !== 4} className="mt-4 border-b border-veil/10 pb-4">
+                <Card className="w-fit max-w-full gap-0 py-0 rounded-lg p-3">
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-700">Särskilda krav</p>
                   <div className="mt-2 grid grid-cols-1 gap-2">
                     <label className="inline-flex items-center gap-2 text-sm text-ink-700">
@@ -1030,28 +771,28 @@ function PanelProfileSection({ app, basePath, forcedTab }) {
                         checked={Boolean(programDraft.includeOperatingCosts)}
                         onCheckedChange={(checked) => setProgramDraft((prev) => ({ ...prev, includeOperatingCosts: Boolean(checked) }))}
                       />
-                      Driftkostnad ingår
+                      {programStep === null ? "Driftkostnad ingår" : "Ska driftkostnader ingå?"}
                     </label>
                     <label className="inline-flex items-center gap-2 text-sm text-ink-700">
                       <Checkbox
                         checked={Boolean(programDraft.accessibilityAdapted)}
                         onCheckedChange={(checked) => setProgramDraft((prev) => ({ ...prev, accessibilityAdapted: Boolean(checked) }))}
                       />
-                      Tillgänglighetsanpassad
+                      {programStep === null ? "Tillgänglighetsanpassad" : "Behöver lokalen vara tillgänglighetsanpassad?"}
                     </label>
                     <label className="inline-flex items-center gap-2 text-sm text-ink-700">
                       <Checkbox
                         checked={Boolean(programDraft.ecoCertified)}
                         onCheckedChange={(checked) => setProgramDraft((prev) => ({ ...prev, ecoCertified: Boolean(checked) }))}
                       />
-                      Miljöcertifierad
+                      {programStep === null ? "Miljöcertifierad" : "Behöver lokalen vara miljöcertifierad?"}
                     </label>
                   </div>
-                </div>
+                </Card>
               </div>
 
-              <div className="mt-3">
-                <p className="mb-2 text-xs font-semibold text-ink-600">Bekvämligheter</p>
+              <div hidden={programStep !== null && programStep !== 5} className="mt-3">
+                <p className="mb-2 text-xs font-semibold text-ink-600">{programStep === null ? "Bekvämligheter" : "Vilka bekvämligheter vill ni ha?"}</p>
                 <div className="flex flex-wrap gap-2">
                   {amenityOptions.map((option) => {
                     const Icon = option.icon;
@@ -1061,8 +802,8 @@ function PanelProfileSection({ app, basePath, forcedTab }) {
                         key={option.value}
                         type="button"
                         variant="outline"
-                        className={`h-auto shrink-0 gap-2 whitespace-nowrap rounded-full px-3.5 py-2.5 text-sm font-semibold ${
-                          active ? "border-[#0b0a0e] bg-[#0b0a0e] text-white hover:bg-[#0b0a0e]/90" : "border-black/10 text-ink-700"
+                          className={`h-auto shrink-0 gap-2 whitespace-nowrap rounded-md px-3 py-2 text-sm font-semibold ${
+                          active ? "border-strong bg-strong text-on-strong hover:bg-strong/90" : "border-veil/10 text-ink-700"
                         }`}
                         onClick={() => toggleProgramAmenity(option.value)}
                       >
@@ -1074,30 +815,9 @@ function PanelProfileSection({ app, basePath, forcedTab }) {
                 </div>
               </div>
 
-              <div className="mt-5 flex items-center justify-end gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="h-auto rounded-full border-black/20 px-5 py-2.5 text-sm font-semibold text-ink-700"
-                  onClick={() => {
-                    setShowProgramOverlay(false);
-                    setEditingProgramId(null);
-                  }}
-                >
-                  Avbryt
-                </Button>
-                <Button
-                  type="button"
-                  className="h-auto rounded-full px-5 py-2.5 text-sm font-semibold"
-                  onClick={saveProgramChanges}
-                  disabled={savingProgram}
-                >
-                  {savingProgram ? "Sparar..." : "Spara ändringar"}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
+            </Card>
+          )}
+        </LocalProgramWorkspace>
       ) : null}
 
       <ViewingRequestModal
@@ -1110,7 +830,7 @@ function PanelProfileSection({ app, basePath, forcedTab }) {
           setBookingListing(null);
         }}
       />
-    </section>
+    </>
   );
 }
 
