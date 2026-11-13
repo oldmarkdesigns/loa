@@ -1,3 +1,8 @@
+import { ThemeProvider } from "../lib/theme";
+import ProfileMenuDropdown from "../components/layout/ProfileMenuDropdown";
+import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "../components/ui/dropdown-menu";
+import "../components/layout/workspace.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { defaultAppPathForUser, navigateTo, usePathname, workspaceRoles } from "../lib/router";
 import { useOptionalAppState } from "../state/AppState";
@@ -240,7 +245,7 @@ export function Nav({ user: suppliedUser, listings, actions = true }) {
           </nav>
 
           <div className="lo-nav-end">
-            <span className="lo-nav-end-wide">{endActions}</span>
+            <span className={user ? "lo-nav-signed-in" : "lo-nav-end-wide"}>{endActions}</span>
             <button
               type="button"
               ref={burgerRef}
@@ -299,26 +304,19 @@ export function Nav({ user: suppliedUser, listings, actions = true }) {
 }
 
 function AccountActions({ user, onLogout, closeAll }) {
-  const pathname = usePathname();
-  const [error, setError] = useState("");
-  const [pending, setPending] = useState(false);
+  const [open, setOpen] = useState(false);
   const publisher = workspaceRoles(user).has("company_admin") || workspaceRoles(user).has("broker");
+  const initials = (user?.name || "").trim().split(/\s+/).filter(Boolean).slice(0, 2).map(word => word[0]).join("").toUpperCase() || "K";
   return <>
-    {publisher && <a className="lo-nav-cta" href={defaultAppPathForUser(user)} onClick={linkTo(defaultAppPathForUser(user), closeAll)}>Admin</a>}
-    <details className="lo-account-menu" key={pathname}>
-      <summary className="lo-nav-login">{user?.name || "Mitt konto"}</summary>
-      <nav className="lo-account-options" aria-label="Mitt konto">
-        <a href="/lokaler" onClick={linkTo("/lokaler", closeAll)}>Sök lokaler</a>
-        <a href={defaultAppPathForUser(user)} onClick={linkTo(defaultAppPathForUser(user), closeAll)}>{publisher ? "Adminpanel" : "Mitt konto"}</a>
-        <a href="/app/profile" onClick={linkTo("/app/profile", closeAll)}>Profil och sparade lokaler</a>
-        <button type="button" disabled={pending} onClick={async () => {
-          setPending(true);
-          try { await onLogout?.(); closeAll(); }
-          catch { setError("Kunde inte logga ut. Försök igen."); setPending(false); }
-        }}>{pending ? "Loggar ut…" : "Logga ut"}</button>
-        {error && <p role="alert">{error}</p>}
-      </nav>
-    </details>
+    {publisher && <a className="lo-admin-link" href={defaultAppPathForUser(user)} onClick={linkTo(defaultAppPathForUser(user), closeAll)}>Byt till adminläge</a>}
+    <DropdownMenu open={open} onOpenChange={setOpen}>
+      <DropdownMenuTrigger render={<button type="button" className="lo-avatar-trigger" aria-label={`Kontomeny, ${user?.name || "Mitt konto"}`} />}>
+        <Avatar><AvatarImage src={user?.profile?.avatarUrl} alt="" /><AvatarFallback>{initials}</AvatarFallback></Avatar>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" sideOffset={12} className="loa-account-popover admin-workspace w-72 rounded-none p-3">
+        <ProfileMenuDropdown user={user} setMenuOpen={setOpen} onLogout={onLogout} />
+      </DropdownMenuContent>
+    </DropdownMenu>
   </>;
 }
 
@@ -569,13 +567,13 @@ export function SiteFrame({ user, listings, band, slim = false, navActions = tru
   useReveal(`${pathname}|${pageKey ?? ""}`);
 
   return (
-    <div className={`lo${slim ? " lo--slim" : ""}`} data-no-reveal>
+    <ThemeProvider enabled={Boolean(user)}><div className={`lo${slim ? " lo--slim" : ""}`} data-no-reveal>
       <div id="lo-top-sentinel" className="lo-sentinel" aria-hidden="true" />
       <Nav user={user} listings={listings} actions={navActions} />
       <main id="top">{children}</main>
       {band}
       <Footer slim={slim} />
-    </div>
+    </div></ThemeProvider>
   );
 }
 

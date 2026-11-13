@@ -45,10 +45,12 @@ No remote restoration required; no writes made to rentalplatform or Office Renta
 LOA origin now points to oldmarkdesigns/loa. Existing inherited history is retained.
 
 
-## Workspace navigation design
+## Workspace design and preserved interaction
 
-Admin and broker navigation now share a branded LOA header with Sök lokaler / Admin and the account menu. Side navigation uses the site's typography, navy ink, white surfaces and hairline separation, with a compact rail retained for users who choose it.
+The old panel remains the behavioral reference. The avatar and account dropdown sit at the bottom of the sidebar, alongside its search-mode switch. Profile, company settings and help again open in the existing account window over the current workspace. Navigation groups, sidebar display controls, keyboard commands and page destinations are retained.
 
-Account pages now render as full pages rather than settings dialogs. Profile, saved items, local programs, company profile, settings and help share section navigation; mobile uses a horizontally scrollable page list. Existing forms and data operations are retained.
+The workspace header contains a single Byt till sökläge action, with no Admin/Search tabs. The account dropdown also includes that action. Public search shows an avatar using the former search dropdown actions; Byt till adminläge is a plain text link and dropdown entry, with no filled pill.
 
-Company-admin profile links from public search resolve to the same profile navigation. Profile page selection, saved-page selection, account menu and mobile overflow were checked in Chromium using the actual components with fixture data. The real signed-in workspace header and sidebar were also inspected. No account data was changed.
+Admin content now shares LOA's white surfaces, navy text, hairlines and lighter typography. KPI summaries are an open numeric strip; chart empty states are flat sections; tables, fields, filters and cards share the updated treatment. Existing callbacks and backend operations are retained.
+
+Verified in Chromium with the real components and fixture data: overview, sidebar avatar, profile window open/close, switching to search, search avatar dropdown, returning to admin, and mobile drawer/account controls. Screenshots inspected at desktop and mobile sizes. Build, account-routing and auth-safety checks pass. No account or backend data changed.

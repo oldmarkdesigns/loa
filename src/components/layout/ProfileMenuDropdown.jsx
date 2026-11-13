@@ -7,7 +7,7 @@ import { DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdow
 function MenuRow({ icon, children, onClick }) {
   return (
     <DropdownMenuItem
-      className="menu-hover-row w-full gap-2 rounded-xl px-3 py-2 font-semibold text-ink-700 focus:bg-veil/5 focus:text-ink-700"
+      className="menu-hover-row w-full gap-2 rounded-none px-3 py-2 font-normal text-ink-700 focus:bg-veil/5 focus:text-ink-700"
       onClick={onClick}
     >
       <Icon name={icon} className="h-4 w-4" />
@@ -41,8 +41,8 @@ function ProfileMenuDropdown({
       ? "/app/broker/profil"
       : "/app/profile";
   // In the panels the saved listings and searches are cards on the profile.
-  const savedListingsPath = activeRole === "renter" ? "/app/profile?tab=favorites" : `${profileBasePath}#sparade-objekt`;
-  const savedSearchesPath = activeRole === "renter" ? "/app/profile?tab=history" : `${profileBasePath}#sparade-sokningar`;
+  const savedListingsPath = activeRole === "renter" ? "/app/profile?tab=favorites" : `${profileBasePath}/sparat`;
+  const savedSearchesPath = activeRole === "renter" ? "/app/profile?tab=history" : `${profileBasePath}/sparat`;
 
   function navigateToBrokerPath(path) {
     setMenuOpen(false);
@@ -70,7 +70,7 @@ function ProfileMenuDropdown({
       {hasBrokerAccess ? (
         <>
           <MenuRow icon="switchMode" onClick={switchToAdminMode}>
-            Växla till adminläge
+            Byt till adminläge
           </MenuRow>
           <MenuRow icon="building" onClick={() => navigateToBrokerPath(willBeCompanyAdmin ? "/app/admin/annonser" : "/app/broker/objekt")}>
             Dina objekt

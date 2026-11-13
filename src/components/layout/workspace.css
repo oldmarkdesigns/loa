@@ -1,5 +1,5 @@
-/* The working side of LOA: the site's paper, navy ink and hairlines. */
-.loa-workspace, .loa-account, .loa-workspace-drawer, .loa-account-popover {
+/* LOA workspace identity. Existing routes, controls and interactions remain intact. */
+.loa-workspace, .loa-account-dialog, .loa-workspace-drawer, .loa-account-popover {
   --strong: 20 26 43;
   --ink-400: 113 118 130;
   --ink-500: 91 96 112;
@@ -9,89 +9,111 @@
   --control: 246 247 248;
   --tint: 246 247 248;
   --tint-2: 238 240 242;
+  --primary: #141a2b;
+  --primary-foreground: #fff;
+  --card: #fff;
+  --border: rgba(20,26,43,.12);
   font-family: "Geist", "Helvetica Neue", Arial, sans-serif;
   font-weight: 400;
   color: rgb(var(--strong));
   background: rgb(var(--surface));
 }
-.loa-workspace-header {
-  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
-  flex-shrink: 0; height: 80px; padding: 0 32px; gap: 24px;
-  border-bottom: 1px solid rgb(var(--strong) / .12); background: rgb(var(--surface));
-}
+.loa-workspace-header { display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; height: 80px; padding: 0 32px; gap: 24px; border-bottom: 1px solid var(--border); background: rgb(var(--surface)); }
 .loa-workspace-brand { display: flex; align-items: center; gap: 24px; min-width: 0; }
 .loa-workspace-brand img { width: auto; height: 24px; }
-.loa-workspace-context, .loa-back-workspace { border-left: 1px solid rgb(var(--strong) / .16) !important; padding-left: 24px !important; font-size: 13px; color: rgb(var(--ink-500)); white-space: nowrap; }
-.loa-back-workspace { background: none; border-radius: 0 !important; font-weight: 400; }
-.loa-mode-nav { display: flex; align-self: stretch; align-items: stretch; gap: 28px; font-size: 14px; }
-.loa-mode-nav a { display: flex; align-items: center; border-bottom: 2px solid transparent; color: rgb(var(--ink-500)); }
-.loa-mode-nav a[aria-current] { border-color: rgb(var(--strong)); color: rgb(var(--strong)); }
-.loa-workspace-person { justify-self: end; max-width: 240px; }
-.loa-workspace-person .loa-person-trigger { border-radius: 0 !important; font-weight: 400; padding: 4px 0 !important; }
-.loa-workspace-person [data-slot="avatar"] { width: 32px; height: 32px; }
-.loa-workspace-person .loa-person-trigger span { font-weight: 400; }
-.loa-workspace :focus-visible, .loa-account :focus-visible { outline: 1px solid currentColor; outline-offset: 3px; }
+.loa-workspace-context { border-left: 1px solid var(--border); padding-left: 24px; font-size: 13px; color: rgb(var(--ink-500)); }
+.loa-search-mode-button { display: inline-flex; gap: 10px; align-items: center; padding: 8px 0; border-radius: 0 !important; font-size: 14px; font-weight: 400; color: rgb(var(--strong)); background: transparent; }
+.loa-search-mode-button:hover { text-decoration: underline; text-underline-offset: 5px; }
+.loa-workspace :focus-visible, .loa-account-dialog :focus-visible { outline: 1px solid currentColor; outline-offset: 3px; }
 .loa-sidebar-inner { padding: 16px 8px; }
 .loa-sidebar-head { padding-bottom: 20px; }
-.loa-sidebar-head > button { background: transparent; border-bottom: 1px solid rgb(var(--strong) / .12); border-radius: 0 !important; }
-.loa-sidebar-nav [role="group"] > p { font-size: 11px; color: rgb(var(--ink-500)); margin-top: 28px; margin-bottom: 8px; letter-spacing: .015em; }
-.loa-sidebar-nav .admin-nav-indicator { display: none; }
-.loa-sidebar-nav .admin-nav-row, .loa-sidebar-bottom button { border-radius: 0 !important; height: 40px; font-weight: 400; font-size: 14px; }
-.loa-sidebar-nav .admin-nav-row[data-active="true"] { background: rgb(var(--tint)); font-weight: 500; }
-.loa-sidebar-nav .admin-nav-row[data-active="true"]::after { content: ""; width: 4px; height: 4px; border-radius: 50%; background: currentColor; position: absolute; right: 10px; }
-.loa-sidebar-inner:not(.is-collapsed) .admin-nav-row > span:first-child { display: none; }
-.loa-sidebar-bottom { padding-top: 16px; }
-.loa-sidebar-bottom button { color: rgb(var(--ink-500)); }
-.loa-workspace [data-admin-scroll-container] { background: rgb(var(--surface)); }
-.loa-workspace .admin-section-enter--lift { padding: 40px clamp(24px, 3.5vw, 56px) 96px; }
-.loa-account { display: flex; flex-direction: column; height: 100dvh; min-height: 0; }
-.loa-account-layout { display: grid; grid-template-columns: 248px minmax(0, 1fr); flex: 1; min-height: 0; }
-.loa-account-sidebar { padding: 40px 24px; border-right: 1px solid rgb(var(--strong) / .12); overflow-y: auto; }
-.loa-account-sidebar h1 { font-size: 24px; font-weight: 400; letter-spacing: -.03em; margin: 0 0 28px; }
-.loa-account-search { display: flex; align-items: center; gap: 8px; padding: 0 0 12px; border-bottom: 1px solid rgb(var(--strong) / .12); color: rgb(var(--ink-500)); }
-.loa-account-search input { width: 100%; min-width: 0; border: 0; background: transparent; padding: 0; font-size: 13px; outline-offset: 3px; }
-.loa-account-group { margin-top: 28px; }
-.loa-account-group > p { margin: 0 0 8px; font-size: 11px; color: rgb(var(--ink-500)); }
-.loa-account-group > button { display: block; width: 100%; min-height: 40px; padding: 10px 12px; border-radius: 0 !important; text-align: left; font-size: 14px; font-weight: 400; color: rgb(var(--ink-600)); }
-.loa-account-group > button[aria-current] { background: rgb(var(--tint)); color: rgb(var(--strong)); font-weight: 500; }
-.loa-account-group > button:hover { color: rgb(var(--strong)); background: rgb(var(--tint)); }
-.loa-account-body { overflow-y: auto; min-width: 0; outline: none; }
-.loa-account-content { max-width: 960px; margin: 0 auto; padding: 64px clamp(24px, 5vw, 80px) 96px; }
-.loa-account-content > div > h2 { font-size: clamp(30px, 3vw, 42px); font-weight: 400; line-height: 1.15; letter-spacing: -.035em; }
-.loa-account-content h3 { font-weight: 500; }
-.loa-account-popover { border-radius: 0 !important; border: 1px solid rgb(var(--strong) / .12); }
-.loa-account-popover button { border-radius: 0 !important; font-weight: 400; }
-@media (max-width: 767px) {
-  .loa-workspace-header { height: 68px; padding: 0 20px; gap: 16px; grid-template-columns: auto 1fr auto; }
-  .loa-workspace-context, .loa-back-workspace, .loa-workspace-person .loa-person-trigger > span:not([data-slot="avatar"]), .loa-workspace-person .loa-person-trigger > svg { display: none; }
-  .loa-mode-nav { justify-self: center; gap: 20px; font-size: 13px; }
-  .loa-workspace-brand img { height: 21px; }
-  .loa-account-layout { display: flex; flex-direction: column; }
-  .loa-account-sidebar { overflow: visible; padding: 20px; border-right: 0; border-bottom: 1px solid rgb(var(--strong) / .12); }
-  .loa-account-sidebar h1 { font-size: 22px; margin: 0 0 16px; }
-  .loa-account-search { display: none; }
-  .loa-account-sidebar nav { display: flex; overflow-x: auto; gap: 8px; scrollbar-width: thin; padding-bottom: 4px; }
-  .loa-account-group { display: contents; }
-  .loa-account-group > p { display: none; }
-  .loa-account-group > button { width: auto; flex-shrink: 0; white-space: nowrap; }
-  .loa-account-content { padding: 32px 20px 64px; }
-  .loa-account-body { flex: 1; min-height: 0; }
-  .loa-workspace .admin-section-enter--lift { padding: 24px 20px 64px; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .loa-workspace *, .loa-account * { scroll-behavior: auto !important; }
-}
-
+.loa-sidebar-head > button { background: transparent; border-bottom: 1px solid var(--border); border-radius: 0 !important; }
 .loa-sidebar-head .loa-company-mark { border-radius: 0; background: rgb(var(--tint)); color: rgb(var(--strong)); font-weight: 400; }
-.dark :is(.loa-workspace, .loa-account, .loa-workspace-drawer, .loa-account-popover) {
-  --strong: 232 234 239;
-  --ink-400: 167 172 187;
-  --ink-500: 167 172 187;
-  --ink-600: 195 199 210;
-  --surface: 19 24 37;
-  --canvas: 19 24 37;
-  --control: 29 35 50;
-  --tint: 29 35 50;
-  --tint-2: 38 44 60;
+.loa-sidebar-nav [role="group"] > p { font-size: 11px; color: rgb(var(--ink-500)); margin-top: 24px; margin-bottom: 6px; letter-spacing: .015em; }
+.loa-sidebar-nav .admin-nav-row { border-radius: 0 !important; height: 38px; font-size: 14px; font-weight: 400; }
+.loa-sidebar-nav .admin-nav-row[data-active="true"] { background: rgb(var(--tint)); font-weight: 500; }
+.loa-sidebar-footer .loa-person-trigger { border-radius: 0 !important; }
+.loa-sidebar-footer .loa-person-trigger span { font-weight: 400; }
+.loa-sidebar-footer { padding-top: 16px; }
+.loa-account-popover { border-radius: 0 !important; border: 1px solid var(--border); box-shadow: 0 12px 32px rgb(20 26 43 / .08); }
+.loa-account-popover [data-slot="button"], .loa-account-popover [role="menuitem"] { border-radius: 0 !important; font-weight: 400; }
+
+/* Typography and surfaces: open sections replace the former rounded-card stack. */
+.loa-workspace [data-admin-scroll-container] { background: rgb(var(--surface)); }
+.loa-workspace .admin-section-enter--lift { padding: 48px clamp(24px, 3.5vw, 56px) 96px; }
+.loa-page-heading { padding-bottom: 32px; margin-bottom: 32px; border-bottom: 1px solid var(--border); }
+.loa-page-heading h1 { margin: 0; font-size: clamp(32px, 3.2vw, 48px); line-height: 1.1; letter-spacing: -.035em; font-weight: 400; }
+.loa-workspace :is(h2,h3), .loa-account-dialog :is(h2,h3) { font-weight: 400; letter-spacing: -.025em; }
+.loa-workspace h2 { font-size: 22px; line-height: 1.3; }
+.loa-workspace h3 { font-size: 18px; line-height: 1.35; }
+.loa-workspace [data-slot="card"], .loa-account-dialog [data-slot="card"] {
+  border-radius: 0 !important; box-shadow: none !important;
+  border: 0; border-top: 1px solid var(--border); background: transparent;
+}
+.loa-workspace [data-slot="card"] [data-slot="card"], .loa-account-dialog [data-slot="card"] [data-slot="card"] { border-top: 0; }
+.loa-workspace [data-slot="card"] > [class*="border-b"] { border-color: var(--border); }
+.loa-workspace :is(article[class*="rounded"],aside[class*="rounded"]) { border-radius: 0 !important; box-shadow: none !important; }
+.loa-workspace [data-slot="table-head"] { padding-top: 18px; padding-bottom: 18px; font-size: 12px; font-weight: 400; color: rgb(var(--ink-500)); background: rgb(var(--tint) / .5); }
+.loa-workspace [data-slot="table-cell"] { padding-top: 20px; padding-bottom: 20px; font-weight: 400; border-color: var(--border); }
+.loa-workspace [data-slot="table-row"] { border-color: var(--border); }
+.loa-workspace [data-slot="table-cell"] img { border-radius: 0 !important; }
+.loa-workspace [data-slot="badge"] { border-radius: 3px !important; font-weight: 400; }
+.loa-workspace :is([data-slot="input"],[data-slot="select-trigger"],textarea), .loa-account-dialog :is([data-slot="input"],[data-slot="select-trigger"],textarea) { border-radius: 0 !important; box-shadow: none; font-weight: 400; }
+.loa-workspace [data-slot="button"]:not([aria-label]):not(.admin-nav-row):not(.loa-person-trigger) { font-weight: 400; }
+.loa-workspace [data-slot="button"].bg-secondary { background: transparent; border-radius: 0 !important; border-bottom: 1px solid var(--border); }
+.loa-workspace [data-slot="button"].bg-primary { border-radius: 999px !important; padding-left: 20px; padding-right: 20px; }
+.loa-workspace [data-slot="toggle-group"] { gap: 0; border-bottom: 1px solid var(--border); }
+.loa-workspace [data-slot="toggle-group-item"] { border: 0; border-radius: 0 !important; box-shadow: none; font-weight: 400; }
+.loa-workspace [data-slot="toggle-group-item"][data-state="on"] { background: rgb(var(--tint)); color: rgb(var(--strong)); }
+.loa-kpi-strip { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.loa-kpi-item { min-width: 0; padding: 28px 28px 28px 0; }
+.loa-kpi-item + .loa-kpi-item { border-left: 1px solid var(--border); padding-left: 28px; }
+.loa-kpi-label { font-size: 13px; color: rgb(var(--ink-500)); }
+.loa-kpi-value { font-size: clamp(38px, 4.5vw, 64px); line-height: 1; letter-spacing: -.04em; font-weight: 400; font-variant-numeric: tabular-nums; margin: 24px 0 18px; }
+.loa-kpi-unit, .loa-workspace .loa-kpi-link { font-size: 12px; color: rgb(var(--ink-500)); margin: 0; padding: 0; min-height: 0; height: auto; justify-content: flex-start; }
+.loa-data-section { padding: 28px 0 0; border-top: 1px solid var(--border); }
+.loa-data-section h3 { margin: 0; }
+.loa-section-description { color: rgb(var(--ink-500)); font-size: 13px; }
+.loa-chart-empty { min-height: 200px; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 16px; color: rgb(var(--ink-500)); font-size: 13px; }
+.loa-chart-empty > span { font-size: 40px; font-weight: 300; line-height: 1; color: rgb(var(--ink-400)); }
+.loa-activity-empty { padding: 28px 0; color: rgb(var(--ink-500)); font-size: 13px; font-weight: 400; }
+.loa-overview > .loa-overview-columns > [data-slot="card"] { padding-left: 0; padding-right: 0; }
+.loa-overview [data-slot="card"] > .border-b { padding-left: 0; padding-right: 0; }
+.loa-overview [data-slot="card"] > div:first-child:has(> [data-slot="button"]) { padding-top: 20px; padding-bottom: 20px; }
+.loa-account-dialog { border-radius: 0 !important; border: 1px solid var(--border); }
+.loa-account-dialog [aria-label="Konto och inställningar"] [data-slot="button"] { font-weight: 400; border-radius: 0 !important; }
+.loa-account-dialog h2 { font-size: 30px; }
+.loa-account-dialog [data-slot="button"] { font-weight: 400; }
+
+/* Signed-in search uses the existing account dropdown, not a second menu system. */
+.lo-nav-signed-in { display: flex; align-items: center; gap: 24px; }
+.lo-admin-link { font-size: 14px; font-weight: 400; white-space: nowrap; }
+.lo-admin-link:hover { text-decoration: underline; text-underline-offset: 5px; }
+.lo .lo-avatar-trigger { display: inline-flex; width: 38px; height: 38px; padding: 0; border-radius: 50% !important; }
+.lo-avatar-trigger [data-slot="avatar"] { width: 100%; height: 100%; }
+@media(max-width:767px) {
+  .loa-workspace-header { height: 68px; padding: 0 20px; gap: 16px; }
+  .loa-workspace-context { display: none; }
+  .loa-workspace-brand img { height: 21px; }
+  .loa-search-mode-button { font-size: 13px; }
+  .loa-workspace .admin-section-enter--lift { padding: 28px 20px 64px; }
+  .loa-page-heading { padding-bottom: 24px; margin-bottom: 24px; }
+  .loa-kpi-strip { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .loa-kpi-item { padding: 24px 16px 24px 0; }
+  .loa-kpi-item + .loa-kpi-item { padding-left: 16px; }
+  .loa-kpi-item:nth-child(3) { border-left: 0; padding-left: 0; }
+  .loa-kpi-item:nth-child(n+3) { border-top: 1px solid var(--border); }
+  .loa-kpi-value { font-size: 44px; }
+  .loa-account-dialog { width: calc(100vw - 24px); height: calc(100dvh - 24px); }
+  .lo-nav-signed-in { gap: 12px; }
+  .lo-nav-signed-in > .lo-admin-link { display: none; }
+}
+.dark :is(.loa-workspace,.loa-account-dialog,.loa-workspace-drawer,.loa-account-popover) {
+  --strong:232 234 239; --ink-400:167 172 187; --ink-500:167 172 187; --ink-600:195 199 210;
+  --surface:19 24 37; --canvas:19 24 37; --control:29 35 50; --tint:29 35 50; --tint-2:38 44 60;
+  --primary:#e8eaef; --primary-foreground:#131825; --card:#131825; --border:rgba(232,234,239,.14);
 }
 .dark .loa-workspace-brand img { filter: brightness(0) invert(1); }
+@media(prefers-reduced-motion:reduce) { .loa-workspace *, .loa-account-dialog * { scroll-behavior:auto !important; } }
+.loa-account-dialog > header h2 { font-size: 14px; font-weight: 400; letter-spacing: 0; }
+.loa-sidebar-head > [data-slot="button"] { border-radius: 0 !important; }

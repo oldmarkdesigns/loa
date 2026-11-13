@@ -8,8 +8,8 @@ import { ContactPage, FaqPage, GettingStartedPage } from "./HelpPages";
 import { GeneralSettingsPage, ShortcutsPage } from "./SettingsPages";
 
 /**
- * Full-page profile, company, settings and help navigation. Route changes preserve the
- * existing form state; returning to the workspace restores the originating page.
+ * Profile, company, settings and help window over the current workspace.
+ * Route changes preserve form state; closing restores the originating page.
  */
 export function closeAccountWindow(base) {
   if (typeof window !== "undefined" && window.history.state?.accountBackground) window.history.back();

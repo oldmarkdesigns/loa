@@ -9,11 +9,12 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { BrokerAssistantLauncher } from "../app/BrokerAssistant";
 import { PanelCommandPalette, PanelSearchButton } from "./PanelCommandPalette";
-import { switchToSearchMode, usePanelChrome } from "./PanelChrome";
+import { PanelModeSwitch, switchToSearchMode, usePanelChrome } from "./PanelChrome";
 import { PanelHint, PanelHintSettings } from "./PanelHint";
 import { menuIcon, menuRow, menuRowIconOnly, menuRowInset } from "./menuScale";
 import WorkspaceHeader from "./WorkspaceHeader";
 import "./workspace.css";
+import PanelProfileMenu from "./PanelProfileMenu";
 import PanelSidebarControls from "./PanelSidebarControls";
 
 // The first entry of the panel is its start page, which is only "here" on exactly that path.
@@ -140,11 +141,10 @@ export function PanelSidebar({
         <PanelSidebarNav pathname={pathname} navItems={navItems} rootPath={rootPath} onNavigate={onNavigate} badges={badges} collapsed={collapsed} />
       </div>
 
-      <nav aria-label="Konto och hjälp" className="loa-sidebar-bottom shrink-0 border-t border-veil/10 p-3">
-        {bottomNavItems.filter(item => ["adminprofil", "installningar", "hjalp"].includes(item.key)).map(item => <Button key={item.key} variant="ghost" className={cn(menuRow, collapsed ? menuRowIconOnly : menuRowInset)} aria-label={item.label} onClick={() => onNavigate(item.path)}>
-          {collapsed ? <item.Icon className={menuIcon} /> : item.key === "adminprofil" ? "Företagsprofil" : item.label}
-        </Button>)}
-      </nav>
+      <div className="loa-sidebar-footer shrink-0 space-y-1.5 border-t border-veil/10 p-3">
+        <PanelModeSwitch collapsed={collapsed} />
+        <PanelProfileMenu collapsed={collapsed} pathname={pathname} items={bottomNavItems} onNavigate={onNavigate} onLogout={onLogout} onOpenChange={onMenuOpenChange} />
+      </div>
     </div>
   );
 }
@@ -333,7 +333,10 @@ function AdminPanelShell({ pathname, navItems, bottomNavItems, sectionTitle, onL
         {fullBleedContent ? (
           <div key={contentKey ?? pathname} className="admin-section-enter min-h-0 flex-1">{children}</div>
         ) : (
-          <div key={contentKey ?? pathname} className="admin-section-enter--lift mx-auto w-full max-w-[1440px] p-4 pb-24">{children}</div>
+          <div key={contentKey ?? pathname} className="admin-section-enter--lift mx-auto w-full max-w-[1440px] p-4 pb-24">
+            <header className="loa-page-heading"><h1>{sectionTitle}</h1></header>
+            {children}
+          </div>
         )}
       </div>
 

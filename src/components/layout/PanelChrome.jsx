@@ -177,7 +177,7 @@ export function PanelCompanySwitcher({ collapsed = false, settingsPath, onNaviga
 export function PanelModeSwitch({ collapsed = false, className }) {
   const chrome = usePanelChrome();
   if (!chrome) return null;
-  const label = "Växla till sökläge";
+  const label = "Byt till sökläge";
   const rowClass = cn(menuRow, "text-ink-700 hover:bg-veil/5 hover:text-strong");
 
   if (collapsed) {

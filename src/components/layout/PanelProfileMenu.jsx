@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ChevronsUpDown } from "lucide-react";
 import { cn } from "cn";
 import { navigateTo, routeMatches } from "../../lib/router";
-import { LogoutIcon } from "../icons/UiIcons";
+import { LogoutIcon, SwitchModeIcon } from "../icons/UiIcons";
 import { usePanelChrome } from "./PanelChrome";
 import { PanelHint } from "./PanelHint";
 import { menuIcon, menuRow, menuRowInset, menuSquare } from "./menuScale";
@@ -40,7 +40,7 @@ function MenuButton({ Icon, active = false, onClick, children }) {
   );
 }
 
-export default function PanelProfileMenu({ collapsed = false, pathname, items = [], onNavigate, onLogout, onOpenChange, variant = "sidebar" }) {
+export default function PanelProfileMenu({ collapsed = false, pathname, items = [], onNavigate, onLogout, onOpenChange }) {
   const chrome = usePanelChrome();
   const [open, setOpen] = useState(false);
   // Also told to the side menu, which stays open while this menu is.
@@ -76,7 +76,7 @@ export default function PanelProfileMenu({ collapsed = false, pathname, items = 
         <>
           <span className="min-w-0 flex-1">
             <span className="block truncate text-sm font-semibold leading-[18px] text-strong">{name}</span>
-            {email && variant !== "header" ? <span title={email} className="block truncate text-[12.5px] font-normal leading-4 text-ink-500">{email}</span> : null}
+            {email ? <span title={email} className="block truncate text-[12.5px] font-normal leading-4 text-ink-500">{email}</span> : null}
           </span>
           <ChevronsUpDown aria-hidden="true" className="size-3.5 shrink-0 text-ink-500" />
         </>
@@ -93,10 +93,10 @@ export default function PanelProfileMenu({ collapsed = false, pathname, items = 
       )}
       <PopoverContent
         aria-label="Kontomeny"
-        side={variant === "header" ? "bottom" : collapsed ? "right" : "top"}
-        align={variant === "header" || collapsed ? "end" : "start"}
+        side={collapsed ? "right" : "top"}
+        align={collapsed ? "end" : "start"}
         sideOffset={collapsed ? 10 : 8}
-        className={cn("loa-account-popover admin-workspace gap-0 rounded-none p-3 shadow-none", variant === "header" || collapsed ? "w-72" : "w-[var(--anchor-width)]")}
+        className={cn("loa-account-popover admin-workspace gap-0 rounded-none p-3 shadow-none", collapsed ? "w-72" : "w-[var(--anchor-width)]")}
       >
         <div className="flex items-center justify-between gap-3 px-3 py-1.5">
           <span aria-hidden="true" className="text-sm font-medium text-ink-600">
@@ -104,6 +104,7 @@ export default function PanelProfileMenu({ collapsed = false, pathname, items = 
           </span>
           <ThemeToggle />
         </div>
+        <MenuButton Icon={SwitchModeIcon} onClick={() => { changeOpen(false); navigateTo("/lokaler"); }}>Byt till sökläge</MenuButton>
         {items.length ? <Separator className="my-2 bg-veil/10" /> : null}
         {items.map((item) => (
           <MenuButton

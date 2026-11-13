@@ -648,17 +648,15 @@ function ExtendedStatCard({ item }) {
 }
 
 function KpiCardsSection({ showMatchLink = false, cards = kpiCards } = {}) {
-  const icons = { active: BuildingIcon, views: BarChart3Icon, inquiries: MessageSquareIcon, matches: UsersGroupIcon };
   return (
-    <section aria-label="Nyckeltal" className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-      {cards.map((card) => {
-        const Icon = icons[card.key] || BarChart3Icon;
-        return <Card key={card.key} className="gap-0 p-4 sm:p-5">
-          <div className="flex items-start justify-between gap-2"><p className="text-sm font-medium text-ink-600">{card.label}</p><Icon className="h-4 w-4 shrink-0 text-ink-400" /></div>
-          <p className="mt-4 text-3xl font-semibold tracking-tight tabular-nums text-strong">{card.value}</p>
-          {showMatchLink && card.key === "matches" ? <Button variant="link" className="mt-3 h-auto justify-start whitespace-normal p-0 text-xs text-ink-500" onClick={() => navigateTo("/app/admin/leads#matchningar")}>Visa matchningar →</Button> : <p className="mt-3 text-xs text-ink-500">{card.unit}</p>}
-        </Card>;
-      })}
+    <section aria-label="Nyckeltal" className="loa-kpi-strip">
+      {cards.map(card => <article key={card.key} className="loa-kpi-item">
+        <p className="loa-kpi-label">{card.label}</p>
+        <p className="loa-kpi-value">{card.value}</p>
+        {showMatchLink && card.key === "matches"
+          ? <Button variant="link" className="loa-kpi-link" onClick={() => navigateTo("/app/admin/leads#matchningar")}>Visa matchningar →</Button>
+          : <p className="loa-kpi-unit">{card.unit}</p>}
+      </article>)}
     </section>
   );
 }
@@ -675,15 +673,11 @@ function hasChartSeriesData(datasets) {
 }
 
 function NoDataPanel({ title = "Ingen data", subtitle, className = "" }) {
-  return (
-    <Card className={["gap-0 p-5", className].filter(Boolean).join(" ")}>
-      <h3 className="text-base font-semibold text-ink-900">{title}</h3>
-      {subtitle ? <p className="mt-1 text-sm text-ink-500">{subtitle}</p> : null}
-      <Card className="gap-0 py-0 mt-4 grid h-[180px] place-items-center rounded-xl border border-dashed border-veil/15 bg-canvas text-sm font-semibold text-ink-500">
-        Data visas här när aktivitet registreras.
-      </Card>
-    </Card>
-  );
+  return <section className={`loa-data-section ${className}`}>
+    <h3>{title}</h3>
+    {subtitle && <p className="loa-section-description">{subtitle}</p>}
+    <div className="loa-chart-empty"><span aria-hidden="true">—</span><p>Data visas här när aktivitet registreras.</p></div>
+  </section>;
 }
 
 function WeeklyActivityHeatmap() {
@@ -2665,7 +2659,7 @@ function AdminOverview({ app }) {
     }).format(now)
   ), [now]);
   return (
-    <div className="space-y-4">
+    <div className="loa-overview space-y-10">
 
 
       <div className="flex items-center justify-between gap-3">
@@ -2678,7 +2672,7 @@ function AdminOverview({ app }) {
 
       <KpiCardsSection showMatchLink cards={adminStats.cards} sparklineSeries={adminStats.sparklineSeries} />
 
-      <section className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+      <section className="loa-overview-columns grid gap-8 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         {hasChartSeriesData(adminStats.chartSeries) ? (
           <BarInteractive title="Visningar & förfrågningar" subtitle="Senaste period" datasets={adminStats.chartSeries} defaultRange="7d" />
         ) : (
@@ -2691,7 +2685,7 @@ function AdminOverview({ app }) {
         )}
       </section>
 
-      <section className="grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+      <section className="loa-overview-columns grid gap-8 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <Card className="gap-0 py-0 overflow-hidden"><div className="flex flex-wrap items-center justify-end gap-2 border-b border-border p-4 sm:px-5"><Button type="button" variant="secondary" className="h-auto shrink-0 px-4 py-2" onClick={() => navigateTo("/app/admin/adminprofil")}>
                 <PencilIcon className="mr-1.5 h-4 w-4" />
                 Hantera adminprofil
@@ -2796,7 +2790,7 @@ function AdminOverview({ app }) {
               );
             })}
             {activityItems.length === 0 ? (
-              <li className="rounded-2xl border border-dashed border-veil/15 bg-canvas px-4 py-8 text-center text-sm font-semibold text-ink-500">
+              <li className="loa-activity-empty">
                 Ingen data
               </li>
             ) : null}
