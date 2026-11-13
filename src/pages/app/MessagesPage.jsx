@@ -353,10 +353,10 @@ export default function MessagesPage({ app }) {
     app.pushToast?.("Meddelandet är inte skickat. Meddelandefunktionen är ännu inte ansluten.", "info");
   }
   return (
-    <section aria-label="Meddelanden" className="mx-auto flex h-full min-h-0 w-full max-w-[1440px] flex-col bg-canvas p-4">
-      <div className="grid min-h-0 flex-1 gap-5 md:grid-cols-[300px_minmax(0,1fr)] xl:grid-cols-[340px_minmax(0,1fr)]">
+    <section aria-label="Meddelanden" className="loa-messages mx-auto flex h-full min-h-0 w-full max-w-[1440px] flex-col bg-canvas">
+      <div className="loa-messages-grid grid min-h-0 flex-1 gap-6 md:grid-cols-[300px_minmax(0,1fr)] xl:grid-cols-[340px_minmax(0,1fr)]">
         <Card className={`${mobileChat ? "hidden md:flex" : "flex"} min-h-0 flex-col gap-0 overflow-hidden bg-surface p-0`}>
-          <header className="space-y-4 border-b border-border p-5">
+          <header className="loa-inbox-heading space-y-3">
             <h2 className="text-base font-semibold text-ink-900">Konversationer</h2>
 
             <div className="relative">
@@ -387,7 +387,7 @@ export default function MessagesPage({ app }) {
               ))}
             </ToggleGroup>
           </header>
-          <nav aria-label="Konversationer" className="min-h-0 flex-1 space-y-1 overflow-y-auto p-2">
+          <nav aria-label="Konversationer" className="loa-conversation-list min-h-0 flex-1 space-y-1 overflow-y-auto">
             {visible.map((item) => (
               <Button
                 key={item.id}
@@ -426,7 +426,8 @@ export default function MessagesPage({ app }) {
           <p className="border-t border-border px-5 py-3 text-xs text-ink-500">Demokonversationer · inga meddelanden skickas</p>
         </Card>
         <Card className={`${mobileChat ? "flex" : "hidden md:flex"} min-h-0 min-w-0 flex-col gap-0 overflow-hidden bg-surface p-0`}>
-          <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-4 lg:px-6">
+          <div className="loa-chat-pane-heading">
+          <header className="loa-chat-person-row flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-4 lg:px-6">
             <div className="flex min-w-0 items-center gap-3">
               <Button
                 variant="ghost"
@@ -485,7 +486,7 @@ export default function MessagesPage({ app }) {
               </Button>
             </div>
           </header>
-          <div className="flex items-center gap-3 border-b border-border bg-canvas px-4 py-3 lg:px-6">
+          <div className="loa-chat-listing-row flex items-center gap-3">
             <Building2 className="h-4 w-4 shrink-0 text-ink-500" />
             <p className="min-w-0 truncate text-xs">
               <span className="font-medium">{MESSAGE_LISTING.title}</span>
@@ -494,8 +495,9 @@ export default function MessagesPage({ app }) {
               </span>
             </p>
           </div>
-          <div role="log" aria-label="Meddelandehistorik" className="min-h-0 flex-1 overflow-y-auto px-4 py-6 lg:px-8">
-            <div className="mx-auto max-w-3xl space-y-5">
+          </div>
+          <div role="log" aria-label="Meddelandehistorik" className="loa-chat-thread min-h-0 flex-1 overflow-y-auto">
+            <div className="w-full space-y-5">
               {active.messages.map((message) =>
                 message.type === "system" ? (
                   <p key={message.id} className="mx-auto max-w-sm py-3 text-center text-xs leading-relaxed text-ink-500">
@@ -526,9 +528,9 @@ export default function MessagesPage({ app }) {
               )}
             </div>
           </div>
-          <footer className="shrink-0 border-t border-border px-4 py-4 lg:px-6">
+          <footer className="loa-message-footer shrink-0 px-4 py-3 lg:px-6">
             <form onSubmit={sendDraft} className="mx-auto max-w-3xl">
-              <Card className="gap-0 overflow-hidden rounded-xl p-0 shadow-none focus-within:ring-2 focus-within:ring-brand-200">
+              <Card className="loa-chat-composer loa-chat-composer--compact gap-0 overflow-hidden rounded-xl p-0 shadow-none">
                 <input ref={attachmentInput} type="file" multiple hidden tabIndex={-1} onChange={addAttachments} />
                 {activeAttachments.length > 0 && <ul aria-label="Bilagor" className="flex flex-wrap gap-2 px-3 pt-3">
                   {activeAttachments.map(({ id, file }) => <li key={id} className="flex max-w-full items-center gap-2 rounded-md border border-border bg-canvas py-1 pl-2 pr-1">
@@ -541,12 +543,12 @@ export default function MessagesPage({ app }) {
                   ref={composer}
                   aria-label="Meddelande"
                   placeholder={`Skriv till ${active.counterpartName.split(" ")[0]}…`}
-                  rows={2}
+                  rows={1}
                   value={draft}
                   onChange={(event) => updateDraft(event.target.value)}
-                  className="max-h-40 min-h-[64px] resize-y border-0 px-4 py-3 shadow-none focus-visible:ring-0"
+                  className="max-h-28 min-h-[40px] resize-y border-0 px-3 py-2 shadow-none focus-visible:ring-0"
                 />
-                <div className="flex items-center justify-between gap-2 px-3 pb-3">
+                <div className="loa-composer-actions flex items-center justify-between gap-2 px-2 pb-2">
                   <div className="flex min-w-0 items-center gap-1">
                   <DropdownMenu>
                     <DropdownMenuTrigger render={<Button type="button" variant="ghost" size="icon" aria-label="Bifoga till meddelande" />}><Plus className="h-4 w-4" /></DropdownMenuTrigger>

@@ -1,3 +1,4 @@
+import { PanelPageActions, PanelSectionHeader } from "../../components/layout/PanelPageActions";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Card } from "@/components/ui/card";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -715,14 +716,14 @@ function AdminListingsPage({ listings = [] }) {
     <div className="space-y-4">
 
 
-      <Card className="gap-0 py-0 overflow-hidden"><div className="flex flex-wrap items-center justify-end gap-2 border-b border-border p-4 sm:px-5"><Button type="button" className="h-auto px-4 py-2" onClick={() => navigateTo("/app/publish")}>
+      <Card className="gap-0 py-0 overflow-hidden"><PanelPageActions><Button type="button" className="h-auto px-4 py-2" onClick={() => navigateTo("/app/publish")}>
               <PlusIcon className="mr-1.5 h-4 w-4" />
               Ny annons
-            </Button></div>
+            </Button></PanelPageActions>
         <div className="border-b border-veil/10 px-4 py-4 sm:px-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h2 className="text-lg font-semibold text-ink-900">Alla annonser</h2>
+
               <p className="mt-1 text-sm text-ink-600">Överblick över status, visningar och förfrågningar.</p>
               <ToggleGroup
                 variant="outline"
@@ -2078,10 +2079,9 @@ function AdminStatistics({ app }) {
 
   return (
     <div ref={rootRef} className="relative">
-      <aside className="hidden xl:absolute xl:left-[-264px] xl:top-0 xl:block xl:h-full xl:w-[240px]">
-        <nav className="sticky top-6 rounded-[28px] border border-veil/10 bg-transparent p-3 shadow-[0_10px_24px_rgba(15,25,48,0.05)]">
-          <p className="px-2 pb-2 text-[11px] font-semibold  tracking-[0.16em] text-ink-400">Snabblänkar</p>
-          <div className="space-y-0.5">
+      <aside className="mb-6 hidden xl:block">
+        <nav aria-label="Statistikavsnitt" className="overflow-x-auto">
+          <div className="flex gap-1">
             {visibleSectionLinks.map((item) => {
               const active = item.id === activeSectionId;
               return (
@@ -2104,10 +2104,10 @@ function AdminStatistics({ app }) {
       </aside>
 
       <div className="space-y-4">
-        <Card className="gap-0 p-0"><div className="flex flex-wrap items-center justify-end gap-2 border-b border-border p-4 sm:px-5"><Button type="button" variant="secondary" className="h-auto gap-1.5 px-4 py-2" onClick={() => setCustomizeOpen(true)}>
+        <PanelPageActions><Button type="button" variant="secondary" className="h-auto gap-1.5 px-4 py-2" onClick={() => setCustomizeOpen(true)}>
               <FilterIcon className="h-4 w-4" />
               Anpassa
-            </Button></div></Card>
+            </Button></PanelPageActions>
 
         {visibleModules.kpi ? (
           <section id="stats-kpi">
@@ -2345,7 +2345,7 @@ function AdminLeadMatchesPage({ app }) {
     <div className="space-y-4">
 
 
-      <Card className="gap-0 py-0 overflow-hidden"><div className="flex flex-wrap items-center justify-end gap-2 border-b border-border p-4 sm:px-5"><Button
+      <Card className="gap-0 py-0 overflow-hidden"><PanelPageActions><Button
               type="button"
               variant="secondary"
               className="h-auto px-4 py-2"
@@ -2360,7 +2360,7 @@ function AdminLeadMatchesPage({ app }) {
               onClick={() => app?.pushToast?.("Ingen data att skicka.", "info")}
             >
               + Skicka urval till mäklare
-            </Button></div>
+            </Button></PanelPageActions>
         <div className="border-b border-veil/10 px-4 py-4 sm:px-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
@@ -2628,10 +2628,10 @@ function EmptyCompanyAdminPage({ app, sectionKey }) {
     <div className="space-y-4">
 
 
-      <Card className="gap-0 py-0 p-6 sm:p-8"><div className="flex flex-wrap items-center justify-end gap-2 border-b border-border p-4 sm:px-5"><Button type="button" variant="secondary" className="h-auto px-4 py-2" onClick={() => navigateTo("/app/admin/adminprofil")}>
+      <Card className="gap-0 py-0 p-6 sm:p-8"><PanelPageActions><Button type="button" variant="secondary" className="h-auto px-4 py-2" onClick={() => navigateTo("/app/admin/adminprofil")}>
             <PencilIcon className="mr-1.5 h-4 w-4" />
             Hantera adminprofil
-          </Button></div>
+          </Button></PanelPageActions>
         <div className="mx-auto max-w-[560px] py-8 text-center">
           <span className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-full border border-veil/10 bg-control text-ink-700">
             <BuildingIcon className="h-5 w-5" />
@@ -2659,34 +2659,9 @@ function AdminOverview({ app }) {
     }).format(now)
   ), [now]);
   return (
-    <div className="loa-overview space-y-10">
-
-
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold text-ink-900">Statistik</h2>
-        <Button type="button" variant="secondary" className="h-auto px-4 py-2" onClick={() => navigateTo("/app/admin/statistik")}>
-          <BarChart3Icon className="mr-1.5 h-4 w-4" />
-          Se all statistik
-        </Button>
-      </div>
-
-      <KpiCardsSection showMatchLink cards={adminStats.cards} sparklineSeries={adminStats.sparklineSeries} />
-
-      <section className="loa-overview-columns grid gap-8 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-        {hasChartSeriesData(adminStats.chartSeries) ? (
-          <BarInteractive title="Visningar & förfrågningar" subtitle="Senaste period" datasets={adminStats.chartSeries} defaultRange="7d" />
-        ) : (
-          <NoDataPanel title="Visningar & förfrågningar" />
-        )}
-        {adminStats.distributionData.length > 0 ? (
-          <TypeDistributionDonut title="Fördelning" subtitle="Typ av lokal" data={adminStats.distributionData} />
-        ) : (
-          <NoDataPanel title="Fördelning" />
-        )}
-      </section>
-
-      <section className="loa-overview-columns grid gap-8 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-        <Card className="gap-0 py-0 overflow-hidden"><div className="flex flex-wrap items-center justify-end gap-2 border-b border-border p-4 sm:px-5"><Button type="button" variant="secondary" className="h-auto shrink-0 px-4 py-2" onClick={() => navigateTo("/app/admin/adminprofil")}>
+    <div className="loa-overview space-y-8">
+        <Card className="gap-0 py-0 overflow-hidden"><PanelSectionHeader title="Senaste annonser" description="Övervaka era pågående annonseringar" actions={<>
+<Button type="button" variant="secondary" className="h-auto shrink-0 px-4 py-2" onClick={() => navigateTo("/app/admin/adminprofil")}>
                 <PencilIcon className="mr-1.5 h-4 w-4" />
                 Hantera adminprofil
               </Button>
@@ -2697,17 +2672,7 @@ function AdminOverview({ app }) {
 <Button type="button" variant="secondary" className="h-auto w-fit justify-start px-3 py-2 text-sm" onClick={() => navigateTo("/app/publish")}>
                 <PlusIcon className="mr-2 h-4 w-4" />
                 Publicera annons
-              </Button></div>
-          <div className="border-b border-veil/10 px-4 py-4 sm:px-5">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <h2 className="text-lg font-semibold text-ink-900">Senaste annonser</h2>
-                <p className="mt-1 text-sm text-ink-600">Övervaka era pågående annonseringar</p>
-              </div>
-
-            </div>
-          </div>
-
+              </Button></>} />
           <div className="overflow-x-auto">
             <Table className="min-w-[760px]">
               <TableHeader className="bg-canvas text-[11px] text-ink-500">
@@ -2770,6 +2735,33 @@ function AdminOverview({ app }) {
             </Button>
           </div>
         </Card>
+
+
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-lg font-semibold text-ink-900">Statistik</h2>
+        <Button type="button" variant="secondary" className="h-auto px-4 py-2" onClick={() => navigateTo("/app/admin/statistik")}>
+          <BarChart3Icon className="mr-1.5 h-4 w-4" />
+          Se all statistik
+        </Button>
+      </div>
+
+      <KpiCardsSection showMatchLink cards={adminStats.cards} sparklineSeries={adminStats.sparklineSeries} />
+
+      <section className="loa-overview-columns grid gap-8 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+        {hasChartSeriesData(adminStats.chartSeries) ? (
+          <BarInteractive title="Visningar & förfrågningar" subtitle="Senaste period" datasets={adminStats.chartSeries} defaultRange="7d" />
+        ) : (
+          <NoDataPanel title="Visningar & förfrågningar" />
+        )}
+        {adminStats.distributionData.length > 0 ? (
+          <TypeDistributionDonut title="Fördelning" subtitle="Typ av lokal" data={adminStats.distributionData} />
+        ) : (
+          <NoDataPanel title="Fördelning" />
+        )}
+      </section>
+
+      <section>
+
 
         <Card className="gap-0 py-0 p-4 sm:p-5">
           <h2 className="text-lg font-semibold text-ink-900">Aktivitet</h2>
@@ -2859,7 +2851,7 @@ function AdminProspectsPage({ app }) {
         <div className="border-b border-veil/10 px-4 py-4 sm:px-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold text-ink-500">Prospekt</p>
+
               <p className="mt-1 text-sm text-ink-600">Skapande och redigering sker i respektive mäklares egen panel.</p>
             </div>
             <Badge variant="outline" className="h-auto rounded-full bg-veil/10 px-2 py-0.5 text-[11px] font-semibold text-ink-700">{prospects.length} prospekt</Badge>

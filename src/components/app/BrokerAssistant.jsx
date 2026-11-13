@@ -216,7 +216,7 @@ function BrokerAssistantComposer({ className, autoFocus = false, placeholder = "
 
   return (
     <form onSubmit={submit} className={className}>
-      <Card className="gap-0 overflow-hidden rounded-xl p-0 shadow-none focus-within:ring-2 focus-within:ring-brand-200">
+      <Card className="loa-chat-composer gap-0 overflow-hidden rounded-xl p-0 shadow-none">
         <input ref={fileInput} type="file" multiple hidden tabIndex={-1} onChange={addAttachments} />
         {attachments.length > 0 ? (
           <ul aria-label="Bilagor" className="flex flex-wrap gap-2 px-3 pt-3">

@@ -67,3 +67,11 @@ Browser checks covered nested dialog → popover → select, nested confirmation
 The hosted WorkOS screens are supplied by WorkOS and do not load LOA repository CSS.
 
 Text-input focus uses a single darker field border; additional outline and shadow rings are removed. Checkbox/radio focus and other keyboard controls retain their normal indicators. The hosted WorkOS sign-up form was observed to retain provider-owned styling; LOA's radius CSS does not affect it.
+
+## Compact workspace layout
+
+Page titles now use a compact toolbar with page actions aligned right. Actions retain their page-owned handlers through a shared header slot. The listings, leads and statistics action strips no longer occupy separate padded rows. Section and table edges share the shell gutter; statistics links stay inside the content column.
+
+Översikt starts with the full-width recent-listings section and its actions, before statistics. Both assistant and message composers have a defined container. Meddelanden uses a 40px text area with a compact action row; its list and conversation headers share top position and height, and the thread/composer share gutters. Demo messaging remains demo messaging.
+
+Collapsed sidebar controls share a 44px width. Desktop browser checks covered overview order/width, title/action baseline, header sizes across listings/leads/statistics/brokers/activity/notifications, collapsed rail widths, message-header alignment, composer size, and mobile message overflow. No account or business data was changed.

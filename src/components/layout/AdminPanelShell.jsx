@@ -1,3 +1,4 @@
+import { PanelActionsHost } from "./PanelPageActions";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { cn } from "cn";
 import { hasShortcutModifier, isInsideDialog, isTypingTarget } from "../../lib/shortcuts";
@@ -239,6 +240,7 @@ export function PanelSidebarDock({ className, mode, onModeChange, children }) {
 
 function AdminPanelShell({ pathname, navItems, bottomNavItems, sectionTitle, onLogout, badges = {}, fullBleedContent = false, hideAssistantLauncher = false, contentKey, children }) {
   const chrome = usePanelChrome();
+  const [actionsHost, setActionsHost] = useState(null);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const { mode, setMode } = useSidebarMode();
@@ -288,7 +290,7 @@ function AdminPanelShell({ pathname, navItems, bottomNavItems, sectionTitle, onL
   );
 
   return (
-    <section className="admin-platform loa-workspace flex h-full min-h-0 flex-col bg-canvas">
+    <PanelActionsHost value={actionsHost}><section className="admin-platform loa-workspace flex h-full min-h-0 flex-col bg-canvas">
       <WorkspaceHeader user={chrome?.user} pathname={pathname} onLogout={onLogout} />
       <div className="flex min-h-0 flex-1">
       <PanelSidebarDock className="hidden lg:block" mode={mode} onModeChange={setMode}>
@@ -334,7 +336,7 @@ function AdminPanelShell({ pathname, navItems, bottomNavItems, sectionTitle, onL
           <div key={contentKey ?? pathname} className="admin-section-enter min-h-0 flex-1">{children}</div>
         ) : (
           <div key={contentKey ?? pathname} className="admin-section-enter--lift mx-auto w-full max-w-[1440px] p-4 pb-24">
-            <header className="loa-page-heading"><h1>{sectionTitle}</h1></header>
+            <header className="loa-page-heading"><h1>{sectionTitle}</h1><div ref={setActionsHost} className="loa-page-actions" /></header>
             {children}
           </div>
         )}
@@ -366,7 +368,7 @@ function AdminPanelShell({ pathname, navItems, bottomNavItems, sectionTitle, onL
 
       <PanelCommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} items={paletteItems} />
       <BrokerAssistantLauncher hidden={hideAssistantLauncher} />
-    </section>
+    </section></PanelActionsHost>
   );
 }
 
