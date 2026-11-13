@@ -9,10 +9,11 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { BrokerAssistantLauncher } from "../app/BrokerAssistant";
 import { PanelCommandPalette, PanelSearchButton } from "./PanelCommandPalette";
-import { PanelModeSwitch, switchToSearchMode, usePanelChrome } from "./PanelChrome";
+import { switchToSearchMode, usePanelChrome } from "./PanelChrome";
 import { PanelHint, PanelHintSettings } from "./PanelHint";
 import { menuIcon, menuRow, menuRowIconOnly, menuRowInset } from "./menuScale";
-import PanelProfileMenu from "./PanelProfileMenu";
+import WorkspaceHeader from "./WorkspaceHeader";
+import "./workspace.css";
 import PanelSidebarControls from "./PanelSidebarControls";
 
 // The first entry of the panel is its start page, which is only "here" on exactly that path.
@@ -33,38 +34,8 @@ function groupNavItems(navItems) {
 }
 
 function PanelSidebarNav({ pathname, navItems, rootPath, onNavigate, badges, collapsed = false }) {
-  const navRef = useRef(null);
-  const hasAnimatedRef = useRef(false);
-  const [indicator, setIndicator] = useState(null);
-
-  useLayoutEffect(() => {
-    const nav = navRef.current;
-    if (!nav) return;
-    const activeEl = nav.querySelector('[data-active="true"]');
-    if (!activeEl) {
-      setIndicator((prev) => (prev ? { ...prev, visible: false } : prev));
-      return;
-    }
-    setIndicator({
-      top: activeEl.offsetTop,
-      height: activeEl.offsetHeight,
-      visible: true,
-      animate: hasAnimatedRef.current,
-    });
-    hasAnimatedRef.current = true;
-  }, [pathname, collapsed, navItems]);
-
   return (
-    <nav ref={navRef} aria-label="Arbetsyta" className="relative">
-      <span
-        aria-hidden="true"
-        className={`admin-nav-indicator ${indicator?.animate ? "is-animated" : ""}`}
-        style={
-          indicator?.visible
-            ? { transform: `translateY(${indicator.top}px)`, height: `${indicator.height}px`, opacity: 1 }
-            : { opacity: 0 }
-        }
-      />
+    <nav aria-label="Arbetsyta" className="loa-sidebar-nav relative">
       {groupNavItems(navItems).map((group, groupIndex) => (
         <div key={group.label} role="group" aria-label={group.label}>
           {collapsed ? (
@@ -150,8 +121,8 @@ export function PanelSidebar({
 }) {
   const rootPath = navItems[0]?.path;
   return (
-    <div className="flex h-full min-h-0 flex-col">
-      <div className="shrink-0 space-y-2.5 p-3">
+    <div className={cn("loa-sidebar-inner flex h-full min-h-0 flex-col", collapsed && "is-collapsed")}>
+      <div className="loa-sidebar-head shrink-0 space-y-2.5 p-3">
         <PanelSidebarControls
           collapsed={collapsed}
           onToggleCollapsed={onToggleCollapsed}
@@ -169,10 +140,11 @@ export function PanelSidebar({
         <PanelSidebarNav pathname={pathname} navItems={navItems} rootPath={rootPath} onNavigate={onNavigate} badges={badges} collapsed={collapsed} />
       </div>
 
-      <div className="shrink-0 space-y-1.5 border-t border-veil/10 p-3">
-        <PanelModeSwitch collapsed={collapsed} />
-        <PanelProfileMenu collapsed={collapsed} pathname={pathname} items={bottomNavItems} onNavigate={onNavigate} onLogout={onLogout} onOpenChange={onMenuOpenChange} />
-      </div>
+      <nav aria-label="Konto och hjälp" className="loa-sidebar-bottom shrink-0 border-t border-veil/10 p-3">
+        {bottomNavItems.filter(item => ["adminprofil", "installningar", "hjalp"].includes(item.key)).map(item => <Button key={item.key} variant="ghost" className={cn(menuRow, collapsed ? menuRowIconOnly : menuRowInset)} aria-label={item.label} onClick={() => onNavigate(item.path)}>
+          {collapsed ? <item.Icon className={menuIcon} /> : item.key === "adminprofil" ? "Företagsprofil" : item.label}
+        </Button>)}
+      </nav>
     </div>
   );
 }
@@ -246,7 +218,7 @@ export function PanelSidebarDock({ className, mode, onModeChange, children }) {
   }, [toggle]);
 
   return (
-    <div className={cn("admin-sidebar-slot relative h-full shrink-0", pinned ? "w-[272px]" : "w-[72px]", className)}>
+    <div className={cn("admin-sidebar-slot relative h-full shrink-0", pinned ? "w-[248px]" : "w-[72px]", className)}>
       <aside
         ref={cardRef}
         aria-label="Sidomeny"
@@ -254,7 +226,7 @@ export function PanelSidebarDock({ className, mode, onModeChange, children }) {
         data-open={expanded ? "true" : "false"}
         className={cn(
           "admin-sidebar-panel absolute inset-y-0 left-0 z-30 overflow-hidden border-r border-veil/10 bg-surface",
-          expanded ? "w-[272px]" : "w-[72px]"
+          expanded ? "w-[248px]" : "w-[72px]"
         )}
         onPointerEnter={(event) => armed && event.pointerType !== "touch" && lean(true)}
         onPointerLeave={(event) => armed && event.pointerType !== "touch" && lean(false)}
@@ -316,7 +288,9 @@ function AdminPanelShell({ pathname, navItems, bottomNavItems, sectionTitle, onL
   );
 
   return (
-    <section className="admin-platform flex h-full min-h-0 bg-canvas">
+    <section className="admin-platform loa-workspace flex h-full min-h-0 flex-col bg-canvas">
+      <WorkspaceHeader user={chrome?.user} pathname={pathname} onLogout={onLogout} />
+      <div className="flex min-h-0 flex-1">
       <PanelSidebarDock className="hidden lg:block" mode={mode} onModeChange={setMode}>
         {({ collapsed, toggle, onMenuOpenChange }) => (
           <PanelSidebar
@@ -363,8 +337,9 @@ function AdminPanelShell({ pathname, navItems, bottomNavItems, sectionTitle, onL
         )}
       </div>
 
+      </div>
       <Sheet open={mobileSidebarOpen} onOpenChange={setMobileSidebarOpen}>
-        <SheetContent side="left" showCloseButton={false} className="admin-workspace w-[min(88vw,304px)] max-w-none gap-0 bg-popover p-0">
+        <SheetContent side="left" showCloseButton={false} className="admin-workspace loa-workspace-drawer w-[min(88vw,304px)] max-w-none gap-0 bg-popover p-0">
           <SheetTitle className="sr-only">Arbetsyta</SheetTitle>
           <PanelSidebar
             pathname={pathname}

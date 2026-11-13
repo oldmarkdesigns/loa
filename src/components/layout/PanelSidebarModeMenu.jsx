@@ -40,7 +40,7 @@ export default function PanelSidebarModeMenu({ mode, onModeChange, onOpenChange,
       >
         <ChevronDown aria-hidden="true" className="size-3.5 shrink-0" />
       </PanelHint>
-      <DropdownMenuContent align="end" sideOffset={8} className="w-max rounded-xl p-2 shadow-none">
+      <DropdownMenuContent align="end" sideOffset={8} className="loa-account-popover admin-workspace w-max rounded-none p-3 shadow-none">
         <DropdownMenuGroup>
           <DropdownMenuLabel className="px-2.5 pb-1.5 pt-1 text-[12.5px] font-medium text-ink-500">Sidomeny</DropdownMenuLabel>
           <DropdownMenuRadioGroup value={mode} onValueChange={onModeChange}>

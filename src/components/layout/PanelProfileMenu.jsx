@@ -40,7 +40,7 @@ function MenuButton({ Icon, active = false, onClick, children }) {
   );
 }
 
-export default function PanelProfileMenu({ collapsed = false, pathname, items = [], onNavigate, onLogout, onOpenChange }) {
+export default function PanelProfileMenu({ collapsed = false, pathname, items = [], onNavigate, onLogout, onOpenChange, variant = "sidebar" }) {
   const chrome = usePanelChrome();
   const [open, setOpen] = useState(false);
   // Also told to the side menu, which stays open while this menu is.
@@ -60,9 +60,9 @@ export default function PanelProfileMenu({ collapsed = false, pathname, items = 
         <Button
           type="button"
           variant="ghost"
-          aria-label={collapsed ? `Kontomeny, ${name}` : undefined}
+          aria-label={`Kontomeny, ${name}`}
           className={cn(
-            "min-h-0 text-left hover:bg-veil/5 focus-visible:ring-veil/20 aria-expanded:bg-veil/5",
+            "loa-person-trigger min-h-0 text-left hover:bg-veil/5 focus-visible:ring-veil/20 aria-expanded:bg-veil/5",
             collapsed ? cn(menuSquare, "mx-auto flex !rounded-full p-0") : "h-auto w-full justify-start gap-2.5 !rounded-md px-2.5 py-1.5"
           )}
         />
@@ -76,7 +76,7 @@ export default function PanelProfileMenu({ collapsed = false, pathname, items = 
         <>
           <span className="min-w-0 flex-1">
             <span className="block truncate text-sm font-semibold leading-[18px] text-strong">{name}</span>
-            {email ? <span title={email} className="block truncate text-[12.5px] font-normal leading-4 text-ink-500">{email}</span> : null}
+            {email && variant !== "header" ? <span title={email} className="block truncate text-[12.5px] font-normal leading-4 text-ink-500">{email}</span> : null}
           </span>
           <ChevronsUpDown aria-hidden="true" className="size-3.5 shrink-0 text-ink-500" />
         </>
@@ -93,10 +93,10 @@ export default function PanelProfileMenu({ collapsed = false, pathname, items = 
       )}
       <PopoverContent
         aria-label="Kontomeny"
-        side={collapsed ? "right" : "top"}
-        align={collapsed ? "end" : "start"}
+        side={variant === "header" ? "bottom" : collapsed ? "right" : "top"}
+        align={variant === "header" || collapsed ? "end" : "start"}
         sideOffset={collapsed ? 10 : 8}
-        className={cn("gap-0 rounded-xl p-2.5 shadow-none", collapsed ? "w-64" : "w-[var(--anchor-width)]")}
+        className={cn("loa-account-popover admin-workspace gap-0 rounded-none p-3 shadow-none", variant === "header" || collapsed ? "w-72" : "w-[var(--anchor-width)]")}
       >
         <div className="flex items-center justify-between gap-3 px-3 py-1.5">
           <span aria-hidden="true" className="text-sm font-medium text-ink-600">

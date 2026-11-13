@@ -59,7 +59,7 @@ export function switchToSearchMode(chrome) {
 /** A company's mark: its initials on black, in a square with rounded corners (people are round, companies are not). */
 function CompanyMark({ name, className }) {
   return (
-    <span aria-hidden="true" className={cn("flex shrink-0 items-center justify-center rounded-md bg-strong font-semibold leading-none text-on-strong", className)}>
+    <span aria-hidden="true" className={cn("loa-company-mark flex shrink-0 items-center justify-center rounded-md bg-strong font-semibold leading-none text-on-strong", className)}>
       {initialsForName(name)}
     </span>
   );
@@ -119,7 +119,7 @@ export function PanelCompanySwitcher({ collapsed = false, settingsPath, onNaviga
       ) : (
         trigger
       )}
-      <DropdownMenuContent align="start" side={collapsed ? "right" : "bottom"} sideOffset={collapsed ? 10 : 6} className="w-[280px] rounded-xl p-2 shadow-none">
+      <DropdownMenuContent align="start" side={collapsed ? "right" : "bottom"} sideOffset={collapsed ? 10 : 6} className="loa-account-popover admin-workspace w-[280px] rounded-none p-3 shadow-none">
         <DropdownMenuRadioGroup
           value={activeId}
           onValueChange={(companyId) => {

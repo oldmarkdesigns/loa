@@ -1,3 +1,7 @@
+import AccountWindow from "../components/account/AccountWindow";
+import { parseAccountPath } from "../lib/accountPages";
+import { PanelChromeProvider } from "../components/layout/PanelChrome";
+import { ThemeProvider } from "../lib/theme";
 import AppShell from "../components/layout/AppShell";
 import AdminPanelPage from "./app/AdminPanelPage";
 import BrokerPanelPage from "./app/BrokerPanelPage";
@@ -12,6 +16,10 @@ import PublishPage from "./app/PublishPage";
 import { defaultAppPathForUser, navigateTo, routeMatches } from "../lib/router";
 
 export default function WorkspacePage({ app, pathname }) {
+  const account = parseAccountPath(pathname, window.location.hash, pathname.startsWith("/app/admin/") ? "company_admin" : app.user.role);
+  if (account) return <ThemeProvider><PanelChromeProvider value={{ user: app.user, myCompanies: app.myCompanies, onSwitchRole: app.switchRole, onSwitchCompany: app.switchActiveCompany }}>
+    <AccountWindow app={app} base={account.base} pageKey={account.page.key} />
+  </PanelChromeProvider></ThemeProvider>;
   const publishing = pathname === "/app/publish";
   const background = publishing ? window.history.state?.publishBackground : null;
   const path = publishing ? background?.split(/[?#]/)[0] || defaultAppPathForUser(app.user) : pathname;

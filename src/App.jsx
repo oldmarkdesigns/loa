@@ -29,6 +29,9 @@ function AppContent() {
       navigateTo(pathname === "/app/rent" ? "/lokaler" : app.user ? defaultAppPathForUser(app.user) : "/login", { replace: true });
     } else if (/^\/app\/listings\/[^/]+(?:\/gallery)?$/.test(pathname)) {
       navigateTo("/lokaler/" + pathname.split("/")[3], { replace: true });
+    } else if (pathname === "/app/profile" && app.user && defaultAppPathForUser(app.user) !== "/app/profile") {
+      const tab = new URLSearchParams(window.location.search).get("tab");
+      navigateTo(defaultAppPathForUser(app.user) + "/profil" + (tab === "favorites" || tab === "history" ? "/sparat" : ""), { replace: true });
     } else if (workspace) {
       if (!app.user) navigateTo(`/login?returnTo=${encodeURIComponent(pathname)}`, { replace: true });
       else if (!app.user.onboardingCompleted) navigateTo("/onboarding", { replace: true });

@@ -43,3 +43,12 @@ LOA's November 12 reflog shows checkout to site-studio-rebuild, with no rebuild 
 Remote rentalplatform main remains 8caa3ccbc54efcf005065cd81584d420b83ae1ec and feat/shadcn-full-adoption remains the prior baseline.
 No remote restoration required; no writes made to rentalplatform or Office Rental Project.
 LOA origin now points to oldmarkdesigns/loa. Existing inherited history is retained.
+
+
+## Workspace navigation design
+
+Admin and broker navigation now share a branded LOA header with Sök lokaler / Admin and the account menu. Side navigation uses the site's typography, navy ink, white surfaces and hairline separation, with a compact rail retained for users who choose it.
+
+Account pages now render as full pages rather than settings dialogs. Profile, saved items, local programs, company profile, settings and help share section navigation; mobile uses a horizontally scrollable page list. Existing forms and data operations are retained.
+
+Company-admin profile links from public search resolve to the same profile navigation. Profile page selection, saved-page selection, account menu and mobile overflow were checked in Chromium using the actual components with fixture data. The real signed-in workspace header and sidebar were also inspected. No account data was changed.
