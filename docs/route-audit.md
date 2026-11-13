@@ -15,18 +15,26 @@ LOA runs from src/App.jsx with public shared navigation in src/site/SiteChrome.j
 - /onboarding/* — authenticated profile setup
 - /prospekt/dela/:token — shared prospect
 
-All other paths render a missing-page screen. In particular /admin and /app/* no longer mount old panels, including when a user already has an admin session. Legacy components remain as dormant source; they are not registered routes. This is route removal, not a replacement dashboard implementation.
+## Authenticated workspaces
 
-Desktop and mobile navigation always expose Logga in and Skapa konto. Auth completion and role defaults return to public listings. Listing requests open directly on the public listing. Saving uses existing favorites API.
+Updated after successful real signup: company administrators return to /app/admin; brokers with granted access return to /app/broker; renter accounts return to /app/profile.
+
+The existing workspace components are now mounted behind authentication and role checks. This explicitly restores the account workspaces requested after signup; the /admin alias stays unregistered. Profile, messages, settings, viewings, publishing, managed listings and prospects are registered for their permitted accounts. Unknown paths render a missing-page screen.
+
+Search mode uses the rebuilt /lokaler page. Switching between search and admin is navigation only: no role grant or active-role mutation. Existing /app/rent links resolve to public search; workspace listing links resolve to public listing details.
+
+Signed-in desktop/mobile navigation shows Admin (when granted) and an account menu instead of Logga in / Skapa konto. Footer and search-page prompts also recognize the session. Normal login resolves the role destination through /callback; an explicit listing return remains supported.
+
+Workspace code loads separately from public pages.
 
 ## Verification
 
-- Production build passed.
-- Auth safety static checks passed.
-- Chromium checked public routes, unknown routes and legacy admin/broker/renter paths.
-- Clicked desktop login, listing viewing login and mobile signup.
-- No browser errors in these checks.
-- Live WorkOS credential completion, authenticated save/viewing submissions, and onboarding persistence were not exercised. Existing backend configuration remains unchanged.
+- Production build, auth safety checks and account-routing guard tests passed.
+- Used the real signed-in account to open its company admin panel, switch to search, and return.
+- Full page reload restored the authenticated company workspace.
+- Separate signed-out Chromium session denied admin entry.
+- Signed-in navigation fixture checked desktop/mobile account controls without fabricating a backend session.
+- No new account or company was created during these checks.
 
 ## Repository separation
 

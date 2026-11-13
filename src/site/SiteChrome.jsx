@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { navigateTo, usePathname } from "../lib/router";
+import { defaultAppPathForUser, navigateTo, usePathname, workspaceRoles } from "../lib/router";
+import { useOptionalAppState } from "../state/AppState";
 import { districtOptions } from "../data/mockData";
 import loaLogo from "./assets/loa-logo.png";
 import strandvagen from "./assets/strandvagen.jpg";
@@ -58,7 +59,7 @@ export function Logo({ light = false }) {
 export function useAuthDoors() {
   
   return {
-    login: (returnTo = "/lokaler") => navigateTo(`/login?returnTo=${encodeURIComponent(returnTo)}`),
+    login: (returnTo = "/callback") => navigateTo(`/login?returnTo=${encodeURIComponent(returnTo)}`),
     signup: (query = "") => navigateTo(`/signup${query}`)
   };
 }
@@ -75,7 +76,9 @@ const NAV_LINKS = [
   ["#faq", "Frågor"]
 ];
 
-export function Nav({ user, listings, actions = true }) {
+export function Nav({ user: suppliedUser, listings, actions = true }) {
+  const app = useOptionalAppState();
+  const user = app ? app.user : suppliedUser;
   const [scrolled, setScrolled] = useState(false);
   const [menu, setMenu] = useState(false);
   const [mobile, setMobile] = useState(false);
@@ -163,7 +166,8 @@ export function Nav({ user, listings, actions = true }) {
     </li>
   ));
 
-  const endActions = !actions ? null : (
+  const signedInActions = <AccountActions user={user} onLogout={app?.logout} closeAll={closeAll} />;
+  const endActions = !actions ? null : user ? signedInActions : (
     <>
       <button type="button" className="lo-nav-login" onClick={() => doors.login()}>
         Logga in
@@ -275,7 +279,7 @@ export function Nav({ user, listings, actions = true }) {
               </a>
             ))}
             <div className="lo-mobile-actions">
-              {!actions ? null : (
+              {!actions ? null : user ? signedInActions : (
                 <>
                   <a className="lo-btn" href="/signup" onClick={linkTo("/signup", closeAll)}>
                     Skapa konto
@@ -292,6 +296,30 @@ export function Nav({ user, listings, actions = true }) {
       <div className={`lo-scrim${menu || mobile ? " is-open" : ""}`} onClick={closeAll} aria-hidden="true" />
     </>
   );
+}
+
+function AccountActions({ user, onLogout, closeAll }) {
+  const pathname = usePathname();
+  const [error, setError] = useState("");
+  const [pending, setPending] = useState(false);
+  const publisher = workspaceRoles(user).has("company_admin") || workspaceRoles(user).has("broker");
+  return <>
+    {publisher && <a className="lo-nav-cta" href={defaultAppPathForUser(user)} onClick={linkTo(defaultAppPathForUser(user), closeAll)}>Admin</a>}
+    <details className="lo-account-menu" key={pathname}>
+      <summary className="lo-nav-login">{user?.name || "Mitt konto"}</summary>
+      <nav className="lo-account-options" aria-label="Mitt konto">
+        <a href="/lokaler" onClick={linkTo("/lokaler", closeAll)}>Sök lokaler</a>
+        <a href={defaultAppPathForUser(user)} onClick={linkTo(defaultAppPathForUser(user), closeAll)}>{publisher ? "Adminpanel" : "Mitt konto"}</a>
+        <a href="/app/profile" onClick={linkTo("/app/profile", closeAll)}>Profil och sparade lokaler</a>
+        <button type="button" disabled={pending} onClick={async () => {
+          setPending(true);
+          try { await onLogout?.(); closeAll(); }
+          catch { setError("Kunde inte logga ut. Försök igen."); setPending(false); }
+        }}>{pending ? "Loggar ut…" : "Logga ut"}</button>
+        {error && <p role="alert">{error}</p>}
+      </nav>
+    </details>
+  </>;
 }
 
 // ─── Demo request: a quiet sheet over the page ───────────────────────────────
@@ -430,6 +458,8 @@ export function DemoBand({ title = "Vill du se hur LOA fungerar?", body = "Tjugo
 // ─── Footer ──────────────────────────────────────────────────────────────────
 export function Footer({ slim = false }) {
   const doors = useAuthDoors();
+  const app = useOptionalAppState();
+  const user = app?.user;
   const toTop = (event) => {
     event.preventDefault();
     scrollToTop();
@@ -481,21 +511,14 @@ export function Footer({ slim = false }) {
             <nav aria-label="Konto">
               <p className="lo-footer-head">Konto</p>
               <ul>
-                <li>
-                  <a href="/signup" onClick={linkTo("/signup")}>
-                    Skapa konto
-                  </a>
-                </li>
-                <li>
-                  <button type="button" onClick={() => doors.login()}>
-                    Logga in
-                  </button>
-                </li>
-                <li>
-                  <a href="/forgot-password" onClick={linkTo("/forgot-password")}>
-                    Glömt lösenord
-                  </a>
-                </li>
+                {user ? <>
+                  <li><a href={defaultAppPathForUser(user)} onClick={linkTo(defaultAppPathForUser(user))}>Mitt konto</a></li>
+                  <li><a href="/app/profile" onClick={linkTo("/app/profile")}>Profil och sparade lokaler</a></li>
+                </> : <>
+                  <li><a href="/signup" onClick={linkTo("/signup")}>Skapa konto</a></li>
+                  <li><button type="button" onClick={() => doors.login()}>Logga in</button></li>
+                  <li><a href="/forgot-password" onClick={linkTo("/forgot-password")}>Glömt lösenord</a></li>
+                </>}
               </ul>
             </nav>
             <div>

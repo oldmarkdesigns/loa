@@ -12,7 +12,8 @@
     "scrape:amf": "node scripts/scrape-amf-listings.mjs",
     "scrape:amf:headed": "node scripts/scrape-amf-listings.mjs --headed",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "test:routes": "node scripts/account-routing-check.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",

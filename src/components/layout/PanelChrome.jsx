@@ -53,8 +53,7 @@ export const ADD_COMPANY_PATH = "/onboarding/company-admin-profile?role=company_
 
 /** The way over to searching for space: the search pages take over, and the role follows (the same as the mode switch does). */
 export function switchToSearchMode(chrome) {
-  navigateTo("/app/rent");
-  void chrome?.onSwitchRole?.("broker");
+  navigateTo("/lokaler");
 }
 
 /** A company's mark: its initials on black, in a square with rounded corners (people are round, companies are not). */

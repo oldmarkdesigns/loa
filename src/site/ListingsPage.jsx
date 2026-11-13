@@ -705,13 +705,13 @@ export default function ListingsPage({ user, listings, app = null }) {
           title="Inte rätt lokal än?"
           body="Skapa ett lokalprogram med yta, budget och område. Det matchas mot varje ny lokal som kommer in."
         >
-          <a className="lo-btn lo-btn--light" href="/signup" onClick={linkTo("/signup")}>
-            Skapa konto
+          <a className="lo-btn lo-btn--light" href={user ? "/app/profile" : "/signup"} onClick={linkTo(user ? "/app/profile" : "/signup")}>
+            {user ? "Mitt lokalprogram" : "Skapa konto"}
             <Arrow />
           </a>
-          <button type="button" className="lo-text-btn" style={{ color: "rgba(255,255,255,0.85)" }} onClick={() => doors.login("/lokaler")}>
+          {!user && <button type="button" className="lo-text-btn" style={{ color: "rgba(255,255,255,0.85)" }} onClick={() => doors.login("/callback")}>
             Jag har redan ett konto
-          </button>
+          </button>}
         </Band>}>
       {body}
     </SiteFrame>

@@ -935,3 +935,5 @@ export function useAppState() {
   }
   return context;
 }
+
+export function useOptionalAppState() { return useContext(AppStateContext); }

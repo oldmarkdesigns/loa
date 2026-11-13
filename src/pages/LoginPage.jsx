@@ -1,12 +1,18 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@workos-inc/authkit-react";
 import { AccountLayout, SiteFrame, linkTo } from "../site/SiteChrome";
-import { publicReturnTo } from "../lib/router";
+import { defaultAppPathForUser, navigateTo, publicReturnTo } from "../lib/router";
 
 export default function LoginPage({ user, onLogout }) {
   const { signIn } = useAuth();
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
+  useEffect(() => {
+    if (user?.onboardingCompleted) {
+      const requested = new URLSearchParams(window.location.search).get("returnTo");
+      navigateTo(requested ? publicReturnTo(requested) : defaultAppPathForUser(user), { replace: true });
+    }
+  }, [user]);
   async function login() {
     setPending(true);
     setError("");

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { navigateTo, normalizeAppRole } from "../lib/router";
+import { defaultAppPathForUser, navigateTo, normalizeAppRole } from "../lib/router";
 import AuthFlowNav from "../components/layout/AuthFlowNav";
 import infoPictogram from "../../Assets/Pictograms/info.png";
 import { propertyAmenityOptions } from "../lib/propertyAmenityIcons";
@@ -716,7 +716,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
     }
     if (stepIndex === 0) {
       if (isAddRoleIntent) {
-        navigateTo("/lokaler");
+        navigateTo(defaultAppPathForUser(user));
         return;
       }
       navigateTo("/signup?step=details");
@@ -803,7 +803,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
         }
         const lookup = await onCheckCompanyByOrganizationNumber(brokerOrganizationNumber, user?.id);
         if (!lookup?.exists || !lookup?.company) {
-          setPendingPostOnboardingRoute("/lokaler");
+          setPendingPostOnboardingRoute(defaultAppPathForUser(user));
           setCompanySetupOfferOpen(true);
           return;
         }
@@ -903,7 +903,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
         const lookup = await onCheckCompanyByOrganizationNumber(organizationNumberToCheck, nextUser?.id);
         if (!lookup?.exists) {
           window.localStorage.removeItem(draftStorageKey);
-          setPendingPostOnboardingRoute(primaryRole === "broker" ? "/lokaler" : "/lokaler");
+          setPendingPostOnboardingRoute(defaultAppPathForUser(nextUser));
           setCompanySetupOfferOpen(true);
           return;
         }
@@ -912,12 +912,12 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
       window.localStorage.removeItem(draftStorageKey);
       if (primaryRole === "company_admin") {
         window.sessionStorage.removeItem("office_onboarding_completion_screen");
-        navigateTo("/lokaler");
+        navigateTo(defaultAppPathForUser(nextUser));
       } else if (primaryRole === "broker") {
         setBrokerVerificationSubmitted(true);
         gotoStep("publisher-profile", { replace: true });
       } else {
-        navigateTo("/lokaler");
+        navigateTo(defaultAppPathForUser(nextUser));
       }
     } catch (submitError) {
       if (primaryRole === "company_admin" || primaryRole === "broker") {
@@ -1034,7 +1034,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
 
   function skipCompanyProfileSetup() {
     setCompanySetupOfferOpen(false);
-    navigateTo(pendingPostOnboardingRoute || "/lokaler");
+    navigateTo(pendingPostOnboardingRoute || defaultAppPathForUser(user));
   }
 
   const isBrokerVerificationStep = currentStep === "publisher-profile" && primaryRole === "broker";
@@ -1459,7 +1459,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                       className="h-auto rounded-full px-6 py-3 text-sm font-semibold"
                       onClick={() => {
                         window.sessionStorage.removeItem("office_onboarding_completion_screen");
-                        navigateTo("/lokaler");
+                        navigateTo(defaultAppPathForUser(user));
                       }}
                     >
                       Gå till profil
@@ -1633,7 +1633,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                         className="h-auto w-full py-3 text-base"
                         onClick={() => {
                           window.sessionStorage.removeItem("office_onboarding_completion_screen");
-                          navigateTo("/lokaler");
+                          navigateTo(defaultAppPathForUser(user));
                         }}
                       >
                         Slutför profil
@@ -1644,7 +1644,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                         className="h-auto w-full py-3 text-base"
                         onClick={() => {
                           window.sessionStorage.removeItem("office_onboarding_completion_screen");
-                          navigateTo("/lokaler");
+                          navigateTo(defaultAppPathForUser(user));
                         }}
                       >
                         Gå till admin-panelen

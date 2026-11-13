@@ -44,24 +44,14 @@ function ProfileMenuDropdown({
   const savedListingsPath = activeRole === "renter" ? "/app/profile?tab=favorites" : `${profileBasePath}#sparade-objekt`;
   const savedSearchesPath = activeRole === "renter" ? "/app/profile?tab=history" : `${profileBasePath}#sparade-sokningar`;
 
-  async function navigateToBrokerPath(path) {
+  function navigateToBrokerPath(path) {
     setMenuOpen(false);
-    if (isRenterMode && hasBrokerAccess) {
-      await onSwitchRole?.(hasCompanyAdminAccess ? "company_admin" : "broker");
-    }
     navigateTo(path);
   }
 
-  // The way over from searching to the workspace. (The workspace has the way back at the top of its side menu.)
-  async function switchToAdminMode() {
+  function switchToAdminMode() {
     setMenuOpen(false);
-    if (hasCompanyAdminAccess) {
-      await onSwitchRole?.("company_admin");
-      navigateTo("/app/admin");
-      return;
-    }
-    if (isRenterMode) await onSwitchRole?.("broker");
-    navigateTo("/app/broker");
+    navigateTo(hasCompanyAdminAccess ? "/app/admin" : "/app/broker");
   }
 
   return (

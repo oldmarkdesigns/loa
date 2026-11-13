@@ -53,16 +53,41 @@ export function normalizeAppRole(role) {
   return role === "company_admin" || role === "broker" || role === "renter" ? role : "renter";
 }
 
-// Legacy roles never select a legacy panel in LOA.
-export function defaultAppPathForRole() { return "/lokaler"; }
-export function defaultAppPathForUser() { return "/lokaler"; }
+export function workspaceRoles(user) {
+  return new Set([...(user?.roles || []), user?.role].filter(Boolean).map(normalizeAppRole));
+}
+
+export function defaultAppPathForRole(role) {
+  return normalizeAppRole(role) === "company_admin" ? "/app/admin"
+    : normalizeAppRole(role) === "broker" ? "/app/broker" : "/app/profile";
+}
+export function defaultAppPathForUser(user) {
+  const roles = workspaceRoles(user);
+  return roles.has("company_admin") ? "/app/admin"
+    : roles.has("broker") ? "/app/broker" : "/app/profile";
+}
+
+export function isWorkspacePath(path) {
+  return ["/app/admin", "/app/broker", "/app/my-listings", "/app/prospekt"].some(base => routeMatches(path, base))
+    || ["/app/publish", "/app/messages", "/app/profile", "/app/settings", "/app/viewings"].includes(path);
+}
+
+export function canAccessWorkspace(user, path) {
+  if (!user || !isWorkspacePath(path)) return false;
+  const roles = workspaceRoles(user);
+  if (routeMatches(path, "/app/admin")) return roles.has("company_admin");
+  if (routeMatches(path, "/app/broker") || routeMatches(path, "/app/my-listings") || path === "/app/publish") {
+    return roles.has("company_admin") || roles.has("broker");
+  }
+  return true;
+}
 
 export function publicReturnTo(value) {
-  if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//")) return "/lokaler";
+  if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//")) return "/callback";
   try {
     const url = new URL(value, window.location.origin);
-    if (url.origin !== window.location.origin) return "/lokaler";
-    return url.pathname === "/lokaler" || /^\/lokaler\/[^/]+$/.test(url.pathname)
+    if (url.origin !== window.location.origin) return "/callback";
+    return isWorkspacePath(url.pathname) || url.pathname === "/callback" || url.pathname === "/lokaler" || /^\/lokaler\/[^/]+$/.test(url.pathname)
       ? url.pathname + url.search + url.hash : "/lokaler";
-  } catch { return "/lokaler"; }
+  } catch { return "/callback"; }
 }

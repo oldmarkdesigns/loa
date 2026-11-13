@@ -232,7 +232,7 @@ function LandingPage({ user, listings = [] }) {
           <div className="lo-body">
             <Rows numbered items={PROGRAM} />
             <div className="lo-actions">
-              <a className="lo-btn" href="/signup" onClick={linkTo("/signup")}>
+              <a className="lo-btn" href={user ? "/app/profile" : "/signup"} onClick={linkTo(user ? "/app/profile" : "/signup")}>
                 Skapa lokalprogram
                 <Arrow />
               </a>

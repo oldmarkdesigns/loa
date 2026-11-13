@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { AppProvider, useAppState } from "./state/AppState";
 import { TooltipProvider } from "./components/ui/tooltip";
 import ToastStack from "./components/layout/ToastStack";
@@ -13,13 +13,28 @@ import ListingsPage from "./site/ListingsPage";
 import ListingPage from "./site/ListingPage";
 import LandlordsPage from "./site/LandlordsPage";
 import { SiteFrame, AccountLayout } from "./site/SiteChrome";
-import { navigateTo, usePathname } from "./lib/router";
+const WorkspacePage = lazy(() => import("./pages/WorkspacePage"));
+import { canAccessWorkspace, defaultAppPathForUser, isWorkspacePath, navigateTo, usePathname } from "./lib/router";
 import { clearBootTheme } from "./lib/theme";
 
 function AppContent() {
   const pathname = usePathname();
   const app = useAppState();
   const onboarding = pathname === "/onboarding" || pathname.startsWith("/onboarding/");
+  const workspace = isWorkspacePath(pathname);
+  const allowed = canAccessWorkspace(app.user, pathname);
+  useEffect(() => {
+    if (app.isBootstrapping || app.isAuthPending) return;
+    if (pathname === "/app" || pathname === "/app/rent") {
+      navigateTo(pathname === "/app/rent" ? "/lokaler" : app.user ? defaultAppPathForUser(app.user) : "/login", { replace: true });
+    } else if (/^\/app\/listings\/[^/]+(?:\/gallery)?$/.test(pathname)) {
+      navigateTo("/lokaler/" + pathname.split("/")[3], { replace: true });
+    } else if (workspace) {
+      if (!app.user) navigateTo(`/login?returnTo=${encodeURIComponent(pathname)}`, { replace: true });
+      else if (!app.user.onboardingCompleted) navigateTo("/onboarding", { replace: true });
+      else if (!allowed) navigateTo(defaultAppPathForUser(app.user), { replace: true });
+    }
+  }, [app.isBootstrapping, app.isAuthPending, app.user, pathname, workspace, allowed]);
   useEffect(() => {
     if (!app.isBootstrapping) clearBootTheme();
     if (!app.isBootstrapping && !app.isAuthPending && onboarding && !app.user) {
@@ -29,7 +44,8 @@ function AppContent() {
   if (app.isBootstrapping) return <main role="status" aria-label="Laddar LOA" />;
   const shared = { user: app.user, listings: app.listings };
   let content;
-  if (pathname === "/") content = <LandingPage {...shared} />;
+  if (workspace) content = allowed && app.user.onboardingCompleted ? <Suspense fallback={<main role="status" aria-label="Laddar konto" />}><WorkspacePage app={app} pathname={pathname} /></Suspense> : <main role="status" aria-label="Laddar konto" />;
+  else if (pathname === "/") content = <LandingPage {...shared} />;
   else if (pathname === "/lokaler") content = <ListingsPage {...shared} />;
   else if (/^\/lokaler\/[^/]+$/.test(pathname)) {
     let id;
