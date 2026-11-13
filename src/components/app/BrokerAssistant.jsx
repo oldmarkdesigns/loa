@@ -431,7 +431,7 @@ function AssistantColumn({ open, onClose }) {
 
         {/* my-auto centres the block when there is room and lets it scroll from the top when there is not. */}
         <section className="my-auto">
-          <h2 id="assistant-next-steps" className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-ink-500">Föreslagna nästa steg</h2>
+          <h2 id="assistant-next-steps" className="mb-3 text-[11px] font-semibold text-ink-500">Föreslagna nästa steg</h2>
           {loading ? <SuggestionsSkeleton rows={3} /> : null}
           {!loading && error ? <p className="text-sm text-ink-600">Jag kunde inte hämta dina leads och annonser just nu.</p> : null}
           {!loading && !error ? (

@@ -120,7 +120,7 @@ function AiSearchPanel({ listings, quickNeeds, filters, onApplyFilters, onOpenLi
       </form>
 
       <div className="mt-4 rounded-3xl border border-[#c9d2df] bg-[#ffffff]/80 p-3">
-        <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Toppval just nu</p>
+        <p className="text-xs font-semibold text-ink-500">Toppval just nu</p>
         <div className="mt-2 grid gap-2">
           {previewMatches.map((item) => (
             <button

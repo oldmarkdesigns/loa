@@ -64,7 +64,7 @@ function ProspectRenterPage({ prospectId }) {
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Delat prospekt</p>
+          <p className="text-xs font-semibold text-ink-500">Delat prospekt</p>
           <h1 className="mt-1 text-2xl font-semibold text-ink-900">{prospect.title}</h1>
         </div>
         <StatusPill status={prospect.status} variant="prospect" />
@@ -100,7 +100,7 @@ function ProspectRenterPage({ prospectId }) {
         </div>
 
         <aside className="surface flex h-[560px] flex-col p-4 sm:p-5">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-500">Kommentarer</h2>
+          <h2 className="text-sm font-semibold text-ink-500">Kommentarer</h2>
           <div className="mt-3 min-h-0 flex-1">
             <ProspectCommentThread
               sections={prospect.publishedSections}

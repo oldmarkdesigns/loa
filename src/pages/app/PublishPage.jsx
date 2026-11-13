@@ -721,7 +721,7 @@ function PublishPage({ app, onClose }) {
                           ))}
                         </div>
                         <div className="rounded-lg border border-veil/10 bg-canvas px-3 py-2">
-                          <p className="text-xs font-semibold uppercase tracking-wide text-ink-700">Snabba tips</p>
+                          <p className="text-xs font-semibold text-ink-700">Snabba tips</p>
                           <ul className="mt-2 space-y-1.5 text-xs leading-relaxed text-ink-600">
                             {publishTips.map((tip) => (
                               <li key={tip}>• {tip}</li>
@@ -772,7 +772,7 @@ function PublishPage({ app, onClose }) {
                 </div>
                 <div className="mt-10 w-full text-left">
                   <div className="mb-3 flex items-center justify-between gap-2">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Förhandsgranskning</p>
+                    <p className="text-xs font-semibold text-ink-500">Förhandsgranskning</p>
                     <Badge variant="outline" className="h-auto rounded-full bg-control px-3 py-1 text-xs font-semibold text-ink-700">
                       Kvalitet {qualityScore}
                     </Badge>
@@ -1215,11 +1215,11 @@ function PublishPage({ app, onClose }) {
                           ))}
                         </dl>
                         <div>
-                          <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Beskrivning</p>
+                          <p className="text-xs font-semibold text-ink-500">Beskrivning</p>
                           <p className="mt-1.5 text-sm leading-relaxed text-ink-700">{draft.description || "-"}</p>
                         </div>
                         <div>
-                          <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Bekvämligheter</p>
+                          <p className="text-xs font-semibold text-ink-500">Bekvämligheter</p>
                           <div className="mt-2 flex flex-wrap gap-1.5">
                             {mergeAmenities(draft).map((amenity) => {
                               const Icon = amenityIconFor(amenity);

@@ -2,11 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { cn } from "cn";
 import { navigateTo, routeMatches } from "../../lib/router";
 import { deriveNavbarRoleState } from "../../lib/navbarRoles";
-import { LockIcon, MessageSquareIcon, UserIcon } from "../icons/UiIcons";
-import MarketingNavLinks, { marketingPrimaryItems, marketingSectionItems } from "./MarketingNavLinks";
+import loaLogo from "../../site/assets/loa-logo.png";
 import ProfileMenuDropdown from "./ProfileMenuDropdown";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 function MarketingHeader({
@@ -40,7 +38,6 @@ function MarketingHeader({
     if (words.length === 1) return (words[0] || "AA").slice(0, 2).toUpperCase();
     return `${words[0][0] || ""}${words[1][0] || ""}`.toUpperCase() || "AA";
   }, [isGuest, user?.name]);
-  const activeHref = routeMatches(pathname, "/app/rent") ? marketingPrimaryItems[0].href : null;
 
   useEffect(() => {
     setMenuOpen(false);
@@ -56,24 +53,32 @@ function MarketingHeader({
     return () => window.removeEventListener("keydown", onEscape);
   }, [mobileMenuOpen]);
 
-  function handleMobileNavItemClick(item) {
+  const appLinks = shouldShowGuestActions
+    ? [
+        { label: "Lediga lokaler", href: "/app/rent" },
+        { label: "Hyresvärdar", href: "/hyresvardar" },
+        { label: "Lokalprogram", href: "/#lokalprogram" }
+      ]
+    : [
+        { label: "Sök lokaler", href: "/app/rent" },
+        ...(hasBrokerAccess ? [] : [{ label: "Visningar", href: "/app/viewings" }]),
+        { label: "Meddelanden", href: "/app/messages" }
+      ];
+  const isActive = (href) => !href.includes("#") && routeMatches(pathname, href.split("?")[0]);
+  const go = (href) => (event) => {
+    if (onPrimaryNavClick?.(event, { href }) === true) return;
+    event.preventDefault();
     setMobileMenuOpen(false);
-    if (item.href) {
-      navigateTo(item.href);
-      return;
-    }
-    if (pathname === "/") {
-      onSectionLinkClick?.({ preventDefault() {} }, item.hash);
-      return;
-    }
-    navigateTo(`/${item.hash}`);
-  }
+    navigateTo(href);
+  };
+  const linkTone = onHero ? "text-white/70 hover:text-white" : "text-ink-600 hover:text-strong";
+  const activeTone = onHero ? "text-white" : "text-strong";
 
   return (
     <>
       <header
         className={cn(
-          "navbar-enter sticky top-0 z-40 shrink-0 px-4 py-3",
+          "navbar-enter sticky top-0 z-40 shrink-0 px-4 sm:px-6",
           fadeWithScroll
             ? "will-change-[background-color]"
             : cn(
@@ -87,65 +92,58 @@ function MarketingHeader({
             : undefined
         }
       >
-        <div className="grid w-full grid-cols-[auto_1fr_auto] items-center gap-2 sm:gap-4">
-          <div className="flex min-w-0 items-center gap-4">
-            <Button type="button" variant="ghost" className="h-auto justify-self-start p-0 text-left hover:bg-transparent" onClick={onBrandClick || (() => navigateTo("/"))}>
-              <span className="inline-flex items-center gap-2 rounded-xl border border-veil/10 bg-surface px-2.5 py-1.5">
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-dashed border-veil/30 bg-surface text-[9px] font-semibold uppercase tracking-wide text-ink-500">
-                  LOGGA
-                </span>
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="text-sm font-semibold text-ink-800">LOA</span>
-                </span>
-              </span>
-            </Button>
-          </div>
+        <div className="grid h-16 w-full grid-cols-[auto_1fr_auto] items-center gap-4">
+          <a
+            href="/"
+            aria-label="LOA, till startsidan"
+            className="inline-flex items-center rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4"
+            onClick={(event) => {
+              event.preventDefault();
+              (onBrandClick || (() => navigateTo("/")))();
+            }}
+          >
+            <img src={loaLogo} alt="LOA" width="120" height="71" className={cn("h-[22px] w-auto", onHero ? "brightness-0 invert" : "dark:brightness-0 dark:invert")} />
+          </a>
 
-          <nav className="hidden items-center justify-self-center gap-9 lg:flex">
-            <MarketingNavLinks
-              hrefPrefix="/"
-              activeHref={activeHref}
-              light={onHero}
-              onPrimaryNavClick={onPrimaryNavClick}
-              onSectionLinkClick={onSectionLinkClick}
-              showPublish={false}
-            />
+          <nav aria-label="Huvudmeny" className="hidden items-center justify-self-center gap-1 lg:flex">
+            {appLinks.map((item) => (
+              <a
+                key={item.href}
+                href={item.href}
+                aria-current={isActive(item.href) ? "page" : undefined}
+                onClick={go(item.href)}
+                className={cn(
+                  "relative rounded-full px-3.5 py-2 text-[0.9375rem] font-normal tracking-[-0.01em] transition-colors duration-300",
+                  isActive(item.href) ? activeTone : linkTone
+                )}
+              >
+                {item.label}
+                {isActive(item.href) ? (
+                  <span aria-hidden="true" className="absolute bottom-0.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-current" />
+                ) : null}
+              </a>
+            ))}
           </nav>
 
           {!shouldShowGuestActions ? (
-            <div className="flex items-center justify-self-end gap-4">
-              {!hasBrokerAccess ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  aria-label="Meddelanden"
-                  className="h-11 w-11 rounded-full text-ink-700"
-                  onClick={onMessagesClick || (() => navigateTo("/app/messages"))}
-                >
-                  <MessageSquareIcon className="h-4 w-4" />
-                </Button>
-              ) : null}
-              <div className="relative inline-flex h-11 items-center self-center">
+            <div className="flex items-center justify-self-end gap-2">
+              <div className="relative inline-flex h-10 items-center self-center">
                 <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
                   <DropdownMenuTrigger
                     render={
-                      // The avatar is the whole button: no card around it, only the circle (`!` beats the platform's rounded
-                      // square for buttons, so the focus ring is a circle too). Hovering or opening the menu dims it a little.
-                      <Button
+                      <button
                         type="button"
-                        variant="ghost"
-                        className="h-11 w-11 shrink-0 border-0 bg-transparent p-0 !rounded-full hover:bg-transparent hover:opacity-85 aria-expanded:bg-transparent aria-expanded:opacity-85"
+                        className="h-10 w-10 shrink-0 overflow-hidden !rounded-full p-0 transition-opacity hover:opacity-85 aria-expanded:opacity-85 !min-h-0"
                         aria-label="Öppna profilmeny"
                       />
                     }
                   >
                     <Avatar className="h-full w-full">
                       <AvatarImage src={user?.profile?.avatarUrl} alt={user?.name || "Profil"} />
-                      <AvatarFallback className="bg-control text-sm font-semibold text-ink-700">{initials}</AvatarFallback>
+                      <AvatarFallback className="bg-control text-[0.8125rem] font-medium text-ink-700">{initials}</AvatarFallback>
                     </Avatar>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" sideOffset={8} className="w-[min(320px,calc(100vw-2rem))] rounded-2xl border border-veil/10 p-3 shadow-[0_10px_28px_rgba(15,25,48,0.10)]">
+                  <DropdownMenuContent align="end" sideOffset={10} className="w-[min(320px,calc(100vw-2rem))] rounded-2xl border border-veil/10 p-2 shadow-[0_24px_48px_-20px_rgba(15,20,34,0.35)]">
                     <ProfileMenuDropdown
                       setMenuOpen={setMenuOpen}
                       user={user}
@@ -156,58 +154,28 @@ function MarketingHeader({
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
-              <Button
-                type="button"
-                variant="ghost"
-                aria-label="Öppna meny"
-                className={cn("h-11 hover:bg-transparent lg:hidden", onHero ? "text-white hover:text-white" : "text-strong")}
-                onClick={() => {
-                  setMenuOpen(false);
-                  setMobileMenuOpen((value) => !value);
-                }}
-              >
-                <span className="inline-flex flex-col items-end gap-1.5">
-                  <span className="block h-0.5 w-5 rounded-full bg-current" />
-                  <span className="block h-0.5 w-4 rounded-full bg-current" />
-                  <span className="block h-0.5 w-3 rounded-full bg-current" />
-                </span>
-              </Button>
+              <Burger onHero={onHero} open={mobileMenuOpen} onClick={() => { setMenuOpen(false); setMobileMenuOpen((value) => !value); }} />
             </div>
           ) : (
-            <div className="flex items-center justify-self-end gap-2">
-              <Button
+            <div className="flex items-center justify-self-end gap-1">
+              <button
                 type="button"
-                className={cn("h-auto gap-2 rounded-full px-3 text-sm font-semibold sm:px-5", onHero && "bg-white text-[#0b0a0e] hover:bg-white/90")}
-                onClick={() => onRequireAuth?.("signup", "renter")}
-              >
-                Skapa konto
-                <UserIcon className="hidden h-3.5 w-3.5 sm:block" />
-              </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                className={cn(
-                  "h-auto gap-2 rounded-full px-3 text-sm font-semibold sm:px-5",
-                  onHero ? "bg-white/15 text-white hover:bg-white/25" : "bg-veil/5 text-ink-800 hover:bg-veil/10"
-                )}
+                className={cn("hidden !min-h-0 rounded-full px-4 py-2 text-[0.9375rem] transition-colors sm:inline-flex", linkTone)}
                 onClick={() => onRequireAuth?.("login", "renter")}
               >
                 Logga in
-                <LockIcon className="hidden h-3.5 w-3.5 sm:block" />
-              </Button>
-              <Button
+              </button>
+              <button
                 type="button"
-                variant="ghost"
-                aria-label="Öppna meny"
-                className={cn("h-11 hover:bg-transparent lg:hidden", onHero ? "text-white hover:text-white" : "text-strong")}
-                onClick={() => setMobileMenuOpen((value) => !value)}
+                className={cn(
+                  "inline-flex h-10 !min-h-0 items-center !rounded-full px-5 text-[0.9375rem] font-medium transition-colors",
+                  onHero ? "bg-white text-[#141a2b] hover:bg-white/90" : "bg-strong text-on-strong hover:bg-strong/90"
+                )}
+                onClick={() => onRequireAuth?.("signup", "renter")}
               >
-                <span className="inline-flex flex-col items-end gap-1.5">
-                  <span className="block h-0.5 w-5 rounded-full bg-current" />
-                  <span className="block h-0.5 w-4 rounded-full bg-current" />
-                  <span className="block h-0.5 w-3 rounded-full bg-current" />
-                </span>
-              </Button>
+                Skapa konto
+              </button>
+              <Burger onHero={onHero} open={mobileMenuOpen} onClick={() => setMobileMenuOpen((value) => !value)} />
             </div>
           )}
         </div>
@@ -215,40 +183,50 @@ function MarketingHeader({
 
       {mobileMenuOpen ? (
         <div className="fixed inset-0 z-[60] bg-transparent lg:hidden" onClick={() => setMobileMenuOpen(false)}>
-          <div className="absolute right-4 top-[72px] w-[min(320px,calc(100vw-2rem))] rounded-2xl border border-veil/10 bg-surface p-3" onClick={(event) => event.stopPropagation()}>
-            <div className="space-y-1">
-              {[...marketingPrimaryItems, ...marketingSectionItems].map((item) => (
-                <Button
-                  key={item.href || item.hash}
-                  type="button"
-                  variant="ghost"
-                  className="menu-hover-row h-auto w-full justify-start rounded-xl px-3 py-2 text-left font-semibold text-ink-700 hover:bg-veil/5"
-                  onClick={() => handleMobileNavItemClick(item)}
-                >
-                  {item.label}
-                </Button>
-              ))}
-              {!shouldShowGuestActions ? (
-                <>
-                  <div className="my-1 h-px bg-veil/10" />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="menu-hover-row h-auto w-full justify-start rounded-xl px-3 py-2 text-left font-semibold text-ink-700 hover:bg-veil/5"
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                      navigateTo("/app/publish");
-                    }}
-                  >
-                    Publicera annons
-                  </Button>
-                </>
-              ) : null}
-            </div>
-          </div>
+          <nav
+            aria-label="Meny"
+            className="absolute right-4 top-[68px] grid w-[min(300px,calc(100vw-2rem))] gap-0.5 rounded-2xl border border-veil/10 bg-surface p-2 shadow-[0_24px_48px_-20px_rgba(15,20,34,0.35)]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            {appLinks.map((item) => (
+              <a
+                key={item.href}
+                href={item.href}
+                onClick={go(item.href)}
+                className={cn("rounded-xl px-3 py-2.5 text-[0.9375rem] transition-colors hover:bg-veil/5", isActive(item.href) ? "text-strong" : "text-ink-600")}
+              >
+                {item.label}
+              </a>
+            ))}
+            {shouldShowGuestActions ? (
+              <>
+                <div className="my-1 h-px bg-veil/10" />
+                <button type="button" className="!min-h-0 rounded-xl px-3 py-2.5 text-left text-[0.9375rem] text-ink-600 hover:bg-veil/5" onClick={() => { setMobileMenuOpen(false); onRequireAuth?.("login", "renter"); }}>
+                  Logga in
+                </button>
+              </>
+            ) : null}
+          </nav>
         </div>
       ) : null}
     </>
+  );
+}
+
+function Burger({ onHero, open, onClick }) {
+  return (
+    <button
+      type="button"
+      aria-label={open ? "Stäng meny" : "Öppna meny"}
+      aria-expanded={open}
+      className={cn("grid h-10 w-10 !min-h-0 place-items-center !rounded-full lg:hidden", onHero ? "text-white" : "text-strong")}
+      onClick={onClick}
+    >
+      <span className="grid gap-[5px]">
+        <span className={cn("block h-[1.5px] w-[18px] bg-current transition-transform duration-300", open && "translate-y-[3.25px] rotate-45")} />
+        <span className={cn("block h-[1.5px] w-[18px] bg-current transition-transform duration-300", open && "-translate-y-[3.25px] -rotate-45")} />
+      </span>
+    </button>
   );
 }
 

@@ -91,7 +91,7 @@ export function AssistantSuggestions({ items, disabled, onRun, label = "Föresla
   if (items.length === 0) return null;
   return (
     <div className="space-y-2">
-      {label ? <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">{label}</p> : null}
+      {label ? <p className="text-[11px] font-semibold text-ink-500">{label}</p> : null}
       <ul className="divide-y divide-veil/10 rounded-xl border border-veil/10 bg-surface">
         {items.map((item) => (
           <li key={item.id} className={cn("flex items-center gap-3 px-3 py-2", rowClassName)}>

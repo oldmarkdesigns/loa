@@ -14,7 +14,7 @@ export function StartOption({ icon: Icon, title, description, footnote, badge, o
         <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-subtle text-ink-900">
           <Icon className="h-5 w-5" />
         </span>
-        {badge ? <Badge variant="secondary" className="h-auto rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide">{badge}</Badge> : null}
+        {badge ? <Badge variant="secondary" className="h-auto rounded-full px-2 py-0.5 text-[10px] font-semibold">{badge}</Badge> : null}
       </span>
       <span className="block space-y-1.5">
         <span className="block text-base font-semibold text-ink-900">{title}</span>

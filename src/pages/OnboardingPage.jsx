@@ -716,7 +716,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
     }
     if (stepIndex === 0) {
       if (isAddRoleIntent) {
-        navigateTo("/app/profile");
+        navigateTo("/lokaler");
         return;
       }
       navigateTo("/signup?step=details");
@@ -803,7 +803,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
         }
         const lookup = await onCheckCompanyByOrganizationNumber(brokerOrganizationNumber, user?.id);
         if (!lookup?.exists || !lookup?.company) {
-          setPendingPostOnboardingRoute("/app/profile");
+          setPendingPostOnboardingRoute("/lokaler");
           setCompanySetupOfferOpen(true);
           return;
         }
@@ -903,7 +903,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
         const lookup = await onCheckCompanyByOrganizationNumber(organizationNumberToCheck, nextUser?.id);
         if (!lookup?.exists) {
           window.localStorage.removeItem(draftStorageKey);
-          setPendingPostOnboardingRoute(primaryRole === "broker" ? "/app/broker" : "/app/profile");
+          setPendingPostOnboardingRoute(primaryRole === "broker" ? "/lokaler" : "/lokaler");
           setCompanySetupOfferOpen(true);
           return;
         }
@@ -912,12 +912,12 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
       window.localStorage.removeItem(draftStorageKey);
       if (primaryRole === "company_admin") {
         window.sessionStorage.removeItem("office_onboarding_completion_screen");
-        navigateTo("/app/admin");
+        navigateTo("/lokaler");
       } else if (primaryRole === "broker") {
         setBrokerVerificationSubmitted(true);
         gotoStep("publisher-profile", { replace: true });
       } else {
-        navigateTo("/app/profile");
+        navigateTo("/lokaler");
       }
     } catch (submitError) {
       if (primaryRole === "company_admin" || primaryRole === "broker") {
@@ -1034,7 +1034,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
 
   function skipCompanyProfileSetup() {
     setCompanySetupOfferOpen(false);
-    navigateTo(pendingPostOnboardingRoute || "/app/profile");
+    navigateTo(pendingPostOnboardingRoute || "/lokaler");
   }
 
   const isBrokerVerificationStep = currentStep === "publisher-profile" && primaryRole === "broker";
@@ -1059,9 +1059,9 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
       <div className="w-full max-w-[760px]">
         <section className="rounded-[30px] border border-black/10 bg-[#ffffff] px-6 py-7 sm:px-7 sm:py-8">
           {companySetupOfferOpen ? (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0b0a0e]/50 px-4">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#141a2b]/50 px-4">
               <div className="w-full max-w-[560px] rounded-[28px] border border-black/10 bg-[#ffffff] p-6 shadow-[0_24px_60px_rgba(15,25,48,0.24)]">
-                <h2 className="text-[1.6rem] font-semibold leading-tight text-[#0b0a0e]">Organisationsnumret finns inte på plattformen</h2>
+                <h2 className="text-[1.6rem] font-semibold leading-tight text-[#141a2b]">Organisationsnumret finns inte på plattformen</h2>
                 <p className="mt-2 text-sm leading-relaxed text-ink-600">
                   Vill du sätta upp en ny företagsprofil nu? Då öppnar vi bolagsadmin-onboardingen direkt.
                 </p>
@@ -1087,8 +1087,8 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
           ) : null}
           {!(currentStep === "publisher-profile" || currentStep === "company-admin-profile") ? (
             <>
-              <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Steg {stepIndex + 1} av {activeSteps.length}</p>
-              <h1 className="mt-2 text-[1.95rem] font-semibold leading-tight text-[#0b0a0e]">{currentMeta.title}</h1>
+              <p className="text-xs font-semibold text-ink-500">Steg {stepIndex + 1} av {activeSteps.length}</p>
+              <h1 className="mt-2 text-[1.95rem] font-semibold leading-tight text-[#141a2b]">{currentMeta.title}</h1>
               <p className="mt-1 text-sm text-ink-600">{currentMeta.subtitle}</p>
             </>
           ) : null}
@@ -1098,7 +1098,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
               <div>
                 <section className="space-y-8 pb-1">
                   {showProgramInfoCard ? (
-                    <div className="relative rounded-2xl border border-[#0b0a0e]/15 bg-[#f8fafc] px-4 py-4 sm:px-5">
+                    <div className="relative rounded-2xl border border-[#141a2b]/15 bg-[#f8fafc] px-4 py-4 sm:px-5">
                       <Button
                         type="button"
                         variant="outline"
@@ -1110,13 +1110,13 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                         ×
                       </Button>
                       <div className="pr-10">
-                        <p className="text-[1.65rem] font-semibold leading-tight text-[#0b0a0e]">Hitta rätt lokal snabbare</p>
+                        <p className="text-[1.65rem] font-semibold leading-tight text-[#141a2b]">Hitta rätt lokal snabbare</p>
                       </div>
                       <p className="mt-1.5 text-sm leading-relaxed text-ink-600">Fyll i era behov så matchar vi lokaler med högre precision.</p>
                       <ul className="mt-3 space-y-1.5 text-sm text-ink-700">
-                        <li className="flex items-start gap-2"><span className="mt-1 inline-block h-2 w-2 rounded-full bg-[#0b0a0e]" />Ni får relevanta förslag baserat på era krav.</li>
-                        <li className="flex items-start gap-2"><span className="mt-1 inline-block h-2 w-2 rounded-full bg-[#0b0a0e]" />Matchningar prioriterar läge, storlek och budget.</li>
-                        <li className="flex items-start gap-2"><span className="mt-1 inline-block h-2 w-2 rounded-full bg-[#0b0a0e]" />Ni kan alltid ändra lokalprogrammet senare i Profil.</li>
+                        <li className="flex items-start gap-2"><span className="mt-1 inline-block h-2 w-2 rounded-full bg-[#141a2b]" />Ni får relevanta förslag baserat på era krav.</li>
+                        <li className="flex items-start gap-2"><span className="mt-1 inline-block h-2 w-2 rounded-full bg-[#141a2b]" />Matchningar prioriterar läge, storlek och budget.</li>
+                        <li className="flex items-start gap-2"><span className="mt-1 inline-block h-2 w-2 rounded-full bg-[#141a2b]" />Ni kan alltid ändra lokalprogrammet senare i Profil.</li>
                       </ul>
                       <div className="mt-4">
                         <Button
@@ -1132,7 +1132,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                   ) : null}
 
                   <section>
-                    <h3 className="text-[1.4rem] font-semibold text-[#0b0a0e]">Vad söker ni för lokaltyp?</h3>
+                    <h3 className="text-[1.4rem] font-semibold text-[#141a2b]">Vad söker ni för lokaltyp?</h3>
                     <p className="mt-1 text-sm text-ink-600">Välj en eller flera typer som passar ert behov.</p>
                     <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                       {typeOptions.map((type) => {
@@ -1143,7 +1143,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                             type="button"
                             variant="outline"
                             className={`h-auto justify-center gap-2 !rounded-2xl px-3 py-3 text-sm font-semibold ${
-                              active ? "border-[#0b0a0e] bg-[#0b0a0e] text-white hover:bg-[#0b0a0e] hover:text-white" : "border-black/15 text-ink-700 hover:bg-black/5"
+                              active ? "border-[#141a2b] bg-[#141a2b] text-white hover:bg-[#141a2b] hover:text-white" : "border-black/15 text-ink-700 hover:bg-black/5"
                             }`}
                             onClick={() => toggleProgramType(type)}
                           >
@@ -1155,7 +1155,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                   </section>
 
                   <section className="border-t border-black/10 pt-6">
-                    <h3 className="text-[1.4rem] font-semibold text-[#0b0a0e]">Var söker ni lokal?</h3>
+                    <h3 className="text-[1.4rem] font-semibold text-[#141a2b]">Var söker ni lokal?</h3>
                     <p className="mt-1 text-sm text-ink-600">Välj område och använd snabba förslag.</p>
                     <div className="mt-3 flex flex-wrap gap-2">
                       {districtOptions.map((district) => {
@@ -1169,7 +1169,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                             type="button"
                             variant="outline"
                             className={`h-auto !rounded-2xl px-3 py-1.5 text-xs font-semibold ${
-                              active ? "border-[#0b0a0e] bg-[#0b0a0e] text-white hover:bg-[#0b0a0e] hover:text-white" : "border-black/10 text-ink-700 hover:bg-black/5"
+                              active ? "border-[#141a2b] bg-[#141a2b] text-white hover:bg-[#141a2b] hover:text-white" : "border-black/10 text-ink-700 hover:bg-black/5"
                             }`}
                             onClick={() => toggleProgramDistrict(district)}
                           >
@@ -1181,7 +1181,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                   </section>
 
                   <section className="border-t border-black/10 pt-6">
-                    <h3 className="text-[1.4rem] font-semibold text-[#0b0a0e]">Hur stor lokal söker ni?</h3>
+                    <h3 className="text-[1.4rem] font-semibold text-[#141a2b]">Hur stor lokal söker ni?</h3>
                     <p className="mt-1 text-sm text-ink-600">Ange storlek och antal arbetsplatser.</p>
                     <div className="mt-3 grid gap-3 sm:grid-cols-3">
                       <label className="grid gap-1">
@@ -1270,7 +1270,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                   </section>
 
                   <section className="border-t border-black/10 pt-6">
-                    <h3 className="text-[1.4rem] font-semibold text-[#0b0a0e]">Vad är er flyttstatus?</h3>
+                    <h3 className="text-[1.4rem] font-semibold text-[#141a2b]">Vad är er flyttstatus?</h3>
                     <p className="mt-1 text-sm text-ink-600">Inflyttning, avtalstid och budgetnivå.</p>
                     <div className="mt-3 grid gap-3 sm:grid-cols-3">
                       <label className="grid gap-1">
@@ -1335,7 +1335,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                   </section>
 
                   <section className="border-t border-black/10 pt-6">
-                    <h3 className="text-[1.4rem] font-semibold text-[#0b0a0e]">Övriga krav och preferenser</h3>
+                    <h3 className="text-[1.4rem] font-semibold text-[#141a2b]">Övriga krav och preferenser</h3>
                     <p className="mt-1 text-sm text-ink-600">Fyll i tillgänglighet, parkering, planlösning och bekvämligheter.</p>
                     <div className="mt-3 grid gap-3 sm:grid-cols-3">
                       <label className="grid gap-1">
@@ -1377,7 +1377,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                     </div>
 
                     <div className="mt-4 rounded-2xl border border-black/10 bg-[#ffffff] p-3">
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-700">Särskilda krav</p>
+                      <p className="text-[11px] font-semibold text-ink-700">Särskilda krav</p>
                       <div className="mt-2 grid grid-cols-1 gap-2">
                         <label className="inline-flex items-center gap-2 text-sm text-ink-700">
                           <Checkbox
@@ -1415,7 +1415,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                             type="button"
                             variant="outline"
                             className={`h-auto shrink-0 gap-2 whitespace-nowrap rounded-full px-3.5 py-2.5 text-sm font-semibold ${
-                              active ? "border-[#0b0a0e] bg-[#0b0a0e] text-white hover:bg-[#0b0a0e] hover:text-white" : "border-black/10 text-ink-700 hover:bg-[#ffffff]"
+                              active ? "border-[#141a2b] bg-[#141a2b] text-white hover:bg-[#141a2b] hover:text-white" : "border-black/10 text-ink-700 hover:bg-[#ffffff]"
                             }`}
                             onClick={() => toggleProgramAmenity(option.value)}
                           >
@@ -1435,16 +1435,16 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
               <div className="space-y-6">
                 {hasPendingBrokerVerification ? (
                   <div className="space-y-6 py-6 text-center">
-                    <div className="mx-auto inline-flex h-16 w-16 items-center justify-center rounded-full bg-[#0b0a0e] text-white">
+                    <div className="mx-auto inline-flex h-16 w-16 items-center justify-center rounded-full bg-[#141a2b] text-white">
                       <ShieldIcon className="h-7 w-7" />
                     </div>
                     <div>
-                      <h1 className="text-[2.2rem] font-semibold leading-tight text-[#0b0a0e]">
+                      <h1 className="text-[2.2rem] font-semibold leading-tight text-[#141a2b]">
                         Verifieringsförfrågan skickad
                       </h1>
                       <p className="mx-auto mt-3 max-w-[640px] text-[1.05rem] leading-relaxed text-ink-600">
                         Din förfrågan om att bli verifierad som mäklare har skickats till bolagsadmin för{" "}
-                        <span className="font-semibold text-[#0b0a0e]">
+                        <span className="font-semibold text-[#141a2b]">
                           {brokerVerificationCompanyName || "det angivna bolaget"}
                           {brokerVerificationOrganizationNumber ? ` (${brokerVerificationOrganizationNumber})` : ""}
                         </span>
@@ -1459,7 +1459,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                       className="h-auto rounded-full px-6 py-3 text-sm font-semibold"
                       onClick={() => {
                         window.sessionStorage.removeItem("office_onboarding_completion_screen");
-                        navigateTo("/app/profile");
+                        navigateTo("/lokaler");
                       }}
                     >
                       Gå till profil
@@ -1468,8 +1468,8 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                 ) : (
                 <>
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Steg {publisherFlowStep + 1} av 3</p>
-                  <h1 className="mt-2 text-[1.95rem] font-semibold leading-tight text-[#0b0a0e]">
+                  <p className="text-xs font-semibold text-ink-500">Steg {publisherFlowStep + 1} av 3</p>
+                  <h1 className="mt-2 text-[1.95rem] font-semibold leading-tight text-[#141a2b]">
                     {publisherFlowStep === 0 ? "Profil" : publisherFlowStep === 1 ? "Verifiering" : "Villkor"}
                   </h1>
                   <p className="mt-1 text-sm text-ink-600">
@@ -1540,8 +1540,8 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                     </div>
 
                     <div className="border-t border-black/10 pt-5">
-                      <div className="rounded-2xl border border-[#0b0a0e]/15 bg-[#f8fafc] p-4">
-                        <p className="text-sm font-semibold text-[#0b0a0e]">Verifiering via bolagsadmin</p>
+                      <div className="rounded-2xl border border-[#141a2b]/15 bg-[#f8fafc] p-4">
+                        <p className="text-sm font-semibold text-[#141a2b]">Verifiering via bolagsadmin</p>
                         <p className="mt-1 text-sm leading-relaxed text-ink-600">
                           När du skickar in förfrågan går den till admin-kontot för bolaget med organisationsnummer {publisherProfile.organizationNumber || "du angav"}. Du får mäklarbehörighet först när bolagsadmin godkänner dig.
                         </p>
@@ -1566,7 +1566,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                         checked={publisherProfile.termsPublishingRules}
                         onCheckedChange={(checked) => setPublisherProfile((prev) => ({ ...prev, termsPublishingRules: Boolean(checked) }))}
                       />
-                      <span className="flex-1 text-[0.88rem] leading-snug text-ink-700">Jag har läst och godkänner plattformens <Button type="button" variant="link" className="h-auto p-0 align-baseline font-semibold text-[#0b0a0e] underline underline-offset-2">publiceringsregler</Button> och <Button type="button" variant="link" className="h-auto p-0 align-baseline font-semibold text-[#0b0a0e] underline underline-offset-2">användarvillkor</Button>.</span>
+                      <span className="flex-1 text-[0.88rem] leading-snug text-ink-700">Jag har läst och godkänner plattformens <Button type="button" variant="link" className="h-auto p-0 align-baseline font-semibold text-[#141a2b] underline underline-offset-2">publiceringsregler</Button> och <Button type="button" variant="link" className="h-auto p-0 align-baseline font-semibold text-[#141a2b] underline underline-offset-2">användarvillkor</Button>.</span>
                     </label>
                     <label className="flex items-center gap-3">
                       <Checkbox
@@ -1592,7 +1592,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
 
                   <div className="flex items-center gap-2">
                     {publisherStepDots.map((dot) => (
-                      <span key={dot} className={`h-2.5 rounded-full transition-all ${dot === publisherFlowStep ? "w-7 bg-[#0b0a0e]" : "w-2.5 bg-black/15"}`} />
+                      <span key={dot} className={`h-2.5 rounded-full transition-all ${dot === publisherFlowStep ? "w-7 bg-[#141a2b]" : "w-2.5 bg-black/15"}`} />
                     ))}
                   </div>
 
@@ -1620,7 +1620,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                       </svg>
                     </div>
                     <div>
-                      <h1 className="text-[2.2rem] font-semibold leading-tight text-[#0b0a0e]">
+                      <h1 className="text-[2.2rem] font-semibold leading-tight text-[#141a2b]">
                         {companyAdminProfile.legalEntity || "Bolaget"} är aktivt
                       </h1>
                       <p className="mx-auto mt-3 max-w-[640px] text-[1.1rem] leading-relaxed text-ink-600">
@@ -1633,7 +1633,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                         className="h-auto w-full py-3 text-base"
                         onClick={() => {
                           window.sessionStorage.removeItem("office_onboarding_completion_screen");
-                          navigateTo("/app/admin/profil");
+                          navigateTo("/lokaler");
                         }}
                       >
                         Slutför profil
@@ -1644,7 +1644,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                         className="h-auto w-full py-3 text-base"
                         onClick={() => {
                           window.sessionStorage.removeItem("office_onboarding_completion_screen");
-                          navigateTo("/app/admin");
+                          navigateTo("/lokaler");
                         }}
                       >
                         Gå till admin-panelen
@@ -1656,8 +1656,8 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                     <div>
                       <div className="flex items-start justify-between gap-4">
                         <div>
-                          <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Steg {companyAdminFlowStep + 1} av 4</p>
-                          <h1 className="mt-2 text-[1.95rem] font-semibold leading-tight text-[#0b0a0e]">
+                          <p className="text-xs font-semibold text-ink-500">Steg {companyAdminFlowStep + 1} av 4</p>
+                          <h1 className="mt-2 text-[1.95rem] font-semibold leading-tight text-[#141a2b]">
                             {companyAdminFlowStep === 0
                               ? "Bolagsprofil"
                               : companyAdminFlowStep === 1
@@ -1948,8 +1948,8 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                         <div className="rounded-2xl border border-black/10 bg-[#fafafa] px-4 py-4">
                           <div className="flex items-start justify-between gap-4">
                             <div className="min-w-0">
-                              <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Inbjudningskod · giltig i 30 dagar</p>
-                              <p className="mt-2 text-[1.35rem] font-semibold text-[#0b0a0e]">{companyAdminProfile.inviteCode}</p>
+                              <p className="text-xs font-semibold text-ink-500">Inbjudningskod · giltig i 30 dagar</p>
+                              <p className="mt-2 text-[1.35rem] font-semibold text-[#141a2b]">{companyAdminProfile.inviteCode}</p>
                               <p className="mt-1 text-sm text-ink-500">Dela med era mäklare via e-post eller internt system.</p>
                             </div>
                             <div className="flex shrink-0 items-center gap-2">
@@ -2094,14 +2094,14 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                                   key={option.key}
                                   type="button"
                                   variant="outline"
-                                  className={`h-auto w-full justify-start gap-3 !rounded-2xl px-4 py-3 text-left font-normal ${active ? "border-[#0b0a0e] bg-[#f8fafc]" : "border-black/10 hover:bg-black/5"}`}
+                                  className={`h-auto w-full justify-start gap-3 !rounded-2xl px-4 py-3 text-left font-normal ${active ? "border-[#141a2b] bg-[#f8fafc]" : "border-black/10 hover:bg-black/5"}`}
                                   onClick={() => setCompanyAdminProfile((prev) => ({ ...prev, approvalFlow: option.key }))}
                                 >
-                                  <span className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${active ? "border-[#0b0a0e]" : "border-black/20"}`}>
-                                    <span className={`h-2.5 w-2.5 rounded-full ${active ? "bg-[#0b0a0e]" : "bg-transparent"}`} />
+                                  <span className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${active ? "border-[#141a2b]" : "border-black/20"}`}>
+                                    <span className={`h-2.5 w-2.5 rounded-full ${active ? "bg-[#141a2b]" : "bg-transparent"}`} />
                                   </span>
                                   <span>
-                                    <span className="block text-[0.92rem] font-semibold leading-tight text-[#0b0a0e]">{option.title}</span>
+                                    <span className="block text-[0.92rem] font-semibold leading-tight text-[#141a2b]">{option.title}</span>
                                     <span className="mt-1 block text-[0.8rem] leading-snug text-ink-600">{option.description}</span>
                                   </span>
                                 </Button>
@@ -2131,14 +2131,14 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                                   key={option.key}
                                   type="button"
                                   variant="outline"
-                                  className={`h-auto w-full justify-start gap-3 !rounded-2xl px-4 py-3 text-left font-normal ${active ? "border-[#0b0a0e] bg-[#f8fafc]" : "border-black/10 hover:bg-black/5"}`}
+                                  className={`h-auto w-full justify-start gap-3 !rounded-2xl px-4 py-3 text-left font-normal ${active ? "border-[#141a2b] bg-[#f8fafc]" : "border-black/10 hover:bg-black/5"}`}
                                   onClick={() => setCompanyAdminProfile((prev) => ({ ...prev, listingModeration: option.key }))}
                                 >
-                                  <span className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${active ? "border-[#0b0a0e]" : "border-black/20"}`}>
-                                    <span className={`h-2.5 w-2.5 rounded-full ${active ? "bg-[#0b0a0e]" : "bg-transparent"}`} />
+                                  <span className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${active ? "border-[#141a2b]" : "border-black/20"}`}>
+                                    <span className={`h-2.5 w-2.5 rounded-full ${active ? "bg-[#141a2b]" : "bg-transparent"}`} />
                                   </span>
                                   <span>
-                                    <span className="block text-[0.92rem] font-semibold leading-tight text-[#0b0a0e]">{option.title}</span>
+                                    <span className="block text-[0.92rem] font-semibold leading-tight text-[#141a2b]">{option.title}</span>
                                     <span className="mt-1 block text-[0.8rem] leading-snug text-ink-600">{option.description}</span>
                                   </span>
                                 </Button>
@@ -2163,7 +2163,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                                 checked={companyAdminProfile.termsPlatformRules}
                                 onCheckedChange={(checked) => setCompanyAdminProfile((prev) => ({ ...prev, termsPlatformRules: Boolean(checked) }))}
                               />
-                              <span className="flex-1 text-[0.88rem] leading-snug text-ink-700">Jag har läst och godkänner <Button type="button" variant="link" className="h-auto p-0 align-baseline font-semibold text-[#0b0a0e] underline underline-offset-2">användarvillkoren</Button> och <Button type="button" variant="link" className="h-auto p-0 align-baseline font-semibold text-[#0b0a0e] underline underline-offset-2">publiceringsreglerna</Button>.</span>
+                              <span className="flex-1 text-[0.88rem] leading-snug text-ink-700">Jag har läst och godkänner <Button type="button" variant="link" className="h-auto p-0 align-baseline font-semibold text-[#141a2b] underline underline-offset-2">användarvillkoren</Button> och <Button type="button" variant="link" className="h-auto p-0 align-baseline font-semibold text-[#141a2b] underline underline-offset-2">publiceringsreglerna</Button>.</span>
                             </label>
                           </div>
                         </div>
@@ -2183,7 +2183,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
 
                       <div className="flex items-center gap-2">
                         {companyAdminStepDots.map((dot) => (
-                          <span key={dot} className={`h-2.5 rounded-full transition-all ${dot === companyAdminFlowStep ? "w-7 bg-[#0b0a0e]" : "w-2.5 bg-black/15"}`} />
+                          <span key={dot} className={`h-2.5 rounded-full transition-all ${dot === companyAdminFlowStep ? "w-7 bg-[#141a2b]" : "w-2.5 bg-black/15"}`} />
                         ))}
                       </div>
 
@@ -2203,13 +2203,13 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
 
             {currentStep === "review" ? (
               <div className="space-y-4">
-                <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Personlig information</p>
+                <p className="text-xs font-semibold text-ink-500">Personlig information</p>
                 <div className="flex flex-wrap items-center gap-4 px-1 pb-4">
-                  <div className="inline-flex h-20 w-20 shrink-0 items-center justify-center rounded-full border border-black/10 bg-[#0b0a0e] text-2xl font-semibold text-white">
+                  <div className="inline-flex h-20 w-20 shrink-0 items-center justify-center rounded-full border border-black/10 bg-[#141a2b] text-2xl font-semibold text-white">
                     {accountInitial || "A"}
                   </div>
                   <div className="min-w-[220px] flex-1">
-                    <p className="text-[1.35rem] font-semibold leading-tight text-[#0b0a0e]">{account.name || "Namn saknas"}</p>
+                    <p className="text-[1.35rem] font-semibold leading-tight text-[#141a2b]">{account.name || "Namn saknas"}</p>
                     <p className="mt-1 text-sm text-ink-600">{account.email || "-"}</p>
                     <p className="mt-0.5 text-sm text-ink-600">{account.phone || "Telefon ej angivet"}</p>
                   </div>
@@ -2223,7 +2223,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                   <div className="px-1 pt-5">
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Lokalprogram</p>
+                        <p className="text-xs font-semibold text-ink-500">Lokalprogram</p>
                       </div>
                     </div>
 
@@ -2234,7 +2234,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                             <Icon className="h-4 w-4" />
                           </span>
                           <div className="min-w-0">
-                            <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">{label}</p>
+                            <p className="text-[11px] font-semibold text-ink-500">{label}</p>
                             <p className="mt-0.5 text-[1rem] font-semibold text-ink-800">{value}</p>
                           </div>
                         </div>
@@ -2243,7 +2243,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
 
                     {selectedProgramAmenities.length ? (
                       <div className="mt-4 border-t border-black/10 pt-4">
-                        <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-ink-500">Bekvämligheter</p>
+                        <p className="mb-2 text-[11px] font-semibold text-ink-500">Bekvämligheter</p>
                         <div className="flex flex-wrap gap-2">
                           {selectedProgramAmenities.map((amenity) => {
                             const amenityMatch = amenityOptions.find((option) => normalizeAmenity(option.value) === normalizeAmenity(amenity));
@@ -2263,7 +2263,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
 
                 {primaryRole === "broker" ? (
                   <div className="px-1 pt-5">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Publiceringsprofil</p>
+                    <p className="text-xs font-semibold text-ink-500">Publiceringsprofil</p>
                     <div className="mt-5 grid gap-4 sm:grid-cols-2">
                       {[
                         { label: "Fastighetstyp", value: publisherProfile.propertyType || "-" },
@@ -2274,7 +2274,7 @@ function OnboardingPage({ user, onComplete, onCheckCompanyByOrganizationNumber, 
                         { label: "Godkända villkor", value: publisherProfile.termsEmployerAuthority && publisherProfile.termsPublishingRules && publisherProfile.termsSuspensionAware ? "Ja" : "Nej" }
                       ].map(({ label, value }) => (
                         <div key={label} className="rounded-2xl border border-black/10 bg-[#ffffff] px-4 py-3">
-                          <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">{label}</p>
+                          <p className="text-[11px] font-semibold text-ink-500">{label}</p>
                           <p className="mt-1 text-[1rem] font-semibold text-ink-800">{value}</p>
                         </div>
                       ))}

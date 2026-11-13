@@ -18,12 +18,11 @@ export const Default = {
 
 export const CustomLabel = { args: { buttonLabel: "Se Premium-planer" } };
 
-// PremiumPromoCard highlights "Lokalflöde Premium" in a bg-[#f3d571] chip — the only
-// hardcoded-hex color in the file, so it's a precise, non-Tailwind-theme-dependent
-// proof that the shared preview's CSS actually loaded.
+// The card is the site's dark band (bg-[#0f1422]), a hardcoded hex, so it is a precise,
+// non-Tailwind-theme-dependent proof that the shared preview's CSS actually loaded.
 export const CssCheck = {
   play: async ({ canvas }) => {
-    const chip = canvas.getByText("Lokalflöde Premium");
-    await expect(getComputedStyle(chip).backgroundColor).toBe("rgb(243, 213, 113)");
+    const card = canvas.getByText("LOA Premium").closest("[data-premium-card]");
+    await expect(getComputedStyle(card).backgroundColor).toBe("rgb(15, 20, 34)");
   }
 };

@@ -14,7 +14,7 @@ function MapListingPreviewCard({ listing, onOpen, className = "" }) {
       <img src={listing.image} alt={listing.title} className="h-28 w-full object-cover" />
       <div className="flex items-center gap-2 px-3 py-3">
         <Icon name="pin" className="h-4 w-4 shrink-0 text-ink-500" />
-        <p className="text-sm font-medium leading-tight text-[#0b0a0e]">{buildAddress(listing)}</p>
+        <p className="text-sm font-medium leading-tight text-[#141a2b]">{buildAddress(listing)}</p>
       </div>
     </div>
   );

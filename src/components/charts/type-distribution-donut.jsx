@@ -25,7 +25,7 @@ function TypeDistributionDonut({
       <p className="mt-1 text-sm text-ink-600">{subtitle}</p>
 
       <div className="mt-4 flex justify-center">
-        <PieChart data={slices} size={180} innerRadius={54} padAngle={slices.length > 1 ? 0.03 : 0} hoverOffset={6}>
+        <PieChart data={slices} size={180} innerRadius={74} padAngle={slices.length > 1 ? 0.03 : 0} hoverOffset={6}>
           {slices.map((slice, index) => (
             <PieSlice key={slice.label} index={index} showGlow={false} />
           ))}

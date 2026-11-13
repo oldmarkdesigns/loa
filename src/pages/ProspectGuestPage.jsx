@@ -2,9 +2,7 @@ import { useEffect, useState } from "react";
 import { prospectCommentsApi, prospectSharingApi } from "../api";
 import StatusPill from "../components/app/StatusPill";
 import ProspectCommentThread from "../components/app/ProspectCommentThread";
-import TopLeftLogoPlaceholder from "../components/layout/TopLeftLogoPlaceholder";
-import { PaperclipIcon } from "../components/icons/UiIcons";
-import { Badge } from "@/components/ui/badge";
+import { Arrow, PageHead, SiteFrame } from "../site/SiteChrome";
 
 function ProspectGuestPage({ token }) {
   const [prospect, setProspect] = useState(null);
@@ -61,68 +59,80 @@ function ProspectGuestPage({ token }) {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#fafafa] px-4">
-        <p className="text-sm text-ink-600">Laddar prospekt...</p>
-      </div>
+      <SiteFrame slim navActions={false}>
+        <PageHead label="Delat prospekt" title="Hämtar prospektet…">
+          <div role="status" aria-live="polite">
+            <div className="lo-progress" />
+          </div>
+        </PageHead>
+      </SiteFrame>
     );
   }
 
   if (error || !prospect) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#fafafa] px-4">
-        <TopLeftLogoPlaceholder />
-        <div className="surface max-w-md p-6 text-center">
-          <h1 className="text-xl font-semibold text-ink-900">Länken fungerar inte</h1>
-          <p className="mt-2 text-sm text-ink-600">{error || "Prospektet hittades inte."}</p>
-        </div>
-      </div>
+      <SiteFrame slim navActions={false}>
+        <PageHead back="Startsida" label="Delat prospekt" title="Länken fungerar inte." lede={error || "Prospektet hittades inte. Be avsändaren om en ny länk."} />
+      </SiteFrame>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#fafafa] pb-16">
-      <TopLeftLogoPlaceholder />
-      <div className="mx-auto max-w-5xl px-4 pt-24 sm:px-6">
-        <header className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Delat prospekt</p>
-            <h1 className="mt-1 text-2xl font-semibold text-ink-900">{prospect.title}</h1>
-          </div>
+    <SiteFrame slim navActions={false}>
+      <PageHead label="Delat prospekt" title={prospect.title} lede="Läs igenom, och lämna gärna en kommentar på det som berör dig.">
+        <div className="lo-page-meta">
           <StatusPill status={prospect.status} variant="prospect" />
-        </header>
+          <span>{prospect.publishedSections.length} avsnitt</span>
+          <a className="lo-link" href="#kommentarer">
+            Till kommentarerna
+            <Arrow />
+          </a>
+        </div>
+      </PageHead>
 
-        <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
-          <div className="space-y-4">
-            {prospect.publishedSections.length === 0 ? (
-              <p className="surface p-6 text-sm text-ink-600">Inget publicerat innehåll än.</p>
-            ) : (
-              prospect.publishedSections.map((section) => (
-                <section key={section.id} className="surface p-4 sm:p-5">
-                  <h2 className="text-lg font-semibold text-[#0b0a0e]">{section.title}</h2>
-                  <p className="mt-2 whitespace-pre-wrap text-sm text-ink-700">{section.body}</p>
-                  {section.attachments?.length > 0 ? (
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {section.attachments.map((attachment, index) => (
-                        <Badge
-                          key={`${attachment.storageId}-${index}`}
-                          variant="outline"
-                          className="h-auto gap-1.5 rounded-2xl border-ink-200 bg-[#ffffff] px-3 py-1 text-xs font-semibold text-ink-700 hover:bg-[#ffffff]"
-                          render={<a href={attachment.url} target="_blank" rel="noopener noreferrer" />}
-                        >
-                          <PaperclipIcon className="h-3.5 w-3.5" />
-                          {attachment.fileName}
-                        </Badge>
-                      ))}
-                    </div>
-                  ) : null}
-                </section>
-              ))
-            )}
+      {prospect.publishedSections.length === 0 ? (
+        <section className="lo-section">
+          <div className="lo-wrap">
+            <p className="lo-muted">Inget publicerat innehåll än.</p>
           </div>
+        </section>
+      ) : (
+        prospect.publishedSections.map((section, index) => (
+          <section key={section.id} className="lo-section">
+            <div className="lo-wrap lo-split">
+              <div className="lo-section-side">
+                <p className="lo-label">{String(index + 1).padStart(2, "0")}</p>
+                <h2 className="lo-section-title">{section.title}</h2>
+              </div>
+              <div className="lo-section-body">
+                <p className="lo-lede" style={{ whiteSpace: "pre-wrap" }}>{section.body}</p>
+                {section.attachments?.length > 0 ? (
+                  <ul className="lo-rules lo-rules--one">
+                    {section.attachments.map((attachment, attachmentIndex) => (
+                      <li key={`${attachment.storageId}-${attachmentIndex}`}>
+                        <a className="lo-link" href={attachment.url} target="_blank" rel="noopener noreferrer">
+                          {attachment.fileName}
+                          <Arrow />
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
+            </div>
+          </section>
+        ))
+      )}
 
-          <aside className="surface flex h-[560px] flex-col p-4 sm:p-5">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-500">Kommentarer</h2>
-            <div className="mt-3 min-h-0 flex-1">
+      <section className="lo-section" id="kommentarer">
+        <div className="lo-wrap lo-split">
+          <div className="lo-section-side">
+            <p className="lo-label">Kommentarer</p>
+            <h2 className="lo-section-title">Tyck till.</h2>
+            <p className="lo-section-intro">Välj ett avsnitt, skriv ditt namn och din kommentar. Den syns för avsändaren i prospektet.</p>
+          </div>
+          <div className="lo-section-body">
+            <div className="lo-app" style={{ width: "100%", height: 560 }}>
               <ProspectCommentThread
                 sections={prospect.publishedSections}
                 comments={comments}
@@ -133,10 +143,10 @@ function ProspectGuestPage({ token }) {
                 onGuestNameChange={updateGuestName}
               />
             </div>
-          </aside>
+          </div>
         </div>
-      </div>
-    </div>
+      </section>
+    </SiteFrame>
   );
 }
 

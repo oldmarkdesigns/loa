@@ -581,7 +581,7 @@ function PanelProfileSection({ app, page = "profil" }) {
                       </Badge>
                     ) : null}
                   </div>
-                  <p className="mt-0.5 text-[11px] font-semibold uppercase tracking-[0.1em] text-ink-500">{renter.title}</p>
+                  <p className="mt-0.5 text-[11px] font-semibold  tracking-[0.1em] text-ink-500">{renter.title}</p>
                   <p className="mt-1 text-sm leading-5 text-ink-700">{renter.summary}</p>
                   <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-ink-600">
                     <li className="flex items-center gap-1.5"><CalendarIcon className="h-3.5 w-3.5" />{renter.timeline}</li>
@@ -647,7 +647,7 @@ function PanelProfileSection({ app, page = "profil" }) {
                 </Button>
               </div>
 
-              {(programStep === null || programStep === 0) && <div className={`${programStep === null ? "mt-4" : ""} grid gap-3 sm:grid-cols-2 lg:grid-cols-12`}><h4 hidden={programStep !== null} className="border-b border-border pb-1.5 pt-1 text-xs font-semibold uppercase tracking-wide text-ink-600 sm:col-span-2 lg:col-span-12">Grunduppgifter</h4>
+              {(programStep === null || programStep === 0) && <div className={`${programStep === null ? "mt-4" : ""} grid gap-3 sm:grid-cols-2 lg:grid-cols-12`}><h4 hidden={programStep !== null} className="border-b border-border pb-1.5 pt-1 text-xs font-semibold text-ink-600 sm:col-span-2 lg:col-span-12">Grunduppgifter</h4>
 <label className="flex min-w-0 flex-col justify-end gap-1.5 lg:col-span-4">
                   <span className="text-xs font-semibold text-ink-600">{programStep === null ? "Namn på lokalprogram" : "Vad vill du kalla lokalprogrammet?"}</span>
                   <Input
@@ -682,7 +682,7 @@ function PanelProfileSection({ app, page = "profil" }) {
                 </label>
 
                 </div>}
-{(programStep === null || programStep === 1) && <div className={`${programStep === null ? "mt-4" : ""} grid gap-3 sm:grid-cols-2 lg:grid-cols-12`}><h4 hidden={programStep !== null} className="border-b border-border pb-1.5 pt-1 text-xs font-semibold uppercase tracking-wide text-ink-600 sm:col-span-2 lg:col-span-12">Storlek och budget</h4>
+{(programStep === null || programStep === 1) && <div className={`${programStep === null ? "mt-4" : ""} grid gap-3 sm:grid-cols-2 lg:grid-cols-12`}><h4 hidden={programStep !== null} className="border-b border-border pb-1.5 pt-1 text-xs font-semibold text-ink-600 sm:col-span-2 lg:col-span-12">Storlek och budget</h4>
 <label className="flex min-w-0 flex-col justify-end gap-1.5 lg:col-span-3">
                   <span className="text-xs font-semibold text-ink-600">{programStep === null ? "Minst platser" : "Hur många platser behövs?"}</span>
                   <Input type="number" min="0" value={programDraft.teamSize} onChange={(event) => setProgramDraft((prev) => ({ ...prev, teamSize: event.target.value }))} />
@@ -704,7 +704,7 @@ function PanelProfileSection({ app, page = "profil" }) {
                 </label>
 
                 </div>}
-{(programStep === null || programStep === 2) && <div className={`${programStep === null ? "mt-4" : ""} grid gap-3 sm:grid-cols-2 lg:grid-cols-12`}><h4 hidden={programStep !== null} className="border-b border-border pb-1.5 pt-1 text-xs font-semibold uppercase tracking-wide text-ink-600 sm:col-span-2 lg:col-span-12">Tid och avtal</h4>
+{(programStep === null || programStep === 2) && <div className={`${programStep === null ? "mt-4" : ""} grid gap-3 sm:grid-cols-2 lg:grid-cols-12`}><h4 hidden={programStep !== null} className="border-b border-border pb-1.5 pt-1 text-xs font-semibold text-ink-600 sm:col-span-2 lg:col-span-12">Tid och avtal</h4>
 <label className="flex min-w-0 flex-col justify-end gap-1.5 lg:col-span-6">
                   <span className="text-xs font-semibold text-ink-600">{programStep === null ? "Inflyttning" : "När vill ni flytta in?"}</span>
                   <Input type="date" value={programDraft.moveInDate} onChange={(event) => setProgramDraft((prev) => ({ ...prev, moveInDate: event.target.value }))} />
@@ -721,7 +721,7 @@ function PanelProfileSection({ app, page = "profil" }) {
                 </label>
 
                 </div>}
-{(programStep === null || programStep === 3) && <div className={`${programStep === null ? "mt-4" : ""} grid gap-3 sm:grid-cols-2 lg:grid-cols-12`}><h4 hidden={programStep !== null} className="border-b border-border pb-1.5 pt-1 text-xs font-semibold uppercase tracking-wide text-ink-600 sm:col-span-2 lg:col-span-12">Läge och tillgång</h4>
+{(programStep === null || programStep === 3) && <div className={`${programStep === null ? "mt-4" : ""} grid gap-3 sm:grid-cols-2 lg:grid-cols-12`}><h4 hidden={programStep !== null} className="border-b border-border pb-1.5 pt-1 text-xs font-semibold text-ink-600 sm:col-span-2 lg:col-span-12">Läge och tillgång</h4>
 <label className="flex min-w-0 flex-col justify-end gap-1.5 lg:col-span-3">
                   <span className="text-xs font-semibold text-ink-600">{programStep === null ? "Kollektivtrafik" : "Hur nära kollektivtrafik?"}</span>
                   <Select value={programDraft.transitDistance || "Alla"} onValueChange={(value) => setProgramDraft((prev) => ({ ...prev, transitDistance: value === "Alla" ? "" : value }))}>
@@ -764,7 +764,7 @@ function PanelProfileSection({ app, page = "profil" }) {
               </div>}
               <div hidden={programStep !== null && programStep !== 4} className="mt-4 border-b border-veil/10 pb-4">
                 <Card className="w-fit max-w-full gap-0 py-0 rounded-lg p-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-700">Särskilda krav</p>
+                  <p className="text-[11px] font-semibold text-ink-700">Särskilda krav</p>
                   <div className="mt-2 grid grid-cols-1 gap-2">
                     <label className="inline-flex items-center gap-2 text-sm text-ink-700">
                       <Checkbox

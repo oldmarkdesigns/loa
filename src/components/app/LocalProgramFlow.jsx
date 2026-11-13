@@ -653,7 +653,7 @@ export default function LocalProgramFlow({ existingCount = 0, onCreate, onShowMa
                             <p className="flex items-center gap-2 text-sm font-semibold text-ink-900">
                               <Sparkles aria-hidden="true" className="h-4 w-4" />
                               Så här förstod jag din beskrivning
-                              <Badge variant="secondary" className="h-auto px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide">AI</Badge>
+                              <Badge variant="secondary" className="h-auto px-2 py-0.5 text-[10px] font-semibold">AI</Badge>
                             </p>
                             <p className="mt-1.5 text-sm leading-relaxed text-ink-600">
                               Jag hittade {understood.found.length} {understood.found.length === 1 ? "uppgift" : "uppgifter"}

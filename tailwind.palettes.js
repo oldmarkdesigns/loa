@@ -29,18 +29,18 @@ const colorOf = (name) => `rgb(var(--${name}) / <alpha-value>)`;
 
 /** [light, dark] hex of each app token. Light is what the panels have always used. */
 export const APP_TOKENS = {
-  canvas: ["#fafafa", "#050608"], // the page behind the cards (in dark nearly black, so that the containers on it read as a layer of their own)
-  page: ["#ffffff", "#050608"], // the page of search mode (white, where the panels have the off-white canvas; in dark the same near-black as the canvas)
-  surface: ["#ffffff", "#0f1115"], // the containers: cards, panels, the side menu (in dark a step above the canvas, with a hairline, and everything that sits on them is lighter again)
-  control: ["#ffffff", "#171a20"], // what is pressed or typed into and sits on a container: buttons, chips, fields, toggle tracks (in dark clearly lighter than the container under them, so that the eye finds them first)
-  subtle: ["#f5f5f5", "#14171c"], // a row under the pointer, a zebra stripe
-  tint: ["#f3f7f7", "#1b1e25"], // chips and soft fills (secondary buttons)
-  "tint-2": ["#eef2f8", "#242830"], // selected and highlighted fills
-  "tint-3": ["#dde7eb", "#2f3540"], // stronger fills, tracks
-  line: ["#d7e2ee", "#282d36"], // borders with a hue
-  "line-2": ["#bfd0e3", "#383e4a"], // stronger borders
-  strong: ["#0b0a0e", "#eceef2"], // headings, and the dark fill of primary buttons and active pills
-  "on-strong": ["#ffffff", "#08090b"] // what is written on a strong fill
+  canvas: ["#f7f7f8", "#0a0d16"], // the page behind the cards (in dark a deep navy, so that the containers on it read as a layer of their own)
+  page: ["#ffffff", "#0a0d16"], // the page of search mode (white, where the panels have the off-white canvas)
+  surface: ["#ffffff", "#11151f"], // the containers: cards, panels, the side menu
+  control: ["#ffffff", "#181d29"], // what is pressed or typed into and sits on a container: buttons, chips, fields, toggle tracks
+  subtle: ["#f5f6f8", "#151a25"], // a row under the pointer, a zebra stripe
+  tint: ["#f2f3f6", "#1c2130"], // chips and soft fills (secondary buttons)
+  "tint-2": ["#eceef3", "#252b3b"], // selected and highlighted fills
+  "tint-3": ["#dfe2e9", "#303749"], // stronger fills, tracks
+  line: ["#e3e5ea", "#272d3c"], // hairlines
+  "line-2": ["#cfd3dc", "#384054"], // stronger hairlines
+  strong: ["#141a2b", "#eceef4"], // headings, and the dark fill of primary buttons and active pills: the navy-graphite of the logo
+  "on-strong": ["#ffffff", "#0a0d16"] // what is written on a strong fill
 };
 
 /** The colour that overlays are made of: black at low opacity on a light page, white on a dark one. */
@@ -56,13 +56,15 @@ const VEIL_GAIN = ["1", "1.25"];
 // ── The app's own scales ─────────────────────────────────────────────────────────────────────────
 
 const INK = {
-  light: { 50: "#f5f7f7", 100: "#e6ebeb", 200: "#cfd8d7", 300: "#adbdbc", 400: "#859b9a", 500: "#68817f", 600: "#536a69", 700: "#465657", 800: "#3c4949", 900: "#343f3f" },
-  dark: { 50: "#111317", 100: "#191c21", 200: "#252932", 300: "#6b7a8c", 400: "#7f8fa1", 500: "#93a2b3", 600: "#aebbc9", 700: "#c6d0da", 800: "#dbe2e9", 900: "#eef1f5" }
+  // Navy-graphite, the greys of the public site (ink-600 is its secondary text, ink-400 its quiet text).
+  light: { 50: "#f6f7f9", 100: "#eceef2", 200: "#dcdfe6", 300: "#bcc1cc", 400: "#8b8f9a", 500: "#6f7483", 600: "#5b6070", 700: "#444a5b", 800: "#2e3446", 900: "#1d2334" },
+  dark: { 50: "#0f1320", 100: "#161b2a", 200: "#222839", 300: "#646c82", 400: "#7c8499", 500: "#959cb0", 600: "#b0b6c6", 700: "#c8cdd9", 800: "#dde1ea", 900: "#eff1f6" }
 };
 
 const BRAND = {
-  light: { 50: "#f3f7fb", 100: "#e4ecf6", 200: "#cad9ec", 300: "#a7c0df", 400: "#7ea1cc", 500: "#5d84b8", 600: "#476a99", 700: "#3b557c", 800: "#344867", 900: "#2f3e56" },
-  dark: { 50: "#10161f", 100: "#151e2d", 200: "#1c2a40", 300: "#2a3b57", 400: "#5476a5", 500: "#6f92c1", 600: "#8fb0da", 700: "#a9c3e6", 800: "#c4d6ef", 900: "#dbe6f5" }
+  // A steel navy beside the ink: the one quiet hue the product has, for links, selections and the second series of a chart.
+  light: { 50: "#f3f5f9", 100: "#e5e9f1", 200: "#ccd3e2", 300: "#a9b4cc", 400: "#7e8cab", 500: "#5c6b8d", 600: "#475574", 700: "#39445e", 800: "#2c354b", 900: "#1f2638" },
+  dark: { 50: "#10141f", 100: "#161c2b", 200: "#1f2840", 300: "#2d3a57", 400: "#5a6c94", 500: "#7587ad", 600: "#94a4c6", 700: "#b1bed9", 800: "#cdd6ea", 900: "#e3e8f4" }
 };
 
 // ── Standard hues, mirrored ──────────────────────────────────────────────────────────────────────

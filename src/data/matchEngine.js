@@ -120,10 +120,10 @@ export function parseNeedsFromPrompt(prompt) {
   }
 
   const budgetPatterns = [
-    /under\s*(\d{2,6})\s*(k|kr|sek)?/,
-    /max\s*(\d{2,6})\s*(k|kr|sek)?/,
-    /högst\s*(\d{2,6})\s*(k|kr|sek)?/,
-    /(\d{2,6})\s*(k|kr|sek)\s*budget/
+    /under\s*(\d{2,6})\s*(kr|sek|k)?/,
+    /max\s*(\d{2,6})\s*(kr|sek|k)?/,
+    /högst\s*(\d{2,6})\s*(kr|sek|k)?/,
+    /(\d{2,6})\s*(kr|sek|k)\s*budget/
   ];
 
   for (const pattern of budgetPatterns) {

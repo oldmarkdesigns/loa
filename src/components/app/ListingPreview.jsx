@@ -37,7 +37,7 @@ function ListingPreview({ draft }) {
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-ink-500">Yta</p>
+            <p className="mb-1 text-[11px] font-semibold text-ink-500">Yta</p>
             <Input
               readOnly
               aria-label="Storlek"
@@ -46,7 +46,7 @@ function ListingPreview({ draft }) {
             />
           </div>
           <div>
-            <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-ink-500">Platser</p>
+            <p className="mb-1 text-[11px] font-semibold text-ink-500">Platser</p>
             <Input
               readOnly
               aria-label="Kapacitet"
@@ -57,7 +57,7 @@ function ListingPreview({ draft }) {
         </div>
 
         <div className="flex flex-wrap gap-1.5">
-          <p className="w-full text-[11px] font-semibold uppercase tracking-wide text-ink-500">Bekvämligheter</p>
+          <p className="w-full text-[11px] font-semibold text-ink-500">Bekvämligheter</p>
           {mergedAmenities.length === 0 ? <span className="text-xs text-ink-500">Inga bekvämligheter valda.</span> : null}
           {mergedAmenities.slice(0, 8).map((amenity) => {
             const Icon = amenityIconFor(amenity);
@@ -71,7 +71,7 @@ function ListingPreview({ draft }) {
         </div>
 
         <p className="text-sm text-ink-700">
-          <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-500">Beskrivning</span>
+          <span className="mb-1 block text-[11px] font-semibold text-ink-500">Beskrivning</span>
           {draft.description.trim() || "Lägg till en tydlig objektbeskrivning för att öka kvalitet och konvertering."}
         </p>
       </div>

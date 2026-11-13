@@ -48,7 +48,7 @@ function LocalProgramPickerModal({ programs, onClose, onSelect }) {
     >
       <DialogContent showCloseButton={false} className="max-w-lg rounded-3xl border border-veil/10 bg-surface p-5 sm:p-6">
         <DialogHeader className="gap-1 text-left">
-          <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Lokalprogram</p>
+          <p className="text-xs font-semibold text-ink-500">Lokalprogram</p>
           <DialogTitle className="text-lg font-semibold text-ink-900">Vilket lokalprogram vill ni söka med?</DialogTitle>
           <DialogDescription className="text-sm text-ink-600">
             Ni har flera lokalprogram sparade i profilen. Välj vilket som ska styra sökningen.

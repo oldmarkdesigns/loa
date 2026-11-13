@@ -53,17 +53,16 @@ export function normalizeAppRole(role) {
   return role === "company_admin" || role === "broker" || role === "renter" ? role : "renter";
 }
 
-export function defaultAppPathForRole(role) {
-  const normalizedRole = normalizeAppRole(role);
-  if (normalizedRole === "company_admin") return "/app/admin";
-  return normalizedRole === "broker" ? "/app/broker" : "/app/rent";
-}
+// Legacy roles never select a legacy panel in LOA.
+export function defaultAppPathForRole() { return "/lokaler"; }
+export function defaultAppPathForUser() { return "/lokaler"; }
 
-export function defaultAppPathForUser(user) {
-  if (!user) return "/app/rent";
-  const normalizedRoles = Array.isArray(user.roles)
-    ? user.roles.map(normalizeAppRole)
-    : [normalizeAppRole(user.role)];
-  if (normalizedRoles.includes("company_admin")) return "/app/admin";
-  return defaultAppPathForRole(user.role);
+export function publicReturnTo(value) {
+  if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//")) return "/lokaler";
+  try {
+    const url = new URL(value, window.location.origin);
+    if (url.origin !== window.location.origin) return "/lokaler";
+    return url.pathname === "/lokaler" || /^\/lokaler\/[^/]+$/.test(url.pathname)
+      ? url.pathname + url.search + url.hash : "/lokaler";
+  } catch { return "/lokaler"; }
 }

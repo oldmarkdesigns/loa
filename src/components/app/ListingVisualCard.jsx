@@ -222,7 +222,7 @@ function ListingVisualCard({
             <div className="space-y-1">
               <div className="flex items-center justify-between gap-3">
                 <h3 className="text-lg font-semibold leading-tight text-strong">{listing.title}</h3>
-                <p className="inline-flex shrink-0 items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-strong">
+                <p className="inline-flex shrink-0 items-center gap-1.5 text-xs font-semibold text-strong">
                   <Icon name="crown" className="h-3.5 w-3.5" />
                   <span>UTVALD</span>
                 </p>
@@ -276,7 +276,7 @@ function ListingVisualCard({
                 <CalendarIcon className="h-4 w-4" />
                 Boka visning
               </Button>
-              <div className="inline-flex items-center rounded-xl border border-veil/10 bg-canvas px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-ink-600">
+              <div className="inline-flex items-center rounded-xl border border-veil/10 bg-canvas px-3 py-1.5 text-xs font-semibold text-ink-600">
                 Hyresvärd
               </div>
             </div>
@@ -380,7 +380,7 @@ function ListingVisualCard({
               <CalendarIcon className="h-4 w-4" />
               Boka visning
             </Button>
-            <div className="inline-flex items-center rounded-xl border border-veil/10 bg-canvas px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-ink-600">
+            <div className="inline-flex items-center rounded-xl border border-veil/10 bg-canvas px-3 py-1.5 text-xs font-semibold text-ink-600">
               Hyresvärd
             </div>
           </div>

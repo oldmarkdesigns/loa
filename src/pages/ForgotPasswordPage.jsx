@@ -1,9 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@workos-inc/authkit-react";
 import { navigateTo } from "../lib/router";
-import AuthFlowNav from "../components/layout/AuthFlowNav";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { AccountLayout, Arrow, Field, SiteFrame } from "../site/SiteChrome";
 
 function ForgotPasswordPage() {
   const { signIn } = useAuth();
@@ -11,57 +9,54 @@ function ForgotPasswordPage() {
   const [sent, setSent] = useState(false);
 
   return (
-    <main className="grid min-h-screen place-items-center bg-[#f6f7f8] px-4 pb-8 pt-28">
-      <AuthFlowNav />
-      <div className="w-full max-w-[460px]">
-        <div className="rounded-[30px] border border-black/10 bg-[#ffffff] px-6 py-7 sm:px-7 sm:py-8">
-          <h1 className="text-[1.95rem] font-semibold leading-tight text-[#0b0a0e]">Glömt lösenord</h1>
-          <p className="mt-1 text-sm text-ink-600">
-            Ange din e-postadress så skickar vi en återställningslänk.
-          </p>
+    <SiteFrame slim navActions={false}>
+      <AccountLayout
+        label="Konto"
+        title={sent ? "Kolla din inkorg." : "Glömt lösenordet?"}
+        lede={
+          sent
+            ? "Om det finns ett konto för adressen har vi skickat en länk."
+            : "Ange e-postadressen du loggar in med, så skickar vi en länk för att välja ett nytt."
+        }
+      >
+        <form
+          className="lo-form"
+          onSubmit={(event) => {
+            event.preventDefault();
+            setSent(true);
+          }}
+        >
+          <Field label="E-post">
+            <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" placeholder="namn@foretag.se" required />
+          </Field>
 
-          <form
-            className="mt-5 space-y-3"
-            onSubmit={(event) => {
-              event.preventDefault();
-              setSent(true);
-            }}
-          >
-            <label className="block">
-              <span className="mb-1 block text-xs font-semibold text-ink-700">E-post</span>
-              <Input
-                type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                required
-              />
-            </label>
+          {sent ? (
+            <p className="lo-note is-done" role="status">
+              Länken är skickad till {email}. Hittar du den inte? Titta i skräpposten eller skicka igen.
+            </p>
+          ) : null}
 
-            <Button type="submit" className="h-auto w-full rounded-full bg-[#0b0a0e] px-4 py-3 text-sm font-semibold text-white hover:bg-[#0b0a0e]/90">
-              Skicka återställningslänk
-            </Button>
+          <div className="lo-actions">
+            <button type="submit" className="lo-btn">
+              {sent ? "Skicka igen" : "Skicka länk"}
+              <Arrow />
+            </button>
+          </div>
 
-            {sent ? <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700">Om kontot finns har vi skickat en återställningslänk.</p> : null}
-          </form>
-
-          <div className="mt-4 text-center">
-            <p className="text-xs text-ink-700">Minns du lösenordet?</p>
-            <Button
+          <p className="lo-account-alt">
+            Minns du lösenordet?
+            <button
               type="button"
-              variant="outline"
-              className="mt-2 h-auto rounded-full border-black/20 px-4 py-2 text-xs font-semibold text-ink-700 hover:bg-[#f8fafc]"
-              onClick={() => signIn({ state: { returnTo: "/app/rent" } }).catch(() => navigateTo("/"))}
+              className="lo-text-btn"
+              onClick={() => signIn({ state: { returnTo: "/lokaler" } }).catch(() => navigateTo("/"))}
             >
               Logga in
-            </Button>
-          </div>
-        </div>
-
-        <p className="mt-4 text-center text-[11px] leading-relaxed text-ink-500">
-          Genom att fortsätta godkänner du Lokalflödes användarvillkor och integritetspolicy.
-        </p>
-      </div>
-    </main>
+            </button>
+          </p>
+        </form>
+        <p className="lo-fine">Genom att fortsätta godkänner du LOA:s användarvillkor och integritetspolicy.</p>
+      </AccountLayout>
+    </SiteFrame>
   );
 }
 

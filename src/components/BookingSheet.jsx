@@ -22,7 +22,7 @@ function BookingSheet({ listing, onClose, onSubmit }) {
       >
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-brand-700">Boka visning</p>
+            <p className="text-xs font-semibold text-brand-700">Boka visning</p>
             <h2 className="font-display text-2xl font-semibold text-ink-900">
               {listing ? listing.title : "Starta flöde"}
             </h2>

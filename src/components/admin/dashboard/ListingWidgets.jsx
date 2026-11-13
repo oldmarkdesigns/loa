@@ -46,7 +46,7 @@ export function ListingStatusWidget({ listings, loading, error }) {
             <PieChart
               data={slices.map((segment) => ({ label: segment.label, value: segment.value, color: colorOf(segment), fill: hatched(segment) ? `url(#${hatchIdOf(segment)})` : undefined }))}
               size={180}
-              innerRadius={58}
+              innerRadius={74}
               padAngle={slices.length > 1 ? 0.03 : 0}
               hoverOffset={6}
             >

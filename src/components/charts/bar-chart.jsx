@@ -141,12 +141,22 @@ const ChartCore = memo(function ChartCore({
     const range = isHorizontal
       ? [0, innerHeight]
       : [0, innerWidth];
+    // Bars stay slim however wide the chart is: when the band would be wider
+    // than a few thin columns, the padding grows instead (house style).
+    const length = isHorizontal ? innerHeight : innerWidth;
+    const n = Math.max(1, domain.length);
+    const series = Math.max(1, lines.length);
+    const maxBand = series * 16 + (series - 1) * 4;
+    const plain = length * (1 - barGap) / (n + barGap);
+    const padding = barWidthProp || plain <= maxBand
+      ? barGap
+      : Math.min(0.92, Math.max(barGap, (length - maxBand * n) / (length + maxBand)));
     return scaleBand({
       range,
       domain,
-      padding: barGap,
+      padding,
     });
-  }, [innerWidth, innerHeight, data, categoryAccessor, barGap, isHorizontal]);
+  }, [innerWidth, innerHeight, data, categoryAccessor, barGap, isHorizontal, lines.length, barWidthProp]);
 
   // Band width for bars - use prop if provided, otherwise use scale's bandwidth
   const bandWidth = barWidthProp ?? categoryScale.bandwidth();

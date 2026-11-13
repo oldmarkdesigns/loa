@@ -1,15 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@workos-inc/authkit-react";
-import { RadioGroup as RadioGroupPrimitive } from "@base-ui/react/radio-group";
-import { Radio as RadioPrimitive } from "@base-ui/react/radio";
 import { defaultAppPathForUser, navigateTo } from "../lib/router";
-import AuthFlowNav from "../components/layout/AuthFlowNav";
-import { BuildingIcon, UserIcon } from "../components/icons/UiIcons";
 import { hasConvexConfig, hasWorkosConfig } from "../lib/convex";
+import { AccountLayout, Arrow, Field, SiteFrame } from "../site/SiteChrome";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const SIGNUP_DRAFT_STORAGE_KEY = "office_rental_signup_draft";
 const STEP_INTENT = 2;
@@ -525,112 +520,69 @@ function SignupPage({ onCheckCompanyByOrganizationNumber, onCompleteSignup, curr
     navigateTo("/", { replace: true });
   }
 
-  function renderIntentStep() {
+  function renderChoices(name, value, options, onChange) {
     return (
-      <div className="mt-1">
-        <RadioGroupPrimitive
-          value={form.intentSelection}
-          onValueChange={applyIntentSelection}
-          aria-label="Välj riktning"
-          className="grid grid-cols-2 gap-3"
-        >
-          {[
-            { value: "rent", label: "Jag vill hyra", Icon: UserIcon },
-            { value: "lease-out", label: "Jag vill hyra ut", Icon: BuildingIcon }
-          ].map((option) => {
-            const selected = form.intentSelection === option.value;
-            const Icon = option.Icon;
-            return (
-              <RadioPrimitive.Root
-                key={option.value}
-                value={option.value}
-                className={`flex flex-col items-center gap-3 rounded-xl border px-4 py-6 text-center outline-none transition focus-visible:ring-3 focus-visible:ring-ring/50 ${
-                  selected ? "border-[#0b0a0e] bg-[#ffffff] text-[#0b0a0e] shadow-[0_0_0_1px_rgba(15,25,48,0.2)]" : "border-black/15 bg-[#ffffff] text-ink-700"
-                }`}
-              >
-                <span
-                  className={`flex h-12 w-12 items-center justify-center rounded-full ${
-                    selected ? "bg-[#0b0a0e] text-white ring-4 ring-[#0b0a0e]/10" : "border border-black/15 text-ink-400"
-                  }`}
-                >
-                  <Icon className="h-5 w-5" />
-                </span>
-                <span className="text-sm font-medium leading-tight">{option.label}</span>
-              </RadioPrimitive.Root>
-            );
-          })}
-        </RadioGroupPrimitive>
+      <div className="lo-choices" role="radiogroup" aria-label={name}>
+        {options.map((option) => (
+          <label key={option.value} className="lo-choice">
+            <input
+              type="radio"
+              name={name}
+              value={option.value}
+              checked={value === option.value}
+              onChange={() => onChange(option.value)}
+            />
+            <span className="lo-choice-name">{option.label}</span>
+            <span className="lo-choice-desc">{option.desc}</span>
+            <span className="lo-choice-mark" aria-hidden="true" />
+          </label>
+        ))}
       </div>
     );
   }
 
+  function renderIntentStep() {
+    return renderChoices("Vad vill du göra?", form.intentSelection, [
+      { value: "rent", label: "Jag vill hyra", desc: "Hitta lokal, skapa ett lokalprogram och boka visningar." },
+      { value: "lease-out", label: "Jag vill hyra ut", desc: "Publicera lokaler och hantera förfrågningar och visningar." }
+    ], applyIntentSelection);
+  }
+
   function renderRoleStep() {
-    return (
-      <div className="mt-1">
-        <p className="mb-2 text-sm font-semibold text-ink-700">
-          För att hyra ut
-        </p>
-        <RadioGroupPrimitive
-          value={form.roleSelection}
-          onValueChange={(value) => applySelection(form.intentSelection, value)}
-          aria-label="Välj roll"
-          className="grid grid-cols-1 gap-2.5"
-        >
-          {[
-            { value: "company_admin", label: "Hyresvärd" },
-            { value: "broker", label: "Mäklare" }
-          ].map((option) => {
-            const selected = form.roleSelection === option.value;
-            return (
-              <RadioPrimitive.Root
-                key={option.value}
-                value={option.value}
-                className={`flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left outline-none transition focus-visible:ring-3 focus-visible:ring-ring/50 ${
-                  selected ? "border-[#0b0a0e] bg-[#ffffff] text-[#0b0a0e] shadow-[0_0_0_1px_rgba(15,25,48,0.2)]" : "border-black/15 bg-[#ffffff] text-ink-700"
-                }`}
-              >
-                <span className="text-sm font-medium leading-tight">{option.label}</span>
-                <span className={`inline-flex h-5 w-5 items-center justify-center rounded-full border ${selected ? "border-[#0b0a0e]" : "border-black/20"}`}>
-                  <RadioPrimitive.Indicator className="h-2 w-2 rounded-full bg-[#0b0a0e]" />
-                </span>
-              </RadioPrimitive.Root>
-            );
-          })}
-        </RadioGroupPrimitive>
-      </div>
-    );
+    return renderChoices("Välj roll", form.roleSelection, [
+      { value: "company_admin", label: "Hyresvärd", desc: "Ni äger eller förvaltar lokalerna och administrerar bolagets konto." },
+      { value: "broker", label: "Mäklare", desc: "Du publicerar och förmedlar lokaler åt en eller flera hyresvärdar." }
+    ], (value) => applySelection(form.intentSelection, value));
   }
 
   function renderProfileExtraStep() {
     return (
       <>
         {shouldShowNameFields ? (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <label className="block">
-              <span className="mb-1 block text-xs font-semibold text-ink-700">Förnamn</span>
-              <Input value={form.firstName} onChange={(e) => setForm((p) => ({ ...p, firstName: e.target.value }))} required />
-            </label>
-            <label className="block">
-              <span className="mb-1 block text-xs font-semibold text-ink-700">Efternamn</span>
-              <Input value={form.lastName} onChange={(e) => setForm((p) => ({ ...p, lastName: e.target.value }))} required />
-            </label>
+          <div className="lo-form-row">
+            <Field label="Förnamn">
+              <input value={form.firstName} onChange={(e) => setForm((p) => ({ ...p, firstName: e.target.value }))} autoComplete="given-name" required />
+            </Field>
+            <Field label="Efternamn">
+              <input value={form.lastName} onChange={(e) => setForm((p) => ({ ...p, lastName: e.target.value }))} autoComplete="family-name" required />
+            </Field>
           </div>
         ) : null}
-        <label className="block">
-          <span className="mb-1 block text-xs font-semibold text-ink-700">E-post</span>
-          <Input
+        <Field label="E-post" hint="Från inloggningen. Ändras i kontoinställningarna.">
+          <input
             type="email"
             value={form.email}
             onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
             readOnly
             required
           />
-        </label>
-        <label className="block">
-          <span className="mb-1 block text-xs font-semibold text-ink-700">
-            Organisationsnummer {requiresOrganizationNumber ? "" : "(valfritt)"}
-          </span>
-          <Input
+        </Field>
+        <Field
+          label={`Organisationsnummer${requiresOrganizationNumber ? "" : " (valfritt)"}`}
+          error={organizationNumberError}
+          hint={matchedCompany ? `${matchedCompany.name} finns registrerat och fylls i automatiskt.` : undefined}
+        >
+          <input
             inputMode="numeric"
             value={form.organizationNumber}
             onChange={(e) => {
@@ -651,117 +603,111 @@ function SignupPage({ onCheckCompanyByOrganizationNumber, onCompleteSignup, curr
             placeholder="556123-4567"
             required={requiresOrganizationNumber}
           />
-          {organizationNumberError ? (
-            <span className="mt-1 block text-xs text-rose-700">{organizationNumberError}</span>
-          ) : matchedCompany ? (
-            <span className="mt-1 block text-xs text-emerald-700">
-              {matchedCompany.name} finns registrerat och fylls i automatiskt.
-            </span>
-          ) : null}
-        </label>
-        <label className="block">
-          <span className="mb-1 block text-xs font-semibold text-ink-700">Telefon (valfritt)</span>
-          <div className="grid grid-cols-[152px_1fr] gap-2">
-            <Select value={phoneCountryCode} onValueChange={setPhoneCountryCode}>
-              <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {countryCodeOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Input value={form.phone} onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))} placeholder="70 123 45 67" />
-          </div>
-        </label>
+        </Field>
+        <div className="lo-form-row" style={{ gridTemplateColumns: "minmax(0, 0.8fr) minmax(0, 1.2fr)" }}>
+          <Field label="Landsnummer">
+            <select value={phoneCountryCode} onChange={(e) => setPhoneCountryCode(e.target.value)}>
+              {countryCodeOptions.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Telefon (valfritt)">
+            <input type="tel" value={form.phone} onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))} placeholder="70 123 45 67" autoComplete="tel-national" />
+          </Field>
+        </div>
       </>
     );
   }
 
+  const isLeaseOut = form.intentSelection === "lease-out";
+  const stepCount = isLeaseOut ? 3 : 2;
+  const stepCurrent = detailsStep === STEP_INTENT ? 1 : detailsStep === STEP_ROLE ? 2 : stepCount;
   const heading =
     detailsStep === STEP_INTENT
-      ? "Välkommen!"
+      ? "Välkommen till LOA."
       : detailsStep === STEP_ROLE
-        ? "Välj roll"
-        : "Berätta om dig själv";
+        ? "Vilken roll har du?"
+        : "Berätta om dig själv.";
   const subheading =
     detailsStep === STEP_INTENT
-      ? "Välj vad du vill göra."
+      ? "Vad vill du göra? Samma konto rymmer flera roller, så du kan lägga till fler senare."
       : detailsStep === STEP_ROLE
-        ? "Välj vilken roll som passar."
-        : "Fyll i de sista uppgifterna för din profil.";
+        ? "För att hyra ut behöver vi veta hur du representerar lokalerna."
+        : isLeaseOut
+          ? "De sista uppgifterna. Organisationsnumret kopplar kontot till ert bolag."
+          : "De sista uppgifterna till din profil.";
   const submitLabel =
     pending
-      ? detailsStep === STEP_PROFILE_EXTRA ? "Sparar..." : "Skapar konto"
-      : "Fortsätt";
+      ? detailsStep === STEP_PROFILE_EXTRA ? "Sparar…" : "Skapar konto"
+      : detailsStep === STEP_PROFILE_EXTRA ? "Klar" : "Fortsätt";
   const showSubmitLoadingDots = pending && detailsStep !== STEP_PROFILE_EXTRA;
 
   return (
-    <main className="grid min-h-screen place-items-center bg-[#ffffff] px-4 pb-8 pt-20">
-      <AuthFlowNav />
+    <SiteFrame slim navActions={false}>
       <Dialog open={companyConfirmPromptOpen && Boolean(pendingCompanyLookup?.company)} onOpenChange={(open) => { if (!open) rejectMatchedCompany(); }}>
-        <DialogContent showCloseButton={false} className="max-w-[520px] rounded-[28px] border border-black/10 bg-[#ffffff] p-6">
+        <DialogContent showCloseButton={false} className="max-w-[520px] rounded-2xl border-0 bg-white p-8 font-['Geist',sans-serif]">
           <DialogHeader className="text-left">
-            <DialogTitle className="text-[1.5rem] font-semibold leading-tight text-[#0b0a0e]">Bekräfta företaget</DialogTitle>
-            <DialogDescription className="text-sm leading-relaxed text-ink-600">
+            <DialogTitle className="text-[1.75rem] font-normal leading-tight tracking-[-0.035em] text-[#141a2b]">Bekräfta företaget</DialogTitle>
+            <DialogDescription className="text-[0.9375rem] leading-relaxed text-[#5b6070]">
               Vi hittade ett registrerat företag för organisationsnumret. Kontrollera att uppgifterna stämmer innan du går vidare.
             </DialogDescription>
           </DialogHeader>
-          <div className="rounded-2xl border border-[#d7e2ee] bg-[#f8fafc] px-4 py-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Företag</p>
-            <p className="mt-1 text-lg font-semibold text-[#0b0a0e]">{pendingCompanyLookup?.company?.name}</p>
-            <p className="mt-1 text-sm font-semibold text-[#0b0a0e]">
+          <div className="border-y border-[#141a2b]/10 py-4">
+            <p className="text-[0.8125rem] text-[#8b8f9a]">Företag</p>
+            <p className="mt-1 text-xl tracking-[-0.03em] text-[#141a2b]">{pendingCompanyLookup?.company?.name}</p>
+            <p className="mt-1 text-[0.9375rem] tabular-nums text-[#5b6070]">
               {pendingCompanyLookup?.company?.organizationNumber || pendingFormattedOrganizationNumber}
             </p>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" className="h-auto rounded-full px-5 py-3 text-sm font-semibold text-ink-800" onClick={rejectMatchedCompany}>
+            <Button type="button" variant="outline" className="h-auto !rounded-full px-5 py-3 text-sm font-medium text-[#141a2b]" onClick={rejectMatchedCompany}>
               Nej, ändra orgnummer
             </Button>
-            <Button type="button" className="h-auto rounded-full px-5 py-3 text-sm font-semibold" onClick={confirmMatchedCompany}>
+            <Button type="button" className="h-auto !rounded-full bg-[#141a2b] px-5 py-3 text-sm font-medium text-white hover:bg-[#2a3146]" onClick={confirmMatchedCompany}>
               Ja, fortsätt
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
       <Dialog open={companySetupPromptOpen} onOpenChange={(open) => { if (!open) cancelCompanySetup(); }}>
-        <DialogContent showCloseButton={false} className="max-w-[520px] rounded-[28px] border border-black/10 bg-[#ffffff] p-6">
+        <DialogContent showCloseButton={false} className="max-w-[520px] rounded-2xl border-0 bg-white p-8 font-['Geist',sans-serif]">
           <DialogHeader className="text-left">
-            <DialogTitle className="text-[1.5rem] font-semibold leading-tight text-[#0b0a0e]">Företaget finns inte registrerat</DialogTitle>
-            <DialogDescription className="text-sm leading-relaxed text-ink-600">
+            <DialogTitle className="text-[1.75rem] font-normal leading-tight tracking-[-0.035em] text-[#141a2b]">Företaget finns inte registrerat</DialogTitle>
+            <DialogDescription className="text-[0.9375rem] leading-relaxed text-[#5b6070]">
               Organisationsnumret finns inte på plattformen. Vill du sätta upp ett nytt företag nu?
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button type="button" variant="outline" className="h-auto rounded-full px-5 py-3 text-sm font-semibold text-ink-800" onClick={cancelCompanySetup}>
+            <Button type="button" variant="outline" className="h-auto !rounded-full px-5 py-3 text-sm font-medium text-[#141a2b]" onClick={cancelCompanySetup}>
               Inte nu
             </Button>
-            <Button type="button" className="h-auto rounded-full px-5 py-3 text-sm font-semibold" onClick={confirmCompanySetup}>
+            <Button type="button" className="h-auto !rounded-full bg-[#141a2b] px-5 py-3 text-sm font-medium text-white hover:bg-[#2a3146]" onClick={confirmCompanySetup}>
               Sätt upp nytt företag
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <div className="mx-auto w-full">
-        <div ref={cardWrapRef} className="mx-auto w-full max-w-[460px] rounded-[30px] border border-black/10 bg-[#ffffff] px-6 py-7 sm:px-7 sm:py-8">
-          <h1 className="text-[1.95rem] font-semibold leading-tight text-[#0b0a0e]">
-            {heading}
-          </h1>
-          <p className="mt-1 text-sm text-ink-600">
-            {subheading}
-          </p>
 
+      <AccountLayout
+        label="Skapa konto"
+        title={heading}
+        lede={subheading}
+        steps={{ count: stepCount, current: stepCurrent }}
+      >
+        <div ref={cardWrapRef}>
           {!isConfigured ? (
-            <div className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            <p className="lo-note is-error">
               WorkOS saknar miljövariabler. Lägg till <code>VITE_CONVEX_URL</code>, <code>VITE_WORKOS_CLIENT_ID</code> och <code>VITE_WORKOS_REDIRECT_URI</code>.
-            </div>
+            </p>
           ) : (
-            <form className="mt-5 space-y-3" onSubmit={submit}>
+            <form className="lo-form" onSubmit={submit}>
               {detailsStep === STEP_INTENT ? renderIntentStep() : detailsStep === STEP_ROLE ? renderRoleStep() : renderProfileExtraStep()}
 
-              {error ? <p className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">{error}</p> : null}
+              {error ? <p className="lo-note is-error" role="alert">{error}</p> : null}
 
-              <div className={`flex flex-col gap-3 ${detailsStep === STEP_PROFILE_EXTRA ? "pt-2" : "mt-6"}`}>
-                <Button type="submit" className="h-auto gap-1.5 rounded-full px-5 py-3 text-sm font-semibold" disabled={pending || isLoading}>
+              <div className="lo-actions">
+                <button type="submit" className="lo-btn" disabled={pending || isLoading}>
                   {submitLabel}
                   {showSubmitLoadingDots ? (
                     <span className="button-loading-dots inline-flex items-center gap-0.5" aria-hidden="true">
@@ -769,39 +715,36 @@ function SignupPage({ onCheckCompanyByOrganizationNumber, onCompleteSignup, curr
                       <span />
                       <span />
                     </span>
-                  ) : null}
-                </Button>
-                {detailsStep !== STEP_INTENT ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="h-auto rounded-full px-5 py-3 text-sm font-semibold text-ink-800 hover:bg-[#f8fafc]"
-                    onClick={goBackFromDetails}
-                    disabled={pending}
-                  >
-                    Tillbaka
-                  </Button>
-                ) : null}
-
-                {detailsStep !== STEP_PROFILE_EXTRA ? (
-                  <>
-                    <p className="text-center text-xs text-ink-600">Har du redan konto?</p>
-                    <Button type="button" variant="outline" className="mx-auto h-auto rounded-full px-5 py-3 text-sm font-semibold text-ink-800 hover:bg-[#f8fafc]" onClick={startLoginFromSignup} disabled={pending}>
-                      Logga in
-                    </Button>
-                  </>
-                ) : null}
+                  ) : (
+                    <Arrow />
+                  )}
+                </button>
+                <button
+                  type="button"
+                  className="lo-text-btn"
+                  onClick={goBackFromDetails}
+                  disabled={pending}
+                >
+                  {detailsStep === STEP_INTENT ? "Till startsidan" : "Tillbaka"}
+                </button>
               </div>
+
+              {detailsStep !== STEP_PROFILE_EXTRA ? (
+                <p className="lo-account-alt">
+                  Har du redan ett konto?
+                  <button type="button" className="lo-text-btn" onClick={startLoginFromSignup} disabled={pending}>
+                    Logga in
+                  </button>
+                </p>
+              ) : null}
             </form>
           )}
         </div>
-        <div className="mx-auto mt-4 text-center" style={cardWidth ? { width: `${cardWidth}px`, maxWidth: "100%" } : undefined}>
-          <p className="mt-4 text-center text-[11px] leading-relaxed text-ink-500">
-            Genom att fortsätta godkänner du Lokalflödes användarvillkor och integritetspolicy.
-          </p>
-        </div>
-      </div>
-    </main>
+        <p className="lo-fine" style={cardWidth ? { maxWidth: `${cardWidth}px` } : undefined}>
+          Genom att fortsätta godkänner du LOA:s användarvillkor och integritetspolicy.
+        </p>
+      </AccountLayout>
+    </SiteFrame>
   );
 }
 

@@ -134,13 +134,13 @@ const PIN_PATH = "M12 1.75C6.34 1.75 1.75 6.34 1.75 12c0 7.71 8.58 16.56 9.57 17
 const PIN_COLOURS = {
   light: {
     inactive: { fill: "#ea4335", stroke: "#c5221f", dot: "#ffffff" },
-    active: { fill: "#0b0a0e", stroke: "#0b1428", dot: "#ffffff" },
-    hover: { fill: "#1b2a4d", stroke: "#0b0a0e", dot: "#ffffff" }
+    active: { fill: "#141a2b", stroke: "#0b1428", dot: "#ffffff" },
+    hover: { fill: "#1b2a4d", stroke: "#141a2b", dot: "#ffffff" }
   },
   dark: {
     inactive: { fill: "#ea4335", stroke: "#c5221f", dot: "#ffffff" },
-    active: { fill: "#eceef2", stroke: "#ffffff", dot: "#0b0a0e" },
-    hover: { fill: "#8fb0da", stroke: "#eceef2", dot: "#0b0a0e" }
+    active: { fill: "#eceef2", stroke: "#ffffff", dot: "#141a2b" },
+    hover: { fill: "#8fb0da", stroke: "#eceef2", dot: "#141a2b" }
   }
 };
 

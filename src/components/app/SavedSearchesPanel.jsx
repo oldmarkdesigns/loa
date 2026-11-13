@@ -28,7 +28,7 @@ function FilterPresetCard({ item, onApply, onDelete }) {
       </div>
 
       <div className="mt-3 flex gap-2">
-        <button type="button" className="rounded-xl border border-[#0b0a0e] bg-[#0b0a0e] px-3 py-2 text-xs font-semibold text-white" onClick={() => onApply(item)}>
+        <button type="button" className="rounded-xl border border-[#141a2b] bg-[#141a2b] px-3 py-2 text-xs font-semibold text-white" onClick={() => onApply(item)}>
           Använd filter
         </button>
         <button type="button" className="rounded-xl border border-black/20 bg-[#ffffff] px-3 py-2 text-xs font-semibold" onClick={() => onDelete(item.id)}>
@@ -52,7 +52,7 @@ function SavedAiSearchCard({ item, onRun, onDelete }) {
       </div>
 
       <div className="mt-3 flex gap-2">
-        <button type="button" className="rounded-xl border border-[#0b0a0e] bg-[#0b0a0e] px-3 py-2 text-xs font-semibold text-white" onClick={() => onRun(item)}>
+        <button type="button" className="rounded-xl border border-[#141a2b] bg-[#141a2b] px-3 py-2 text-xs font-semibold text-white" onClick={() => onRun(item)}>
           Kör AI-sök
         </button>
         <button type="button" className="rounded-xl border border-black/20 bg-[#ffffff] px-3 py-2 text-xs font-semibold" onClick={() => onDelete(item.id)}>
@@ -86,7 +86,7 @@ function SavedSearchesPanel({
       <div className="mt-4 min-h-0 flex-1 space-y-4 overflow-y-auto">
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Sparade filter</p>
+            <p className="text-xs font-semibold text-ink-500">Sparade filter</p>
             <span className="text-xs text-ink-500">{filterPresets.length}</span>
           </div>
           {filterPresets.length === 0 ? <p className="rounded-2xl border border-black/10 bg-[#ffffff] p-3 text-xs text-ink-500">Inga sparade filter ännu.</p> : null}
@@ -97,7 +97,7 @@ function SavedSearchesPanel({
 
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Sparade AI-sökningar</p>
+            <p className="text-xs font-semibold text-ink-500">Sparade AI-sökningar</p>
             <span className="text-xs text-ink-500">{savedAiSearches.length}</span>
           </div>
           {savedAiSearches.length === 0 ? <p className="rounded-2xl border border-black/10 bg-[#ffffff] p-3 text-xs text-ink-500">Inga sparade AI-sökningar ännu.</p> : null}

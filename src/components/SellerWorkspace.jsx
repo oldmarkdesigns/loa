@@ -66,7 +66,7 @@ function ListingVisualCard({ listing, shortlisted, onOpenListing, onBookViewing,
           <button
             type="button"
             onClick={() => onBookViewing(listing)}
-            className="rounded-2xl border border-[#0b0a0e] bg-[#0b0a0e] px-3 py-2 text-xs font-semibold text-white"
+            className="rounded-2xl border border-[#141a2b] bg-[#141a2b] px-3 py-2 text-xs font-semibold text-white"
           >
             Boka visning
           </button>
@@ -137,14 +137,14 @@ function SellerWorkspace({
           <button
             type="button"
             onClick={() => onModeChange("buyer")}
-            className={`rounded-xl px-4 py-2 font-semibold ${mode === "buyer" ? "bg-[#0b0a0e] text-white" : "text-ink-600"}`}
+            className={`rounded-xl px-4 py-2 font-semibold ${mode === "buyer" ? "bg-[#141a2b] text-white" : "text-ink-600"}`}
           >
             Hyr lokal
           </button>
           <button
             type="button"
             onClick={() => onModeChange("seller")}
-            className={`rounded-xl px-4 py-2 font-semibold ${mode === "seller" ? "bg-[#0b0a0e] text-white" : "text-ink-600"}`}
+            className={`rounded-xl px-4 py-2 font-semibold ${mode === "seller" ? "bg-[#141a2b] text-white" : "text-ink-600"}`}
           >
             Publicera lokal
           </button>
@@ -163,14 +163,14 @@ function SellerWorkspace({
                 <button
                   type="button"
                   onClick={() => setSearchTool("filter")}
-                  className={`rounded-xl px-4 py-2 font-semibold ${searchTool === "filter" ? "bg-[#0b0a0e] text-white" : "text-ink-600"}`}
+                  className={`rounded-xl px-4 py-2 font-semibold ${searchTool === "filter" ? "bg-[#141a2b] text-white" : "text-ink-600"}`}
                 >
                   Filter
                 </button>
                 <button
                   type="button"
                   onClick={() => setSearchTool("ai")}
-                  className={`rounded-xl px-4 py-2 font-semibold ${searchTool === "ai" ? "bg-[#0b0a0e] text-white" : "text-ink-600"}`}
+                  className={`rounded-xl px-4 py-2 font-semibold ${searchTool === "ai" ? "bg-[#141a2b] text-white" : "text-ink-600"}`}
                 >
                   AI-sök
                 </button>
@@ -179,7 +179,7 @@ function SellerWorkspace({
               {searchTool === "filter" ? (
                 <div className="rounded-3xl border border-[#c8d1de] bg-gradient-to-br from-[#edf2f7] via-[#eaf0f7] to-[#f3f6fb] p-5">
                   <div className="mb-3 flex items-center justify-between">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Sökprofil</p>
+                    <p className="text-xs font-semibold text-ink-500">Sökprofil</p>
                     <span className="rounded-full border border-white/70 bg-[#ffffff]/75 px-2 py-1 text-[11px] font-semibold text-ink-600">
                       Aktiv
                     </span>
@@ -327,7 +327,7 @@ function SellerWorkspace({
         <section className="flex min-h-[calc(100vh-64px)] items-start justify-center p-4 sm:p-8">
           <div className="w-full max-w-4xl rounded-3xl border border-black/10 bg-[#ffffff] p-5 sm:p-8">
             <div className="text-center">
-              <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Publiceringsflöde</p>
+              <p className="text-xs font-semibold text-ink-500">Publiceringsflöde</p>
               <h1 className="mt-1 text-4xl font-semibold">Publicera objekt</h1>
               <p className="mt-2 text-sm text-ink-500">Ett centrerat steg-för-steg-flöde för snabb publicering.</p>
             </div>
@@ -338,7 +338,7 @@ function SellerWorkspace({
                   key={label}
                   type="button"
                   onClick={() => setStep(index)}
-                  className={`rounded-xl px-4 py-2 font-semibold ${step === index ? "bg-[#0b0a0e] text-white" : "text-ink-600"}`}
+                  className={`rounded-xl px-4 py-2 font-semibold ${step === index ? "bg-[#141a2b] text-white" : "text-ink-600"}`}
                 >
                   {index + 1}. {label}
                 </button>
@@ -412,11 +412,11 @@ function SellerWorkspace({
                 Föregående
               </button>
               {step < steps.length - 1 ? (
-                <button type="button" className="rounded-2xl border border-[#0b0a0e] bg-[#0b0a0e] px-4 py-2 text-xs font-semibold text-white" onClick={() => setStep((v) => Math.min(v + 1, steps.length - 1))}>
+                <button type="button" className="rounded-2xl border border-[#141a2b] bg-[#141a2b] px-4 py-2 text-xs font-semibold text-white" onClick={() => setStep((v) => Math.min(v + 1, steps.length - 1))}>
                   Nästa
                 </button>
               ) : (
-                <button type="button" className="rounded-2xl border border-[#0b0a0e] bg-[#0b0a0e] px-4 py-2 text-xs font-semibold text-white" onClick={publishListing}>
+                <button type="button" className="rounded-2xl border border-[#141a2b] bg-[#141a2b] px-4 py-2 text-xs font-semibold text-white" onClick={publishListing}>
                   Publicera annons
                 </button>
               )}

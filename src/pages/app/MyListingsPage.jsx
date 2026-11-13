@@ -482,7 +482,7 @@ function MyListingsPage({ app }) {
           <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
             <div className="space-y-3 rounded-3xl border border-black/10 bg-[#ffffff] p-4">
               <div className="rounded-2xl border border-black/10 bg-[#ffffff] p-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">1. Grund</p>
+                <p className="text-xs font-semibold text-ink-500">1. Grund</p>
                 <div className="mt-2 space-y-3">
                   <Input value={draft.title} onChange={(event) => setDraft((prev) => ({ ...prev, title: event.target.value }))} placeholder="Rubrik" />
                   <div className="grid gap-3 sm:grid-cols-2">
@@ -508,7 +508,7 @@ function MyListingsPage({ app }) {
               </div>
 
               <div className="rounded-2xl border border-black/10 bg-[#ffffff] p-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">2. Villkor</p>
+                <p className="text-xs font-semibold text-ink-500">2. Villkor</p>
                 <div className="mt-2 space-y-3">
                   <div className="grid gap-3 sm:grid-cols-2">
                     <Input type="number" min="0" value={draft.priceMonthly} onChange={(event) => setDraft((prev) => ({ ...prev, priceMonthly: event.target.value }))} placeholder="Månadshyra (SEK)" />
@@ -534,7 +534,7 @@ function MyListingsPage({ app }) {
               </div>
 
               <div className="rounded-2xl border border-black/10 bg-[#ffffff] p-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">3. Media</p>
+                <p className="text-xs font-semibold text-ink-500">3. Media</p>
                 <div className="mt-2 space-y-3">
                   <Input value={draft.image} onChange={(event) => setDraft((prev) => ({ ...prev, image: event.target.value }))} placeholder="Sökväg till omslagsbild" />
                   <Textarea className="min-h-28" value={draft.amenities} onChange={(event) => setDraft((prev) => ({ ...prev, amenities: event.target.value }))} placeholder="Faciliteter, separera med kommatecken" />
@@ -556,7 +556,7 @@ function MyListingsPage({ app }) {
             </div>
 
             <div className="space-y-2 rounded-3xl border border-black/10 bg-[#ffffff] p-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Förhandsvisning för hyresgäst</p>
+              <p className="text-xs font-semibold text-ink-500">Förhandsvisning för hyresgäst</p>
               <ListingPreview draft={draft} />
             </div>
           </div>
@@ -574,7 +574,7 @@ function MyListingsPage({ app }) {
               <Button
                 type="button"
                 variant="ghost"
-                className="tab-underline-button h-auto gap-1.5 rounded-none border-b-2 border-[#0b0a0e] px-0 pb-1 text-sm font-semibold text-[#0b0a0e] hover:bg-transparent"
+                className="tab-underline-button h-auto gap-1.5 rounded-none border-b-2 border-[#141a2b] px-0 pb-1 text-sm font-semibold text-[#141a2b] hover:bg-transparent"
                 onClick={() => navigateTo("/app/my-listings")}
               >
                 <Icon name="building" className="h-3.5 w-3.5" />
@@ -604,7 +604,7 @@ function MyListingsPage({ app }) {
           <aside className="xl:order-3 self-start rounded-3xl border border-[#c8d1de] bg-[#ffffff] p-4 sm:p-5">
             <div className="mb-3 flex items-start justify-between gap-3">
               <div>
-                <p className={`text-xs font-semibold uppercase tracking-wide ${publishedPreview ? "text-emerald-600" : "text-ink-500"}`}>
+                <p className={`text-xs font-semibold ${publishedPreview ? "text-emerald-600" : "text-ink-500"}`}>
                   {publishedPreview ? "Publicerat" : "Publiceringsflöde"}
                 </p>
                 <h2 className="text-[34px] font-semibold leading-tight">{publishedPreview ? "Objekt publicerat" : "Publicera objekt"}</h2>
@@ -789,7 +789,7 @@ function MyListingsPage({ app }) {
                           <p className="truncate text-base font-semibold leading-tight">{listing.title}</p>
                           <p className="truncate text-xs text-ink-600">{listing.district} • {listing.address}</p>
                         </div>
-                        <span className="shrink-0 rounded-xl border border-black/10 bg-[#ffffff] px-2 py-1 text-[10px] font-semibold uppercase text-ink-700">
+                        <span className="shrink-0 rounded-xl border border-black/10 bg-[#ffffff] px-2 py-1 text-[10px] font-semibold  text-ink-700">
                           {statusLabel(listing.status)}
                         </span>
                       </div>

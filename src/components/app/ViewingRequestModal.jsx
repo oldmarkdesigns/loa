@@ -83,7 +83,7 @@ function ViewingRequestModal({ listing, onClose, onSubmit }) {
         <div className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block">
-              <span className="mb-2 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Ärendetyp</span>
+              <span className="mb-2 block text-[11px] font-semibold text-ink-700">Ärendetyp</span>
               <Select
                 value={form.inquiryType}
                 onValueChange={(value) => setForm((prev) => ({ ...prev, inquiryType: value === "viewing" ? "viewing" : "contact" }))}
@@ -100,7 +100,7 @@ function ViewingRequestModal({ listing, onClose, onSubmit }) {
 
             {form.inquiryType === "viewing" ? (
               <div className="block">
-                <span className="mb-2 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Önskat datum</span>
+                <span className="mb-2 block text-[11px] font-semibold text-ink-700">Önskat datum</span>
                 <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                   <PopoverTrigger
                     render={
@@ -143,7 +143,7 @@ function ViewingRequestModal({ listing, onClose, onSubmit }) {
           </div>
 
           <label className="block">
-            <span className="mb-2 block text-[11px] font-semibold uppercase tracking-wide text-ink-700">Meddelande</span>
+            <span className="mb-2 block text-[11px] font-semibold text-ink-700">Meddelande</span>
             <Textarea
               className="min-h-24"
               placeholder={form.inquiryType === "viewing" ? "Skriv önskad tid och övriga detaljer." : "Skriv ditt meddelande till uthyraren."}

@@ -99,7 +99,7 @@ function ProspectShareSheet({ prospectId, listingId, prospect, app }) {
       ) : null}
 
       <section>
-        <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Interna samarbetspartners</p>
+        <p className="text-xs font-semibold text-ink-500">Interna samarbetspartners</p>
         <div className="mt-2 space-y-2">
           {collaborators.length === 0 ? <p className="text-sm text-ink-500">Ingen tillagd än.</p> : null}
           {collaborators.map((collab) => (
@@ -153,7 +153,7 @@ function ProspectShareSheet({ prospectId, listingId, prospect, app }) {
       </section>
 
       <section>
-        <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Extern gästlänk</p>
+        <p className="text-xs font-semibold text-ink-500">Extern gästlänk</p>
         <p className="mt-1 text-sm text-ink-600">Läs- och kommenteringsåtkomst, inget konto krävs. Bra för t.ex. arkitekten.</p>
         <div className="mt-2 space-y-2">
           {guestLinks.map((link) => (

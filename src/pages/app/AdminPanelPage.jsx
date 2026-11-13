@@ -565,7 +565,7 @@ function ExtendedMetricSparkline({ data = [], labels = [], direction = "up" }) {
   return (
     <Card className="gap-0 py-0 rounded-xl border border-veil/5 bg-canvas px-3 py-2.5">
       <MetricSparkline data={data} direction={direction} />
-      <div className="mt-1 flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-400">
+      <div className="mt-1 flex items-center justify-between text-[10px] font-semibold  tracking-[0.16em] text-ink-400">
         <span>{labels[0] || "start"}</span>
         <span>{labels[1] || "nu"}</span>
       </div>
@@ -761,7 +761,7 @@ function AdminListingsPage({ listings = [] }) {
         <div className="overflow-x-auto">
           <Table className="min-w-[780px]">
 
-            <TableHeader className="bg-canvas text-[11px] uppercase tracking-wide text-ink-500">
+            <TableHeader className="bg-canvas text-[11px] text-ink-500">
               <TableRow className="hover:bg-transparent">
                 <TableHead className="px-4 py-3 sm:px-5">Annons</TableHead>
                 <TableHead className="px-4 py-3">Status</TableHead>
@@ -1119,7 +1119,7 @@ function AdminBrokersPage({ app }) {
           <p className="mt-1 text-sm text-ink-600">Använd samma inbjudningsflöde som onboarding, anpassat för adminpanelen.</p>
 
           <Card className="gap-0 py-0 mt-4 rounded-xl border border-veil/10 bg-canvas px-4 py-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Inbjudningskod</p>
+            <p className="text-xs font-semibold text-ink-500">Inbjudningskod</p>
             <p className="mt-2 text-[1.2rem] font-semibold text-strong">{inviteCode}</p>
             <p className="mt-1 text-sm text-ink-500">Dela med mäklare via e-post eller internt system.</p>
           </Card>
@@ -1219,11 +1219,11 @@ function AdminBrokersPage({ app }) {
                       </span>
                     </div>
                     <div>
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">Mäklarnummer (FMI)</p>
+                      <p className="text-[11px] font-semibold text-ink-500">Mäklarnummer (FMI)</p>
                       <p className="mt-0.5 text-sm font-medium text-ink-800">{broker.fmiNumber || "-"}</p>
                     </div>
                     <div>
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">Gick med</p>
+                      <p className="text-[11px] font-semibold text-ink-500">Gick med</p>
                       <p className="mt-0.5 text-sm font-medium text-ink-800">{formatJoinedDate(broker.approvedAt || broker.requestedAt)}</p>
                     </div>
                     <div className="flex flex-wrap gap-2 md:justify-end">
@@ -1264,7 +1264,7 @@ function AdminBrokersPage({ app }) {
         >
           <div className="flex items-start justify-between gap-4 border-b border-veil/10 px-5 py-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Mäklarteam</p>
+              <p className="text-xs font-semibold text-ink-500">Mäklarteam</p>
               <h2 className="mt-1 text-xl font-semibold text-ink-900">All teamaktivitet</h2>
             </div>
             <Button
@@ -1318,7 +1318,7 @@ function AdminBrokersPage({ app }) {
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <label className="block text-left">
-                <span className="text-xs font-semibold uppercase tracking-wide text-ink-500">Skriv mäklarens namn för att bekräfta</span>
+                <span className="text-xs font-semibold text-ink-500">Skriv mäklarens namn för att bekräfta</span>
                 <Input
                   className="mt-1.5"
                   value={deleteBrokerConfirmName}
@@ -1356,7 +1356,7 @@ function AdminBrokersPage({ app }) {
         >
           <div className="flex items-start justify-between gap-4 border-b border-veil/10 px-5 py-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Mäklarteam</p>
+              <p className="text-xs font-semibold text-ink-500">Mäklarteam</p>
               <h2 className="mt-1 text-xl font-semibold text-ink-900">Hantera mäklare</h2>
             </div>
             <Button
@@ -1414,7 +1414,7 @@ function AdminBrokersPage({ app }) {
 
                   <div className="grid gap-4 sm:grid-cols-2">
                     <label className="block">
-                      <span className="text-xs font-semibold uppercase tracking-wide text-ink-500">Namn</span>
+                      <span className="text-xs font-semibold text-ink-500">Namn</span>
                       <Input
                         className="mt-1.5"
                         value={brokerDraft.name}
@@ -1422,7 +1422,7 @@ function AdminBrokersPage({ app }) {
                       />
                     </label>
                     <label className="block">
-                      <span className="text-xs font-semibold uppercase tracking-wide text-ink-500">Telefon</span>
+                      <span className="text-xs font-semibold text-ink-500">Telefon</span>
                       <Input
                         className="mt-1.5"
                         value={brokerDraft.phone}
@@ -1431,7 +1431,7 @@ function AdminBrokersPage({ app }) {
                       />
                     </label>
                     <label className="block">
-                      <span className="text-xs font-semibold uppercase tracking-wide text-ink-500">Mäklarnummer (FMI)</span>
+                      <span className="text-xs font-semibold text-ink-500">Mäklarnummer (FMI)</span>
                       <Input
                         className="mt-1.5"
                         value={brokerDraft.fmiNumber}
@@ -1440,7 +1440,7 @@ function AdminBrokersPage({ app }) {
                       />
                     </label>
                     <label className="block">
-                      <span className="text-xs font-semibold uppercase tracking-wide text-ink-500">E-post</span>
+                      <span className="text-xs font-semibold text-ink-500">E-post</span>
                       <Input className="mt-1.5 bg-subtle text-ink-600" value={selectedBroker.email || ""} disabled />
                     </label>
                   </div>
@@ -1598,15 +1598,15 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
 
       <section className="grid gap-3 sm:grid-cols-3">
         <Card className="gap-0 py-0 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Nya</p>
+          <p className="text-xs font-semibold text-ink-500">Nya</p>
           <p className="mt-2 text-2xl font-semibold text-strong">{inquiries.filter((item) => item.status === "Ny").length}</p>
         </Card>
         <Card className="gap-0 py-0 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Pågående</p>
+          <p className="text-xs font-semibold text-ink-500">Pågående</p>
           <p className="mt-2 text-2xl font-semibold text-strong">{inquiries.filter((item) => item.status === "Pågående").length}</p>
         </Card>
         <Card className="gap-0 py-0 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Hög prioritet</p>
+          <p className="text-xs font-semibold text-ink-500">Hög prioritet</p>
           <p className="mt-2 text-2xl font-semibold text-strong">{inquiries.filter((item) => item.priority === "Hög").length}</p>
         </Card>
       </section>
@@ -1615,7 +1615,7 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
         <div className="grid lg:h-[calc(100vh-11rem)] lg:grid-cols-[360px,minmax(0,1fr)] xl:grid-cols-[360px,minmax(0,1fr),336px]">
           <aside className="border-b border-veil/10 bg-canvas lg:border-b-0 lg:border-r">
             <div className="border-b border-veil/10 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ink-500">Inkorg</p>
+              <p className="text-xs font-semibold  tracking-[0.18em] text-ink-500">Inkorg</p>
               <h2 className="mt-1 text-lg font-semibold text-strong">Konversationer</h2>
               <div className="mt-3">
                 <label className="relative block">
@@ -1746,12 +1746,12 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                   <Card className="gap-0 py-0 flex flex-wrap items-center gap-3 rounded-xl border border-line bg-surface p-3">
                     <img src={activeListing.image} alt={activeListing.title} className="h-16 w-24 rounded-2xl border border-veil/10 object-cover" loading="lazy" />
                     <div className="min-w-0 flex-1">
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-brand-600">Matchad annons</p>
+                      <p className="text-[11px] font-semibold text-brand-600">Matchad annons</p>
                       <p className="mt-1 truncate text-sm font-semibold text-strong">{activeListing.title}</p>
                       <p className="mt-1 text-xs text-ink-600">{activeListing.district} · {activeListing.size} m² · {formatSek(activeListing.priceMonthly)}/mån</p>
                     </div>
                     <Card className="gap-0 py-0 rounded-xl border border-line bg-tint-2 px-3 py-2 text-center">
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">Match</p>
+                      <p className="text-[11px] font-semibold text-ink-500">Match</p>
                       <p className="mt-1 text-lg font-semibold text-strong">{activeRenter.score}%</p>
                     </Card>
                   </Card>
@@ -1761,14 +1761,14 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                   <Card className="gap-0 py-0 mx-auto max-w-3xl rounded-xl border border-line bg-tint-2 p-4">
                     <div className="flex flex-wrap items-start gap-3">
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-brand-600">Dialogsammanfattning</p>
+                        <p className="text-xs font-semibold text-brand-600">Dialogsammanfattning</p>
                         <p className="mt-1 text-sm font-semibold text-strong">{activeSummary}</p>
                         <p className="mt-2 text-sm leading-relaxed text-ink-700">
                           {activeRenter.name.split(" ")[0]} söker {activeRenter.preferredType.toLowerCase()} i {activeRenter.district} för {activeRenter.teamSize.toLowerCase()} med budget {activeRenter.budget}.
                         </p>
                       </div>
                       <Card className="gap-0 py-0 rounded-xl border border-line-2 bg-surface px-3 py-2">
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">Nästa steg</p>
+                        <p className="text-[11px] font-semibold text-ink-500">Nästa steg</p>
                         <p className="mt-1 text-sm font-semibold text-strong">{activeInquiry.stage}</p>
                       </Card>
                     </div>
@@ -1782,7 +1782,7 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                         <div key={message.id} className={`flex ${isAdmin ? "justify-end" : "justify-start"}`}>
                           <div className={`flex max-w-[85%] flex-col gap-1 ${isAdmin ? "items-end" : "items-start"}`}>
                             {!isSystem ? (
-                              <span className="px-1 text-[11px] font-semibold uppercase tracking-wide text-ink-400">
+                              <span className="px-1 text-[11px] font-semibold text-ink-400">
                                 {isAdmin ? "Bolagsadmin" : activeRenter.name}
                               </span>
                             ) : null}
@@ -1848,7 +1848,7 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                 <article className="rounded-[28px] border border-line bg-surface p-4">
                   <img src={activeListing.image} alt={activeListing.title} className="h-40 w-full rounded-[22px] border border-veil/10 object-cover" loading="lazy" />
                   <div className="mt-3">
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-brand-600">Matchad annons</p>
+                    <p className="text-[11px] font-semibold text-brand-600">Matchad annons</p>
                     <h3 className="mt-1 text-base font-semibold text-strong">{activeListing.title}</h3>
                     <p className="mt-1 text-sm text-ink-600">{activeListing.district} · {activeListing.size} m² · {formatSek(activeListing.priceMonthly)}/mån</p>
                   </div>
@@ -1857,26 +1857,26 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                 <article className="rounded-[28px] border border-line bg-surface p-4">
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">Hyresgäst</p>
+                      <p className="text-[11px] font-semibold text-ink-500">Hyresgäst</p>
                       <h3 className="mt-1 text-base font-semibold text-strong">{activeRenter.name}</h3>
                     </div>
                     <Card className="gap-0 py-0 rounded-xl border border-line bg-tint-2 px-3 py-2 text-center">
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">Match</p>
+                      <p className="text-[11px] font-semibold text-ink-500">Match</p>
                       <p className="mt-1 text-lg font-semibold text-strong">{activeRenter.score}%</p>
                     </Card>
                   </div>
                   <div className="mt-3 grid gap-2">
                     <Card className="gap-0 py-0 rounded-xl border border-veil/10 bg-canvas px-3 py-2.5">
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">Bolag</p>
+                      <p className="text-[11px] font-semibold text-ink-500">Bolag</p>
                       <p className="mt-1 text-sm font-semibold text-ink-900">{activeRenter.company}</p>
                     </Card>
                     <div className="grid grid-cols-2 gap-2">
                       <Card className="gap-0 py-0 rounded-xl border border-veil/10 bg-canvas px-3 py-2.5">
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">Team</p>
+                        <p className="text-[11px] font-semibold text-ink-500">Team</p>
                         <p className="mt-1 text-sm font-semibold text-ink-900">{activeRenter.teamSize}</p>
                       </Card>
                       <Card className="gap-0 py-0 rounded-xl border border-veil/10 bg-canvas px-3 py-2.5">
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">Budget</p>
+                        <p className="text-[11px] font-semibold text-ink-500">Budget</p>
                         <p className="mt-1 text-sm font-semibold text-ink-900">{activeRenter.budget}</p>
                       </Card>
                     </div>
@@ -1899,7 +1899,7 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                         className="h-auto block w-full rounded-xl border-veil/10 bg-canvas p-3 text-left font-normal hover:border-line-2 hover:bg-control"
                       >
                         <div className="flex items-center justify-between gap-2">
-                          <Badge className={`h-auto rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+                          <Badge className={`h-auto rounded-full px-2 py-0.5 text-[10px] font-semibold ${
                             prompt.kind === "question" ? "bg-tint-2 text-brand-600" : "bg-[#f3ebe6] text-[#9b5d3f] dark:bg-[#3a2c25] dark:text-[#e2b8a0]"
                           }`}>
                             {prompt.kind === "question" ? "Fråga" : "Svar"}
@@ -1918,7 +1918,7 @@ function AdminInquiriesPage({ pathname = "/app/admin/inkorg" }) {
                     {activeRenter.matchCriteria.map((item) => (
                       <Card key={`${activeInquiry.id}-${item.label}`} className="gap-0 py-0 flex items-start justify-between gap-3 rounded-xl border border-veil/10 bg-canvas px-3 py-2.5">
                         <div>
-                          <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">{item.label}</p>
+                          <p className="text-[11px] font-semibold text-ink-500">{item.label}</p>
                           <p className="mt-1 text-sm font-semibold text-ink-900">{item.value}</p>
                         </div>
                         <Badge className={`h-auto rounded-full px-2 py-0.5 text-[10px] font-semibold ${
@@ -2086,7 +2086,7 @@ function AdminStatistics({ app }) {
     <div ref={rootRef} className="relative">
       <aside className="hidden xl:absolute xl:left-[-264px] xl:top-0 xl:block xl:h-full xl:w-[240px]">
         <nav className="sticky top-6 rounded-[28px] border border-veil/10 bg-transparent p-3 shadow-[0_10px_24px_rgba(15,25,48,0.05)]">
-          <p className="px-2 pb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-400">Snabblänkar</p>
+          <p className="px-2 pb-2 text-[11px] font-semibold  tracking-[0.16em] text-ink-400">Snabblänkar</p>
           <div className="space-y-0.5">
             {visibleSectionLinks.map((item) => {
               const active = item.id === activeSectionId;
@@ -2250,7 +2250,7 @@ function AdminStatistics({ app }) {
           >
             <div className="mb-4 flex items-start justify-between gap-3">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Anpassa statistik</p>
+                <p className="text-xs font-semibold text-ink-500">Anpassa statistik</p>
                 <h3 className="mt-1 text-xl font-semibold text-ink-900">Välj vilka nyckeltal som ska visas</h3>
               </div>
               <Button type="button" variant="outline" size="icon" className="close-circle-button text-xl leading-none text-ink-700" onClick={closeCustomize}>
@@ -2371,7 +2371,7 @@ function AdminLeadMatchesPage({ app }) {
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">LEADS</p>
+                <p className="text-xs font-semibold text-ink-500">LEADS</p>
                 <Badge variant="outline" className="h-auto rounded-full bg-veil/10 px-2 py-0.5 text-[11px] font-semibold text-ink-700">
                   {leadRows.length} nya
                 </Badge>
@@ -2383,7 +2383,7 @@ function AdminLeadMatchesPage({ app }) {
 
         <div className="overflow-x-auto">
           <Table className="min-w-[900px]">
-            <TableHeader className="bg-canvas text-[11px] uppercase tracking-wide text-ink-500">
+            <TableHeader className="bg-canvas text-[11px] text-ink-500">
               <TableRow className="hover:bg-transparent">
                 <TableHead className="px-4 py-3 sm:px-5">Hyresgäst</TableHead>
                 <TableHead className="px-4 py-3">Lokal</TableHead>
@@ -2465,7 +2465,7 @@ function AdminLeadMatchesPage({ app }) {
 
       <div className="flex items-center gap-3 py-1">
         <span className="h-px flex-1 bg-veil/10" />
-        <span className="text-[11px] font-semibold uppercase tracking-wide text-ink-400">Föreslagna av systemet</span>
+        <span className="text-[11px] font-semibold text-ink-400">Föreslagna av systemet</span>
         <span className="h-px flex-1 bg-veil/10" />
       </div>
 
@@ -2473,7 +2473,7 @@ function AdminLeadMatchesPage({ app }) {
         <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">MATCHNINGAR</p>
+              <p className="text-xs font-semibold text-ink-500">MATCHNINGAR</p>
               <Badge variant="outline" className="h-auto rounded-full bg-veil/10 px-2 py-0.5 text-[11px] font-semibold text-ink-700">
                 {suggestedMatches.length} föreslagna
               </Badge>
@@ -2554,7 +2554,7 @@ function AdminLeadMatchesPage({ app }) {
 
                   <div className="mt-4 flex items-end justify-between gap-3 border-t border-veil/10 pt-3">
                     <div>
-                      <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">Match</p>
+                      <p className="text-[10px] font-semibold text-ink-500">Match</p>
                       <p className={`mt-1 text-3xl font-semibold leading-none ${matchScoreClass(renter.score)}`}>{renter.score}%</p>
                     </div>
                     <Badge variant="outline" className={`h-auto rounded-full px-2.5 py-0.5 text-xs font-semibold ${matchScoreBadgeClass(renter.score)}`}>
@@ -2564,15 +2564,15 @@ function AdminLeadMatchesPage({ app }) {
 
                   <div className="mt-4 grid grid-cols-3 gap-3 border-t border-veil/10 pt-3">
                     <Card className="gap-0 py-0 rounded-xl border border-veil/10 bg-canvas px-3 py-2.5">
-                      <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">Område</p>
+                      <p className="text-[10px] font-semibold text-ink-500">Område</p>
                       <p className="mt-1 truncate text-sm font-semibold text-ink-900">{renter.district}</p>
                     </Card>
                     <Card className="gap-0 py-0 rounded-xl border border-veil/10 bg-canvas px-3 py-2.5">
-                      <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">Storlek</p>
+                      <p className="text-[10px] font-semibold text-ink-500">Storlek</p>
                       <p className="mt-1 truncate text-sm font-semibold text-ink-900">{matchCriteriaValue(renter, "Yta", renter.teamSize)}</p>
                     </Card>
                     <Card className="gap-0 py-0 rounded-xl border border-veil/10 bg-canvas px-3 py-2.5">
-                      <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-500">Budget</p>
+                      <p className="text-[10px] font-semibold text-ink-500">Budget</p>
                       <p className="mt-1 truncate text-sm font-semibold text-ink-900">{renter.budget}</p>
                     </Card>
                   </div>
@@ -2716,7 +2716,7 @@ function AdminOverview({ app }) {
 
           <div className="overflow-x-auto">
             <Table className="min-w-[760px]">
-              <TableHeader className="bg-canvas text-[11px] uppercase tracking-wide text-ink-500">
+              <TableHeader className="bg-canvas text-[11px] text-ink-500">
                 <TableRow className="hover:bg-transparent">
                   <TableHead className="px-4 py-3 sm:px-5">Annons</TableHead>
                   <TableHead className="px-4 py-3">Status</TableHead>
@@ -2865,7 +2865,7 @@ function AdminProspectsPage({ app }) {
         <div className="border-b border-veil/10 px-4 py-4 sm:px-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Prospekt</p>
+              <p className="text-xs font-semibold text-ink-500">Prospekt</p>
               <p className="mt-1 text-sm text-ink-600">Skapande och redigering sker i respektive mäklares egen panel.</p>
             </div>
             <Badge variant="outline" className="h-auto rounded-full bg-veil/10 px-2 py-0.5 text-[11px] font-semibold text-ink-700">{prospects.length} prospekt</Badge>
@@ -2878,7 +2878,7 @@ function AdminProspectsPage({ app }) {
         </div>
         <div className="overflow-x-auto">
           <Table className="min-w-[720px]">
-            <TableHeader className="bg-canvas text-[11px] uppercase tracking-wide text-ink-500">
+            <TableHeader className="bg-canvas text-[11px] text-ink-500">
               <TableRow className="hover:bg-transparent">
                 <TableHead className="px-4 py-3 sm:px-5">Prospekt</TableHead>
                 <TableHead className="px-4 py-3">Objekt</TableHead>

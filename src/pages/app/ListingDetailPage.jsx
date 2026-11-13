@@ -1120,7 +1120,7 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
               <article className="rounded-3xl border border-veil/10 bg-surface p-5">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Tillgänglighet</p>
+                    <p className="text-xs font-semibold text-ink-500">Tillgänglighet</p>
                     <p className="mt-1 text-sm font-semibold text-ink-900">{listing.availability || "Efter överenskommelse"}</p>
                   </div>
                   <Badge variant="outline" className="h-auto rounded-full bg-surface px-2.5 py-1 text-[11px] font-semibold text-ink-700">
@@ -1129,12 +1129,12 @@ function ListingDetailPage({ app, listingId, isGuest = false, onRequireAuth, ini
                 </div>
 
                 <div className="mt-4 border-t border-veil/10 pt-4">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Hyra per månad</p>
+                  <p className="text-xs font-semibold text-ink-500">Hyra per månad</p>
                   <p className="mt-1 text-[28px] font-semibold leading-none text-strong">{formatSek(listing.priceMonthly)}</p>
                 </div>
 
                 <div className="mt-4 border-t border-veil/10 pt-4">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Mäklare</p>
+                  <p className="text-xs font-semibold text-ink-500">Mäklare</p>
                   <div className="mt-2 flex items-center gap-3 rounded-2xl border border-veil/10 bg-canvas p-3">
                     <Avatar className="h-11 w-11 shrink-0">
                       <AvatarFallback className="bg-strong text-sm font-semibold text-on-strong">{brokerInitials}</AvatarFallback>

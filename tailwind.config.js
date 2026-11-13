@@ -42,8 +42,9 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        display: ["Urbanist", "Avenir Next", "Helvetica Neue", "sans-serif"],
-        body: ["Urbanist", "Avenir Next", "Helvetica Neue", "sans-serif"]
+        display: ["Geist", "Helvetica Neue", "Arial", "sans-serif"],
+        body: ["Geist", "Helvetica Neue", "Arial", "sans-serif"],
+        sans: ["Geist", "Helvetica Neue", "Arial", "sans-serif"]
       },
       colors: {
         // shadcn/ui semantic tokens (see src/index.css for values) — used only
@@ -133,9 +134,29 @@ export default {
           900: "#633616"
         }
       },
+      // The weights and tracking of the public site: Geist is read lighter than Urbanist was, so the app's "semibold" is a firm
+      // medium, and large sizes are set tight.
+      fontWeight: {
+        medium: "450",
+        semibold: "510",
+        bold: "580",
+        extrabold: "680"
+      },
+      fontSize: {
+        xl: ["1.25rem", { lineHeight: "1.75rem", letterSpacing: "-0.015em" }],
+        "2xl": ["1.5rem", { lineHeight: "2rem", letterSpacing: "-0.025em" }],
+        "3xl": ["1.875rem", { lineHeight: "2.25rem", letterSpacing: "-0.03em" }],
+        "4xl": ["2.25rem", { lineHeight: "2.5rem", letterSpacing: "-0.035em" }],
+        "5xl": ["3rem", { lineHeight: "1.05", letterSpacing: "-0.04em" }],
+        "6xl": ["3.75rem", { lineHeight: "1", letterSpacing: "-0.045em" }]
+      },
+      letterSpacing: {
+        tight: "-0.025em",
+        tighter: "-0.04em"
+      },
       boxShadow: {
-        surface: "0 20px 40px -20px rgba(20, 35, 32, 0.35)",
-        focus: "0 0 0 3px rgba(79, 136, 98, 0.35)"
+        surface: "0 24px 60px -36px rgba(15, 20, 34, 0.35)",
+        focus: "0 0 0 3px rgba(20, 26, 43, 0.22)"
       },
       borderRadius: {
         sm: "var(--radius-sm)",

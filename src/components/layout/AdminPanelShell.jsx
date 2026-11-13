@@ -71,7 +71,7 @@ function PanelSidebarNav({ pathname, navItems, rootPath, onNavigate, badges, col
             // The rail has no titles: a rule between the groups.
             <div aria-hidden="true" className={cn("mx-1 h-px bg-veil/10", groupIndex === 0 ? "mb-3 mt-2" : "my-3")} />
           ) : (
-            <p aria-hidden="true" className={cn("mb-2 flex h-6 items-center px-[13px] text-[11.5px] font-medium uppercase tracking-[0.06em] text-ink-500", groupIndex === 0 ? "mt-3.5" : "mt-5")}>
+            <p aria-hidden="true" className={cn("mb-2 flex h-6 items-center px-[13px] text-[13px] font-normal tracking-[-0.005em] text-ink-400", groupIndex === 0 ? "mt-3.5" : "mt-5")}>
               {group.label}
             </p>
           )}
@@ -91,7 +91,7 @@ function PanelSidebarNav({ pathname, navItems, rootPath, onNavigate, badges, col
                     menuRow,
                     "admin-nav-row relative z-[1]",
                     collapsed ? menuRowIconOnly : menuRowInset,
-                    active ? "text-on-strong hover:bg-transparent hover:text-on-strong" : "text-ink-700 hover:bg-veil/5 hover:text-strong"
+                    active ? "text-strong hover:bg-transparent hover:text-strong" : "text-ink-600 hover:bg-veil/5 hover:text-strong"
                   )}
                   onClick={() => onNavigate(item.path)}
                 >
@@ -105,7 +105,7 @@ function PanelSidebarNav({ pathname, navItems, rootPath, onNavigate, badges, col
                     <>
                       <span className="min-w-0 flex-1 truncate text-left">{item.label}</span>
                       {badgeValue ? (
-                        <Badge className={cn("h-[22px] min-w-[22px] rounded-full px-1.5 py-0 text-xs font-semibold leading-none", active ? "bg-on-strong/20 text-on-strong" : "bg-veil/10 text-ink-700")}>
+                        <Badge className={cn("h-[22px] min-w-[22px] rounded-full px-1.5 py-0 text-xs font-semibold leading-none", active ? "bg-strong text-on-strong" : "bg-veil/10 text-ink-700")}>
                           {badgeValue}
                         </Badge>
                       ) : null}

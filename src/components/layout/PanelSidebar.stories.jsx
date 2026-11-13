@@ -119,8 +119,8 @@ export const GroupedPages = {
     // Each group has its title, a small quiet one, over its rows.
     for (const group of groups) {
       const title = within(group).getByText(group.getAttribute("aria-label"), { selector: "p" });
-      await expect(fontSize(title)).toBe(11.5);
-      await expect(getComputedStyle(title).textTransform).toBe("uppercase");
+      await expect(fontSize(title)).toBe(13);
+      await expect(getComputedStyle(title).textTransform).toBe("none");
       await expect(box(title).bottom).toBeLessThan(box(within(group).getAllByRole("button")[0]).top);
     }
     // Rows are 38px on the same 44px pitch everywhere in a group.
@@ -169,8 +169,8 @@ export const Expanded = {
 
     // The pages: a small title, then rows of 38px on a 44px pitch, with an icon of 18px and text of 14px.
     const title = canvas.getByText("Arbetsyta");
-    await expect(fontSize(title)).toBe(11.5);
-    await expect(getComputedStyle(title).textTransform).toBe("uppercase");
+    await expect(fontSize(title)).toBe(13);
+    await expect(getComputedStyle(title).textTransform).toBe("none");
     await expect(box(search).bottom).toBeLessThan(box(title).top);
     const nav = canvas.getByRole("navigation", { name: "Arbetsyta" });
     const rows = within(nav).getAllByRole("button");

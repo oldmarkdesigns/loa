@@ -331,7 +331,7 @@ const cardClass = "gap-0 py-0 p-4 sm:p-5";
 function CardHead({ eyebrow, title, hint }) {
   return (
     <>
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">{eyebrow}</p>
+      <p className="text-[11px] font-semibold text-ink-500">{eyebrow}</p>
       <h2 className="mt-0.5 text-lg font-semibold text-strong">{title}</h2>
       {hint ? <p className="mt-1 text-sm text-ink-600">{hint}</p> : null}
     </>
@@ -350,7 +350,7 @@ export function ListingEditorSections({ listing, editor }) {
   return (
     <Tabs value={editor.tab} onValueChange={editor.setTab} orientation={sidebar ? "vertical" : "horizontal"} className="min-h-0 min-w-0 flex-1 gap-0">
       <div className="shrink-0 border-b border-veil/10 bg-surface lg:w-[248px] lg:overflow-y-auto lg:border-b-0 lg:border-r">
-        <p className="hidden px-5 pt-5 text-[11px] font-semibold uppercase tracking-wide text-ink-500 lg:block">Kategorier</p>
+        <p className="hidden px-5 pt-5 text-[11px] font-semibold text-ink-500 lg:block">Kategorier</p>
         <TabsList aria-label="Objektets innehåll" className="!h-auto w-full max-w-full justify-start gap-1 overflow-x-auto bg-transparent p-3 lg:flex-col lg:items-stretch lg:overflow-visible">
           {categories.map(({ id, label, Icon }) => (
             <TabsTrigger key={id} value={id} className="!h-10 flex-none shrink-0 justify-start gap-2.5 px-3 text-sm font-semibold lg:w-full">

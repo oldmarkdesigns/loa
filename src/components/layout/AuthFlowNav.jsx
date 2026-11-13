@@ -32,7 +32,7 @@ function AuthFlowNav({ user, onSwitchRole, onLogout }) {
           <div className="flex min-w-0 items-center gap-4">
             <Button type="button" variant="ghost" className="h-auto justify-self-start p-0 text-left hover:bg-transparent" onClick={() => navigateTo("/")}>
               <span className="inline-flex items-center gap-2 rounded-xl border border-black/10 bg-[#ffffff] px-2.5 py-1.5">
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-dashed border-black/30 bg-[#ffffff] text-[9px] font-semibold uppercase tracking-wide text-ink-500">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-dashed border-black/30 bg-[#ffffff] text-[9px] font-semibold text-ink-500">
                   LOGGA
                 </span>
                 <span className="text-sm font-semibold text-ink-800">LOA</span>

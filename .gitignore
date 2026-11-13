@@ -8,3 +8,6 @@ dist
 
 *storybook.log
 storybook-static
+
+.playwright-cli/
+tmp/loa-playwright.json

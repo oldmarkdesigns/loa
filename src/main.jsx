@@ -4,7 +4,7 @@ import { ConvexProviderWithAuthKit } from "@convex-dev/workos";
 import App from "./App";
 import { initAnalytics } from "./lib/analytics";
 import { convex, workosRedirectUri } from "./lib/convex";
-import { navigateTo } from "./lib/router";
+import { navigateTo, publicReturnTo } from "./lib/router";
 import "./index.css";
 
 initAnalytics();
@@ -24,18 +24,10 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       }
       const hasSignupDraft = typeof window !== "undefined" && Boolean(window.sessionStorage.getItem("office_rental_signup_draft"));
       const returnTo = typeof state?.returnTo === "string" && state.returnTo.startsWith("/")
-        ? state.returnTo
+        ? (state.returnTo.startsWith("/signup?") ? state.returnTo : publicReturnTo(state.returnTo))
         : hasSignupDraft
           ? "/signup?step=profile-extra"
           : "/signup";
-      // TEMP DIAGNOSTIC - remove once the role-selection bounce is confirmed fixed.
-      console.warn("[DIAG onRedirectCallback]", {
-        stateReceived: state,
-        stateReturnTo: state?.returnTo,
-        hasSignupDraft,
-        draftRaw: typeof window !== "undefined" ? window.sessionStorage.getItem("office_rental_signup_draft") : null,
-        finalReturnTo: returnTo
-      });
       navigateTo(returnTo, { replace: true });
     }}
     onRefreshFailure={({ signIn }) => {

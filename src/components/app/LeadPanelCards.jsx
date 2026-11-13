@@ -7,7 +7,7 @@ import { formatSek } from "../../lib/formatters";
 
 // Shared by every card in the lead overlay: flat, hairline border only (the app uses no shadows).
 export const leadCardClass = "shadow-none";
-const titleClass = "text-[11px] font-semibold uppercase tracking-wide text-ink-500";
+const titleClass = "text-[11px] font-semibold text-ink-500";
 
 const activityStyles = {
   call: { Icon: Phone, className: "bg-blue-50 text-blue-700" },

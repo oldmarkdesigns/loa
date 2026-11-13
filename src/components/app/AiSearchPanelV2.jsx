@@ -115,7 +115,7 @@ function AiSearchPanelV2({
         </div>
 
         <form
-          className="mt-3 rounded-2xl border border-[#0b0a0e]/20 bg-[#ffffff] p-2"
+          className="mt-3 rounded-2xl border border-[#141a2b]/20 bg-[#ffffff] p-2"
           onSubmit={(event) => {
             event.preventDefault();
             submitPrompt(input);
@@ -125,7 +125,7 @@ function AiSearchPanelV2({
             <input
               value={input}
               onChange={(event) => setInput(event.target.value)}
-              className="field w-full border-[#0b0a0e]/25 bg-[#fdfefe]"
+              className="field w-full border-[#141a2b]/25 bg-[#fdfefe]"
               placeholder="Exempel: kontor i Solna för 16 personer, max 60000 kr"
             />
             <div className="flex justify-end gap-2">

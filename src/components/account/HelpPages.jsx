@@ -174,7 +174,7 @@ export function ContactPage({ onOpenPage }) {
         </div>
       </AccountSection>
 
-      <AccountNote>Lokalflöde Stockholm © {new Date().getFullYear()}</AccountNote>
+      <AccountNote>LOA © {new Date().getFullYear()}</AccountNote>
     </AccountPage>
   );
 }

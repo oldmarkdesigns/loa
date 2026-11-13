@@ -37,7 +37,7 @@ function ListingModal({ listing, onClose, onToggleShortlist, shortlisted, onBook
 
           <div className="space-y-5 p-6">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-ink-500">Objektsdetaljer</p>
+              <p className="text-xs font-semibold text-ink-500">Objektsdetaljer</p>
               <h2 className="font-display text-2xl font-semibold text-ink-900">{listing.title}</h2>
               <p className="text-sm text-ink-600">
                 {listing.district} • {listing.address}

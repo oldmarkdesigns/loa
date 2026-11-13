@@ -316,7 +316,7 @@ function BrokerListingsSection({ app }) {
         <div className="border-b border-veil/10 px-4 py-4 sm:px-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Hantera objekt</p>
+              <p className="text-xs font-semibold text-ink-500">Hantera objekt</p>
               <p className="mt-1 text-sm text-ink-600">Välj ett objekt för att redigera uppgifterna.</p>
             </div>
             <Badge variant="outline" className="h-auto rounded-full bg-veil/10 px-2 py-0.5 text-[11px] font-semibold text-ink-700">{filteredListings.length} objekt</Badge>
@@ -400,7 +400,7 @@ function ListingEditorSidePanel(props) {
 function ProspectWorkspaceCard({ title, children }) {
   return (
     <Card className="gap-0 py-0 p-4 sm:p-5">
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">{title}</p>
+      <p className="text-[11px] font-semibold text-ink-500">{title}</p>
       <div className="mt-3">{children}</div>
     </Card>
   );
@@ -750,7 +750,7 @@ function BrokerProspectsSection({ app }) {
         <div className="border-b border-veil/10 px-4 py-4 sm:px-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Prospekt</p>
+              <p className="text-xs font-semibold text-ink-500">Prospekt</p>
               {ownListings.length > 0 ? (
                 <div className="mt-2 flex flex-wrap items-center gap-2">
                   <Select
@@ -786,7 +786,7 @@ function BrokerProspectsSection({ app }) {
         {loadError ? <div role="alert" className="p-5 text-sm text-rose-700">{loadError}<Button variant="link" onClick={loadProspects}>Försök igen</Button></div> : null}
         <div className="overflow-x-auto">
           <Table className="min-w-[860px]">
-            <TableHeader className="bg-canvas text-[11px] uppercase tracking-wide text-ink-500">
+            <TableHeader className="bg-canvas text-[11px] text-ink-500">
               <TableRow className="hover:bg-transparent">
                 <TableHead className="px-4 py-3 sm:px-5">Prospekt</TableHead>
                 <TableHead className="px-4 py-3">Objekt</TableHead>
@@ -946,7 +946,7 @@ export function LeadDetailPanel({ lead, app, onClose }) {
         <div className="shrink-0 border-b border-border px-5 py-4">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-500">Lead</p>
+              <p className="text-[11px] font-semibold text-ink-500">Lead</p>
               <h2 className="mt-0.5 truncate text-xl font-semibold text-ink-900">{lead.renter?.name || lead.renter?.email || "Hyresgäst"}</h2>
               <p className="mt-0.5 text-sm text-ink-500">Berätta vad som hänt så hjälper assistenten dig vidare.</p>
             </div>
@@ -1068,7 +1068,7 @@ function BrokerLeadsSection({ app }) {
         <div className="border-b border-veil/10 px-4 py-4 sm:px-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-ink-500">Intresseanmälningar</p>
+              <p className="text-xs font-semibold text-ink-500">Intresseanmälningar</p>
               <p className="mt-1 text-sm text-ink-600">Klicka på en rad för att följa upp med hjälp av assistenten och se loggen.</p>
             </div>
             <Badge variant="outline" className="h-auto rounded-full bg-veil/10 px-2 py-0.5 text-[11px] font-semibold text-ink-700">{rows.length} rader</Badge>
@@ -1077,7 +1077,7 @@ function BrokerLeadsSection({ app }) {
 
         <div className="overflow-x-auto">
           <Table className="min-w-[900px]">
-            <TableHeader className="bg-canvas text-[11px] uppercase tracking-wide text-ink-500">
+            <TableHeader className="bg-canvas text-[11px] text-ink-500">
               <TableRow className="hover:bg-transparent">
                 <TableHead className="px-4 py-3 sm:px-5">Hyresgäst</TableHead>
                 <TableHead className="px-4 py-3">Objekt</TableHead>

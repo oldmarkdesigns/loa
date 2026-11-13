@@ -94,7 +94,7 @@ export const AvatarOverDarkHero = {
   args: { user: withPhoto, overHero: true, fadeWithScroll: true },
   decorators: [
     (Story) => (
-      <div className="bg-[#0b0a0e]">
+      <div className="bg-[#141a2b]">
         <Story />
       </div>
     )

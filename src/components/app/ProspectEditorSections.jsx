@@ -558,7 +558,7 @@ export function ProspectEditorSections({ editor, listingSummary, activeKind = nu
       })}
 
       {showCustomSections && customSections.length > 0 ? (
-        <p className="pt-2 text-[11px] font-semibold uppercase tracking-wide text-ink-500">Egna sektioner</p>
+        <p className="pt-2 text-[11px] font-semibold text-ink-500">Egna sektioner</p>
       ) : null}
 
       {showCustomSections ? customSections.map((section) => (

@@ -1,24 +1,19 @@
-import { Button } from "@/components/ui/button";
-
+// The premium invitation, as the site's dark band: navy paper, one large line, a light pill.
 function PremiumPromoCard({ className = "", onUpgrade, buttonLabel = "Uppgradera (demo)" }) {
-  const cardClassName = ["rounded-3xl border border-veil/10 bg-surface p-5", className].filter(Boolean).join(" ");
+  const cardClassName = ["rounded-[22px] bg-[#0f1422] p-6 text-white", className].filter(Boolean).join(" ");
 
   return (
-    <article className={cardClassName}>
-      <p className="text-[34px] font-semibold leading-[1.05] text-strong">
-        Stick ut med
-        <span className="mt-1 block w-fit rounded-2xl bg-[#f3d571] px-2 py-1 text-[34px] leading-none text-[#352922]">
-          Lokalflöde Premium
-        </span>
-      </p>
-      <p className="mt-3 text-sm text-ink-600">Premiumprofiler får i snitt fler relevanta förfrågningar och snabbare återkoppling.</p>
-      <Button
+    <article className={cardClassName} data-premium-card>
+      <p className="text-[13px] text-white/50">LOA Premium</p>
+      <p className="mt-3 text-[30px] font-normal leading-[1.05] tracking-[-0.04em] text-balance">Stick ut för hyresvärdarna.</p>
+      <p className="mt-3 text-sm text-white/60">Premiumprofiler får i snitt fler relevanta förfrågningar och snabbare återkoppling.</p>
+      <button
         type="button"
-        className="mt-4 h-auto rounded-full border-strong bg-control px-4 py-2.5 text-sm font-semibold text-strong hover:bg-control"
+        className="mt-6 inline-flex h-10 !min-h-0 items-center !rounded-full bg-white px-5 text-sm font-medium text-[#0f1422] transition-colors hover:bg-white/90"
         onClick={onUpgrade}
       >
         {buttonLabel}
-      </Button>
+      </button>
     </article>
   );
 }
