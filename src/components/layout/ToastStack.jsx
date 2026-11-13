@@ -1,4 +1,4 @@
-function ToastStack({ toasts = [] }) {
+function ToastStack({ toasts = [], workspace = false }) {
   if (!toasts.length) {
     return null;
   }
@@ -8,6 +8,9 @@ function ToastStack({ toasts = [] }) {
       {toasts.map((toast) => (
         <div
           key={toast.id}
+          data-loa-surface={workspace ? "toast" : undefined}
+          data-tone={toast.type}
+          role={toast.type === "error" ? "alert" : "status"}
           className={`rounded-2xl border px-4 py-3 text-sm font-semibold ${
             toast.type === "success"
               ? "border-[#10b981]/50 bg-[#047857] text-white"

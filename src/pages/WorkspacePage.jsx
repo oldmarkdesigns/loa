@@ -1,3 +1,4 @@
+import { WorkspaceDesignProvider } from "../components/layout/WorkspaceDesign";
 import AppShell from "../components/layout/AppShell";
 import AdminPanelPage from "./app/AdminPanelPage";
 import BrokerPanelPage from "./app/BrokerPanelPage";
@@ -11,7 +12,7 @@ import ProspectRenterPage from "./app/ProspectRenterPage";
 import PublishPage from "./app/PublishPage";
 import { defaultAppPathForUser, navigateTo, routeMatches } from "../lib/router";
 
-export default function WorkspacePage({ app, pathname }) {
+function WorkspaceContent({ app, pathname }) {
   const publishing = pathname === "/app/publish";
   const background = publishing ? window.history.state?.publishBackground : null;
   const path = publishing ? background?.split(/[?#]/)[0] || defaultAppPathForUser(app.user) : pathname;
@@ -31,4 +32,8 @@ export default function WorkspacePage({ app, pathname }) {
     {content}
     {publishing && <PublishPage app={app} onClose={() => background ? window.history.back() : navigateTo(path, { replace: true })} />}
   </AppShell>;
+}
+
+export default function WorkspacePage(props) {
+  return <WorkspaceDesignProvider><WorkspaceContent {...props} /></WorkspaceDesignProvider>;
 }

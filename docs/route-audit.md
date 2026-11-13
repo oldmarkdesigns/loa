@@ -54,3 +54,16 @@ The workspace header contains a single Byt till sökläge action, with no Admin/
 Admin content now shares LOA's white surfaces, navy text, hairlines and lighter typography. KPI summaries are an open numeric strip; chart empty states are flat sections; tables, fields, filters and cards share the updated treatment. Existing callbacks and backend operations are retained.
 
 Verified in Chromium with the real components and fixture data: overview, sidebar avatar, profile window open/close, switching to search, search avatar dropdown, returning to admin, and mobile drawer/account controls. Screenshots inspected at desktop and mobile sizes. Build, account-routing and auth-safety checks pass. No account or backend data changed.
+
+
+## Overlay coverage and radius system
+
+WorkspaceDesignProvider now carries the admin visual identity through React portals. Dialogs, confirmation dialogs, sheets, popovers, select menus, nested dropdowns and tooltips inherit the workspace styling without changing open/close, keyboard, selection or save/discard behavior. The assistant panel, chart tooltip boxes and workspace notifications are covered too.
+
+Shared shape tokens in src/radius.css apply across public pages, account screens, admin and overlays: controls 4px, cards/media 6px, menus/dialogs 8px. Avatars, status dots and switch/radio controls retain their circular meaning. Storybook loads the same shape system. Competing forced-pill and forced-square rules were replaced.
+
+Browser checks covered nested dialog → popover → select, nested confirmation cancel, sheet and dropdown opening/closing, actual listing-editor rendering at desktop/mobile sizes, and absence of workspace-specific portal markers outside the workspace provider. Public CTA/filter/input radii and listing media radii were checked via computed styles. No account or listing data was submitted.
+
+The hosted WorkOS screens are supplied by WorkOS and do not load LOA repository CSS.
+
+Text-input focus uses a single darker field border; additional outline and shadow rings are removed. Checkbox/radio focus and other keyboard controls retain their normal indicators. The hosted WorkOS sign-up form was observed to retain provider-owned styling; LOA's radius CSS does not affect it.

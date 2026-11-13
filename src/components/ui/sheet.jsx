@@ -1,3 +1,4 @@
+import { useWorkspaceSurface } from "../layout/WorkspaceDesign";
 import * as React from "react"
 import { Dialog as SheetPrimitive } from "@base-ui/react/dialog"
 import { cn } from "cn"
@@ -33,8 +34,10 @@ function SheetOverlay({
   className,
   ...props
 }) {
+  const workspaceSurface = useWorkspaceSurface("backdrop");
   return (
     <SheetPrimitive.Backdrop
+      data-loa-surface={workspaceSurface}
       data-slot="sheet-overlay"
       className={cn(
         "fixed inset-0 z-50 bg-black/10 dark:bg-black/55 transition-opacity duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0 supports-backdrop-filter:backdrop-blur-xs",
@@ -51,10 +54,12 @@ function SheetContent({
   showCloseButton = true,
   ...props
 }) {
+  const workspaceSurface = useWorkspaceSurface("panel");
   return (
     <SheetPortal>
       <SheetOverlay />
       <SheetPrimitive.Popup
+        data-loa-surface={workspaceSurface}
         data-slot="sheet-content"
         data-side={side}
         className={cn(

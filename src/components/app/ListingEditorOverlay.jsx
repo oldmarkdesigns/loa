@@ -328,10 +328,9 @@ function categoryIssues(draft) {
 
 const cardClass = "gap-0 py-0 p-4 sm:p-5";
 
-function CardHead({ eyebrow, title, hint }) {
+function CardHead({ title, hint }) {
   return (
     <>
-      <p className="text-[11px] font-semibold text-ink-500">{eyebrow}</p>
       <h2 className="mt-0.5 text-lg font-semibold text-strong">{title}</h2>
       {hint ? <p className="mt-1 text-sm text-ink-600">{hint}</p> : null}
     </>

@@ -1,5 +1,6 @@
 "use client"
 
+import { useWorkspaceSurface } from "../layout/WorkspaceDesign";
 import * as React from "react"
 import { AlertDialog as AlertDialogPrimitive } from "@base-ui/react/alert-dialog"
 import { cn } from "cn"
@@ -28,8 +29,10 @@ function AlertDialogOverlay({
   className,
   ...props
 }) {
+  const workspaceSurface = useWorkspaceSurface("backdrop");
   return (
     <AlertDialogPrimitive.Backdrop
+      data-loa-surface={workspaceSurface}
       data-slot="alert-dialog-overlay"
       className={cn(
         "fixed inset-0 isolate z-50 bg-black/10 dark:bg-black/55 duration-100 supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
@@ -44,10 +47,12 @@ function AlertDialogContent({
   size = "default",
   ...props
 }) {
+  const workspaceSurface = useWorkspaceSurface("panel");
   return (
     <AlertDialogPortal>
       <AlertDialogOverlay />
       <AlertDialogPrimitive.Popup
+        data-loa-surface={workspaceSurface}
         data-slot="alert-dialog-content"
         data-size={size}
         className={cn(

@@ -11,7 +11,7 @@
 export const menuHeight = "h-[38px]";
 
 /** A row of the menu: a page, the way over to searching, an entry of the profile menu. */
-export const menuRow = `${menuHeight} min-h-0 w-full !rounded-full text-sm font-normal focus-visible:ring-veil/20`;
+export const menuRow = `${menuHeight} min-h-0 w-full !rounded-md text-sm font-normal focus-visible:ring-veil/20`;
 
 /** How a row lays out its icon and its label. */
 export const menuRowInset = "justify-start gap-2.5 px-3";

@@ -1,5 +1,6 @@
 "use client"
 
+import { useWorkspaceSurface } from "../layout/WorkspaceDesign";
 import * as React from "react"
 import { Select as SelectPrimitive } from "@base-ui/react/select"
 import { cn } from "cn"
@@ -93,6 +94,7 @@ function SelectContent({
   alignItemWithTrigger = false,
   ...props
 }) {
+  const workspaceSurface = useWorkspaceSurface("panel");
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Positioner
@@ -103,6 +105,7 @@ function SelectContent({
         alignItemWithTrigger={alignItemWithTrigger}
         className="isolate z-50">
         <SelectPrimitive.Popup
+          data-loa-surface={workspaceSurface}
           data-slot="select-content"
           data-align-trigger={alignItemWithTrigger}
           className={cn(

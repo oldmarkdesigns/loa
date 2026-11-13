@@ -1,5 +1,6 @@
 import { useLayoutEffect } from "react";
 import "../src/index.css";
+import "../src/radius.css";
 import { SIDEBAR_DISPLAY_KEY } from "../src/lib/sidebarDisplay";
 import { THEME_STORAGE_KEY, ThemeProvider, withoutTransitions } from "../src/lib/theme";
 

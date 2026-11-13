@@ -34,11 +34,11 @@
     --chart-3: oklch(0.55 0.03 268);
     --chart-4: oklch(0.72 0.02 268);
     --chart-5: oklch(0.88 0.01 268);
-    --radius: 0.75rem;
-    --radius-sm: calc(var(--radius) - 4px);
-    --radius-md: calc(var(--radius) - 2px);
-    --radius-lg: var(--radius);
-    --radius-xl: calc(var(--radius) + 4px);
+    --radius: var(--loa-radius-surface, 6px);
+    --radius-sm: var(--loa-radius-control, 4px);
+    --radius-md: var(--loa-radius-control, 4px);
+    --radius-lg: var(--loa-radius-surface, 6px);
+    --radius-xl: var(--loa-radius-overlay, 8px);
     --sidebar: oklch(0.99 0.002 268);
     --sidebar-foreground: oklch(0.225 0.035 268);
     --sidebar-primary: oklch(0.225 0.035 268);
@@ -436,7 +436,7 @@ textarea::placeholder {
   display: inline-block;
   width: 4px;
   height: 4px;
-  border-radius: 9999px;
+  border-radius: var(--loa-radius-control, 4px);
   background-color: currentColor;
   animation: button-loading-dot 1.1s ease-in-out infinite;
 }
@@ -581,7 +581,7 @@ input[type="number"]::-webkit-inner-spin-button {
 .calendar-scope [data-day] {
   /* Deliberately exempt from the platform's button-radius rule below — calendar day
      cells stay circular, matching the near-universal date-picker convention. */
-  border-radius: 9999px !important;
+  border-radius: var(--loa-radius-control, 4px) !important;
 }
 
 .ui-chevron {
@@ -607,17 +607,16 @@ button[class*="text-xs"] {
    matches the active-tab radius in the admin/broker sidebar (.admin-nav-indicator). */
 button,
 [role="button"] {
-  border-radius: 0.75rem !important;
+  border-radius: var(--loa-radius-control, 4px) !important;
 }
 
-/* Actions (the shared Button at a fixed height) are pills, as on the public site; Buttons that are cards or rows
-   (h-auto) and other pressable things keep the squared radius above. */
+/* Fixed-height actions share the same small control radius as other buttons. */
 [data-slot="button"]:not([class*="h-auto"]):not([class*="h-full"]):not([class*="rounded-none"]):not(:has(img)) {
-  border-radius: 9999px !important;
+  border-radius: var(--loa-radius-control, 4px) !important;
 }
 
 .gallery-thumb-button {
-  border-radius: 0.75rem !important;
+  border-radius: var(--loa-radius-control, 4px) !important;
 }
 
 .gallery-mosaic-tile {
@@ -626,7 +625,7 @@ button,
 }
 
 .profile-card-button {
-  border-radius: 0.75rem !important;
+  border-radius: var(--loa-radius-control, 4px) !important;
 }
 
 .close-circle-button {
@@ -637,19 +636,19 @@ button,
   padding: 0 !important;
   aspect-ratio: 1 / 1 !important;
   flex-shrink: 0 !important;
-  border-radius: 0.75rem !important;
+  border-radius: var(--loa-radius-control, 4px) !important;
 }
 
 .role-option-button {
-  border-radius: 0.75rem !important;
+  border-radius: var(--loa-radius-control, 4px) !important;
 }
 
 .step-pill-button {
-  border-radius: 0.75rem !important;
+  border-radius: var(--loa-radius-control, 4px) !important;
 }
 
 .menu-hover-row {
-  border-radius: 0.75rem !important;
+  border-radius: var(--loa-radius-control, 4px) !important;
 }
 
 /* Admin/broker side menu open + collapse: smooth glide with a subtle spring overshoot. The card (.admin-sidebar-panel) and its
@@ -678,7 +677,7 @@ button,
   right: 0;
   top: 0;
   height: 0;
-  border-radius: 9999px;
+  border-radius: var(--loa-radius-control, 4px);
   background: rgb(var(--veil) / calc(0.07 * var(--veil-gain, 1)));
   opacity: 0;
   pointer-events: none;
@@ -705,7 +704,7 @@ button,
   bottom: 0;
   left: 0;
   width: 0;
-  border-radius: 9999px;
+  border-radius: var(--loa-radius-control, 4px);
   background: rgb(var(--veil) / calc(0.07 * var(--veil-gain, 1)));
   opacity: 0;
   pointer-events: none;
@@ -780,22 +779,22 @@ button,
 }
 
 .tab-underline-button {
-  border-radius: 0.75rem !important;
+  border-radius: var(--loa-radius-control, 4px) !important;
 }
 
 .message-list-row {
-  border-radius: 1.625rem !important;
+  border-radius: var(--loa-radius-surface, 6px) !important;
   overflow: hidden;
   min-height: 0 !important;
 }
 
 .message-suggestion-card {
-  border-radius: 1rem !important;
+  border-radius: var(--loa-radius-surface, 6px) !important;
   min-height: 0 !important;
 }
 
 .notification-card-button {
-  border-radius: 0.75rem !important;
+  border-radius: var(--loa-radius-control, 4px) !important;
 }
 
 .nav-underline-anim {
@@ -862,7 +861,7 @@ button[class*="bg-surface"][class*="border-veil/10"]:hover {
 /* Shared admin workspace rhythm; uses the established monochrome/ink palette. */
 .admin-platform,
 .admin-workspace {
-  --radius: 0.625rem;
+  --radius: var(--loa-radius-surface, 6px);
   --primary: #141a2b;
   --primary-foreground: #ffffff;
   --muted: #f7f7f7;
@@ -885,7 +884,7 @@ button[class*="bg-surface"][class*="border-veil/10"]:hover {
 .admin-platform [data-slot="table-head"] { font-size: 0.75rem; color: rgb(var(--ink-500)); }
 .admin-platform [data-slot="table-cell"] { vertical-align: middle; }
 .admin-platform .admin-nav-indicator,
-.admin-workspace .admin-nav-indicator { border-radius: 0.5rem; }
+.admin-workspace .admin-nav-indicator { border-radius: var(--loa-radius-control, 4px); }
 .admin-platform [data-slot="select-trigger"] { max-width: 100%; }
 .admin-workspace [data-slot="tabs-trigger"][data-active],
 .admin-platform [data-slot="tabs-trigger"][data-active] { background: rgb(var(--surface)); color: rgb(var(--strong)); box-shadow: 0 1px 3px #00000012; }
@@ -952,7 +951,7 @@ button[class*="bg-surface"][class*="border-veil/10"]:hover {
   top: 0;
   left: 0;
   pointer-events: none;
-  border-radius: 9999px;
+  border-radius: var(--loa-radius-control, 4px);
   background: rgb(var(--strong));
   z-index: -1;
   transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
@@ -1001,7 +1000,7 @@ button[class*="bg-surface"][class*="border-veil/10"]:hover {
 [data-flash="true"] {
   outline: 2px solid rgb(var(--brand-600));
   outline-offset: 3px;
-  border-radius: 0.5rem;
+  border-radius: var(--loa-radius-control, 4px);
 }
 
 /* Liquid glass, iOS style: a mostly transparent disc that blurs and brightens whatever is behind it, edged by a bright
@@ -1112,10 +1111,9 @@ button[class*="bg-surface"][class*="border-veil/10"]:hover {
   container-name: chart-center;
 }
 
-/* Segmented controls read as the site's Lista/Karta switch: a hairline pill
-   with a sliding thumb, not a grey tray. */
+/* Segmented controls share the small-radius Lista/Karta switch geometry. */
 [data-slot="toggle-group"] {
-  border-radius: 9999px !important;
+  border-radius: var(--loa-radius-control, 4px) !important;
 }
 [data-slot="toggle-group"][data-sliding-selection="true"] {
   background: transparent !important;
@@ -1123,5 +1121,5 @@ button[class*="bg-surface"][class*="border-veil/10"]:hover {
   padding: 4px;
 }
 [data-slot="toggle-group-item"] {
-  border-radius: 9999px !important;
+  border-radius: var(--loa-radius-control, 4px) !important;
 }

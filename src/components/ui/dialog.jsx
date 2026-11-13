@@ -1,5 +1,6 @@
 "use client"
 
+import { useWorkspaceSurface } from "../layout/WorkspaceDesign";
 import * as React from "react"
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 import { cn } from "cn"
@@ -35,8 +36,10 @@ function DialogOverlay({
   className,
   ...props
 }) {
+  const workspaceSurface = useWorkspaceSurface("backdrop");
   return (
     <DialogPrimitive.Backdrop
+      data-loa-surface={workspaceSurface}
       data-slot="dialog-overlay"
       className={cn(
         "fixed inset-0 isolate z-50 bg-black/10 dark:bg-black/55 duration-100 supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
@@ -52,10 +55,12 @@ function DialogContent({
   showCloseButton = true,
   ...props
 }) {
+  const workspaceSurface = useWorkspaceSurface("panel");
   return (
     <DialogPortal>
       <DialogOverlay />
       <DialogPrimitive.Popup
+        data-loa-surface={workspaceSurface}
         data-slot="dialog-content"
         className={cn(
           "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-6 rounded-xl bg-popover p-6 text-sm text-popover-foreground ring-1 ring-veil/10 dialog-slide-up outline-none sm:max-w-md",

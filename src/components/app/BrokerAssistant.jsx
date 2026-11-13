@@ -1,3 +1,4 @@
+import { useWorkspaceSurface } from "../layout/WorkspaceDesign";
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
@@ -557,6 +558,7 @@ export function BrokerAssistantPage() {
 // ── The button in the corner ─────────────────────────────────────────────────────────────────
 
 function BrokerAssistantPanel({ onClose }) {
+  const workspaceSurface = useWorkspaceSurface();
   const assistant = useBrokerAssistant();
   const scrollRef = useRef(null);
   useKeepLatestInView(scrollRef, `${assistant.thread.length}:${assistant.phase}`);
@@ -573,6 +575,7 @@ function BrokerAssistantPanel({ onClose }) {
     <section
       role="dialog"
       aria-modal="false"
+      data-loa-surface={workspaceSurface}
       aria-label="Assistent"
       onKeyDown={handleKeyDown}
       className="fixed bottom-[5.5rem] right-4 z-40 flex h-[min(580px,calc(100dvh-10rem))] w-[min(400px,calc(100vw-2rem))] origin-bottom-right flex-col overflow-hidden rounded-2xl border border-veil/10 bg-surface text-strong duration-200 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-3 sm:bottom-24 sm:right-6"
@@ -605,6 +608,7 @@ function BrokerAssistantPanel({ onClose }) {
 
 /** Fixed button in the bottom-right corner of the panel: the orb in a glass avatar. Opens the assistant. `hidden` on the assistant's own page. */
 export function BrokerAssistantLauncher({ hidden = false }) {
+  const workspaceSurface = useWorkspaceSurface("launcher");
   const assistant = useBrokerAssistant();
   const trigger = useRef(null);
   const mustClose = hidden && Boolean(assistant?.open);
@@ -630,6 +634,7 @@ export function BrokerAssistantLauncher({ hidden = false }) {
       {open ? <BrokerAssistantPanel onClose={close} /> : null}
       <Button
         ref={trigger}
+        data-loa-surface={workspaceSurface}
         type="button"
         variant="ghost"
         aria-label={open ? "Stäng assistenten" : "Öppna assistenten"}

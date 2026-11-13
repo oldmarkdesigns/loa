@@ -1,4 +1,5 @@
 "use client";;
+import { useWorkspaceSurface } from "../../layout/WorkspaceDesign";
 import { motion, useSpring } from "motion/react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -108,6 +109,7 @@ function TooltipBoxInner({
     animatedTop,
   ]);
 
+  const workspaceSurface = useWorkspaceSurface();
   const prevFlipRef = useRef(shouldFlipX);
   const [flipKey, setFlipKey] = useState(0);
 
@@ -145,7 +147,7 @@ function TooltipBoxInner({
       className={cn("pointer-events-none absolute z-50", className)}
       ref={tooltipRef}
       style={{ left: staticPosition.left, top: staticPosition.top }}>
-      <div className={panelClassName} style={panelStyleResolved}>
+      <div data-loa-surface={workspaceSurface} className={panelClassName} style={panelStyleResolved}>
         {children}
       </div>
     </div>, container);
@@ -161,6 +163,7 @@ function TooltipBoxInner({
     transition={{ duration: 0.1 }}>
     <motion.div
       animate={{ scale: 1, opacity: 1, x: 0 }}
+      data-loa-surface={workspaceSurface}
       className={panelClassName}
       initial={{ scale: 0.85, opacity: 0, x: isFlipped ? 20 : -20 }}
       key={flipKey}

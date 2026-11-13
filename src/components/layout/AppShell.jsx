@@ -1,3 +1,4 @@
+import { useWorkspaceSurface } from "./WorkspaceDesign";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { navigateTo, routeMatches } from "../../lib/router";
 import { deriveNavbarRoleState } from "../../lib/navbarRoles";
@@ -29,6 +30,7 @@ function AppShell({
   isGuest = false,
   children
 }) {
+  const workspaceSurface = useWorkspaceSurface();
   const isAdminContext = routeMatches(pathname, "/app/admin");
   const { activeRole, hasBrokerAccess: hasPublisherAccess } = deriveNavbarRoleState(user, { isGuest });
   const isPublisherWorkspacePath = (
@@ -108,7 +110,7 @@ function AppShell({
     // The theme (light, dark or the system's) is one for the whole shell: the workspace panels and search mode look the same in it,
     // and the header of search mode is inside it, so the switch in its profile menu can reach it.
     <ThemeProvider>
-      <main className={`flex h-screen flex-col overflow-hidden text-strong ${isPanelContext ? "bg-canvas" : "bg-page"}`}>
+      <main data-loa-surface={workspaceSurface} className={`flex h-screen flex-col overflow-hidden text-strong ${isPanelContext ? "bg-canvas" : "bg-page"}`}>
         {isPanelContext ? null : (
           <MarketingHeader
             pathname={pathname}

@@ -63,7 +63,7 @@ function AppContent() {
   else if (onboarding) content = app.user ? <OnboardingPage user={app.user} onComplete={app.completeOnboarding} onCheckCompanyByOrganizationNumber={app.findCompanyByOrganizationNumber} onSwitchRole={app.switchRole} onLogout={app.logout} pathname={pathname} /> : null;
   else if (pathname.startsWith("/prospekt/dela/")) content = <ProspectGuestPage token={pathname.slice("/prospekt/dela/".length)} />;
   else content = <SiteFrame {...shared}><AccountLayout label="404" title="Sidan finns inte." lede="Gå till lediga lokaler för att fortsätta."><a className="lo-btn" href="/lokaler">Se lediga lokaler</a></AccountLayout></SiteFrame>;
-  return <>{content}<ToastStack toasts={app.toasts} /></>;
+  return <>{content}<ToastStack toasts={app.toasts} workspace={workspace} /></>;
 }
 export default function App() {
   return <AppProvider><TooltipProvider><AppContent /></TooltipProvider></AppProvider>;

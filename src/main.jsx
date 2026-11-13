@@ -6,6 +6,7 @@ import { initAnalytics } from "./lib/analytics";
 import { convex, workosRedirectUri } from "./lib/convex";
 import { navigateTo, publicReturnTo } from "./lib/router";
 import "./index.css";
+import "./radius.css";
 
 initAnalytics();
 

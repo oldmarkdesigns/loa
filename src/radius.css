@@ -1,0 +1,79 @@
+/* LOA shape system. These are size classes, not separate themes. */
+:root {
+  --loa-radius-control: 4px;
+  --loa-radius-surface: 6px;
+  --loa-radius-overlay: 8px;
+}
+html body :is(button,[role="button"],input:not([type="radio"]),textarea,select,[data-slot="select-trigger"],[data-slot="tabs-trigger"],[data-slot="toggle-group-item"]) {
+  border-radius: var(--loa-radius-control) !important;
+}
+html body :is(.lo,.admin-platform,.admin-workspace,[data-loa-surface="panel"]) :is(button,[role="button"],input:not([type="radio"]),textarea,select,[data-slot="select-trigger"],[data-slot="tabs-trigger"],[data-slot="toggle-group-item"]) {
+  border-radius: var(--loa-radius-control) !important;
+}
+html body :is([data-slot="card"],.surface,.card-click-surface) {
+  border-radius: var(--loa-radius-surface) !important;
+}
+html body :is(.admin-platform,.admin-workspace,[data-loa-surface="panel"]) :is(div,section,article,aside,figure,nav)[class*="rounded"]:not([data-slot="avatar"]) {
+  border-radius: var(--loa-radius-surface) !important;
+}
+html body :is(.admin-platform,.admin-workspace,[data-loa-surface="panel"]) :is([data-slot="card"],[data-slot="card-header"],[data-slot="card-content"],[data-slot="card-footer"]) {
+  border-radius: var(--loa-radius-surface) !important;
+}
+html body :is([data-slot="dialog-content"],[data-slot="alert-dialog-content"],[data-slot="sheet-content"],[data-slot="popover-content"],[data-slot="dropdown-menu-content"],[data-slot="dropdown-menu-sub-content"],[data-slot="select-content"],.lo-dialog,.lo-dd-panel,.lo-peek,.lo-mobile,.loa-account-popover) {
+  border-radius: var(--loa-radius-overlay) !important;
+}
+html body [data-loa-surface="panel"]:is([data-slot="dialog-content"],[data-slot="alert-dialog-content"],[data-slot="sheet-content"],[data-slot="popover-content"],[data-slot="dropdown-menu-content"],[data-slot="dropdown-menu-sub-content"],[data-slot="select-content"]) {
+  border-radius: var(--loa-radius-overlay) !important;
+}
+html body :is([role="menuitem"],[role="menuitemradio"],[role="menuitemcheckbox"],[role="option"],[data-slot="tooltip-content"],[data-slot="checkbox"],[data-slot="kbd"],[data-slot="badge"]) {
+  border-radius: var(--loa-radius-control) !important;
+}
+html body :is(.lo,.admin-platform,.admin-workspace,[data-loa-surface="panel"]) :is([role="menuitem"],[role="menuitemradio"],[role="menuitemcheckbox"],[role="option"],[data-slot="checkbox"],[data-slot="kbd"],[data-slot="badge"]) {
+  border-radius: var(--loa-radius-control) !important;
+}
+html body .lo :is(.lo-btn,.lo-nav-cta,.lo-dd-btn,.lo-dd-option,.lo-nav-login,.lo-ask-row,.lo-view-switch,.lo-view-switch button,.lo-field input,.lo-field textarea) {
+  border-radius: var(--loa-radius-control) !important;
+}
+html body .lo :is(.lo-cover,.lo-menu-card,.lo-mini-img,.lo-peek-img,.lo-page-head-media,.lo-page-head-media img,.lo-page-media figure,.lo-page-media img,.lo-viewing-media,.lo-viewing-media img) {
+  border-radius: var(--loa-radius-surface);
+  overflow: hidden;
+}
+html body .lo :is(.lo-panel,.lo-dd-panel,.lo-peek,.lo-dialog,.lo-mobile) {
+  border-radius: var(--loa-radius-overlay) !important;
+}
+html body :is(.menu-selection-indicator,.admin-nav-indicator,.program-step-selection-indicator,[data-slot="toggle-group"],[data-slot="tabs-list"]) {
+  border-radius: var(--loa-radius-control) !important;
+}
+html body :is(.admin-platform,.admin-workspace,[data-loa-surface="panel"]) :is(.menu-selection-indicator,.admin-nav-indicator,.program-step-selection-indicator,[data-slot="toggle-group"],[data-slot="tabs-list"]) {
+  border-radius: var(--loa-radius-control) !important;
+}
+html body [data-loa-surface="toast"] { border-radius: var(--loa-radius-surface) !important; }
+
+/* A person, a status dot and a switch thumb are semantic circles, not cards. */
+html body :is([data-slot="avatar"],[data-slot="avatar-image"],[data-slot="avatar-fallback"],[data-slot="radio-group-item"],[data-slot="switch"],[data-slot="switch-thumb"]) {
+  border-radius: 999px !important;
+}
+html body :is(button,.lo-avatar-trigger):has(> [data-slot="avatar"]) {
+  border-radius: 999px !important;
+}
+html body .lo .lo-avatar-trigger { border-radius: 999px !important; }
+
+
+html body .lo :is(.lo-view,.lo-view-thumb,.lo-cover-tag,.lo-choice,.lo-dd-check,.lo-chip) {
+  border-radius: var(--loa-radius-control) !important;
+}
+html body .lo :is(.lo-choice,.lo-card,.lo-mini-card) { border-radius: var(--loa-radius-surface); }
+
+/* A focused text field uses its own border, never a second surrounding ring. */
+html body :is(input:not([type="checkbox"],[type="radio"],[type="range"]),textarea):focus-visible,
+html body :is(.lo,.admin-platform,.admin-workspace,[data-loa-surface="panel"]) :is(input:not([type="checkbox"],[type="radio"],[type="range"]),textarea):focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+html body :is(input:not([type="checkbox"],[type="radio"],[type="range"]),textarea):focus-visible:not([aria-invalid="true"]) {
+  border-color: rgb(var(--strong, 20 26 43)) !important;
+}
+html body :is(.lo-field,.lo-ask-row):focus-within,
+html body [data-loa-surface="panel"] [class*="border"]:has(> input:focus-visible) {
+  border-color: rgb(var(--strong, 20 26 43));
+}
