@@ -137,7 +137,7 @@ export function AccountPage({ title, description, children }) {
 export function AccountSection({ title, description, action, children, className }) {
   return (
     <section className={className}>
-      <div className="flex items-end justify-between gap-4 border-b border-veil/10 pb-3">
+      <div className="flex items-end justify-between gap-4 pb-4">
         <div className="min-w-0">
           <h3 className="text-base font-semibold text-strong">{title}</h3>
           {description ? <p className="mt-0.5 text-sm text-ink-500">{description}</p> : null}
@@ -157,7 +157,7 @@ export function AccountRow({ label, description, htmlFor, field = false, align =
   return (
     <div
       className={cn(
-        "flex flex-col gap-2 border-b border-veil/10 py-4 last:border-b-0 sm:flex-row sm:justify-between sm:gap-6",
+        "flex flex-col gap-2 py-4 sm:flex-row sm:justify-between sm:gap-6",
         align === "start" ? "sm:items-start" : "sm:items-center",
         className
       )}
